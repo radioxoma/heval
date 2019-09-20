@@ -50,16 +50,15 @@ class MainWindow(Tk):
         menubar.add_cascade(label="Help", menu=menu_about)
         self['menu'] = menubar
 
-        self.create_human_input()
 
         nb = Notebook(self)
         self.TxtView = TextView(nb)
         self.AInterpreter = ABGInterpreter(nb)
         # self.CElectrolytes = CalcElectrolytes(nb)
-        # self.bind('<Key-Return>', self.TxtView.calculate)
+        # self.bind('<Key-Return>', self.TxtView.print)
         # `add` prevents key binding overwrite
-        # self.bind('<Key-Return>', self.AInterpreter.calculate, add='+')
-        # self.bind('<Key-Return>', self.CElectrolytes.calculate, add='+')
+        # self.bind('<Key-Return>', self.AInterpreter.print, add='+')
+        # self.bind('<Key-Return>', self.CElectrolytes.print, add='+')
 
         nb.add(self.TxtView, text='Human')
         nb.add(self.AInterpreter, text='ABG')
@@ -68,97 +67,109 @@ class MainWindow(Tk):
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         # self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
+
+        self.HModel = human.HumanModel()
+        self.create_input()
+
         nb.pack(expand=True, fill=BOTH)
 
         # self.statusbar_str = StringVar()
         # self.statusbar_str.set("Hello world!")
         # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
         # statusbar.pack(side=BOTTOM, fill=X)
-        self.set_defaults()
+        self.set_input_defaults()
 
-    def create_human_input(self):
+    def create_input(self):
         """One row of widgets."""
         frm_entry = Frame(self)
         frm_entry.pack(fill=BOTH)
         Label(frm_entry, text='Sex').pack(side='left')
-        self.sex = Combobox(frm_entry, values=['Male', 'Female', 'Paed'], width=7)
-        self.sex.bind("<<ComboboxSelected>>", self.calculate)
-        self.sex.pack(side='left')
-        CreateToolTip(self.sex, "Age and sex selector. Calculations quite differ for adults and infants")
+        self.ctl_sex = Combobox(frm_entry, values=['Male', 'Female', 'Paed'], width=7)
+        self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
+        self.ctl_sex.pack(side='left')
+        CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and infants")
 
         Label(frm_entry, text='Height, cm').pack(side='left')
-        self.height = Spinbox(frm_entry, width=3, from_=1, to=500, command=self.calculate)
-        self.height.pack(side='left')
-        CreateToolTip(self.height, "Height highly correlates with age, ideal body weight and body surface area")
+        self.ctl_height = Spinbox(frm_entry, width=3, from_=1, to=500, command=self.set_model_height)
+        self.ctl_height.pack(side='left')
+        CreateToolTip(self.ctl_height, "Height highly correlates with age, ideal body weight and body surface area")
 
-        self.use_ibw = IntVar()  # No real body weight
-        self.use_ibw.set(1)
-        self.use_ibw_cb = Checkbutton(frm_entry, variable=self.use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_weight_mode)
-        self.use_ibw_cb.pack(side='left')
-        CreateToolTip(self.use_ibw_cb, "Estimate ideal body weight from height")
+        self.ctl_use_ibw = IntVar()  # No real body weight
+        self.ctl_use_ibw.set(1)
+        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.ctl_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_use_ibw)
+        self.ctl_use_ibw_cb.pack(side='left')
+        CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
 
-        self.weight_lbl = Label(frm_entry, text='Weight, kg')
-        self.weight_lbl.pack(side='left')
-        CreateToolTip(self.weight_lbl, "Real body weight")
-        self.weight = Spinbox(frm_entry, width=4, from_=1, to=500, command=self.calculate)
-        self.weight.pack(side='left')
+        self.lbl_weight = Label(frm_entry, text='Weight, kg')
+        self.lbl_weight.pack(side='left')
+        CreateToolTip(self.lbl_weight, "Real body weight")
+        self.ctl_weight = Spinbox(frm_entry, width=4, from_=1, to=500, command=self.set_model_weight)
+        self.ctl_weight.pack(side='left')
 
         Label(frm_entry, text='Body temp, °C').pack(side='left')
-        self.sbx_temp = Spinbox(frm_entry, width=4, from_=0.0, to=50.0,
+        self.ctl_sbx_temp = Spinbox(frm_entry, width=4, from_=0.0, to=50.0,
             format='%.1f',
             increment=0.1,
-         command=self.calculate)
-        self.sbx_temp.pack(side='left')
-        CreateToolTip(self.sbx_temp, "Axillary temperature, used for perspiration evaluation")
+         command=self.set_model_body_temp)
+        self.ctl_sbx_temp.pack(side='left')
+        CreateToolTip(self.ctl_sbx_temp, "Axillary temperature, used for perspiration evaluation")
 
-        reset = Button(frm_entry, text="Reset", command=self.set_defaults)
+        reset = Button(frm_entry, text="Reset", command=self.set_input_defaults)
         reset.pack(side='left')
         CreateToolTip(reset, "Drop changes for sex, height, real body weight, temp")
 
-    def set_weight_mode(self):
-        if self.use_ibw.get() == 0:
-            self.weight_lbl['state'] = NORMAL
-            self.weight['state'] = NORMAL
-        else:
-            self.weight_lbl['state'] = DISABLED
-            self.weight['state'] = DISABLED
-        self.calculate()
+    def set_input_defaults(self, event=None):
+        self.ctl_sex.current(0)
+        self.set_model_sex()
 
-    def set_defaults(self):
-        self.sex.current(0)
-        self.height.delete(0, 'end')
-        self.height.insert(0, 186)  # cm
+        self.ctl_height.delete(0, 'end')
+        self.ctl_height.insert(0, 186)  # cm
+        self.set_model_height()
 
         # Can't change widget value while it being disabled, so here is a trick
-        self.weight['state'] = NORMAL
-        self.weight.delete(0, 'end')
-        self.weight.insert(0, 55)  # kg
-        self.weight['state'] = self.weight_lbl['state']
+        self.ctl_weight['state'] = NORMAL
+        self.ctl_weight.delete(0, 'end')
+        self.ctl_weight.insert(0, 55)  # kg
+        self.ctl_weight['state'] = self.lbl_weight['state']
+        self.set_model_weight()
 
-        self.use_ibw.set(1)
+        self.ctl_use_ibw.set(1)
+        self.set_use_ibw()
 
-        self.sbx_temp.delete(0, 'end')
-        self.sbx_temp.insert(0, 36.6)  # celsus degrees
-        self.calculate()
-        self.set_weight_mode()
+        self.ctl_sbx_temp.delete(0, 'end')
+        self.ctl_sbx_temp.insert(0, 36.6)  # celsus degrees
+        self.set_model_body_temp()
 
-    def calculate(self, event=None):
+    def set_model_sex(self, event=None):
+        self.HModel.sex = self.ctl_sex.get().lower()
+        self.print()
+
+    def set_model_height(self, event=None):
+        self.HModel.height = float(self.ctl_height.get()) / 100
+        self.print()
+
+    def set_model_weight(self, event=None):
+        self.HModel.weight = float(self.ctl_weight.get())
+        self.print()
+
+    def set_model_body_temp(self, event=None):
+        self.HModel.body_temp = float(self.ctl_sbx_temp.get())
+        self.print()
+
+    def set_use_ibw(self, event=None):
+        if self.ctl_use_ibw.get() == 0:
+            self.lbl_weight['state'] = NORMAL
+            self.ctl_weight['state'] = NORMAL
+            self.HModel.use_ibw(False)
+        else:
+            self.lbl_weight['state'] = DISABLED
+            self.ctl_weight['state'] = DISABLED
+            self.HModel.use_ibw(True)
+        self.print()
+
+    def print(self, event=None):
         """Calculate and print some evaluated data."""
-        Hm = human.Human(
-        sex=self.sex.get().lower(),
-        height=float(self.height.get()) / 100,
-        weight=float(self.weight.get()),
-        body_temp=float(self.sbx_temp.get()))
-
-        # Reinitialize with IBW
-        if self.use_ibw.get() == 1:
-            weight = Hm.weight_ideal
-            Hm.__init__(
-                sex=self.sex.get().lower(),
-                height=float(self.height.get()) / 100,
-                weight=weight,
-                body_temp=float(self.sbx_temp.get()))
-        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(Hm), Hm.medication()))
+        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.HModel), self.HModel.medication()))
 
 
 class TextView(Frame):
@@ -205,7 +216,7 @@ class TextView(Frame):
     #         title='Save text output',
     #         filetypes=[('Plain text', '.txt'), ('All files', '*')],
     #         defaultextension='.txt',
-    #         initialfile="Patient_{}-{}.txt".format(self.height.get(), self.weight.get()))
+    #         initialfile="Patient_{}-{}.txt".format(self.ctl_height.get(), self.ctl_weight.get()))
     #     if dst_filepath:
     #         self.txt['state'] = NORMAL
     #         try:
@@ -239,14 +250,14 @@ class ABGInterpreter(Frame):
         self.sbx_pH = Spinbox(frm_entry, width=4, from_=0, to=14,
             format='%.2f',
             increment=0.01,
-            command=self.calculate)
+            command=self.print)
         self.sbx_pH.grid(row=1, column=1)  # Default pH 7.40
 
         Label(frm_entry, text='pCO2, mmHg').grid(row=2, column=0)
         self.sbx_pCO2 = Spinbox(frm_entry, width=4, from_=0.0, to=150.0,
             format='%.1f',
             increment=0.1,
-            command=self.calculate)
+            command=self.print)
         self.sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
         self.txt = scrolledtext.ScrolledText(self)
@@ -263,9 +274,9 @@ class ABGInterpreter(Frame):
         self.sbx_pH.insert(0, '7.40')  # cm
         self.sbx_pCO2.delete(0, END)
         self.sbx_pCO2.insert(0, 40.0)  # kg
-        self.calculate()
+        self.print()
 
-    def calculate(self, event=None):
+    def print(self, event=None):
         pH = float(self.sbx_pH.get())
         pCO2 = float(self.sbx_pCO2.get())
         info = textwrap.dedent("""\
@@ -295,21 +306,21 @@ class CalcElectrolytes(Frame):
         self.sbx_K = Spinbox(frm_entry, width=3, from_=0, to=15,
             format='%2.1f',
             increment=0.1,
-            command=self.calculate)
+            command=self.print)
         self.sbx_K.grid(row=1, column=1)
 
         Label(frm_entry, text='Na, mmol/L').grid(row=2, column=0)
         self.sbx_Na = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f',
             increment=1,
-            command=self.calculate)
+            command=self.print)
         self.sbx_Na.grid(row=2, column=1)
 
         Label(frm_entry, text='Cl, mmol/L').grid(row=3, column=0)
         self.sbx_Cl = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f',
             increment=1,
-            command=self.calculate)
+            command=self.print)
         self.sbx_Cl.grid(row=3, column=1)
 
         self.txt = scrolledtext.ScrolledText(self)
@@ -328,10 +339,9 @@ class CalcElectrolytes(Frame):
         self.sbx_Na.insert(0, 145)
         self.sbx_Cl.delete(0, END)
         self.sbx_Cl.insert(0, 95)
-        self.calculate()
+        self.print()
 
-    def calculate(self, event=None):
-        pass
+    def print(self, event=None):
         # pH = float(self.sbx_pH.get())
         # pCO2 = float(self.sbx_pCO2.get())
         # info = textwrap.dedent("""\

@@ -79,15 +79,17 @@ paed = {  # 3 year old kid
     }
 
 
-class Human(object):
-    def __init__(self, sex, height, weight, body_temp=36.6):
+class HumanModel(object):
+    def __init__(self):
+        self._height = None
+        self._sex = None
+        self.weight_ideal = None
+        self._use_ibw = False
+
         self.comment = list()
-        self.height = height
-        self.weight = weight
-        self.sex = sex
+        self.weight = None
         # self.age = age
-        self.body_temp = body_temp
-        self.weight_ideal = self.body_mass_ideal(sex=sex, height=height)
+        self.body_temp = 36.6
         self.drug_list = [
             Fentanyl(self),
             Propofol(self),
@@ -97,6 +99,8 @@ class Human(object):
             Esmeron(self)]
 
     def __str__(self):
+        if not self.is_init():
+            return "Human model not initialized with data"
         # Nutrition status
         info = "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
         bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
@@ -122,6 +126,54 @@ class Human(object):
         if self.comment:
             info += "\nComments:\n{}\n".format('\n'.join(self.comment))
         return info
+
+    def is_init(self):
+        """Is class got all necessary data for calculations."""
+        return all((self.height, self.weight, self.sex))
+
+    def use_ibw(self, value):
+        """Set flag to use calculated IBW instead real weight
+
+        :param value bool: Use or not IBW, bool
+        """
+        self._use_ibw = value
+
+    @property
+    def sex(self):
+        return self._sex
+
+    @sex.setter
+    def sex(self, value):
+        self._sex = value
+        self.reinit()
+
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, value):
+        self._height = value
+        self.reinit()
+
+    @property
+    def weight(self):
+        if self._use_ibw:
+            return self.weight_ideal
+        else:
+            return self._weight
+
+    @weight.setter
+    def weight(self, value):
+        """You always can set real body weight, but not get it.
+
+        Never use 'self._weight' directly beyond setter/getter code.
+        """
+        self._weight = value
+
+    def reinit(self):
+        if self._sex and self._height:
+            self.weight_ideal = self.body_mass_ideal(sex=self._sex, height=self._height)
 
     def _info_in_respiration(self):
         """Calulate optimal Tidal Volume for given patient (any gase mixture).
@@ -342,7 +394,10 @@ class Human(object):
         return out
 
     def medication(self):
-        return "\n".join(["* " + str(d) for d in self.drug_list])
+        if not self.is_init():
+            return "Medication not initialized"
+        else:
+            return "\n".join(["* " + str(d) for d in self.drug_list])
 
     def body_mass_ideal(self, sex, height):
         """Evaluate ideal body weight (IBW) for all ages.
@@ -568,6 +623,10 @@ WETFlAG report for {} yo, weight {} kg paed:
 
 
 if __name__ == '__main__':
-    Hm = Human(**male_thin)
-    print(Hm)
-    # print(Hm.medication())
+    HModel = HumanModel()
+    HModel.sex = male_thin['sex']
+    HModel.height = male_thin['height']
+    HModel.use_ibw(True)
+    # HModel.weight = male_thin['weight']
+    print(HModel)
+    print(HModel.medication())

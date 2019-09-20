@@ -50,21 +50,18 @@ class MainWindow(Tk):
         menubar.add_cascade(label="Help", menu=menu_about)
         self['menu'] = menubar
 
-        # self.statusbar_str = StringVar()
-        # self.statusbar_str.set("Hello world!")
-        # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
-        # statusbar.pack(side=BOTTOM, fill=X)
+        self.create_human_input()
 
         nb = Notebook(self)
-        self.CHuman = CalcHuman(nb)
+        self.TxtView = TextView(nb)
         self.AInterpreter = ABGInterpreter(nb)
         # self.CElectrolytes = CalcElectrolytes(nb)
-        self.bind('<Key-Return>', self.CHuman.calculate)
+        # self.bind('<Key-Return>', self.TxtView.calculate)
         # `add` prevents key binding overwrite
-        self.bind('<Key-Return>', self.AInterpreter.calculate, add='+')
+        # self.bind('<Key-Return>', self.AInterpreter.calculate, add='+')
         # self.bind('<Key-Return>', self.CElectrolytes.calculate, add='+')
 
-        nb.add(self.CHuman, text='Human')
+        nb.add(self.TxtView, text='Human')
         nb.add(self.AInterpreter, text='ABG')
         # nb.add(self.CElectrolytes, text='Electrolytes')
 
@@ -73,43 +70,13 @@ class MainWindow(Tk):
         # self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
         nb.pack(expand=True, fill=BOTH)
 
-
-class CalcHuman(Frame):
-    def __init__(self, parent=None):
-        super(CalcHuman, self).__init__()
-        self.parent = parent
-        self.create_input()
-
-        # Could be replaced with tkinter.scrolledtext
-        # self.frm_txt = scrolledtext.ScrolledText(self.root, undo=True)
-        # self.txt.config(font=('consolas', 10), undo=True, wrap='word')
-        # self.frm_txt.pack(expand=True, fill=BOTH)
-        frm_txt = Frame(self, width=450, height=300)
-        frm_txt.pack(fill=BOTH, expand=True)
-        frm_txt.grid_propagate(False)  # ensure a consistent GUI size
-        frm_txt.grid_rowconfigure(0, weight=1)
-        frm_txt.grid_columnconfigure(0, weight=1) # implement stretchability
-
-        self.txt = Text(frm_txt, borderwidth=1, relief="sunken")
-        self.txt.config(font=("consolas", 10), undo=True, wrap='word')
-        self.txt.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-
-        # Create a Scrollbar and associate it with txt
-        scrollb = Scrollbar(frm_txt, command=self.txt.yview)
-        scrollb.grid(row=0, column=1, sticky='nsew')
-        self.txt['yscrollcommand'] = scrollb.set
-
-        # Context menu
-        self.popup_menu = Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
-        self.txt.bind("<Button-3>", self.popup)
-
+        # self.statusbar_str = StringVar()
+        # self.statusbar_str.set("Hello world!")
+        # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
+        # statusbar.pack(side=BOTTOM, fill=X)
         self.set_defaults()
 
-    def popup(self, event):
-        self.popup_menu.post(event.x_root, event.y_root)
-
-    def create_input(self):
+    def create_human_input(self):
         """One row of widgets."""
         frm_entry = Frame(self)
         frm_entry.pack(fill=BOTH)
@@ -178,10 +145,10 @@ class CalcHuman(Frame):
     def calculate(self, event=None):
         """Calculate and print some evaluated data."""
         Hm = human.Human(
-            sex=self.sex.get().lower(),
-            height=float(self.height.get()) / 100,
-            weight=float(self.weight.get()),
-            body_temp=float(self.sbx_temp.get()))
+        sex=self.sex.get().lower(),
+        height=float(self.height.get()) / 100,
+        weight=float(self.weight.get()),
+        body_temp=float(self.sbx_temp.get()))
 
         # Reinitialize with IBW
         if self.use_ibw.get() == 1:
@@ -191,29 +158,63 @@ class CalcHuman(Frame):
                 height=float(self.height.get()) / 100,
                 weight=weight,
                 body_temp=float(self.sbx_temp.get()))
+        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(Hm), Hm.medication()))
 
+
+class TextView(Frame):
+    def __init__(self, parent=None):
+        super(TextView, self).__init__()
+        self.parent = parent
+
+        # Could be replaced with tkinter.scrolledtext
+        # self.frm_txt = scrolledtext.ScrolledText(self.root, undo=True)
+        # self.txt.config(font=('consolas', 10), undo=True, wrap='word')
+        # self.frm_txt.pack(expand=True, fill=BOTH)
+        frm_txt = Frame(self, width=450, height=300)
+        frm_txt.pack(fill=BOTH, expand=True)
+        frm_txt.grid_propagate(False)  # ensure a consistent GUI size
+        frm_txt.grid_rowconfigure(0, weight=1)
+        frm_txt.grid_columnconfigure(0, weight=1) # implement stretchability
+
+        self.txt = Text(frm_txt, borderwidth=1, relief="sunken")
+        self.txt.config(font=("consolas", 10), undo=True, wrap='word')
+        self.txt.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        # Create a Scrollbar and associate it with txt
+        scrollb = Scrollbar(frm_txt, command=self.txt.yview)
+        scrollb.grid(row=0, column=1, sticky='nsew')
+        self.txt['yscrollcommand'] = scrollb.set
+
+        # Context menu
+        self.popup_menu = Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
+        self.txt.bind("<Button-3>", self.popup)
+
+    def popup(self, event):
+        self.popup_menu.post(event.x_root, event.y_root)
+
+    def set_text(self, text):
+        """Replace current text in TextView."""
         self.txt['state'] = NORMAL
         self.txt.delete(1.0, END)
-        self.txt.insert(END, str(Hm))
-        self.txt.insert(END, "\n--- Drugs --------------------------------------\n")
-        self.txt.insert(END, Hm.medication())
+        self.txt.insert(END, text)
         self.txt['state'] = DISABLED
 
-    def save_text(self):
-        dst_filepath = filedialog.asksaveasfilename(
-            title='Save text output',
-            filetypes=[('Plain text', '.txt'), ('All files', '*')],
-            defaultextension='.txt',
-            initialfile="Patient_{}-{}.txt".format(self.height.get(), self.weight.get()))
-        if dst_filepath:
-            self.txt['state'] = NORMAL
-            try:
-                with open(dst_filepath, mode='w') as f:
-                    f.write(self.txt.get(1.0, "end-1c"))
-            except Exception as e:
-                raise
-            finally:
-                self.txt['state'] = DISABLED
+    # def save_text(self):
+    #     dst_filepath = filedialog.asksaveasfilename(
+    #         title='Save text output',
+    #         filetypes=[('Plain text', '.txt'), ('All files', '*')],
+    #         defaultextension='.txt',
+    #         initialfile="Patient_{}-{}.txt".format(self.height.get(), self.weight.get()))
+    #     if dst_filepath:
+    #         self.txt['state'] = NORMAL
+    #         try:
+    #             with open(dst_filepath, mode='w') as f:
+    #                 f.write(self.txt.get(1.0, "end-1c"))
+    #         except Exception as e:
+    #             raise
+    #         finally:
+    #             self.txt['state'] = DISABLED
 
     def select_all(self):
         self.txt.tag_add(SEL, "1.0", END)

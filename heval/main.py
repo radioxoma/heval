@@ -19,6 +19,7 @@ from tkinter import filedialog
 from tkinter.ttk import *
 import human
 import abg
+import electrolytes
 
 
 class MainWindow(Tk):
@@ -50,20 +51,22 @@ class MainWindow(Tk):
         menubar.add_cascade(label="Help", menu=menu_about)
         self['menu'] = menubar
 
-        nb = Notebook(self)
-        self.TxtView = TextView(nb)
-        self.AInterpreter = ABGInterpreter(nb)
-        self.CElectrolytes = CalcElectrolytes(nb)
         self.HModel = human.HumanModel()
+        nb = Notebook(self)
+        # Populaing Notebook with Frame subclasses
         self.create_input()
+        self.TxtView = TextView(nb)
+        self.set_input_defaults()
+        self.AInterpreter = ABGInterpreter(nb)
+        self.CElectrolytes = CalcElectrolytes(nb, self.HModel)
 
         nb.add(self.TxtView, text='Human')
         nb.add(self.AInterpreter, text='ABG')
-        # nb.add(self.CElectrolytes, text='Electrolytes')
+        nb.add(self.CElectrolytes, text='Electrolytes')
 
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
-        # self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
+        self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
 
         nb.pack(expand=True, fill=BOTH)
 
@@ -71,7 +74,6 @@ class MainWindow(Tk):
         # self.statusbar_str.set("Hello world!")
         # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
         # statusbar.pack(side=BOTTOM, fill=X)
-        self.set_input_defaults()
 
     def create_input(self):
         """One row of widgets."""
@@ -202,7 +204,7 @@ class TextView(Frame):
         self.popup_menu.post(event.x_root, event.y_root)
 
     def set_text(self, text):
-        """Replace current text in TextView."""
+        """Replace current text."""
         self.txt['state'] = NORMAL
         self.txt.delete(1.0, END)
         self.txt.insert(END, text)
@@ -234,6 +236,22 @@ class TextView(Frame):
     #     self.clipboard_clear()
     #     self.clipboard_append(text)
 
+class TextView2(Frame):
+    def __init__(self, parent=None):
+        super(TextView2, self).__init__()
+        self.parent = parent
+        
+        self.txt = scrolledtext.ScrolledText(self.parent, undo=True)
+        self.txt.config(font=('consolas', 10), undo=True, wrap='word')
+        self.txt.pack(expand=True, fill=BOTH)
+
+    def set_text(self, text):
+        """Replace current text."""
+        self.txt['state'] = NORMAL
+        self.txt.delete(1.0, END)
+        self.txt.insert(END, text)
+        self.txt['state'] = DISABLED
+
 
 class ABGInterpreter(Frame):
     def __init__(self, parent=None):
@@ -251,6 +269,9 @@ class ABGInterpreter(Frame):
         self.sbx_pH.bind("<Return>", self.print)
         self.sbx_pH.grid(row=1, column=1)  # Default pH 7.40
 
+        button = Button(frm_entry, text="Reset", command=self.set_defaults)
+        button.grid(row=1, column=2)
+
         Label(frm_entry, text='pCO2, mmHg').grid(row=2, column=0)
         self.sbx_pCO2 = Spinbox(frm_entry, width=4, from_=0.0, to=150.0,
             format='%.1f',
@@ -262,10 +283,6 @@ class ABGInterpreter(Frame):
         self.txt = scrolledtext.ScrolledText(self)
         self.txt.config(font=('consolas', 10), undo=True, wrap='word')
         self.txt.pack(expand=True, fill=BOTH)
-
-        button = Button(frm_entry, text="Reset", command=self.set_defaults)
-        button.grid(row=2, column=2)
-
         self.set_defaults()
 
     def set_defaults(self):
@@ -294,69 +311,60 @@ class ABGInterpreter(Frame):
 
 
 class CalcElectrolytes(Frame):
-    def __init__(self, parent=None):
+    def __init__(self, parent, human_model):
         super(CalcElectrolytes, self).__init__()
         self.parent = parent
+        self.human_model = human_model
         # Create columns of widgets for input
         frm_entry = Frame(self)
         frm_entry.pack(fill=BOTH)  # Aligns to left (not TOP center) somehow
 
         Label(frm_entry, text='K, mmol/L').grid(row=1, column=0)
-        self.sbx_K = Spinbox(frm_entry, width=3, from_=0, to=15,
+        self.ctl_sbx_K = Spinbox(frm_entry, width=3, from_=0, to=15,
             format='%2.1f',
             increment=0.1,
             command=self.print)
-        self.sbx_K.grid(row=1, column=1)
+        self.ctl_sbx_K.bind("<Return>", self.print)
+        self.ctl_sbx_K.grid(row=1, column=1)
 
         Label(frm_entry, text='Na, mmol/L').grid(row=2, column=0)
-        self.sbx_Na = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
+        self.ctl_sbx_Na = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f',
             increment=1,
             command=self.print)
-        self.sbx_Na.grid(row=2, column=1)
+        self.ctl_sbx_Na.bind("<Return>", self.print)
+        self.ctl_sbx_Na.grid(row=2, column=1)
 
         Label(frm_entry, text='Cl, mmol/L').grid(row=3, column=0)
-        self.sbx_Cl = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
+        self.ctl_sbx_Cl = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f',
             increment=1,
             command=self.print)
-        self.sbx_Cl.grid(row=3, column=1)
-
-        self.txt = scrolledtext.ScrolledText(self)
-        self.txt.config(font=('consolas', 10), undo=True, wrap='word')
-        self.txt.pack(expand=True, fill=BOTH)
+        self.ctl_sbx_Cl.bind("<Return>", self.print)
+        self.ctl_sbx_Cl.grid(row=3, column=1)
 
         button = Button(frm_entry, text="Reset", command=self.set_defaults)
         button.grid(row=1, column=2)
 
+        self.TxtView = TextView2(self)
+        self.TxtView.pack(expand=True, fill=BOTH)
         self.set_defaults()
 
     def set_defaults(self):
-        self.sbx_K.delete(0, END)
-        self.sbx_K.insert(0, 4.0)
-        self.sbx_Na.delete(0, END)
-        self.sbx_Na.insert(0, 145)
-        self.sbx_Cl.delete(0, END)
-        self.sbx_Cl.insert(0, 95)
-        self.print()
+        self.ctl_sbx_K.delete(0, END)
+        self.ctl_sbx_K.insert(0, 4.0)
+        self.ctl_sbx_Na.delete(0, END)
+        self.ctl_sbx_Na.insert(0, 145)
+        self.ctl_sbx_Cl.delete(0, END)
+        self.ctl_sbx_Cl.insert(0, 95)
+        self.TxtView.set_text("Electrolyte calculations depend on body mass.")
 
     def print(self, event=None):
-        # pH = float(self.sbx_pH.get())
-        # pCO2 = float(self.sbx_pCO2.get())
-        # info = textwrap.dedent("""\
-        # pCO2    {:2.1f} kPa
-        # HCO3(P) {:2.1f} mmol/L
-        # SBE     {:2.1f} mEq/L
-        # Result: {}""".format(
-        #     pCO2 * 0.133322368,
-        #     abg.calculate_hco3p(pH, pCO2 * 0.133322368),  # to kPa
-        #     abg.calculate_cbase(pH, pCO2 * 0.133322368),
-        #     abg.abg(pH, pCO2)))
-        info = "NotImplementedYet"
-        self.txt['state'] = NORMAL
-        self.txt.delete(1.0, END)
-        self.txt.insert(END, info)
-        self.txt['state'] = DISABLED
+        weight = self.human_model.weight
+        info = "{}\n{}\n".format(
+            electrolytes.kurek_electrolytes_K(weight, float(self.ctl_sbx_K.get())),
+            electrolytes.kurek_electrolytes_Na(weight, float(self.ctl_sbx_Na.get())))
+        self.TxtView.set_text(info)
 
 
 class CreateToolTip(object):

@@ -56,14 +56,14 @@ def glucosae_solution(glu_mass, body_weight):
     # to 0.5 g/kg/h. If hyperglycemia occurs, slow down or add more insulinum
     # to avoid glycosuria:
     # Hyperglycemia -> renal threshold (8.9-10 mmol/L) -> glycosuria
-    info = "Glu {} g ({:.2f} mmol) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, insulinum, ins_dosage)
+    info = "Glu {:.3f} g ({:.2f} mmol) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, insulinum, ins_dosage)
 
     for dilution in (5, 10, 40):
         g_low, g_max = 0.15, 0.5  # g/kg/h
         speed_low = (g_low * body_weight) / dilution * 100
         speed_max = (g_max * body_weight) / dilution * 100
         vol = glu_mass / dilution * 100
-        info += "\t* Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.3f} g/kg/h)\n".format(dilution, vol, speed_low, speed_max, g_low, g_max)
+        info += " * Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.3f} g/kg/h)\n".format(dilution, vol, speed_low, speed_max, g_low, g_max)
     return info
 
 
@@ -211,7 +211,7 @@ def kurek_electrolytes_Na(weight, Na_serum):
         coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой]
         info += "Na is dangerously low (<{} mmol/L), expect seizure\n".format(Na_low)
         Na_deficiency = (Na_target - Na_serum) * weight * coefficient
-        info += "Na_deficiency is {} mmol [Курек]".format(Na_deficiency)
+        info += "Na_deficiency is {:.0f} mmol [Курек]".format(Na_deficiency)
     else:
         info += "Na is ok"
     return info

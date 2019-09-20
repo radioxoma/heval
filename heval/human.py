@@ -235,12 +235,13 @@ class HumanModel(object):
                 mv = 0.1
             return mv
 
+        info = ""
         mv = normal_minute_ventilation(self.weight_ideal)  
         Vd = mv * self.weight_ideal  # l/min
         if self.weight_ideal < 3:
             info += " * WARNING: MV calculation for paed <3 kg is not supported\n"
         else:
-            info = "IBW respiration for {} {:.1f} kg [Hamilton ASV]\n".format(self.sex, self.weight_ideal)
+            info += "IBW respiration for {} {:.1f} kg [Hamilton ASV]\n".format(self.sex, self.weight_ideal)
             info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
             info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
             info += " * TV x6.5={:.0f} ml, RR {:.0f}/min\n".format(self.weight_ideal * 6.5, Vd * 1000 / (self.weight_ideal * 6.5))

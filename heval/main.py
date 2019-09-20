@@ -50,15 +50,12 @@ class MainWindow(Tk):
         menubar.add_cascade(label="Help", menu=menu_about)
         self['menu'] = menubar
 
-
         nb = Notebook(self)
         self.TxtView = TextView(nb)
         self.AInterpreter = ABGInterpreter(nb)
-        # self.CElectrolytes = CalcElectrolytes(nb)
-        # self.bind('<Key-Return>', self.TxtView.print)
-        # `add` prevents key binding overwrite
-        # self.bind('<Key-Return>', self.AInterpreter.print, add='+')
-        # self.bind('<Key-Return>', self.CElectrolytes.print, add='+')
+        self.CElectrolytes = CalcElectrolytes(nb)
+        self.HModel = human.HumanModel()
+        self.create_input()
 
         nb.add(self.TxtView, text='Human')
         nb.add(self.AInterpreter, text='ABG')
@@ -67,9 +64,6 @@ class MainWindow(Tk):
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         # self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
-
-        self.HModel = human.HumanModel()
-        self.create_input()
 
         nb.pack(expand=True, fill=BOTH)
 
@@ -91,6 +85,7 @@ class MainWindow(Tk):
 
         Label(frm_entry, text='Height, cm').pack(side='left')
         self.ctl_height = Spinbox(frm_entry, width=3, from_=1, to=500, command=self.set_model_height)
+        self.ctl_height.bind("<Return>", self.set_model_height)
         self.ctl_height.pack(side='left')
         CreateToolTip(self.ctl_height, "Height highly correlates with age, ideal body weight and body surface area")
 
@@ -104,6 +99,7 @@ class MainWindow(Tk):
         self.lbl_weight.pack(side='left')
         CreateToolTip(self.lbl_weight, "Real body weight")
         self.ctl_weight = Spinbox(frm_entry, width=4, from_=1, to=500, command=self.set_model_weight)
+        self.ctl_weight.bind("<Return>", self.set_model_weight)
         self.ctl_weight.pack(side='left')
 
         Label(frm_entry, text='Body temp, °C').pack(side='left')
@@ -111,6 +107,7 @@ class MainWindow(Tk):
             format='%.1f',
             increment=0.1,
          command=self.set_model_body_temp)
+        self.ctl_sbx_temp.bind("<Return>", self.set_model_body_temp)
         self.ctl_sbx_temp.pack(side='left')
         CreateToolTip(self.ctl_sbx_temp, "Axillary temperature, used for perspiration evaluation")
 
@@ -251,6 +248,7 @@ class ABGInterpreter(Frame):
             format='%.2f',
             increment=0.01,
             command=self.print)
+        self.sbx_pH.bind("<Return>", self.print)
         self.sbx_pH.grid(row=1, column=1)  # Default pH 7.40
 
         Label(frm_entry, text='pCO2, mmHg').grid(row=2, column=0)
@@ -258,6 +256,7 @@ class ABGInterpreter(Frame):
             format='%.1f',
             increment=0.1,
             command=self.print)
+        self.sbx_pCO2.bind("<Return>", self.print)
         self.sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
         self.txt = scrolledtext.ScrolledText(self)

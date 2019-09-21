@@ -59,14 +59,17 @@ class MainWindow(Tk):
         self.set_input_defaults()
         self.AInterpreter = ABGInterpreter(nb)
         self.CElectrolytes = CalcElectrolytes(nb, self.HModel)
+        self.CGFR = CalcGFR(nb, self.HModel)
 
         nb.add(self.TxtView, text='Human')
         nb.add(self.AInterpreter, text='ABG')
         nb.add(self.CElectrolytes, text='Electrolytes')
+        nb.add(self.CGFR, text='eGFR')
 
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
+        self.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
 
         nb.pack(expand=True, fill=BOTH)
 
@@ -91,9 +94,9 @@ class MainWindow(Tk):
         self.ctl_height.pack(side='left')
         CreateToolTip(self.ctl_height, "Height highly correlates with age, ideal body weight and body surface area")
 
-        self.ctl_use_ibw = IntVar()  # No real body weight
-        self.ctl_use_ibw.set(1)
-        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.ctl_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_ui_use_ibw)
+        self.var_use_ibw = IntVar()  # No real body weight
+        self.var_use_ibw.set(1)
+        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_ui_use_ibw)
         self.ctl_use_ibw_cb.pack(side='left')
         CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
 
@@ -131,7 +134,7 @@ class MainWindow(Tk):
         self.ctl_weight['state'] = self.lbl_weight['state']
         self.set_model_weight()
 
-        self.ctl_use_ibw.set(1)
+        self.var_use_ibw.set(1)
         self.set_ui_use_ibw()
 
         self.ctl_sbx_temp.delete(0, 'end')
@@ -160,7 +163,7 @@ class MainWindow(Tk):
         self.print()
 
     def set_ui_use_ibw(self, event=None):
-        if self.ctl_use_ibw.get() == 0:
+        if self.var_use_ibw.get() == 0:
             self.lbl_weight['state'] = NORMAL
             self.ctl_weight['state'] = NORMAL
             self.HModel.use_ibw = False
@@ -299,7 +302,7 @@ class ABGInterpreter(Frame):
     def print(self, event=None):
         pH = float(self.sbx_pH.get())
         pCO2 = float(self.sbx_pCO2.get())
-        info = textwrap.dedent("""\
+        info = """\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
         SBE     {:2.1f} mEq/L
@@ -307,10 +310,10 @@ class ABGInterpreter(Frame):
             pCO2 * 0.133322368,
             abg.calculate_hco3p(pH, pCO2 * 0.133322368),  # to kPa
             abg.calculate_cbase(pH, pCO2 * 0.133322368),
-            abg.abg(pH, pCO2)))
+            abg.abg(pH, pCO2))
         self.txt['state'] = NORMAL
         self.txt.delete(1.0, END)
-        self.txt.insert(END, info)
+        self.txt.insert(END, textwrap.dedent(info))
         self.txt['state'] = DISABLED
 
 
@@ -353,15 +356,16 @@ class CalcElectrolytes(Frame):
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_defaults()
+        self.TxtView.set_text("Electrolyte calculations depend on body mass.")
 
-    def set_defaults(self):
+    def set_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
         self.ctl_sbx_K.insert(0, 4.0)
         self.ctl_sbx_Na.delete(0, END)
         self.ctl_sbx_Na.insert(0, 145)
         self.ctl_sbx_Cl.delete(0, END)
         self.ctl_sbx_Cl.insert(0, 95)
-        self.TxtView.set_text("Electrolyte calculations depend on body mass.")
+        self.print()
 
     def print(self, event=None):
         weight = self.human_model.weight
@@ -369,6 +373,69 @@ class CalcElectrolytes(Frame):
             electrolytes.kurek_electrolytes_K(weight, float(self.ctl_sbx_K.get())),
             electrolytes.kurek_electrolytes_Na(weight, float(self.ctl_sbx_Na.get())))
         self.TxtView.set_text(info)
+
+
+class CalcGFR(Frame):
+    """Esimate glomerular filtration rate (eGFR)"""
+    def __init__(self, parent, human_model):
+        super(CalcGFR, self).__init__()
+        self.parent = parent
+        self.human_model = human_model
+
+        frm_entry = Frame(self)
+        frm_entry.pack(fill=BOTH)
+
+        Label(frm_entry, text="cCrea, μmol/L").pack(side='left')
+        self.ctl_sbx_ccrea = Spinbox(frm_entry, width=4, from_=0.0, to=1000.0,
+            format='%.1f', increment=1, command=self.print)
+        self.ctl_sbx_ccrea.bind("<Return>", self.print)
+        self.ctl_sbx_ccrea.pack(side='left')
+        CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
+
+        Label(frm_entry, text="Age").pack(side='left')
+        self.ctl_sbx_age = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
+            format='%1.0f', increment=1, command=self.print)
+        self.ctl_sbx_age.bind("<Return>", self.print)
+        self.ctl_sbx_age.pack(side='left')
+        CreateToolTip(self.ctl_sbx_age, "Human age, years")
+
+        self.var_isblack = IntVar()  # No real body weight
+        self.var_isblack.set(0)
+        self.ctl_ckb_isblack = Checkbutton(frm_entry, variable=self.var_isblack, onvalue=1, offvalue=0, text="Black human", command=self.print)
+        self.ctl_ckb_isblack.pack(side='left')
+        CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
+
+        self.reset = Button(frm_entry, text="Reset", command=self.set_input_defaults)
+        self.reset.pack(side='left')
+        CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
+
+        self.TxtView = TextView2(self)
+        self.TxtView.pack(expand=True, fill=BOTH)
+        self.set_input_defaults()
+        self.TxtView.set_text("Esimate glomerular filtration rate (eGFR)")
+
+    def set_input_defaults(self, event=None):
+        self.ctl_sbx_ccrea.delete(0, END)
+        self.ctl_sbx_ccrea.insert(0, 75.0)
+        self.ctl_sbx_age.delete(0, END)
+        self.ctl_sbx_age.insert(0, 40)
+        self.var_isblack.set(0)
+        self.print()
+
+    def print(self, event=None):
+        sex = self.human_model.sex
+        if sex in ('male', 'female'):
+            cCrea = float(self.ctl_sbx_ccrea.get())
+            age = float(self.ctl_sbx_age.get())
+            black_skin = (self.var_isblack.get() == 1)
+            info = """\
+             MDRD\t{:.0f} mL/min/1.73 m2
+             CKD-EPI\t{:.0f} mL/min/1.73 m2""".format(
+                abg.egfr_mdrd(sex, cCrea, age, black_skin),
+                abg.egfr_ckd_epi(sex, cCrea, age, black_skin))
+        else:
+            info = "Don't know how to calculate eGFR in paed"
+        self.TxtView.set_text(textwrap.dedent(info))
 
 
 class CreateToolTip(object):

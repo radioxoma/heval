@@ -439,7 +439,7 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
     :return:
-        GFR, mL/min/1.73 m2
+        eGFR, mL/min/1.73 m2
     :rtype: float
     """
     # cCrea (μmol/L) = 88.4 × cCrea (mg/dL)
@@ -448,7 +448,7 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     # egfr = 186 * (cCrea / 88.4) ** -1.154 * age ** -0.203
 
     # Revised equation from 2005, to accommodate for standardization of
-    # creatinine assays over IDMS (isotope dilution mass spectrometry (IDMS).
+    # creatinine assays over isotope dilution mass spectrometry (IDMS).
     # Equation being used by Radiometer devices
     # Для наборов со стандартизацией креатинина по референтному реактиву SRM 967
     egfr = 175 * (cCrea / 88.4) ** -1.154 * age ** -0.203
@@ -477,7 +477,7 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
     :return:
-        GFR, mL/min/1.73 m2
+        eGFR, mL/min/1.73 m2
     :rtype: float
     """
     cCrea /= 88.4  # to mg/dl

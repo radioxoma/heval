@@ -93,22 +93,21 @@ class MainWindow(Tk):
 
         self.ctl_use_ibw = IntVar()  # No real body weight
         self.ctl_use_ibw.set(1)
-        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.ctl_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_use_ibw)
+        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.ctl_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_ui_use_ibw)
         self.ctl_use_ibw_cb.pack(side='left')
         CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
 
         self.lbl_weight = Label(frm_entry, text='Weight, kg')
         self.lbl_weight.pack(side='left')
-        CreateToolTip(self.lbl_weight, "Real body weight")
-        self.ctl_weight = Spinbox(frm_entry, width=4, from_=1, to=500, command=self.set_model_weight)
+        self.ctl_weight = Spinbox(frm_entry, width=4, from_=1, to=500,
+            format='%.1f', increment=1, command=self.set_model_weight)
         self.ctl_weight.bind("<Return>", self.set_model_weight)
         self.ctl_weight.pack(side='left')
+        CreateToolTip(self.ctl_weight, "Real body weight")
 
         Label(frm_entry, text='Body temp, °C').pack(side='left')
         self.ctl_sbx_temp = Spinbox(frm_entry, width=4, from_=0.0, to=50.0,
-            format='%.1f',
-            increment=0.1,
-         command=self.set_model_body_temp)
+            format='%.1f', increment=0.1, command=self.set_model_body_temp)
         self.ctl_sbx_temp.bind("<Return>", self.set_model_body_temp)
         self.ctl_sbx_temp.pack(side='left')
         CreateToolTip(self.ctl_sbx_temp, "Axillary temperature, used for perspiration evaluation")
@@ -128,12 +127,12 @@ class MainWindow(Tk):
         # Can't change widget value while it being disabled, so here is a trick
         self.ctl_weight['state'] = NORMAL
         self.ctl_weight.delete(0, 'end')
-        self.ctl_weight.insert(0, 55)  # kg
+        self.ctl_weight.insert(0, 55.0)  # kg
         self.ctl_weight['state'] = self.lbl_weight['state']
         self.set_model_weight()
 
         self.ctl_use_ibw.set(1)
-        self.set_use_ibw()
+        self.set_ui_use_ibw()
 
         self.ctl_sbx_temp.delete(0, 'end')
         self.ctl_sbx_temp.insert(0, 36.6)  # celsus degrees
@@ -145,6 +144,11 @@ class MainWindow(Tk):
 
     def set_model_height(self, event=None):
         self.HModel.height = float(self.ctl_height.get()) / 100
+        if self.HModel.use_ibw:
+            self.ctl_weight['state'] = NORMAL
+            self.ctl_weight.delete(0, 'end')
+            self.ctl_weight.insert(0, round(self.HModel.weight, 1))
+            self.ctl_weight['state'] = self.lbl_weight['state']
         self.print()
 
     def set_model_weight(self, event=None):
@@ -155,15 +159,15 @@ class MainWindow(Tk):
         self.HModel.body_temp = float(self.ctl_sbx_temp.get())
         self.print()
 
-    def set_use_ibw(self, event=None):
+    def set_ui_use_ibw(self, event=None):
         if self.ctl_use_ibw.get() == 0:
             self.lbl_weight['state'] = NORMAL
             self.ctl_weight['state'] = NORMAL
-            self.HModel.use_ibw(False)
+            self.HModel.use_ibw = False
         else:
             self.lbl_weight['state'] = DISABLED
             self.ctl_weight['state'] = DISABLED
-            self.HModel.use_ibw(True)
+            self.HModel.use_ibw = True
         self.print()
 
     def print(self, event=None):

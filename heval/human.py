@@ -131,6 +131,11 @@ class HumanModel(object):
         """Is class got all necessary data for calculations."""
         return all((self.height, self.weight, self.sex))
 
+    @property
+    def use_ibw(self):
+        return self._use_ibw
+
+    @use_ibw.setter
     def use_ibw(self, value):
         """Set flag to use calculated IBW instead real weight
 
@@ -627,7 +632,7 @@ if __name__ == '__main__':
     HModel = HumanModel()
     HModel.sex = male_thin['sex']
     HModel.height = male_thin['height']
-    HModel.use_ibw(True)
+    HModel.use_ibw = True
     # HModel.weight = male_thin['weight']
     print(HModel)
     print(HModel.medication())

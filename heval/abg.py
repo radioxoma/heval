@@ -416,7 +416,7 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     For patients >18 years, can't be used for acute renal failure.
 
 
-    Exabples
+    Examples
     --------
 
     >>> egfr_mdrd('male', 74.4, 27)
@@ -435,7 +435,7 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     25. Myers GL, Miller WG, Coresh J, Fleming J, Greenberg N, Greene T, Hostetter T, Levey AS, Panteghini M, Welch M, and Eckfeldt JH for the National Kidney Disease Education Program Laboratory Working Group. Clin Chem, 52:5-18, 2006; First published December 6, 2005, 10.1373/clinchem.2005.0525144.
 
     :param str sex: Choose 'male', 'female'.
-    :param float cCrea: Serum creatinine, μmol/L
+    :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
     :return:
@@ -448,13 +448,54 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     # egfr = 186 * (cCrea / 88.4) ** -1.154 * age ** -0.203
 
     # Revised equation from 2005, to accommodate for standardization of
-    # creatinine assays over IDMS. Equation being used by Radiometer devices
+    # creatinine assays over IDMS (isotope dilution mass spectrometry (IDMS).
+    # Equation being used by Radiometer devices
     # Для наборов со стандартизацией креатинина по референтному реактиву SRM 967
     egfr = 175 * (cCrea / 88.4) ** -1.154 * age ** -0.203
     if sex == 'female':
         egfr *= 0.742
+    elif sex == 'paed':
+        raise ValueError("MDRD eGFR for paed not supported")
     if black_skin:
         egfr *= 1.210
+    return egfr
+
+
+def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
+    """Estimated glomerular filtration rate (CKD-EPI 2009 formula).
+
+    For patients >18 years. Appears as more accurate than MDRD, especially
+    when actual GFR is greater than 60 mL/min per 1.73 m2.
+
+    References
+    ----------
+    [1] A new equation to estimate glomerular filtration rate. Ann Intern Med. 2009;150(9):604-12.
+    [2] https://en.wikipedia.org/wiki/Renal_function#Glomerular_filtration_rate
+
+    :param str sex: Choose 'male', 'female'.
+    :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+    :param float age: Human age, years
+    :param bool black_skin: True for people with black skin (african american)
+    :return:
+        GFR, mL/min/1.73 m2
+    :rtype: float
+    """
+    cCrea /= 88.4  # to mg/dl
+    if sex == 'male':
+        if cCrea <= 0.9:
+            egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993 ** age
+        else:
+            egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993 ** age
+    elif sex == 'female':
+        if cCrea <= 0.7:
+            egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993 ** age * 1.018
+        else:
+            egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993 ** age * 1.018
+    elif sex == 'paed':
+        raise ValueError("CKD-EPI eGFR for paed not supported")
+
+    if black_skin:
+        egfr *= 1.159
     return egfr
 
 
@@ -605,7 +646,6 @@ def test():
     for v in variants:
         describe(pH=v[0], pCO2=v[1])
         print("[%s]\n" % v[3])
-    print(egfr_mdrd('male', 74.4, 27))
 
 
 if __name__ == '__main__':

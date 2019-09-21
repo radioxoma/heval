@@ -410,27 +410,47 @@ def calculate_Ca74(pH, Ca):
     return Ca * (1 - 0.53 * (7.4 - pH))
 
 
-def gfr(S_cr, age, sex, black_skin=False):
-    """Glomerular filtration rate MDRD Study equation for patients >18 years.
+def egfr_mdrd(sex, cCrea, age, black_skin=False):
+    """Estimated glomerular filtration rate (MDRD 2005 revised study equation).
+
+    For patients >18 years, can't be used for acute renal failure.
+
+
+    Exabples
+    --------
+
+    >>> egfr_mdrd('male', 74.4, 27)
+    109.36590492087734
+    >>> egfr_mdrd('female', 100, 80, True)
+    55.98942027449337
+
 
     References
     ----------
 
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-43, p. 279, equations 53, 54.
+    [2] https://www.kidney.org/sites/default/files/docs/12-10-4004_abe_faqs_aboutgfrrev1b_singleb.pdf
     24. U.S Department of Health and Human Services, National Institutes of Health, National Institute of Diabetes and Digestive and Kidney Diseases: NKDEP National Kidney Disease Education Program. Rationale for Use and Reporting of Estimated GFR. NIH Publication No. 04-5509. Revised November 2005.
     25. Myers GL, Miller WG, Coresh J, Fleming J, Greenberg N, Greene T, Hostetter T, Levey AS, Panteghini M, Welch M, and Eckfeldt JH for the National Kidney Disease Education Program Laboratory Working Group. Clin Chem, 52:5-18, 2006; First published December 6, 2005, 10.1373/clinchem.2005.0525144.
-    https://www.kidney.org/sites/default/files/docs/12-10-4004_abe_faqs_aboutgfrrev1b_singleb.pdf
 
-    :param float S_cr: Serum creatinine, umol/L
-    :param float age: Age, years
-    :param str sex: Set 'female' if female
+    :param str sex: Choose 'male', 'female'.
+    :param float cCrea: Serum creatinine, μmol/L
+    :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
     :return:
         GFR, mL/min/1.73 m2
     :rtype: float
     """
-    egfr = 175 * (S_cr / 88.4) ** -1.154 * age **-0.203  # eGFR mL/min/1.73m
+    # cCrea (μmol/L) = 88.4 × cCrea (mg/dL)
+    
+    # Original equation from 1999 (для наборов без стандартизации креатинина)
+    # egfr = 186 * (cCrea / 88.4) ** -1.154 * age ** -0.203
+
+    # Revised equation from 2005, to accommodate for standardization of
+    # creatinine assays over IDMS. Equation being used by Radiometer devices
+    # Для наборов со стандартизацией креатинина по референтному реактиву SRM 967
+    egfr = 175 * (cCrea / 88.4) ** -1.154 * age ** -0.203
     if sex == 'female':
         egfr *= 0.742
     if black_skin:
@@ -585,6 +605,7 @@ def test():
     for v in variants:
         describe(pH=v[0], pCO2=v[1])
         print("[%s]\n" % v[3])
+    print(egfr_mdrd('male', 74.4, 27))
 
 
 if __name__ == '__main__':

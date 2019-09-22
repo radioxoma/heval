@@ -183,10 +183,6 @@ class TextView(Frame):
         super(TextView, self).__init__()
         self.parent = parent
 
-        # Could be replaced with tkinter.scrolledtext
-        # self.frm_txt = scrolledtext.ScrolledText(self.root, undo=True)
-        # self.txt.config(font=('consolas', 10), undo=True, wrap='word')
-        # self.frm_txt.pack(expand=True, fill=BOTH)
         frm_txt = Frame(self, width=450, height=300)
         frm_txt.pack(fill=BOTH, expand=True)
         frm_txt.grid_propagate(False)  # ensure a consistent GUI size
@@ -247,7 +243,6 @@ class TextView2(Frame):
     def __init__(self, parent=None):
         super(TextView2, self).__init__()
         self.parent = parent
-        
         self.txt = scrolledtext.ScrolledText(self.parent, undo=True)
         self.txt.config(font=('consolas', 10), undo=True, wrap='word')
         self.txt.pack(expand=True, fill=BOTH)
@@ -287,10 +282,10 @@ class ABGInterpreter(Frame):
         self.ctl_sbx_pCO2.bind("<Return>", self.print)
         self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
-        self.txt = scrolledtext.ScrolledText(self)
-        self.txt.config(font=('consolas', 10), undo=True, wrap='word')
-        self.txt.pack(expand=True, fill=BOTH)
+        self.TxtView = TextView2(self)
+        self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
+        self.TxtView.set_text("Electrolyte calculations depend on body mass.")
 
     def set_input_defaults(self):
         self.ctl_sbx_pH.delete(0, END)
@@ -311,10 +306,7 @@ class ABGInterpreter(Frame):
             abg.calculate_hco3p(pH, pCO2 * 0.133322368),  # to kPa
             abg.calculate_cbase(pH, pCO2 * 0.133322368),
             abg.abg(pH, pCO2))
-        self.txt['state'] = NORMAL
-        self.txt.delete(1.0, END)
-        self.txt.insert(END, textwrap.dedent(info))
-        self.txt['state'] = DISABLED
+        self.TxtView.set_text(textwrap.dedent(info))
 
 
 class CalcElectrolytes(Frame):

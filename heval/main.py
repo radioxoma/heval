@@ -269,23 +269,23 @@ class ABGInterpreter(Frame):
         frm_entry.pack(fill=BOTH)  # Aligns to left (not TOP center) somehow
 
         Label(frm_entry, text='pH').grid(row=1, column=0)
-        self.sbx_pH = Spinbox(frm_entry, width=4, from_=0, to=14,
+        self.ctl_sbx_pH = Spinbox(frm_entry, width=4, from_=0, to=14,
             format='%.2f',
             increment=0.01,
             command=self.print)
-        self.sbx_pH.bind("<Return>", self.print)
-        self.sbx_pH.grid(row=1, column=1)  # Default pH 7.40
+        self.ctl_sbx_pH.bind("<Return>", self.print)
+        self.ctl_sbx_pH.grid(row=1, column=1)  # Default pH 7.40
 
         button = Button(frm_entry, text="Reset", command=self.set_input_defaults)
         button.grid(row=1, column=2)
 
         Label(frm_entry, text='pCO2, mmHg').grid(row=2, column=0)
-        self.sbx_pCO2 = Spinbox(frm_entry, width=4, from_=0.0, to=150.0,
+        self.ctl_sbx_pCO2 = Spinbox(frm_entry, width=4, from_=0.0, to=150.0,
             format='%.1f',
             increment=0.1,
             command=self.print)
-        self.sbx_pCO2.bind("<Return>", self.print)
-        self.sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
+        self.ctl_sbx_pCO2.bind("<Return>", self.print)
+        self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
         self.txt = scrolledtext.ScrolledText(self)
         self.txt.config(font=('consolas', 10), undo=True, wrap='word')
@@ -293,15 +293,15 @@ class ABGInterpreter(Frame):
         self.set_input_defaults()
 
     def set_input_defaults(self):
-        self.sbx_pH.delete(0, END)
-        self.sbx_pH.insert(0, '7.40')  # cm
-        self.sbx_pCO2.delete(0, END)
-        self.sbx_pCO2.insert(0, 40.0)  # kg
+        self.ctl_sbx_pH.delete(0, END)
+        self.ctl_sbx_pH.insert(0, '7.40')  # cm
+        self.ctl_sbx_pCO2.delete(0, END)
+        self.ctl_sbx_pCO2.insert(0, 40.0)  # kg
         self.print()
 
     def print(self, event=None):
-        pH = float(self.sbx_pH.get())
-        pCO2 = float(self.sbx_pCO2.get())
+        pH = float(self.ctl_sbx_pH.get())
+        pCO2 = float(self.ctl_sbx_pCO2.get())
         info = """\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L

@@ -52,26 +52,24 @@ class MainWindow(Tk):
         self['menu'] = menubar
 
         self.HModel = human.HumanModel()
+
         nb = Notebook(self)
-        # Populaing Notebook with Frame subclasses
         self.create_input()
-        self.TxtView = TextView(nb)
-        self.set_input_defaults()
+        self.MText = MainText(nb, self.HModel)
         self.AInterpreter = ABGInterpreter(nb)
         self.CElectrolytes = CalcElectrolytes(nb, self.HModel)
         self.CGFR = CalcGFR(nb, self.HModel)
-
-        nb.add(self.TxtView, text='Human')
+        nb.add(self.MText, text='Human')
         nb.add(self.AInterpreter, text='ABG')
         nb.add(self.CElectrolytes, text='Electrolytes')
         nb.add(self.CGFR, text='eGFR')
+        self.set_input_defaults()
+        nb.pack(expand=True, fill=BOTH)
 
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
         self.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
-
-        nb.pack(expand=True, fill=BOTH)
 
         # self.statusbar_str = StringVar()
         # self.statusbar_str.set("Hello world!")
@@ -81,7 +79,7 @@ class MainWindow(Tk):
     def create_input(self):
         """One row of widgets."""
         frm_entry = Frame(self)
-        frm_entry.pack(fill=BOTH)
+        frm_entry.pack(anchor=W)
         Label(frm_entry, text='Sex').pack(side=LEFT)
         self.ctl_sex = Combobox(frm_entry, values=['Male', 'Female', 'Paed'], width=7)
         self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
@@ -143,7 +141,7 @@ class MainWindow(Tk):
 
     def set_model_sex(self, event=None):
         self.HModel.sex = self.ctl_sex.get().lower()
-        self.print()
+        self.MText.print()
 
     def set_model_height(self, event=None):
         self.HModel.height = float(self.ctl_height.get()) / 100
@@ -152,15 +150,15 @@ class MainWindow(Tk):
             self.ctl_weight.delete(0, 'end')
             self.ctl_weight.insert(0, round(self.HModel.weight, 1))
             self.ctl_weight['state'] = self.lbl_weight['state']
-        self.print()
+        self.MText.print()
 
     def set_model_weight(self, event=None):
         self.HModel.weight = float(self.ctl_weight.get())
-        self.print()
+        self.MText.print()
 
     def set_model_body_temp(self, event=None):
         self.HModel.body_temp = float(self.ctl_sbx_temp.get())
-        self.print()
+        self.MText.print()
 
     def set_ui_use_ibw(self, event=None):
         if self.var_use_ibw.get() == 0:
@@ -171,11 +169,7 @@ class MainWindow(Tk):
             self.lbl_weight['state'] = DISABLED
             self.ctl_weight['state'] = DISABLED
             self.HModel.use_ibw = True
-        self.print()
-
-    def print(self, event=None):
-        """Calculate and print some evaluated data."""
-        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.HModel), self.HModel.medication()))
+        self.MText.print()
 
 
 class TextView(Frame):
@@ -255,6 +249,21 @@ class TextView2(Frame):
         self.txt['state'] = DISABLED
 
 
+class MainText(Frame):
+    def __init__(self, parent, human_model):
+        super(MainText, self).__init__()
+        self.parent = parent
+        self.human_model = human_model
+
+        self.TxtView = TextView2(self)
+        self.TxtView.pack()
+        self.print()
+
+    def print(self, event=None):
+        """Calculate and print some evaluated data."""
+        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_model), self.human_model.medication()))
+
+
 class ABGInterpreter(Frame):
     def __init__(self, parent=None):
         super(ABGInterpreter, self).__init__()
@@ -283,7 +292,7 @@ class ABGInterpreter(Frame):
         self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack()
         self.set_input_defaults()
         self.print()
 
@@ -346,7 +355,7 @@ class CalcElectrolytes(Frame):
         button.grid(row=1, column=2)
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack()
         self.set_input_defaults()
         self.TxtView.set_text("Electrolyte calculations depend on body mass.")
 
@@ -402,7 +411,7 @@ class CalcGFR(Frame):
         CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack()
         self.set_input_defaults()
         self.TxtView.set_text("Esimate glomerular filtration rate (eGFR)")
 

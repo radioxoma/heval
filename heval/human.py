@@ -38,6 +38,7 @@ RBW - real body weight, kg
 IBW - ideal body weight, kg, calculated
 BSA - body surface area, m^2, calculated
 BMI - body mass index, calculated
+CKD - chronic kidney disease
 """
 
 # Average Belorussian male in 2008 >=18 years old

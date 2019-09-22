@@ -270,7 +270,7 @@ class ABGInterpreter(Frame):
         self.parent = parent
         # Create columns of widgets for ABG input
         frm_entry = Frame(self)
-        frm_entry.pack(fill=BOTH)  # Aligns to left (not TOP center) somehow
+        frm_entry.pack(anchor=W)  # Aligns to left (not TOP center) somehow
 
         Label(frm_entry, text="pH").grid(row=1, column=0)
         self.ctl_sbx_pH = Spinbox(frm_entry, width=4, from_=0, to=14,
@@ -325,7 +325,7 @@ class CalcElectrolytes(Frame):
         self.human_model = human_model
         # Create columns of widgets for input
         frm_entry = Frame(self)
-        frm_entry.pack(fill=BOTH)  # Aligns to left (not TOP center) somehow
+        frm_entry.pack(anchor=W)
 
         Label(frm_entry, text='K, mmol/L').grid(row=1, column=0)
         self.ctl_sbx_K = Spinbox(frm_entry, width=3, from_=0, to=15,
@@ -384,7 +384,7 @@ class CalcGFR(Frame):
         self.human_model = human_model
 
         frm_entry = Frame(self)
-        frm_entry.pack(fill=BOTH)
+        frm_entry.pack(anchor=W)
 
         Label(frm_entry, text="cCrea, μmol/L").pack(side=LEFT)
         self.ctl_sbx_ccrea = Spinbox(frm_entry, width=4, from_=0.0, to=1000.0,

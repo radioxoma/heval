@@ -320,13 +320,7 @@ class HumanModel(object):
             return "Don't know how to calculate electrolytes for paed. Check Курек 2013 расчёт дефицита K, Na стр. 130"
 
     def _info_in_energy(self):
-        """Basal metabolic rate.
-
-        https://en.wikipedia.org/wiki/Basal_metabolic_rate
-
-        Формула энергетической потребности из пособия дежуранта:
-        :param float self.height: Height in meters
-        :return: kcal per 24 hours
+        """
 
         Взрослый мужчина
         3. Суточная потребность в энергии составляет 24-30 ккал/кг [тесты БелМАПО]
@@ -363,7 +357,6 @@ class HumanModel(object):
         сравнению с использованием упрощенного предиктивного уравнения" [Костючёнко 2016, с. 9]
         BMR [Harris—Benedict equation](https://en.wikipedia.org/wiki/Harris%E2%80%93Benedict_equation)
         The Mifflin St Jeor Equation is better?
-
         """
         info = ''
         if self.sex in ('male', 'female'):
@@ -506,6 +499,78 @@ def body_surface_area(height, weight):
     return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
 
 
+def bmr_harris_benedict(height, weight, sex, age):
+    """Basal metabolic rate, revised Harris-Benedict equation (1984).
+
+    Examples
+    --------
+
+    >>> bmr_harris_benedict(168, 59, 'female', 55)
+    1275.4799999999998
+
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
+    [2] Roza AM, Shizgal HM (1984). "The Harris Benedict equation reevaluated:
+        resting energy requirements and the body cell mass" (PDF).
+        The American Journal of Clinical Nutrition. 40 (1): 168–182.
+
+    :param float height: Height, meters
+    :param float weight: Weight, kg
+    :param str sex: Choose 'male', 'female'.
+    :param float age: Age, years
+    :return: 
+        BMR kcal/24h
+    :rtype:
+        float
+    """
+    if sex == 'male':
+        bmr = 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
+    elif sex == 'female':
+        bmr = 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
+    elif sex == 'paed':
+        raise ValueError("Harris-Benedict equation BMR calculation for paed not supported")
+    return bmr
+
+
+def bmr_mifflin(height, weight, sex, age):
+    """Basal metabolic rate, Mifflin St Jeor Equation (1990).
+
+    Considered as more accurate than revised Harris-Benedict equation.
+
+    Examples
+    --------
+
+    >>> bmr_mifflin(168, 59, 'female', 55)
+    1204.0
+
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
+    [2] Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO (1990).
+        "A new predictive equation for resting energy expenditure in healthy
+        individuals". 
+        The American Journal of Clinical Nutrition. 51 (2): 241–247. 
+
+    :param float height: Height, meters
+    :param float weight: Weight, kg
+    :param str sex: Choose 'male', 'female'.
+    :param float age: Age, years
+    :return: 
+        BMR kcal/24h
+    :rtype:
+        float
+    """
+    bmr = 10 * weight + 6.25 * height * 100 - 5 * age
+    if sex == 'male':
+        bmr += 5
+    elif sex == 'female':
+        bmr -= 161
+    elif sex == 'paed':
+        raise ValueError("Mufflin BMR calculation for paed not supported")
+    return bmr
+
+
 def mean_arterial_pressure(SysP, DiasP):
     """Расчёт Среднего АД (mean arterial pressure, MAP)
 
@@ -639,10 +704,12 @@ WETFlAG report for {} yo, weight {} kg paed:
 
 
 if __name__ == '__main__':
-    HModel = HumanModel()
-    HModel.sex = male_thin['sex']
-    HModel.height = male_thin['height']
-    HModel.use_ibw = True
+    # HModel = HumanModel()
+    # HModel.sex = male_thin['sex']
+    # HModel.height = male_thin['height']
+    # HModel.use_ibw = True
     # HModel.weight = male_thin['weight']
-    print(HModel)
-    print(HModel.medication())
+    # print(HModel)
+    # print(HModel.medication())
+    print(bmr_harris_benedict(168/100, 59, 'female', 55))
+    print(bmr_mifflin(168/100, 59, 'female', 55))

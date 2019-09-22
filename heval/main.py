@@ -392,7 +392,7 @@ class CalcGFR(Frame):
         self.ctl_sbx_ccrea.pack(side='left')
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
-        Label(frm_entry, text="Age").pack(side='left')
+        Label(frm_entry, text="Age, years").pack(side='left')
         self.ctl_sbx_age = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_age)
         self.ctl_sbx_age.bind("<Return>", self.set_model_age)

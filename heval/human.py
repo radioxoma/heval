@@ -143,6 +143,7 @@ class HumanModel(object):
         :param value bool: Use or not IBW, bool
         """
         self._use_ibw = value
+        self.reinit()
 
     @property
     def sex(self):

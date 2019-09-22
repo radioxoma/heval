@@ -55,6 +55,7 @@ class MainWindow(Tk):
 
         nb = Notebook(self)
         self.create_input()
+        self.set_input_defaults()
         self.MText = MainText(nb, self.HModel)
         self.AInterpreter = ABGInterpreter(nb)
         self.CElectrolytes = CalcElectrolytes(nb, self.HModel)
@@ -63,13 +64,16 @@ class MainWindow(Tk):
         nb.add(self.AInterpreter, text='ABG')
         nb.add(self.CElectrolytes, text='Electrolytes')
         nb.add(self.CGFR, text='eGFR')
-        self.set_input_defaults()
         nb.pack(expand=True, fill=BOTH)
 
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
         self.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
+        self.bind('<<HumanModelChanged>>', self.MText.print)
+        self.bind('<<HumanModelChanged>>', self.AInterpreter.print, add='+')
+        self.bind('<<HumanModelChanged>>', self.CElectrolytes.print, add='+')
+        self.bind('<<HumanModelChanged>>', self.CGFR.print, add='+')
 
         # self.statusbar_str = StringVar()
         # self.statusbar_str.set("Hello world!")
@@ -94,7 +98,7 @@ class MainWindow(Tk):
 
         self.var_use_ibw = IntVar()  # No real body weight
         self.var_use_ibw.set(1)
-        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_ui_use_ibw)
+        self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_model_use_ibw)
         self.ctl_use_ibw_cb.pack(side=LEFT)
         CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
 
@@ -121,55 +125,57 @@ class MainWindow(Tk):
         self.ctl_sex.current(0)
         self.set_model_sex()
 
-        self.ctl_height.delete(0, 'end')
+        self.ctl_height.delete(0, END)
         self.ctl_height.insert(0, 186)  # cm
         self.set_model_height()
 
         # Can't change widget value while it being disabled, so here is a trick
         self.ctl_weight['state'] = NORMAL
-        self.ctl_weight.delete(0, 'end')
+        self.ctl_weight.delete(0, END)
         self.ctl_weight.insert(0, 55.0)  # kg
         self.ctl_weight['state'] = self.lbl_weight['state']
         self.set_model_weight()
 
         self.var_use_ibw.set(1)
-        self.set_ui_use_ibw()
+        self.set_model_use_ibw()
 
-        self.ctl_sbx_temp.delete(0, 'end')
+        self.ctl_sbx_temp.delete(0, END)
         self.ctl_sbx_temp.insert(0, 36.6)  # celsus degrees
         self.set_model_body_temp()
 
     def set_model_sex(self, event=None):
         self.HModel.sex = self.ctl_sex.get().lower()
-        self.MText.print()
+        self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
         self.HModel.height = float(self.ctl_height.get()) / 100
         if self.HModel.use_ibw:
             self.ctl_weight['state'] = NORMAL
-            self.ctl_weight.delete(0, 'end')
+            self.ctl_weight.delete(0, END)
             self.ctl_weight.insert(0, round(self.HModel.weight, 1))
             self.ctl_weight['state'] = self.lbl_weight['state']
-        self.MText.print()
+        self.event_generate("<<HumanModelChanged>>")
 
     def set_model_weight(self, event=None):
         self.HModel.weight = float(self.ctl_weight.get())
-        self.MText.print()
+        self.event_generate("<<HumanModelChanged>>")
 
     def set_model_body_temp(self, event=None):
         self.HModel.body_temp = float(self.ctl_sbx_temp.get())
-        self.MText.print()
+        self.event_generate("<<HumanModelChanged>>")
 
-    def set_ui_use_ibw(self, event=None):
+    def set_model_use_ibw(self, event=None):
         if self.var_use_ibw.get() == 0:
+            self.HModel.use_ibw = False
             self.lbl_weight['state'] = NORMAL
             self.ctl_weight['state'] = NORMAL
-            self.HModel.use_ibw = False
         else:
-            self.lbl_weight['state'] = DISABLED
-            self.ctl_weight['state'] = DISABLED
             self.HModel.use_ibw = True
-        self.MText.print()
+            self.ctl_weight.delete(0, END)
+            self.ctl_weight.insert(0, round(self.HModel.weight, 1))
+            self.ctl_weight['state'] = DISABLED
+            self.lbl_weight['state'] = DISABLED
+        self.event_generate("<<HumanModelChanged>>")
 
 
 class TextView(Frame):
@@ -428,7 +434,7 @@ class CalcGFR(Frame):
 
     def set_model_age(self, event=None):
         self.human_model.age = float(self.ctl_sbx_age.get())
-        self.print()
+        self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
         sex = self.human_model.sex

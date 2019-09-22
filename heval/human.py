@@ -30,7 +30,6 @@ Function parameters tends to be in International System of Units.
 * Дозировки некоторых лекарственных стредсв
 
 Неизвестно:
-* Клиренс креатинина (используй IBW)
 * АД, ЧСС, ЧД.
 """
 
@@ -320,22 +319,17 @@ class HumanModel(object):
             return "Don't know how to calculate electrolytes for paed. Check Курек 2013 расчёт дефицита K, Na стр. 130"
 
     def _info_in_energy(self):
-        """
+        """Attempt to calculate energy requirements for an human.
 
         Взрослый мужчина
         3. Суточная потребность в энергии составляет 24-30 ккал/кг [тесты БелМАПО]
         1. _Минимальная_ дневная потребность в глюкозе 2 г/кг в сутки
         2. Дневная потребность в аминокислотах 0,7 г/кг в сутки
         4. Суточная потребность в жирах 2 г/кг в сутки
-        Суточная энергетическая потребность 25-30 ккал/кг
-        glucosae = 3.74 kcal/g [https://en.wikipedia.org/wiki/Glucose]
-            Или 4.1 kcal/g?
-        жир = 9 kcal/g  [http://lekmed.ru/info/literatyra/intensivnaya-terapiya.-okonchanie_8.html]
 
-        Толстым - на идеальный, истощённым на реальный [РМАНПО]
+        Толстым рассчитывать на идеальный, истощённым на реальный [РМАНПО]
         Углеводы <=5-6 г/кг/24h если выше, то риск жирового гепатоза [РМАНПО]
         Липиды <=0.2 г/кг/час независимо от возраста [Курек 2013], 0.15 г/кг/час [РМАНПО]
-
 
         Нейрореаниматология: практическое руководство 2017
         --------------------------------------------------
@@ -345,39 +339,46 @@ class HumanModel(object):
 
         Белок 1-2 г/кг/сут (на 1 г белка должно быть >=150 ккал небелковых)
         Жир 1-1.5 г/кг/сут (30-35 % энергетических потребностей)
-        Угеводы 5-6 г/кг/сут (50-70 % небелковых карорий). Скорость окисления глюкозы у человека не быстрее 7 мг/кг/мин == 0,5 г/кг/ч,
+        Угеводы 5-6 г/кг/сут (50-70 % небелковых карорий). Скорость окисления глюкозы у человека не быстрее 7 мг/кг/мин ~ 0,5 г/кг/ч,
         поэтому вводить глюкозу не быстрее 5 мг/кг/мин.
 
-        Лейдерман И.Н. и соаторы 2004:
-            * Белки 4.2 ккал/г (5.4 при сжигании)
-            * Жиры 9.3 ккал/г
-            * Углеводы 4.1 ккал/г
+        Лейдерман И.Н. и соаторы 2004
+        -----------------------------
+          * Белки 4.2 ккал/г (5.4 при сжигании)
+          * Жиры 9.3 ккал/г
+          * Углеводы 4.1 ккал/г
 
-        "Использование формулы Харриса-Бенедикта не несет преимуществ по
-        сравнению с использованием упрощенного предиктивного уравнения" [Костючёнко 2016, с. 9]
-        BMR [Harris—Benedict equation](https://en.wikipedia.org/wiki/Harris%E2%80%93Benedict_equation)
-        The Mifflin St Jeor Equation is better?
+        Костючёнко Нутритивная терапия 2016, с. 9
+        -----------------------------------------
+          * Использование формулы Харриса-Бенедикта не несет преимуществ по
+            сравнению с использованием упрощенного предиктивного уравнения
+          * 25-30 kcal/kg/24h
+
+        Пособие дежуранта 2014
+        ----------------------
+          * Расчёт на идеальный вес "25 * (self.height * 100 - 100)" [с 232]
+          * Энергия 20-30 ккал/кг, ожоги – до 40 ккал/кг [с 238]
+          * Жидкость 20-40 мл/кг
+
+        Соотношение 1:1:4
+        Таблица 2, с 238.
+        Белки        1.0-1.5 г/кг, Аминокислоты 1.2-1.5 г/кг
+        Жиры         1.0-1.5 г/кг (30-40% от общей энергии)
+        Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
         """
         info = ''
         if self.sex in ('male', 'female'):
-            """Расчёт по пособию дежуранта, на реальный? вес
-            Таблица 2, пособие дежуранта (тут больше глюкозы, белков, меньше жиров)
-            Жидкость 20-40 мл/кг
-            Энергия 20-30 ккал/кг, ожоги – до 40 ккал/кг ИЛИ 25 * (self.height * 100 - 100)
-            Соотношение 1:1:4
-            Белки        1.0-1.5 г/кг, Аминокислоты 1.2-1.5 г/кг
-            Жиры         1.0-1.5 г/кг (30-40% от общей энергии)
-            Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
-            """
-            ## Won't use simplified formula from [ПосДеж] because of thin, obese and edema patients.
-            # 25 ккал/кг * (идеальная масса тела) для взрослых обеих полов [посдеж 2014, стр 232]
-            # expend = 25 * (self.height * 100 - 100)
-            # info += "Near IBW adult basal energy expenditure {:.0f} kcal/24h [ПосДеж]:\n".format(expend)
-
-            info += "IBW adult basal energy expenditure {:.0f} kcal/24h ({} kcal/kg/24h):\n".format(25 * self.weight_ideal, 25)
+            info += "Суточная потребность в энергии для взрослых [ПосДеж]:\n"
+            info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW):\n".format(25 * self.weight_ideal, 25)
             info += " * Аминокислоты {:3.0f}-{:3.0f} г/24h (1.2-1.5 г/кг/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Жиры         {:3.0f}-{:3.0f} г/24h (1.0-1.5 г/кг/24h) (30-40% от общей энергии)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Глюкоза      {:3.0f}-{:3.0f} г/24h (4.0-5.0 г/кг/24h) (60-70% от общей энергии)".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
+            info += " * Глюкоза      {:3.0f}-{:3.0f} г/24h (4.0-5.0 г/кг/24h) (60-70% от общей энергии)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
+            if self.age:
+                info += "Basal metabolic rate for adults:\n"
+                info += " * {:.0f} kcal/24h Harris-Benedict (1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(bmr_mifflin(self.height, self.weight, self.sex, self.age))
+            else:
+                info += "Enter age to calculate BMR"
         else:
             # Looks like paed needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
@@ -520,7 +521,7 @@ def bmr_harris_benedict(height, weight, sex, age):
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
     :return: 
-        BMR kcal/24h
+        BMR, kcal/24h
     :rtype:
         float
     """
@@ -557,7 +558,7 @@ def bmr_mifflin(height, weight, sex, age):
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
     :return: 
-        BMR kcal/24h
+        BMR, kcal/24h
     :rtype:
         float
     """

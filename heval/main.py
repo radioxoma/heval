@@ -82,41 +82,41 @@ class MainWindow(Tk):
         """One row of widgets."""
         frm_entry = Frame(self)
         frm_entry.pack(fill=BOTH)
-        Label(frm_entry, text='Sex').pack(side='left')
+        Label(frm_entry, text='Sex').pack(side=LEFT)
         self.ctl_sex = Combobox(frm_entry, values=['Male', 'Female', 'Paed'], width=7)
         self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
-        self.ctl_sex.pack(side='left')
+        self.ctl_sex.pack(side=LEFT)
         CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and infants")
 
-        Label(frm_entry, text='Height, cm').pack(side='left')
+        Label(frm_entry, text='Height, cm').pack(side=LEFT)
         self.ctl_height = Spinbox(frm_entry, width=3, from_=1, to=500, command=self.set_model_height)
         self.ctl_height.bind("<Return>", self.set_model_height)
-        self.ctl_height.pack(side='left')
+        self.ctl_height.pack(side=LEFT)
         CreateToolTip(self.ctl_height, "Height highly correlates with age, ideal body weight and body surface area")
 
         self.var_use_ibw = IntVar()  # No real body weight
         self.var_use_ibw.set(1)
         self.ctl_use_ibw_cb = Checkbutton(frm_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_ui_use_ibw)
-        self.ctl_use_ibw_cb.pack(side='left')
+        self.ctl_use_ibw_cb.pack(side=LEFT)
         CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
 
         self.lbl_weight = Label(frm_entry, text='Weight, kg')
-        self.lbl_weight.pack(side='left')
+        self.lbl_weight.pack(side=LEFT)
         self.ctl_weight = Spinbox(frm_entry, width=4, from_=1, to=500,
             format='%.1f', increment=1, command=self.set_model_weight)
         self.ctl_weight.bind("<Return>", self.set_model_weight)
-        self.ctl_weight.pack(side='left')
+        self.ctl_weight.pack(side=LEFT)
         CreateToolTip(self.ctl_weight, "Real body weight")
 
-        Label(frm_entry, text='Body temp, °C').pack(side='left')
+        Label(frm_entry, text='Body temp, °C').pack(side=LEFT)
         self.ctl_sbx_temp = Spinbox(frm_entry, width=4, from_=0.0, to=50.0,
             format='%.1f', increment=0.1, command=self.set_model_body_temp)
         self.ctl_sbx_temp.bind("<Return>", self.set_model_body_temp)
-        self.ctl_sbx_temp.pack(side='left')
+        self.ctl_sbx_temp.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_temp, "Axillary temperature, used for perspiration evaluation")
 
         reset = Button(frm_entry, text="Reset", command=self.set_input_defaults)
-        reset.pack(side='left')
+        reset.pack(side=LEFT)
         CreateToolTip(reset, "Drop changes for sex, height, real body weight, temp")
 
     def set_input_defaults(self, event=None):
@@ -268,7 +268,7 @@ class ABGInterpreter(Frame):
         frm_entry = Frame(self)
         frm_entry.pack(fill=BOTH)  # Aligns to left (not TOP center) somehow
 
-        Label(frm_entry, text='pH').grid(row=1, column=0)
+        Label(frm_entry, text="pH").grid(row=1, column=0)
         self.ctl_sbx_pH = Spinbox(frm_entry, width=4, from_=0, to=14,
             format='%.2f',
             increment=0.01,
@@ -279,7 +279,7 @@ class ABGInterpreter(Frame):
         button = Button(frm_entry, text="Reset", command=self.set_input_defaults)
         button.grid(row=1, column=2)
 
-        Label(frm_entry, text='pCO2, mmHg').grid(row=2, column=0)
+        Label(frm_entry, text="pCO2, mmHg").grid(row=2, column=0)
         self.ctl_sbx_pCO2 = Spinbox(frm_entry, width=4, from_=0.0, to=150.0,
             format='%.1f',
             increment=0.1,
@@ -385,28 +385,28 @@ class CalcGFR(Frame):
         frm_entry = Frame(self)
         frm_entry.pack(fill=BOTH)
 
-        Label(frm_entry, text="cCrea, μmol/L").pack(side='left')
+        Label(frm_entry, text="cCrea, μmol/L").pack(side=LEFT)
         self.ctl_sbx_ccrea = Spinbox(frm_entry, width=4, from_=0.0, to=1000.0,
             format='%.1f', increment=1, command=self.print)
         self.ctl_sbx_ccrea.bind("<Return>", self.print)
-        self.ctl_sbx_ccrea.pack(side='left')
+        self.ctl_sbx_ccrea.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
-        Label(frm_entry, text="Age, years").pack(side='left')
+        Label(frm_entry, text="Age, years").pack(side=LEFT)
         self.ctl_sbx_age = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_age)
         self.ctl_sbx_age.bind("<Return>", self.set_model_age)
-        self.ctl_sbx_age.pack(side='left')
+        self.ctl_sbx_age.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_age, "Human age, years")
 
         self.var_isblack = IntVar()  # No real body weight
         self.var_isblack.set(0)
         self.ctl_ckb_isblack = Checkbutton(frm_entry, variable=self.var_isblack, onvalue=1, offvalue=0, text="Black human", command=self.print)
-        self.ctl_ckb_isblack.pack(side='left')
+        self.ctl_ckb_isblack.pack(side=LEFT)
         CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
 
         self.reset = Button(frm_entry, text="Reset", command=self.set_input_defaults)
-        self.reset.pack(side='left')
+        self.reset.pack(side=LEFT)
         CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
 
         self.TxtView = TextView2(self)
@@ -485,7 +485,7 @@ class CreateToolTip(object):
         # Leaves only the label and removes the app window
         self.tw.wm_overrideredirect(True)
         self.tw.wm_geometry("+%d+%d" % (x, y))
-        label = Label(self.tw, text=self.text, justify='left',
+        label = Label(self.tw, text=self.text, justify=LEFT,
             background="#ffffff", relief='solid', borderwidth=1,
             wraplength=self.wraplength)
         label.pack(ipadx=1)

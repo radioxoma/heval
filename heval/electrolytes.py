@@ -43,7 +43,7 @@ def glucosae_solution(glu_mass, body_weight):
 
     Соотношение глюкоза/инсулин, видимо, верно для питания и для болюсов при гиперкалиемии.
 
-    * 1 ЕД на 3-5 г сухой глюкозы, скорость инфузии <= 0.5 г/кг/ч чтобы избежать глюкозурии [Мартов, Карманный справочник врача; RLSNET, Крылов Нейрореаниматология] (0.33-0.2 Ед/г)
+    * 1 ЕД на 3-5 г сухой глюкозы, скорость инфузии <= 0.5 г/кг/ч чтобы избежать глюкозурии [Мартов, Карманный справочник врача; RLSNET, Крылов Нейрореаниматология] (Ins 0.33-0.2 UI/г)
     * 1 ЕД на 4 г сухой глюкозы (если глюкозурия, то добавить инсулин или снизить скорость введения) [Курек, с 143; калькулятор BBraun; другие источники]
         * 0.25 IU/g
     """
@@ -63,7 +63,7 @@ def glucosae_solution(glu_mass, body_weight):
         speed_low = (g_low * body_weight) / dilution * 100
         speed_max = (g_max * body_weight) / dilution * 100
         vol = glu_mass / dilution * 100
-        info += " * Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.3f} g/kg/h)\n".format(dilution, vol, speed_low, speed_max, g_low, g_max)
+        info += " * Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.2f} g/kg/h)\n".format(dilution, vol, speed_low, speed_max, g_low, g_max)
     return info
 
 

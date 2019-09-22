@@ -285,7 +285,7 @@ class ABGInterpreter(Frame):
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
-        self.TxtView.set_text("Electrolyte calculations depend on body mass.")
+        self.print()
 
     def set_input_defaults(self):
         self.ctl_sbx_pH.delete(0, END)
@@ -409,7 +409,7 @@ class CalcGFR(Frame):
     def set_input_defaults(self, event=None):
         self.ctl_sbx_ccrea.delete(0, END)
         self.ctl_sbx_ccrea.insert(0, 75.0)
-        
+
         self.ctl_sbx_age.delete(0, END)
         self.ctl_sbx_age.insert(0, 40)
         self.set_model_age()
@@ -427,11 +427,15 @@ class CalcGFR(Frame):
             cCrea = float(self.ctl_sbx_ccrea.get())
             age = self.human_model.age
             black_skin = (self.var_isblack.get() == 1)
+            mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
+            epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)
             info = """\
-             MDRD\t{:.0f} mL/min/1.73 m2
-             CKD-EPI\t{:.0f} mL/min/1.73 m2""".format(
-                abg.egfr_mdrd(sex, cCrea, age, black_skin),
-                abg.egfr_ckd_epi(sex, cCrea, age, black_skin))
+            cCrea {:.2f} mg/dl
+            MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
+            CKD-EPI\t{:3.0f} mL/min/1.73 m2
+
+            {}
+            """.format(cCrea / 88.4, mdrd, epi, abg.gfr_describe(epi))
         else:
             info = "Don't know how to calculate eGFR in paed"
         self.TxtView.set_text(textwrap.dedent(info))

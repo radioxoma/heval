@@ -466,6 +466,8 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
 
     For patients >18 years. Appears as more accurate than MDRD, especially
     when actual GFR is greater than 60 mL/min per 1.73 m2.
+    Cahexy, limb loss will reduce creatinine production, so eGFR will look
+    better than it is.
 
     References
     ----------
@@ -497,6 +499,23 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     if black_skin:
         egfr *= 1.159
     return egfr
+
+
+def gfr_describe(gfr):
+    """Describe GFR value and stage Chronic Kidney Disease.
+    """
+    if 90 <= gfr:
+        return "Normal kidney function if no proteinuria, otherwise CKD1 (90-100 %)"
+    elif 60 <= gfr < 90:
+        return "CKD2 kidney damage with mild loss of kidney function (89-60 %). For most patients, a GFR over 60 mL/min/1.73 m2 is adequate."
+    elif 45 <= gfr < 60:
+        return "CKD3a, mild to moderate loss of kidney function (59-45 %)"
+    elif 30 <= gfr < 45:
+        return "CKD3b, moderate to severe loss of kidney function (44-30 %)"
+    elif 15 <= gfr < 30:
+        return "CKD4, severe loss of kidney function (29-15 %)"
+    else:
+        return "CKD5, kidney failure (<15 %)"
 
 
 def expected_pH(pCO2, status='acute'):

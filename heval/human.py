@@ -434,7 +434,7 @@ class HumanModel(object):
             weight_ideal = 0.9049 * height * 100 - 92.006  # kg
         elif sex == 'paed':
             if not 0.74 <= height <= 1.524:  # Ranges from paper
-                self.comment.append("WARNING: paed IBW estimation accurate only for height 0.74-1.524 m.\n".format(height))
+                print("WARNING: paed IBW estimation accurate only for height 0.74-1.524 m.\n".format(height))
             # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
             # For children over 74 cm and aged 1 to 17 years.
             weight_ideal = 2.396 * math.exp(0.01863 * height * 100)

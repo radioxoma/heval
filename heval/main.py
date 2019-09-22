@@ -30,7 +30,7 @@ class MainWindow(Tk):
         self.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.bind('<Escape>', lambda e: self.destroy())
         self.bind_all('<F1>', lambda e: messagebox.showinfo('Help', human.__abbr__))
-        # self.bind('<r>', lambda e: self.set_defaults())
+        # self.bind('<r>', lambda e: self.set_input_defaults())
         # self.bind('<Control-s>', lambda e: self.save_text())
         # self.bind('<Control-a>', lambda e: self.select_all())
         # self.bind('<Control-c>', lambda e: self.copy_text())
@@ -39,7 +39,7 @@ class MainWindow(Tk):
 
         menubar = Menu(self)
         menu_file = Menu(menubar, tearoff=0)
-        # menu_file.add_command(label="Reset values", command=self.set_defaults, accelerator="R")
+        # menu_file.add_command(label="Reset values", command=self.set_input_defaults, accelerator="R")
         # menu_file.add_command(label="Save text...", command=self.save_text, accelerator="Ctrl+S")
         menu_file.add_command(label="Exit", command=self.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
@@ -276,7 +276,7 @@ class ABGInterpreter(Frame):
         self.sbx_pH.bind("<Return>", self.print)
         self.sbx_pH.grid(row=1, column=1)  # Default pH 7.40
 
-        button = Button(frm_entry, text="Reset", command=self.set_defaults)
+        button = Button(frm_entry, text="Reset", command=self.set_input_defaults)
         button.grid(row=1, column=2)
 
         Label(frm_entry, text='pCO2, mmHg').grid(row=2, column=0)
@@ -290,9 +290,9 @@ class ABGInterpreter(Frame):
         self.txt = scrolledtext.ScrolledText(self)
         self.txt.config(font=('consolas', 10), undo=True, wrap='word')
         self.txt.pack(expand=True, fill=BOTH)
-        self.set_defaults()
+        self.set_input_defaults()
 
-    def set_defaults(self):
+    def set_input_defaults(self):
         self.sbx_pH.delete(0, END)
         self.sbx_pH.insert(0, '7.40')  # cm
         self.sbx_pCO2.delete(0, END)
@@ -350,15 +350,15 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_Cl.bind("<Return>", self.print)
         self.ctl_sbx_Cl.grid(row=3, column=1)
 
-        button = Button(frm_entry, text="Reset", command=self.set_defaults)
+        button = Button(frm_entry, text="Reset", command=self.set_input_defaults)
         button.grid(row=1, column=2)
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.set_defaults()
+        self.set_input_defaults()
         self.TxtView.set_text("Electrolyte calculations depend on body mass.")
 
-    def set_defaults(self, event=None):
+    def set_input_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
         self.ctl_sbx_K.insert(0, 4.0)
         self.ctl_sbx_Na.delete(0, END)
@@ -394,8 +394,8 @@ class CalcGFR(Frame):
 
         Label(frm_entry, text="Age").pack(side='left')
         self.ctl_sbx_age = Spinbox(frm_entry, width=3, from_=0.0, to=200.0,
-            format='%1.0f', increment=1, command=self.print)
-        self.ctl_sbx_age.bind("<Return>", self.print)
+            format='%1.0f', increment=1, command=self.set_model_age)
+        self.ctl_sbx_age.bind("<Return>", self.set_model_age)
         self.ctl_sbx_age.pack(side='left')
         CreateToolTip(self.ctl_sbx_age, "Human age, years")
 
@@ -417,16 +417,23 @@ class CalcGFR(Frame):
     def set_input_defaults(self, event=None):
         self.ctl_sbx_ccrea.delete(0, END)
         self.ctl_sbx_ccrea.insert(0, 75.0)
+        
         self.ctl_sbx_age.delete(0, END)
         self.ctl_sbx_age.insert(0, 40)
+        self.set_model_age()
+
         self.var_isblack.set(0)
+        self.print()
+
+    def set_model_age(self, event=None):
+        self.human_model.age = float(self.ctl_sbx_age.get())
         self.print()
 
     def print(self, event=None):
         sex = self.human_model.sex
         if sex in ('male', 'female'):
             cCrea = float(self.ctl_sbx_ccrea.get())
-            age = float(self.ctl_sbx_age.get())
+            age = self.human_model.age
             black_skin = (self.var_isblack.get() == 1)
             info = """\
              MDRD\t{:.0f} mL/min/1.73 m2

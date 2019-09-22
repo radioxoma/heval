@@ -83,6 +83,7 @@ class HumanModel(object):
     def __init__(self):
         self._height = None
         self._sex = None
+        self._age = None
         self.weight_ideal = None
         self._use_ibw = False
 
@@ -175,6 +176,15 @@ class HumanModel(object):
         Never use 'self._weight' directly beyond setter/getter code.
         """
         self._weight = value
+
+    @property
+    def age(self):
+        return self._age
+
+    @age.setter        
+    def age(self, value):
+        """Human age in years."""
+        self._age = value
 
     def reinit(self):
         if self._sex and self._height:

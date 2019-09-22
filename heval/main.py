@@ -64,7 +64,7 @@ class MainWindow(Tk):
         nb.add(self.AInterpreter, text='ABG')
         nb.add(self.CElectrolytes, text='Electrolytes')
         nb.add(self.CGFR, text='eGFR')
-        nb.pack(expand=True, fill=BOTH)
+        nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
 
         self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
@@ -83,7 +83,7 @@ class MainWindow(Tk):
     def create_input(self):
         """One row of widgets."""
         frm_entry = Frame(self)
-        frm_entry.pack(anchor=W)
+        frm_entry.pack(anchor=W, fill=Y)
         Label(frm_entry, text='Sex').pack(side=LEFT)
         self.ctl_sex = Combobox(frm_entry, values=['Male', 'Female', 'Paed'], width=7)
         self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
@@ -276,7 +276,7 @@ class ABGInterpreter(Frame):
         self.parent = parent
         # Create columns of widgets for ABG input
         frm_entry = Frame(self)
-        frm_entry.pack(anchor=W)  # Aligns to left (not TOP center) somehow
+        frm_entry.pack(anchor=W)
 
         Label(frm_entry, text="pH").grid(row=1, column=0)
         self.ctl_sbx_pH = Spinbox(frm_entry, width=4, from_=0, to=14,
@@ -284,7 +284,7 @@ class ABGInterpreter(Frame):
             increment=0.01,
             command=self.print)
         self.ctl_sbx_pH.bind("<Return>", self.print)
-        self.ctl_sbx_pH.grid(row=1, column=1)  # Default pH 7.40
+        self.ctl_sbx_pH.grid(row=1, column=1)
 
         button = Button(frm_entry, text="Reset", command=self.set_input_defaults)
         button.grid(row=1, column=2)

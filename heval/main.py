@@ -22,28 +22,27 @@ import abg
 import electrolytes
 
 
-class MainWindow(Tk):
-    def __init__(self):
+class MainWindow(Frame):
+    def __init__(self, parent=None):
         super(MainWindow, self).__init__()
 
+        self.parent = parent
+        self.parent.title("Heval — a human evaluator")
+        self.parent.geometry("600x420")
+        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.style = Style()
         self.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
-        self.bind('<Escape>', lambda e: self.destroy())
         self.bind_all('<F1>', lambda e: messagebox.showinfo('Help', human.__abbr__))
         # self.bind('<r>', lambda e: self.set_input_defaults())
         # self.bind('<Control-s>', lambda e: self.save_text())
         # self.bind('<Control-a>', lambda e: self.select_all())
         # self.bind('<Control-c>', lambda e: self.copy_text())
-        self.title("Heval — a human evaluator")
-        self.geometry("600x420")
-        self.MainFrame = Frame(self)
-        self.MainFrame.pack(expand=True, fill=BOTH)
 
-        menubar = Menu(self)
+        menubar = Menu(self.parent)
         menu_file = Menu(menubar, tearoff=0)
         # menu_file.add_command(label="Reset values", command=self.set_input_defaults, accelerator="R")
         # menu_file.add_command(label="Save text...", command=self.save_text, accelerator="Ctrl+S")
-        menu_file.add_command(label="Exit", command=self.destroy, accelerator="Esc")
+        menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
         menu_about = Menu(menubar, tearoff=0)
         menu_about.add_command(label="Help", 
@@ -51,11 +50,11 @@ class MainWindow(Tk):
         menu_about.add_command(label="About...",
             command=lambda: messagebox.showinfo('About', __description__))
         menubar.add_cascade(label="Help", menu=menu_about)
-        self['menu'] = menubar
+        self.parent['menu'] = menubar
 
         self.HModel = human.HumanModel()
 
-        nb = Notebook(self.MainFrame)
+        nb = Notebook(self)
         self.create_input()
         self.set_input_defaults()
         self.MText = MainText(nb, self.HModel)
@@ -84,7 +83,7 @@ class MainWindow(Tk):
 
     def create_input(self):
         """One row of input widgets."""
-        fr_entry = Frame(self.MainFrame)
+        fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
         Label(fr_entry, text='Sex').pack(side=LEFT)
         self.ctl_sex = Combobox(fr_entry, values=['Male', 'Female', 'Paed'], width=7)
@@ -510,9 +509,9 @@ class CreateToolTip(object):
 
 
 def main():
-    root = MainWindow()
+    root = Tk()
+    MainWindow(root).pack(expand=True, fill=BOTH)
     root.mainloop()
-
 
 if __name__ == '__main__':
     main()

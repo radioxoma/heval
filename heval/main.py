@@ -30,8 +30,8 @@ class MainWindow(Frame):
         self.parent.title("Heval — a human evaluator")
         self.parent.geometry("600x420")
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
-        self.style = Style()
-        self.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
+        self.parent.style = Style()
+        self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.bind_all('<F1>', lambda e: messagebox.showinfo('Help', human.__abbr__))
         # self.bind('<r>', lambda e: self.set_input_defaults())
         # self.bind('<Control-s>', lambda e: self.save_text())
@@ -67,10 +67,10 @@ class MainWindow(Frame):
         nb.add(self.CGFR, text='eGFR')
         nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
 
-        self.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
-        self.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
-        self.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
-        self.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
+        self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
+        self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
+        self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
+        self.parent.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
         self.bind('<<HumanModelChanged>>', self.MText.print)
         self.bind('<<HumanModelChanged>>', self.AInterpreter.print, add='+')
         self.bind('<<HumanModelChanged>>', self.CElectrolytes.print, add='+')
@@ -240,20 +240,17 @@ class TextView(Frame):
     #     self.clipboard_clear()
     #     self.clipboard_append(text)
 
-class TextView2(Frame):
-    def __init__(self, parent=None):
-        super(TextView2, self).__init__()
-        self.parent = parent
-        self.txt = scrolledtext.ScrolledText(self.parent, undo=True)
-        self.txt.config(font=('consolas', 10), undo=True, wrap='word')
-        self.txt.pack(expand=True, fill=BOTH)
+class TextView2(scrolledtext.ScrolledText):
+    def __init__(self, *args, **kwargs):
+        super(TextView2, self).__init__(*args, **kwargs)
+        self.config(font=('consolas', 10), wrap='word')
 
     def set_text(self, text):
         """Replace current text."""
-        self.txt['state'] = NORMAL
-        self.txt.delete(1.0, END)
-        self.txt.insert(END, text)
-        self.txt['state'] = DISABLED
+        self['state'] = NORMAL
+        self.delete(1.0, END)
+        self.insert(END, text)
+        self['state'] = DISABLED
 
 
 class MainText(Frame):
@@ -263,7 +260,7 @@ class MainText(Frame):
         self.human_model = human_model
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack()
+        self.TxtView.pack(expand=True, fill=BOTH)
         self.print()
 
     def print(self, event=None):
@@ -299,7 +296,7 @@ class ABGInterpreter(Frame):
         self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack()
+        self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
         self.print()
 
@@ -362,7 +359,7 @@ class CalcElectrolytes(Frame):
         button.grid(row=1, column=2)
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack()
+        self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
         self.TxtView.set_text("Electrolyte calculations depend on body mass.")
 
@@ -418,7 +415,7 @@ class CalcGFR(Frame):
         CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
 
         self.TxtView = TextView2(self)
-        self.TxtView.pack()
+        self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
         self.TxtView.set_text("Esimate glomerular filtration rate (eGFR)")
 

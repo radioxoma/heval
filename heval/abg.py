@@ -502,20 +502,20 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
 
 
 def gfr_describe(gfr):
-    """Describe GFR value and stage Chronic Kidney Disease.
+    """Describe GFR value meaning and stage of Chronic Kidney Disease.
     """
     if 90 <= gfr:
         return "Normal kidney function if no proteinuria, otherwise CKD1 (90-100 %)"
     elif 60 <= gfr < 90:
-        return "CKD2 kidney damage with mild loss of kidney function (89-60 %). For most patients, a GFR over 60 mL/min/1.73 m2 is adequate."
+        return "CKD2 kidney damage with mild loss of kidney function (89-60 %). For most patients, a GFR over 60 mL/min/1.73 m2 is adequate"
     elif 45 <= gfr < 60:
-        return "CKD3a, mild to moderate loss of kidney function (59-45 %)"
+        return "CKD3a, mild to moderate loss of kidney function (59-45 %). Evaluate progression"
     elif 30 <= gfr < 45:
-        return "CKD3b, moderate to severe loss of kidney function (44-30 %)"
+        return "CKD3b, moderate to severe loss of kidney function (44-30 %). Evaluate progression"
     elif 15 <= gfr < 30:
-        return "CKD4, severe loss of kidney function (29-15 %)"
+        return "CKD4, severe loss of kidney function (29-15 %). Be prepared for dialysis"
     else:
-        return "CKD5, kidney failure (<15 %)"
+        return "CKD5, kidney failure (<15 %). Needs dialysis or kidney transplant"
 
 
 def expected_pH(pCO2, status='acute'):

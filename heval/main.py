@@ -4,13 +4,16 @@
 __description__ = """\
 Please don't expect much from humans, nor this calculator.
 
-Written by Eugene Dvoretsky 2016-2019.
-Check source code for references and formulas.
-
 Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \
 Не используйте лекарственное средство, если не читали его инструкцию.
+
+Written by Eugene Dvoretsky 2016-2019. Check source code for references and formulas.
+
+Heval is a free software and licensed under the terms of GNU General Public License version 3.
 """
 
+
+import random
 import textwrap
 from tkinter import *
 from tkinter import messagebox
@@ -47,8 +50,9 @@ class MainWindow(Frame):
         menu_about = Menu(menubar, tearoff=0)
         menu_about.add_command(label="Help", 
             command=lambda: messagebox.showinfo('Help', human.__abbr__), accelerator="F1")
-        menu_about.add_command(label="About...",
-            command=lambda: messagebox.showinfo('About', __description__))
+        menu_about.add_command(label="About...", command=self.about)
+        menu_about.add_command(label="Visit website...",
+            command=self.visit_website)
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
 
@@ -80,6 +84,15 @@ class MainWindow(Frame):
         # self.statusbar_str.set("Hello world!")
         # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
         # statusbar.pack(side=BOTTOM, fill=X)
+
+    def about(self, event=None):
+        abouttext = __description__ + "And remember: {}".format(
+            random.choice(electrolytes.__EASTER_TEXT__))
+        messagebox.showinfo('About', abouttext)
+
+    def visit_website(self, event=None):
+        import webbrowser
+        webbrowser.open_new_tab("https://github.com/radioxoma/heval")
 
     def create_input(self):
         """One row of input widgets."""

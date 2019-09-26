@@ -34,11 +34,12 @@ Function parameters tends to be in International System of Units.
 """
 
 __abbr__ = """\
-RBW - real body weight, kg
-IBW - ideal body weight, kg, calculated
-BSA - body surface area, m^2, calculated
 BMI - body mass index, calculated
+BSA - body surface area, m^2, calculated
 CKD - chronic kidney disease
+eGFR - estimated glomerular filtration rate
+IBW - ideal body weight, kg, calculated
+RBW - real body weight, kg
 """
 
 # Average Belorussian male in 2008 >=18 years old

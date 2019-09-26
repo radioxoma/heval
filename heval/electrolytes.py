@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__EASTER_TEXT__ = ("It's got what plants crave", "It's got electrolytes!")
+__EASTER_TEXT__ = ("It's got what plants crave!", "It's got electrolytes!")
 M_NaHCO3 = 84  # g/mol or mg/mmol
 M_C6H12O6 = 180
 M_NaCl = 58.5

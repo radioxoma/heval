@@ -627,15 +627,17 @@ def abg2(pH, pCO2, HCO3=None):
         HCO3 = calculate_hco3(pH, pCO2)
 
     # Assess respiratory problem
-    print("y = ΔpH/ΔpCO2×100 = {:.2f}".format((7.4 - pH) / (pCO2 - 40.0) * 100))
+    info = ""
+    info += "y = ΔpH/ΔpCO2×100 = {:.2f}\n".format((7.4 - pH) / (pCO2 - 40.0) * 100)
 
     # Expected pH (acute, chronic)
-    print("pH\t\tby Genderson\texpected {:.2f} .. {:.2f} acute-chronic".format(
-        7.4 + 0.008 * (40 - pCO2), 7.4 + 0.003 * (40 - pCO2)))
+    info += "pH\t\tby Genderson\texpected {:.2f} .. {:.2f} acute-chronic\n".format(
+        7.4 + 0.008 * (40 - pCO2), 7.4 + 0.003 * (40 - pCO2))
 
     # Winter's formula (acidosis, alkalosis)
-    print("pCO2\tby Winter (x)\texpected {:.1f}±2 .. {:.1f}±1.5"
-          " acidisis-alkalosis".format(1.5 * HCO3 + 8, 0.7 * HCO3 + 20))
+    info += "pCO2\tby Winter (x)\texpected {:.1f}±2 .. {:.1f}±1.5 acidisis-alkalosis\n".format(
+        1.5 * HCO3 + 8, 0.7 * HCO3 + 20)
+    return info
 
 
 def describe_pH(pH, pCO2):
@@ -650,12 +652,10 @@ def describe_pH(pH, pCO2):
     info = """\
     pCO2    {:2.1f} kPa
     HCO3(P) {:2.1f} mmol/L
-    HCO3    {:2.1f} mmol/L
     SBE     {:2.1f} mEq/L
     Result: {}""".format(
         pCO2,
         calculate_hco3p(pH, pCO2),
-        calculate_hco3(pH, pCO2),
         calculate_cbase(pH, pCO2),
         abg(pH, pCO2))
     return textwrap.dedent(info)
@@ -666,8 +666,8 @@ def describe(pH, pCO2):
     info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f}".format(
         pH, pCO2 / kPa, HCO3act, calculate_be(pH, HCO3act=HCO3act))
     print(info)
-    print(abg(pH, pCO2))
-    abg2(pH, pCO2)
+    print("Abg 1: {}".format(abg(pH, pCO2)))
+    print("Abg 2: {}".format(abg2(pH, pCO2)))
 
 
 def test():

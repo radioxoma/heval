@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 __description__ = """\
-Please don't expect much from humans, nor this calculator.
-
 Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \
 Не используйте лекарственное средство, если не читали его инструкцию.
 
@@ -12,11 +10,9 @@ Written by Eugene Dvoretsky 2016-2019. Check source code for references and form
 Heval is a free software and licensed under the terms of GNU General Public License version 3.
 """
 
-
 import random
 import textwrap
 from tkinter import *
-from tkinter import messagebox
 from tkinter import scrolledtext
 from tkinter import filedialog
 from tkinter.ttk import *
@@ -127,13 +123,13 @@ class MainWindow(Frame):
         self.set_model_sex()
 
         self.ctl_height.delete(0, END)
-        self.ctl_height.insert(0, 186)  # cm
+        self.ctl_height.insert(0, 177)  # cm
         self.set_model_height()
 
         # Can't change widget value while it being disabled, so here is a trick
         self.ctl_weight['state'] = NORMAL
         self.ctl_weight.delete(0, END)
-        self.ctl_weight.insert(0, 55.0)  # kg
+        self.ctl_weight.insert(0, 69.0)  # kg
         self.ctl_weight['state'] = self.lbl_weight['state']
         self.set_model_weight()
 
@@ -395,13 +391,13 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_Na.bind("<Return>", self.print)
         self.ctl_sbx_Na.grid(row=2, column=1)
 
-        Label(fr_entry, text='Cl, mmol/L').grid(row=3, column=0)
+        # Label(fr_entry, text='Cl, mmol/L').grid(row=3, column=0)
         self.ctl_sbx_Cl = Spinbox(fr_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f',
             increment=1,
             command=self.print)
         self.ctl_sbx_Cl.bind("<Return>", self.print)
-        self.ctl_sbx_Cl.grid(row=3, column=1)
+        # self.ctl_sbx_Cl.grid(row=3, column=1)
 
         button = Button(fr_entry, text="Reset", command=self.set_input_defaults)
         button.grid(row=1, column=2)

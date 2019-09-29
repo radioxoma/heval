@@ -90,7 +90,6 @@ class HumanModel(object):
 
         self.comment = list()
         self.weight = None
-        # self.age = age
         self.body_temp = 36.6
         self.drug_list = [
             Fentanyl(self),
@@ -105,6 +104,7 @@ class HumanModel(object):
             return "Human model not initialized with data"
         # Nutrition status
         info = "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
+        info += " IBW {:.1f} kg,".format(self.weight_ideal)
         bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
         if self.sex in ('male', 'female'):
             info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())

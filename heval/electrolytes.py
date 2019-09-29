@@ -52,11 +52,13 @@ def glucosae_solution(glu_mass, body_weight):
     insulinum = glu_mass * ins_dosage
 
     # Glucose nutrition
+    # Heat of combustion, higher value is 670 kcal/mol ~ 3.74 kcal/g https://en.wikipedia.org/wiki/Glucose
+    # Usually referenced as 4.1 kcal/g
     # It's convenient to start with 0.15-0.2 g/kg/h, increasing speed up
     # to 0.5 g/kg/h. If hyperglycemia occurs, slow down or add more insulinum
     # to avoid glycosuria:
     # Hyperglycemia -> renal threshold (8.9-10 mmol/L) -> glycosuria
-    info = "Glu {:.3f} g ({:.2f} mmol) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, insulinum, ins_dosage)
+    info = "Glu {:.3f} g ({:.2f} mmol, {:.0f} kcal) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, glu_mass * 4.1, insulinum, ins_dosage)
 
     for dilution in (5, 10, 40):
         g_low, g_max = 0.15, 0.5  # g/kg/h
@@ -121,12 +123,12 @@ def kurek_electrolytes_K(weight, K_serum):
 
     info = ''
     if K_serum < K_low:
-        info += "K is dangerously low (<{:.0f} mmol/L). Often associated with low Mg - should be at least 1 mmol/L and low Cl-.\n".format(K_low)
-        info += 'NB! Potassium calculations considered inaccurate, so use standard replacement speed and check ABG every 2-4 hours\n'
+        info += "K is dangerously low (<{:.0f} mmol/L). Often associated with low Mg (Mg should be at least 1 mmol/L) and low Cl-.\n".format(K_low)
+        info += "NB! Potassium calculations considered inaccurate, so use standard replacement speed and check ABG every 2-4 hours: "
         if weight < 40:
             info += "KCl {:.0f}-{:.0f} mmol/h for paed.\n".format(0.25 * weight, 0.5 * weight)
         else:
-            info += "KCl 10-20 mmol/h (standard speed) for all adults will be ok\n"
+            info += "KCl 10-20 mmol/h (standard speed) for all adults will be ok.\n"
 
         # coefficient = 0.45  # новорождённые
         # coefficient = 0.4   # грудные
@@ -136,7 +138,7 @@ def kurek_electrolytes_K(weight, K_serum):
         K_deficiency = (K_target - K_serum) * weight * coefficient
         # K_deficiency += weight * 1  # mmol/kg/24h Should I add also суточная потребность?
 
-        info += "Estimated paed? K_deficiency is {:.0f} mmol + ".format(K_deficiency)
+        info += "Estimated K_deficiency (for paed too?) is {:.0f} mmol + ".format(K_deficiency)
         if K_deficiency > 4 * weight:
             info += "Too much potassium for 24 hours"
 

@@ -26,9 +26,8 @@ import electrolytes
 
 
 class MainWindow(Frame):
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__()
-
+    def __init__(self, parent=None, *args, **kwargs):
+        super(MainWindow, self).__init__(parent, *args, **kwargs)
         self.parent = parent
         self.parent.title("Heval — a human evaluator")
         self.parent.geometry("600x420")
@@ -194,7 +193,7 @@ class MainWindow(Frame):
 
 class TextView(Frame):
     def __init__(self, parent=None):
-        super(TextView, self).__init__()
+        super(TextView, self).__init__(parent)
         self.parent = parent
 
         frm_txt = Frame(self, width=450, height=300)
@@ -268,7 +267,7 @@ class TextView2(scrolledtext.ScrolledText):
 
 class MainText(Frame):
     def __init__(self, parent, human_model):
-        super(MainText, self).__init__()
+        super(MainText, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
@@ -283,7 +282,7 @@ class MainText(Frame):
 
 class ABGInterpreter(Frame):
     def __init__(self, parent=None):
-        super(ABGInterpreter, self).__init__()
+        super(ABGInterpreter, self).__init__(parent)
         self.parent = parent
         # Create columns of widgets for ABG input
         fr_entry = Frame(self)
@@ -337,7 +336,7 @@ class ABGInterpreter(Frame):
 
 class CalcElectrolytes(Frame):
     def __init__(self, parent, human_model):
-        super(CalcElectrolytes, self).__init__()
+        super(CalcElectrolytes, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
         # Create columns of widgets for input
@@ -396,7 +395,7 @@ class CalcElectrolytes(Frame):
 class CalcGFR(Frame):
     """Esimate glomerular filtration rate (eGFR)"""
     def __init__(self, parent, human_model):
-        super(CalcGFR, self).__init__()
+        super(CalcGFR, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 

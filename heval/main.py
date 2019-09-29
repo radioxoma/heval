@@ -354,16 +354,8 @@ class ABGInterpreter(Frame):
     def print(self, event=None):
         pH = float(self.ctl_sbx_pH.get())
         pCO2 = float(self.ctl_sbx_pCO2.get())
-        info = """\
-        pCO2    {:2.1f} kPa
-        HCO3(P) {:2.1f} mmol/L
-        SBE     {:2.1f} mEq/L
-        Result: {}""".format(
-            pCO2 * 0.133322368,
-            abg.calculate_hco3p(pH, pCO2 * 0.133322368),  # to kPa
-            abg.calculate_cbase(pH, pCO2 * 0.133322368),
-            abg.abg(pH, pCO2))
-        self.TxtView.set_text(textwrap.dedent(info))
+        info = abg.describe_pH(pH, pCO2 * 0.133322368)  # to kPa
+        self.TxtView.set_text(info)
 
 
 class CalcElectrolytes(Frame):

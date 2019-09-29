@@ -21,8 +21,7 @@ a00e5f337bd2c65e513fda1202827c6a ABL800 Operators Manual English US.pdf
 I do not perform any algebraic optimization.
 """
 
-from __future__ import absolute_import
-from __future__ import division
+import textwrap
 try:
     from uncertainties import umath as math
 except ImportError:
@@ -542,7 +541,7 @@ def abg(pH, pCO2):
     http://en.wikipedia.org/wiki/Arterial_blood_gas
 
     :param float pH:
-    :param float pCO2: mmHg
+    :param float pCO2: kPa
     :return:
         Opinion.
     :rtype: unicode
@@ -550,6 +549,7 @@ def abg(pH, pCO2):
     # https://www.kernel.org/doc/Documentation/CodingStyle
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.
+    pCO2 /= 0.133322368
 
     def check_metabolic(pH, pCO2):
         """Check metabolic status by expected pH level.
@@ -638,6 +638,27 @@ def abg2(pH, pCO2, HCO3=None):
     # Winter's formula (acidosis, alkalosis)
     print("pCO2\tby Winter (x)\texpected %.1f±2 .. %.1f±1.5"
           " acidisis-alkalosis" % (1.5 * HCO3 + 8, 0.7 * HCO3 + 20))
+
+
+def describe_pH(pH, pCO2):
+    """An old implementation considered stable.
+
+    :param float pH:
+    :param float pCO2: kPa
+    :return:
+        Opinion.
+    :rtype: unicode
+    """
+    info = """\
+    pCO2    {:2.1f} kPa
+    HCO3(P) {:2.1f} mmol/L
+    SBE     {:2.1f} mEq/L
+    Result: {}""".format(
+        pCO2,
+        calculate_hco3p(pH, pCO2),
+        calculate_cbase(pH, pCO2),
+        abg(pH, pCO2))
+    return textwrap.dedent(info)
 
 
 def describe(pH, pCO2):

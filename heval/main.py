@@ -34,7 +34,7 @@ class MainWindow(Frame):
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.parent.style = Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
-        self.bind_all('<F1>', lambda e: messagebox.showinfo('Help', human.__abbr__))
+        self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
         # self.bind('<r>', lambda e: self.set_input_defaults())
         # self.bind('<Control-s>', lambda e: self.save_text())
         # self.bind('<Control-a>', lambda e: self.select_all())
@@ -47,11 +47,8 @@ class MainWindow(Frame):
         menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
         menu_about = Menu(menubar, tearoff=0)
-        menu_about.add_command(label="Help", 
-            command=lambda: messagebox.showinfo('Help', human.__abbr__), accelerator="F1")
-        menu_about.add_command(label="About...", command=self.about)
-        menu_about.add_command(label="Visit website...",
-            command=self.visit_website)
+        menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
+        menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
 
@@ -83,15 +80,6 @@ class MainWindow(Frame):
         # self.statusbar_str.set("Hello world!")
         # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
         # statusbar.pack(side=BOTTOM, fill=X)
-
-    def about(self, event=None):
-        abouttext = __description__ + "And remember: {}".format(
-            random.choice(electrolytes.__EASTER_TEXT__))
-        messagebox.showinfo('About', abouttext)
-
-    def visit_website(self, event=None):
-        import webbrowser
-        webbrowser.open_new_tab("https://github.com/radioxoma/heval")
 
     def create_input(self):
         """One row of input widgets."""
@@ -189,6 +177,54 @@ class MainWindow(Frame):
             self.ctl_weight['state'] = DISABLED
             self.lbl_weight['state'] = DISABLED
         self.event_generate("<<HumanModelChanged>>")
+
+
+class HelpWindow(Toplevel):
+    def __init__(self, parent=None):
+        super(HelpWindow, self).__init__(parent)
+        self.parent = parent
+        x = self.parent.winfo_x()
+        y = self.parent.winfo_y()
+        self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
+        self.title('Help')
+
+        self.lbl = Label(self, text=human.__abbr__, wraplength=500)
+        self.lbl.pack(expand=True, fill=BOTH)
+
+        self.ctl_frame = Frame(self)
+        self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
+        self.ctl_btn_close.pack(side=RIGHT)
+        self.ctl_frame.pack(expand=True, fill=BOTH)
+        self.bind('<Escape>', lambda e: self.destroy())
+        self.focus_set()
+
+
+class AboutWindow(Toplevel):
+    def __init__(self, parent=None):
+        super(AboutWindow, self).__init__(parent)
+        self.parent = parent
+        x = self.parent.winfo_x()
+        y = self.parent.winfo_y()
+        self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
+        self.title('About')
+
+        abouttext = __description__ + "And remember: {}".format(
+            random.choice(electrolytes.__EASTER_TEXT__))
+        self.lbl = Label(self, text=abouttext, wraplength=500)
+        self.lbl.pack(expand=True, fill=BOTH)
+
+        self.ctl_frame = Frame(self)
+        self.ctl_btn_website = Button(self.ctl_frame, text="Visit website", command=self.visit_website)
+        self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
+        self.ctl_btn_close.pack(side=RIGHT)
+        self.ctl_btn_website.pack(side=RIGHT)
+        self.ctl_frame.pack(expand=True, fill=BOTH)
+        self.bind('<Escape>', lambda e: self.destroy())
+        self.focus_set()
+
+    def visit_website(self, event=None):
+        import webbrowser
+        webbrowser.open_new_tab("https://github.com/radioxoma/heval")
 
 
 class TextView(Frame):

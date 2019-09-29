@@ -128,14 +128,14 @@ def calculate_hco3(pH, pCO2):
     [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
 
     :param float pH:
-    :param float pCO2: mmHg
+    :param float pCO2: kPa
     :return:
         HCO3act mmol/L.
     :rtype: float
     """
     # 0.03 - CO2 solubility coefficient mmol/L/hg
     # 6.1 - dissociation constant for H2CO3
-    return 0.03 * pCO2 * 10 ** (pH - 6.1)
+    return 0.03 * pCO2 / kPa * 10 ** (pH - 6.1)
 
 
 def calculate_hco3p(pH, pCO2):
@@ -164,9 +164,7 @@ def calculate_hco3p(pH, pCO2):
     :rtype: float
     """
     pKp = 6.125 - math.log10(1 + 10 ** (pH - 8.7))  # Dissociation constant
-    # 1 mmHg = 0.133322368 kPa
     # aCO2(P) solubility coefficient for 37 °С = 0.230 mmol/L/kPa
-    # pCO2 *= 0.133322368  # mmHg to kPa
     return 0.230 * pCO2 * 10 ** (pH - pKp)
 
 
@@ -197,10 +195,13 @@ def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     return 24.47 + 0.919 * Z + Z * a * (Z - 8)
 
 
-def calculate_be(pH, pCO2, HCO3act):
+def calculate_be(pH, HCO3act):
     """Calculate base excess (BE), Siggaard Andersen approximation.
 
     Synonym for cBase(Ecf) and SBE?
+
+    To reproduce original [1] calculations:
+    calculate_be(calculate_hco3(pH, pCO2))
 
 
     References
@@ -210,7 +211,7 @@ def calculate_be(pH, pCO2, HCO3act):
     [2] http://www.acid-base.com/computing.php
 
     :param float pH:
-    :param float pCO2: mmHg
+    :param float HCO3act: mmol/L
     :return:
         Base excess, mEq/L.
     :rtype: float
@@ -243,7 +244,6 @@ def calculate_cbase(pH, pCO2, ctHb=3):
         Standard base excess (SBE) or actual base excess (ABE), mEq/L.
     :rtype: float
     """
-    # pCO2 *= 0.133322368  # mmHg to kPa
     a = 4.04 * 10 ** -3 + 4.25 * 10 ** -4 * ctHb
     pHHb = 4.06 * 10 ** -2 * ctHb + 5.98 - 1.92 * 10 ** (-0.16169 * ctHb)
     log_pCO2Hb = -1.7674 * (10 ** -2) * ctHb + 3.4046 + 2.12 * 10 ** (
@@ -324,10 +324,10 @@ def calculate_pCO2T(pCO2, t):
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-28, p. 264, equation 3.
 
-    :param float pCO2: kPa or mmHg (sic!)
+    :param float pCO2: kPa
     :param float t: Body temperature, °C.
     :return:
-        Partial pressure of CO2 at given temperature, kPa or mmHg.
+        Partial pressure of CO2 at given temperature, kPa
     :rtype: float
     """
     return pCO2 * 10 ** (0.021 * (t - 37))
@@ -361,15 +361,13 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
     # ctHb(mmol/L) == ctHb(g/dL) / 1.61140 == ctHb(g/dL) * 0.62058
     # Vol % == 2.241 (mmol/L)
     # By [1] p. 6-14 or 6-49.
-    # pO2 *= 0.133322368  # mmHg to kPa, 1 mmHg = 0.133322368 kPa
     # O2 solubility coefficient in blood at 37 °С.
     alphaO2 = 9.83 * 10 ** -3  # mmol/L/kPa
     return alphaO2 * pO2 + sO2 * (1 - FCOHb - FMetHb) * ctHb
 
 
 def calculate_pO2_FO2_fraction(pO2, FO2):
-    """Oxygen tension ratio of arterial blood and the fraction of oxygen
-    in dry inspired air.
+    """The ratio of pO2 and fraction of inspired oxygen.
 
     Also known as pO2(a)/FO2(I).
 
@@ -549,7 +547,7 @@ def abg(pH, pCO2):
     # https://www.kernel.org/doc/Documentation/CodingStyle
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.
-    pCO2 /= 0.133322368
+    pCO2 /= kPa
 
     def check_metabolic(pH, pCO2):
         """Check metabolic status by expected pH level.
@@ -629,15 +627,15 @@ def abg2(pH, pCO2, HCO3=None):
         HCO3 = calculate_hco3(pH, pCO2)
 
     # Assess respiratory problem
-    print("y = ΔpH/ΔpCO2×100 = %.2f" % ((7.4 - pH) / (pCO2 - 40.0) * 100))
+    print("y = ΔpH/ΔpCO2×100 = {:.2f}".format((7.4 - pH) / (pCO2 - 40.0) * 100))
 
     # Expected pH (acute, chronic)
-    print("pH\t\tby Genderson\texpected %.2f .. %.2f acute-chronic" % (
+    print("pH\t\tby Genderson\texpected {:.2f} .. {:.2f} acute-chronic".format(
         7.4 + 0.008 * (40 - pCO2), 7.4 + 0.003 * (40 - pCO2)))
 
     # Winter's formula (acidosis, alkalosis)
-    print("pCO2\tby Winter (x)\texpected %.1f±2 .. %.1f±1.5"
-          " acidisis-alkalosis" % (1.5 * HCO3 + 8, 0.7 * HCO3 + 20))
+    print("pCO2\tby Winter (x)\texpected {:.1f}±2 .. {:.1f}±1.5"
+          " acidisis-alkalosis".format(1.5 * HCO3 + 8, 0.7 * HCO3 + 20))
 
 
 def describe_pH(pH, pCO2):
@@ -652,18 +650,21 @@ def describe_pH(pH, pCO2):
     info = """\
     pCO2    {:2.1f} kPa
     HCO3(P) {:2.1f} mmol/L
+    HCO3    {:2.1f} mmol/L
     SBE     {:2.1f} mEq/L
     Result: {}""".format(
         pCO2,
         calculate_hco3p(pH, pCO2),
+        calculate_hco3(pH, pCO2),
         calculate_cbase(pH, pCO2),
         abg(pH, pCO2))
     return textwrap.dedent(info)
 
 
 def describe(pH, pCO2):
-    HCO3act = calculate_hco3p(pH, pCO2)
-    info = "pH %.2f, pCO2 %.2f, HCO3act %.2f, BE %+.2f" % (pH, pCO2, HCO3act, calculate_be(pH, pCO2, HCO3act))
+    HCO3act = calculate_hco3(pH, pCO2)
+    info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f}".format(
+        pH, pCO2 / kPa, HCO3act, calculate_be(pH, HCO3act=HCO3act))
     print(info)
     print(abg(pH, pCO2))
     abg2(pH, pCO2)
@@ -684,8 +685,8 @@ def test():
         (7.39, 47., None, "Resp. acidosis, met. alcalosis, full comp. (COPD)")
     )
     for v in variants:
-        describe(pH=v[0], pCO2=v[1])
-        print("[%s]\n" % v[3])
+        describe(pH=v[0], pCO2=v[1] * kPa)
+        print("[{}]\n".format(v[3]))
 
 
 if __name__ == '__main__':

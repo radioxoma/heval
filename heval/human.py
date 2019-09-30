@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
-from drugs import *
+from .drugs import *
 
 """
 Calculations based on human height and weight.
@@ -705,15 +705,3 @@ WETFlAG report for {} yo, weight {} kg paed:
     Adrenaline {:.0f} mcg
     Glucosae 10 % {:.0f} ml""".format(age, W, E, T, Fl, A, G)
     return info
-
-
-if __name__ == '__main__':
-    # HModel = HumanModel()
-    # HModel.sex = male_thin['sex']
-    # HModel.height = male_thin['height']
-    # HModel.use_ibw = True
-    # HModel.weight = male_thin['weight']
-    # print(HModel)
-    # print(HModel.medication())
-    print(bmr_harris_benedict(168/100, 59, 'female', 55))
-    print(bmr_mifflin(168/100, 59, 'female', 55))

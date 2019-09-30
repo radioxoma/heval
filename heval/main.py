@@ -16,9 +16,9 @@ from tkinter import *
 from tkinter import scrolledtext
 from tkinter import filedialog
 from tkinter.ttk import *
-import human
-import abg
-import electrolytes
+from . import human
+from . import abg
+from . import electrolytes
 
 
 class MainWindow(Frame):

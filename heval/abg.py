@@ -116,7 +116,7 @@ def calculate_mosm(Na, glucosae):
 def approx_hco3(pH, pCO2):
     """Concentration of HCO3 in plasma (actual bicarbonate).
 
-    May be known as HCO3act, cHCO3(P)).
+    Also known as cHCO3(P), HCO3act.
 
     Generic approximation of Henderson-Hasselbalch equation.
     Good for water solutions, lower precision in lipemia cases.
@@ -130,7 +130,7 @@ def approx_hco3(pH, pCO2):
     :param float pH:
     :param float pCO2: kPa
     :return:
-        HCO3act mmol/L.
+        cHCO3(P), mmol/L.
     :rtype: float
     """
     # 0.03 - CO2 solubility coefficient mmol/L/hg
@@ -141,7 +141,7 @@ def approx_hco3(pH, pCO2):
 def calculate_hco3p(pH, pCO2):
     """Concentration of HCO3 in plasma (actual bicarbonate).
 
-    May be known as HCO3act, cHCO3(P)) [1].
+    Also known as cHCO3(P), HCO3act [1].
 
     Sophisticated calculation by [1]. Good for water solutions,
     lower precision in lipemia cases.
@@ -171,10 +171,10 @@ def calculate_hco3p(pH, pCO2):
 def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     """Standard Bicarbonate, the concentration of HCO3- in the plasma
     from blood which is equilibrated with a gas mixture with
-    pCO2 = 5.33 kPa (40 mmHg) and
-    pO2 >= 13.33 kPa (100 mmHg) at 37 °С.
+    pCO2 = 5.33 kPa (40 mmHg) and pO2 >= 13.33 kPa (100 mmHg) at 37 °С.
+    (Normal pCO2 and pO2 level enough to saturate Hb.)
 
-    May be known as cHCO3(P,st)) [1].
+    Also known as cHCO3(P,st)) [1].
 
     References
     ----------
@@ -183,7 +183,7 @@ def calculate_hco3pst(pH, pCO2, ctHb, sO2):
         chapter 6-29, p. 265, equation 9.
 
     :param float pH:
-    :param float pCO2: kPa
+    :param float pCO2: CO2 partial pressure, kPa
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L
     :param float sO2: Fraction of saturated hemoglobin, fraction.
     :return:
@@ -223,7 +223,7 @@ def calculate_cbase(pH, pCO2, ctHb=3):
     """Calculate base excess.
 
     Calculate standard base excess, known as SBE, cBase(Ecf) or
-    actual base excess known as ABE, cBase(B).
+    actual base excess, known as ABE, cBase(B) if ctHb is given.
 
 
     References
@@ -239,7 +239,7 @@ def calculate_cbase(pH, pCO2, ctHb=3):
     :param float pH:
     :param float pCO2: kPa
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L
-        If not given, calculate cBase(Ecf), otherwise cBase(B).
+        If given, calculates ABE, if not - SBE.
     :return:
         Standard base excess (SBE) or actual base excess (ABE), mEq/L.
     :rtype: float
@@ -523,6 +523,7 @@ def expected_pH(pCO2, status='acute'):
     ----------
 
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
+    [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
 
     :param float pCO2: mmHg
     :return:
@@ -555,9 +556,9 @@ def abg(pH, pCO2):
         Does this pH and pCO2 means hidden metabolic process?
         """
         guess = ''
-        magic_number = 0.07
+        magic_threshold = 0.07
         ex_pH = expected_pH(pCO2)
-        if abs(pH - ex_pH) > magic_number:
+        if abs(pH - ex_pH) > magic_threshold:
             if pH > ex_pH:
                 guess += "background metabolic alcalosis, "
             else:

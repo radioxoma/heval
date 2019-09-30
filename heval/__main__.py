@@ -243,14 +243,6 @@ class TextView(Frame):
         scrollb.grid(row=0, column=1, sticky='nsew')
         self.txt['yscrollcommand'] = scrollb.set
 
-        # Context menu
-        self.popup_menu = Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
-        self.txt.bind("<Button-3>", self.popup)
-
-    def popup(self, event):
-        self.popup_menu.post(event.x_root, event.y_root)
-
     def set_text(self, text):
         """Replace current text."""
         self.txt['state'] = NORMAL
@@ -280,14 +272,15 @@ class TextView(Frame):
         self.txt.see(INSERT)
         return 'break'
 
-    # def copy_text(self):    
-    #     self.clipboard_clear()
-    #     self.clipboard_append(text)
 
 class TextView2(scrolledtext.ScrolledText):
     def __init__(self, *args, **kwargs):
         super(TextView2, self).__init__(*args, **kwargs)
         self.config(font=('consolas', 10), wrap='word')
+
+        self.popup_menu = Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
+        self.bind("<Button-3><ButtonRelease-3>", self.popup)
 
     def set_text(self, text):
         """Replace current text."""
@@ -295,6 +288,14 @@ class TextView2(scrolledtext.ScrolledText):
         self.delete(1.0, END)
         self.insert(END, text)
         self['state'] = DISABLED
+
+    def copy_all(self, event=None):
+        self.clipboard_clear()
+        text = self.get(1.0, END)
+        self.clipboard_append(text)
+
+    def popup(self, event):
+        self.popup_menu.post(event.x_root, event.y_root)
 
 
 class MainText(Frame):

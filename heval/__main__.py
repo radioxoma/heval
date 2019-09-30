@@ -280,7 +280,7 @@ class TextView2(scrolledtext.ScrolledText):
 
         self.popup_menu = Menu(self, tearoff=False)
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
-        self.bind("<Button-3><ButtonRelease-3>", self.popup)
+        self.bind("<ButtonRelease-3>", self.popup)
 
     def set_text(self, text):
         """Replace current text."""
@@ -295,7 +295,7 @@ class TextView2(scrolledtext.ScrolledText):
         self.clipboard_append(text)
 
     def popup(self, event):
-        self.popup_menu.post(event.x_root, event.y_root)
+        self.popup_menu.tk_popup(event.x_root, event.y_root)
 
 
 class MainText(Frame):

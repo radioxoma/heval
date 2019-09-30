@@ -671,6 +671,43 @@ def describe(pH, pCO2):
     print("Abg 2: {}".format(abg2(pH, pCO2)))
 
 
+def ryabov(pH, pCO2):
+    """Describe ABG by Ryabov algorithm [1].
+
+    1. Calculate how measured pCO2 will change normal pH 7.4
+    2. Compare measured and calculated pH. Big difference between measured and
+       calculated pH points at hidden metabolic process
+    3. Divide measured and calculated pH difference by 0.015 to calculate
+       base excess (BE) approximation in mEq/L
+    4. If extracellular fluid (HCO3- distribution volume) represents 25 % of
+       real body weight (RBW), global base excess will be near "BE * 0.25 * RBW"
+
+
+    Examples
+    --------
+
+    ryabov(7.36, 55)
+    >>> pH, calculated by pCO2, is 7.40-0.12=7.28, found metabolic Base excess (7.36-7.28)/0.015=+5.33 mEq/L
+
+
+    References
+    ----------
+
+    [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США
+
+    :param float pH:
+    :param float pCO2: mmHg
+    """
+    info = "pH {:.02f}, pCO2 {:.02f} mmHg\n".format(pH, pCO2)
+    pH_shift = 0.008 * (40 - pCO2)
+    pH_expected = 7.4 + pH_shift
+    info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
+    pH_diff = pH - pH_expected
+    be = pH_diff / 0.015
+    info += "found metabolic Base excess ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L\n".format(pH, pH_expected, be)
+    return info
+
+
 def test():
     variants = (
         # pH, pCO2, HCO3, comment

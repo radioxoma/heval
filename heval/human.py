@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
-from .drugs import *
+from heval.drugs import *
 
 """
 Calculations based on human height and weight.

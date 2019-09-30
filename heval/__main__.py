@@ -546,5 +546,6 @@ def main():
     MainWindow(root).pack(expand=True, fill=BOTH)
     root.mainloop()
 
+
 if __name__ == '__main__':
     main()

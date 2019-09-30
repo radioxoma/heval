@@ -28,7 +28,7 @@ setup(
     python_requires='>=3.4.*, <4',
     entry_points={
         'gui_scripts': [
-            'heval=heval.main:main',
+            'heval=heval.__main__:main',
         ]
     }
 )

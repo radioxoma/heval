@@ -113,7 +113,7 @@ def calculate_mosm(Na, glucosae):
     return 2 * Na + glucosae
 
 
-def calculate_hco3(pH, pCO2):
+def approx_hco3(pH, pCO2):
     """Concentration of HCO3 in plasma (actual bicarbonate).
 
     May be known as HCO3act, cHCO3(P)).
@@ -195,13 +195,13 @@ def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     return 24.47 + 0.919 * Z + Z * a * (Z - 8)
 
 
-def calculate_be(pH, HCO3act):
+def approx_be(pH, HCO3act):
     """Calculate base excess (BE), Siggaard Andersen approximation.
 
     Synonym for cBase(Ecf) and SBE?
 
     To reproduce original [1] calculations:
-    calculate_be(calculate_hco3(pH, pCO2))
+    approx_be(approx_hco3(pH, pCO2))
 
 
     References
@@ -624,7 +624,7 @@ def abg2(pH, pCO2, HCO3=None):
     :rtype: str
     """
     if HCO3 is None:
-        HCO3 = calculate_hco3(pH, pCO2)
+        HCO3 = approx_hco3(pH, pCO2)
 
     # Assess respiratory problem
     info = ""
@@ -662,9 +662,9 @@ def describe_pH(pH, pCO2):
 
 
 def describe(pH, pCO2):
-    HCO3act = calculate_hco3(pH, pCO2)
+    HCO3act = approx_hco3(pH, pCO2)
     info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f}".format(
-        pH, pCO2 / kPa, HCO3act, calculate_be(pH, HCO3act=HCO3act))
+        pH, pCO2 / kPa, HCO3act, approx_be(pH, HCO3act=HCO3act))
     print(info)
     print("Abg 1: {}".format(abg(pH, pCO2)))
     print("Abg 2: {}".format(abg2(pH, pCO2)))

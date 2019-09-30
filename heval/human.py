@@ -35,6 +35,7 @@ Function parameters tends to be in International System of Units.
 
 __abbr__ = """\
 BMI - body mass index, calculated
+BMR - basal metabolic rate
 BSA - body surface area, m^2, calculated
 CKD - chronic kidney disease
 eGFR - estimated glomerular filtration rate

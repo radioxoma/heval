@@ -667,8 +667,9 @@ def abg_approach_research(pH, pCO2):
     info += "y = ΔpH/ΔpCO2×100 = {:.2f}\n".format((7.4 - pH) / (pCO2 - 40.0) * 100)
 
     # Expected pH (acute, chronic)
-    info += "pH\t\tby Genderson\texpected {:.2f} .. {:.2f} acute-chronic\n".format(
-        7.4 + 0.008 * (40 - pCO2), 7.4 + 0.003 * (40 - pCO2))
+    info += "[Genderson] pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
+        7.4 + 0.008 * (40 - pCO2),
+        7.4 + 0.003 * (40 - pCO2))
 
     """
     Winters' formula
@@ -677,7 +678,7 @@ def abg_approach_research(pH, pCO2):
       * https://en.wikipedia.org/wiki/Winters%27_formula
       * https://jasn.asnjournals.org/content/21/6/920
     """
-    info += "pCO2\tby Winters' (x)\texpected {:.1f}±2 .. {:.1f}±1.5 acidisis-alkalosis".format(
+    info += "[Winters'] pCO2 by cHCO3(P) (x)\texpected\n * acidisis {:.1f}±2 mmHg\n * alcalosis {:.1f}±1.5 mmHg".format(
         1.5 * HCO3act + 8, 0.7 * HCO3act + 20)
     return info
 

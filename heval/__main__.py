@@ -398,7 +398,7 @@ class CalcElectrolytes(Frame):
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
-        self.TxtView.set_text("NOT INTENDED TO CLINICAL USE.\n"
+        self.TxtView.set_text("NOT INTENDED FOR CLINICAL USE.\n"
             "Make sure you set sex, body mass.")
 
     def set_input_defaults(self, event=None):
@@ -456,7 +456,7 @@ class CalcGFR(Frame):
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
         self.TxtView.set_text("Estimate glomerular filtration rate (eGFR).\n"
-            "Make sure you set sex, cCrea, age, skin color.")
+            "Make sure you set sex, cCrea (IDMS-calibrated), age, skin color.")
 
     def set_input_defaults(self, event=None):
         self.ctl_sbx_ccrea.delete(0, END)

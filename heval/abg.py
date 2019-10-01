@@ -40,18 +40,18 @@ kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 
 def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
-    """Calculate serum 'Anion Gap' or 'Anion Gap (K+)'.
+    """Calculate serum 'Anion Gap' or 'Anion Gap (K+)' if potassium is given.
 
     Помогает при выявлении противонаправленных метаболических процессов.
     Напрмиер потеря Cl (алкалоз) и лактат-ацидоз.
 
     May be known as SID [1], AG. Don't get confused with 'osmol gap'.
 
-    Corresponds to phosphates, sulphates, proteins.
+    Corresponds to phosphates, sulphates, proteins (albuminum).
     High gap: acute kidney injury, lactate, ketoacidosis, salicylate ->
         secondary loss of HCO3− which is a buffer, without a concurrent
         increase in Cl− for electroneutrality equilibrium support.
-    Low gap: increase in Cl−.
+    Low gap: increase in Cl−, low albuminum.
 
 
     Examples
@@ -635,7 +635,8 @@ def abg_approach_ryabov(pH, pCO2):
     :param float pCO2: mmHg
     """
     info = ""
-    pH_shift = 0.008 * (40 - pCO2)
+    pCO2mmHg = pCO2 / kPa
+    pH_shift = 0.008 * (40 - pCO2mmHg)
     pH_expected = 7.4 + pH_shift
     info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
     pH_diff = pH - pH_expected
@@ -653,23 +654,28 @@ def abg_approach_research(pH, pCO2):
     [1] Kostuchenko S.S., ABB in the ICU, 2009
 
     :param float pH:
-    :param float pCO2: mmHg
+    :param float pCO2: kPa
     :param float HCO3: mEq/L, standartized. Evaluated automatically if not
         provided
     :return:
         Opinion.
     :rtype: str
     """
-    HCO3act = calculate_hco3p(pH, pCO2)
-
-    # Assess respiratory problem
     info = ""
-    info += "y = ΔpH/ΔpCO2×100 = {:.2f}\n".format((7.4 - pH) / (pCO2 - 40.0) * 100)
+    HCO3act = calculate_hco3p(pH, pCO2)
+    pCO2mmHg = pCO2 / kPa
+
+    try:
+        y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
+        info += "y = ΔpH/ΔpCO2×100 = {:.2f}\n".format(y)
+    except ZeroDivisionError:
+        info += "ZeroDivisionError\n"
 
     # Expected pH (acute, chronic)
-    info += "[Genderson] pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
-        7.4 + 0.008 * (40 - pCO2),
-        7.4 + 0.003 * (40 - pCO2))
+    # [Костюченко, с 55]
+    info += "[Genderson?] pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
+        7.4 + 0.008 * (40 - pCO2mmHg),
+        7.4 + 0.003 * (40 - pCO2mmHg))
 
     """
     Winters' formula
@@ -707,6 +713,7 @@ def describe(pH, pCO2):
 def test():
     variants = (
         # pH, pCO2, HCO3, comment
+        (7.4, 40, None, 'Normal ABG'),
         (7.46, 35., 27., "Metabolic Alkalosis"),
         (7.30, 35., 20., "Metabolic Acidosis"),
         (7.47, 32., 23., "Respiratory Alkalosis"),

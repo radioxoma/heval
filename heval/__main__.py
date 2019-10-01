@@ -355,7 +355,7 @@ class ABGInterpreter(Frame):
     def print(self, event=None):
         pH = float(self.ctl_sbx_pH.get())
         pCO2 = float(self.ctl_sbx_pCO2.get())
-        info = abg.describe_pH(pH, pCO2 * 0.133322368)  # to kPa
+        info = abg.describe(pH, pCO2 * 0.133322368)  # to kPa
         self.TxtView.set_text(info)
 
 

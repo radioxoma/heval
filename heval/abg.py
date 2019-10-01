@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -515,26 +515,7 @@ def gfr_describe(gfr):
         return "CKD5, kidney failure (<15 %). Needs dialysis or kidney transplant"
 
 
-def expected_pH(pCO2, status='acute'):
-    """Calculate expected pH for given pCO2 (chronic or acute patient status).
-
-
-    References
-    ----------
-
-    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
-    [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
-
-    :param float pCO2: mmHg
-    :return:
-        Expected pH.
-    :rtype: float
-    """
-    st = {'acute': 0.008, 'chronic': 0.003}
-    return 7.4 + st[status] * (40.0 - pCO2)
-
-
-def abg(pH, pCO2):
+def abg_approach_stable(pH, pCO2):
     """Evaluate arterial blood gas status.
 
     http://en.wikipedia.org/wiki/Arterial_blood_gas
@@ -549,6 +530,24 @@ def abg(pH, pCO2):
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.
     pCO2 /= kPa
+
+    def expected_pH(pCO2, status='acute'):
+        """Calculate expected pH for given pCO2 (chronic or acute patient status).
+
+
+        References
+        ----------
+
+        [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
+        [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
+
+        :param float pCO2: mmHg
+        :return:
+            Expected pH.
+        :rtype: float
+        """
+        st = {'acute': 0.008, 'chronic': 0.003}
+        return 7.4 + st[status] * (40.0 - pCO2)
 
     def check_metabolic(pH, pCO2):
         """Check metabolic status by expected pH level.
@@ -608,7 +607,44 @@ def abg(pH, pCO2):
                 return "Metabolic alcalosis, no respiratory comp."
 
 
-def abg2(pH, pCO2, HCO3=None):
+def abg_approach_ryabov(pH, pCO2):
+    """Describe ABG by Ryabov algorithm [1].
+
+    1. Calculate how measured pCO2 will change normal pH 7.4
+    2. Compare measured and calculated pH. Big difference between measured and
+       calculated pH points at hidden metabolic process
+    3. Divide measured and calculated pH difference by 0.015 to calculate
+       base excess (BE) approximation in mEq/L
+    4. If extracellular fluid (HCO3- distribution volume) represents 25 % of
+       real body weight (RBW), global base excess will be near "BE * 0.25 * RBW"
+
+
+    Examples
+    --------
+
+    abg_approach_ryabov(7.36, 55)
+    >>> pH, calculated by pCO2, is 7.40-0.12=7.28, found metabolic Base excess (7.36-7.28)/0.015=+5.33 mEq/L
+
+
+    References
+    ----------
+
+    [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США (AHA?)
+
+    :param float pH:
+    :param float pCO2: mmHg
+    """
+    info = ""
+    pH_shift = 0.008 * (40 - pCO2)
+    pH_expected = 7.4 + pH_shift
+    info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
+    pH_diff = pH - pH_expected
+    be = pH_diff / 0.015
+    info += "found metabolic base excess ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L".format(pH, pH_expected, be)
+    return info
+
+
+def abg_approach_research(pH, pCO2):
     """Calculate expected ABG values.
 
 
@@ -624,8 +660,7 @@ def abg2(pH, pCO2, HCO3=None):
         Opinion.
     :rtype: str
     """
-    if HCO3 is None:
-        HCO3 = approx_hco3(pH, pCO2)
+    HCO3act = calculate_hco3p(pH, pCO2)
 
     # Assess respiratory problem
     info = ""
@@ -635,13 +670,19 @@ def abg2(pH, pCO2, HCO3=None):
     info += "pH\t\tby Genderson\texpected {:.2f} .. {:.2f} acute-chronic\n".format(
         7.4 + 0.008 * (40 - pCO2), 7.4 + 0.003 * (40 - pCO2))
 
-    # Winter's formula (acidosis, alkalosis)
-    info += "pCO2\tby Winter (x)\texpected {:.1f}±2 .. {:.1f}±1.5 acidisis-alkalosis\n".format(
-        1.5 * HCO3 + 8, 0.7 * HCO3 + 20)
+    """
+    Winters' formula
+      * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
+      * https://www.ncbi.nlm.nih.gov/pubmed/6016545
+      * https://en.wikipedia.org/wiki/Winters%27_formula
+      * https://jasn.asnjournals.org/content/21/6/920
+    """
+    info += "pCO2\tby Winters' (x)\texpected {:.1f}±2 .. {:.1f}±1.5 acidisis-alkalosis".format(
+        1.5 * HCO3act + 8, 0.7 * HCO3act + 20)
     return info
 
 
-def describe_pH(pH, pCO2):
+def describe(pH, pCO2):
     """An old implementation considered stable.
 
     :param float pH:
@@ -658,54 +699,8 @@ def describe_pH(pH, pCO2):
         pCO2,
         calculate_hco3p(pH, pCO2),
         calculate_cbase(pH, pCO2),
-        abg(pH, pCO2))
+        abg_approach_stable(pH, pCO2))
     return textwrap.dedent(info)
-
-
-def describe(pH, pCO2):
-    HCO3act = approx_hco3(pH, pCO2)
-    info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f}".format(
-        pH, pCO2 / kPa, HCO3act, approx_be(pH, HCO3act=HCO3act))
-    print(info)
-    print("Abg 1: {}".format(abg(pH, pCO2)))
-    print("Abg 2: {}".format(abg2(pH, pCO2)))
-
-
-def ryabov(pH, pCO2):
-    """Describe ABG by Ryabov algorithm [1].
-
-    1. Calculate how measured pCO2 will change normal pH 7.4
-    2. Compare measured and calculated pH. Big difference between measured and
-       calculated pH points at hidden metabolic process
-    3. Divide measured and calculated pH difference by 0.015 to calculate
-       base excess (BE) approximation in mEq/L
-    4. If extracellular fluid (HCO3- distribution volume) represents 25 % of
-       real body weight (RBW), global base excess will be near "BE * 0.25 * RBW"
-
-
-    Examples
-    --------
-
-    ryabov(7.36, 55)
-    >>> pH, calculated by pCO2, is 7.40-0.12=7.28, found metabolic Base excess (7.36-7.28)/0.015=+5.33 mEq/L
-
-
-    References
-    ----------
-
-    [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США
-
-    :param float pH:
-    :param float pCO2: mmHg
-    """
-    info = "pH {:.02f}, pCO2 {:.02f} mmHg\n".format(pH, pCO2)
-    pH_shift = 0.008 * (40 - pCO2)
-    pH_expected = 7.4 + pH_shift
-    info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
-    pH_diff = pH - pH_expected
-    be = pH_diff / 0.015
-    info += "found metabolic Base excess ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L\n".format(pH, pH_expected, be)
-    return info
 
 
 def test():
@@ -723,8 +718,20 @@ def test():
         (7.39, 47., None, "Resp. acidosis, met. alcalosis, full comp. (COPD)")
     )
     for v in variants:
-        describe(pH=v[0], pCO2=v[1] * kPa)
-        print("[{}]\n".format(v[3]))
+        pH = v[0]
+        pCO2mmHg = v[1]
+        pCO2 = v[1] * kPa
+        comment = v[3]
+        be = calculate_cbase(pH, pCO2)
+        HCO3act = calculate_hco3p(pH, pCO2)
+        
+        info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f} ".format(
+            pH, pCO2mmHg, HCO3act, be)
+        info += "'{}'\n".format(comment)
+        info += "Abg stable:\n{}\n".format(textwrap.indent(abg_approach_stable(pH, pCO2), '\t'))
+        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(pH, pCO2), '\t'))
+        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(pH, pCO2), '\t'))
+        print(info)
 
 
 if __name__ == '__main__':

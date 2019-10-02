@@ -321,6 +321,7 @@ class CalcElectrolytes(Frame):
 
         # ABG INPUT
         fr_abg_entry = LabelFrame(fr_entry, text="ABG basic")
+        CreateToolTip(fr_abg_entry, "Compare respiratory and metabolic impact on blood pH")
         fr_abg_entry.pack(side=LEFT, anchor=N)
 
         Label(fr_abg_entry, text="pH").grid(row=1, column=0)
@@ -340,6 +341,7 @@ class CalcElectrolytes(Frame):
 
         # ELECTROLYTE INPUT
         fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
+        CreateToolTip(fr_elec_entry, "Find electrolyte imbalance and unmeasurable anion disturbances")
         fr_elec_entry.pack(side=LEFT, anchor=N)
 
         Label(fr_elec_entry, text='K, mmol/L').grid(row=1, column=0)
@@ -368,7 +370,7 @@ class CalcElectrolytes(Frame):
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
-        self.TxtView.set_text("Make sure you set sex, body mass.")
+        self.TxtView.set_text("Make sure you set sex, body weight.")
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, END)

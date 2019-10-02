@@ -54,11 +54,9 @@ class MainWindow(Frame):
         self.create_input()
         self.set_input_defaults()
         self.MText = MainText(nb, self.HModel)
-        self.AInterpreter = ABGInterpreter(nb)
         self.CElectrolytes = CalcElectrolytes(nb, self.HModel)
         self.CGFR = CalcGFR(nb, self.HModel)
         nb.add(self.MText, text='Human')
-        nb.add(self.AInterpreter, text='ABG')
         nb.add(self.CElectrolytes, text='Electrolytes')
         nb.add(self.CGFR, text='eGFR')
         nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
@@ -66,9 +64,7 @@ class MainWindow(Frame):
         self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
-        self.parent.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
         self.bind_all('<<HumanModelChanged>>', self.MText.print)
-        self.bind_all('<<HumanModelChanged>>', self.AInterpreter.print, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.print, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CGFR.print, add='+')
 
@@ -313,95 +309,74 @@ class MainText(Frame):
         self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_model), self.human_model.medication()))
 
 
-class ABGInterpreter(Frame):
-    def __init__(self, parent=None):
-        super(ABGInterpreter, self).__init__(parent)
+class CalcElectrolytes(Frame):
+    def __init__(self, parent, human_model):
+        super(CalcElectrolytes, self).__init__(parent)
+        self.__form_ready = False
         self.parent = parent
-        # Create columns of widgets for ABG input
+        self.human_model = human_model
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
 
-        Label(fr_entry, text="pH").grid(row=1, column=0)
-        self.ctl_sbx_pH = Spinbox(fr_entry, width=4, from_=0, to=14,
-            format='%.2f',
-            increment=0.01,
-            command=self.print)
+        # ABG INPUT
+        fr_abg_entry = LabelFrame(fr_entry, text="ABG basic")
+        fr_abg_entry.pack(side=LEFT, anchor=N)
+
+        Label(fr_abg_entry, text="pH").grid(row=1, column=0)
+        self.ctl_sbx_pH = Spinbox(fr_abg_entry, width=4, from_=0, to=14,
+            format='%.2f', increment=0.01, command=self.print)
         self.ctl_sbx_pH.bind("<Return>", self.print)
         self.ctl_sbx_pH.grid(row=1, column=1)
 
-        button = Button(fr_entry, text="Reset", command=self.set_input_defaults)
-        button.grid(row=1, column=2)
+        ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
+        ctl_btn_abg.grid(row=1, column=2)
 
-        Label(fr_entry, text="pCO2, mmHg").grid(row=2, column=0)
-        self.ctl_sbx_pCO2 = Spinbox(fr_entry, width=4, from_=0.0, to=150.0,
-            format='%.1f',
-            increment=0.1,
-            command=self.print)
+        Label(fr_abg_entry, text="pCO2, mmHg").grid(row=2, column=0)
+        self.ctl_sbx_pCO2 = Spinbox(fr_abg_entry, width=4, from_=0.0, to=150.0,
+            format='%.1f', increment=0.1, command=self.print)
         self.ctl_sbx_pCO2.bind("<Return>", self.print)
         self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
+        # ELECTROLYTE INPUT
+        fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
+        fr_elec_entry.pack(side=LEFT, anchor=N)
+
+        Label(fr_elec_entry, text='K, mmol/L').grid(row=1, column=0)
+        self.ctl_sbx_K = Spinbox(fr_elec_entry, width=3, from_=0, to=15,
+            format='%2.1f', increment=0.1, command=self.print)
+        self.ctl_sbx_K.bind("<Return>", self.print)
+        self.ctl_sbx_K.grid(row=1, column=1)
+
+        Label(fr_elec_entry, text='Na, mmol/L').grid(row=2, column=0)
+        self.ctl_sbx_Na = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
+            format='%3.0f', increment=1, command=self.print)
+        self.ctl_sbx_Na.bind("<Return>", self.print)
+        self.ctl_sbx_Na.grid(row=2, column=1)
+
+        Label(fr_elec_entry, text='Cl, mmol/L').grid(row=3, column=0)
+        self.ctl_sbx_Cl = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
+            format='%3.0f', increment=1, command=self.print)
+        self.ctl_sbx_Cl.bind("<Return>", self.print)
+        self.ctl_sbx_Cl.grid(row=3, column=1)
+
+        ctl_btn_elec = Button(fr_elec_entry, text="Reset", command=self.set_input_elec_defaults)
+        ctl_btn_elec.grid(row=1, column=2)
+
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.set_input_defaults()
-        self.print()
+        self.set_input_abg_defaults()
+        self.set_input_elec_defaults()
+        self.TxtView.set_text("Make sure you set sex, body mass.")
+        self.__form_ready = True
 
-    def set_input_defaults(self):
+    def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, END)
         self.ctl_sbx_pH.insert(0, '7.40')  # cm
         self.ctl_sbx_pCO2.delete(0, END)
         self.ctl_sbx_pCO2.insert(0, 40.0)  # kg
         self.print()
 
-    def print(self, event=None):
-        pH = float(self.ctl_sbx_pH.get())
-        pCO2 = float(self.ctl_sbx_pCO2.get())
-        info = abg.describe(pH, pCO2 * 0.133322368)  # to kPa
-        self.TxtView.set_text(info)
-
-
-class CalcElectrolytes(Frame):
-    def __init__(self, parent, human_model):
-        super(CalcElectrolytes, self).__init__(parent)
-        self.parent = parent
-        self.human_model = human_model
-        # Create columns of widgets for input
-        fr_entry = Frame(self)
-        fr_entry.pack(anchor=W)
-
-        Label(fr_entry, text='K, mmol/L').grid(row=1, column=0)
-        self.ctl_sbx_K = Spinbox(fr_entry, width=3, from_=0, to=15,
-            format='%2.1f',
-            increment=0.1,
-            command=self.print)
-        self.ctl_sbx_K.bind("<Return>", self.print)
-        self.ctl_sbx_K.grid(row=1, column=1)
-
-        Label(fr_entry, text='Na, mmol/L').grid(row=2, column=0)
-        self.ctl_sbx_Na = Spinbox(fr_entry, width=3, from_=0.0, to=200.0,
-            format='%3.0f',
-            increment=1,
-            command=self.print)
-        self.ctl_sbx_Na.bind("<Return>", self.print)
-        self.ctl_sbx_Na.grid(row=2, column=1)
-
-        # Label(fr_entry, text='Cl, mmol/L').grid(row=3, column=0)
-        self.ctl_sbx_Cl = Spinbox(fr_entry, width=3, from_=0.0, to=200.0,
-            format='%3.0f',
-            increment=1,
-            command=self.print)
-        self.ctl_sbx_Cl.bind("<Return>", self.print)
-        # self.ctl_sbx_Cl.grid(row=3, column=1)
-
-        button = Button(fr_entry, text="Reset", command=self.set_input_defaults)
-        button.grid(row=1, column=2)
-
-        self.TxtView = TextView2(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
-        self.set_input_defaults()
-        self.TxtView.set_text("NOT INTENDED FOR CLINICAL USE.\n"
-            "Make sure you set sex, body mass.")
-
-    def set_input_defaults(self, event=None):
+    def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
         self.ctl_sbx_K.insert(0, 4.0)
         self.ctl_sbx_Na.delete(0, END)
@@ -411,8 +386,15 @@ class CalcElectrolytes(Frame):
         self.print()
 
     def print(self, event=None):
+        if not self.__form_ready:
+            return
+        pH = float(self.ctl_sbx_pH.get())
+        pCO2 = float(self.ctl_sbx_pCO2.get())
+        info = abg.describe(pH, pCO2 * abg.kPa)  # to kPa
+
+        info += "\n\nElectolyte calculations NOT INTENDED FOR CLINICAL USE\n\n"
         weight = self.human_model.weight
-        info = "{}\n{}\n".format(
+        info += "{}\n{}\n".format(
             electrolytes.kurek_electrolytes_K(weight, float(self.ctl_sbx_K.get())),
             electrolytes.kurek_electrolytes_Na(weight, float(self.ctl_sbx_Na.get())))
         self.TxtView.set_text(info)

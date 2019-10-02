@@ -315,6 +315,7 @@ class CalcElectrolytes(Frame):
         self.__form_ready = False
         self.parent = parent
         self.human_model = human_model
+        self.human_blood = abg.HumanBlood()
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
 
@@ -324,8 +325,8 @@ class CalcElectrolytes(Frame):
 
         Label(fr_abg_entry, text="pH").grid(row=1, column=0)
         self.ctl_sbx_pH = Spinbox(fr_abg_entry, width=4, from_=0, to=14,
-            format='%.2f', increment=0.01, command=self.print)
-        self.ctl_sbx_pH.bind("<Return>", self.print)
+            format='%.2f', increment=0.01, command=self.set_model_pH)
+        self.ctl_sbx_pH.bind("<Return>", self.set_model_pH)
         self.ctl_sbx_pH.grid(row=1, column=1)
 
         ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
@@ -333,8 +334,8 @@ class CalcElectrolytes(Frame):
 
         Label(fr_abg_entry, text="pCO2, mmHg").grid(row=2, column=0)
         self.ctl_sbx_pCO2 = Spinbox(fr_abg_entry, width=4, from_=0.0, to=150.0,
-            format='%.1f', increment=0.1, command=self.print)
-        self.ctl_sbx_pCO2.bind("<Return>", self.print)
+            format='%.1f', increment=0.1, command=self.set_model_pCO2)
+        self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)
         self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
 
         # ELECTROLYTE INPUT
@@ -367,14 +368,14 @@ class CalcElectrolytes(Frame):
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
         self.TxtView.set_text("Make sure you set sex, body mass.")
-        self.__form_ready = True
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, END)
         self.ctl_sbx_pH.insert(0, '7.40')  # cm
+        self.set_model_pH()
         self.ctl_sbx_pCO2.delete(0, END)
         self.ctl_sbx_pCO2.insert(0, 40.0)  # kg
-        self.print()
+        self.set_model_pCO2()
 
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
@@ -383,15 +384,17 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_Na.insert(0, 145)
         self.ctl_sbx_Cl.delete(0, END)
         self.ctl_sbx_Cl.insert(0, 95)
-        self.print()
+
+    def set_model_pH(self, event=None):
+        self.human_blood.pH = float(self.ctl_sbx_pH.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_pCO2(self, event=None):
+        self.human_blood.pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
+        self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
-        if not self.__form_ready:
-            return
-        pH = float(self.ctl_sbx_pH.get())
-        pCO2 = float(self.ctl_sbx_pCO2.get())
-        info = abg.describe(pH, pCO2 * abg.kPa)  # to kPa
-
+        info = self.human_blood.describe()
         info += "\n\nElectolyte calculations NOT INTENDED FOR CLINICAL USE\n\n"
         weight = self.human_model.weight
         info += "{}\n{}\n".format(

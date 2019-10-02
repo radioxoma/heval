@@ -18,7 +18,9 @@ $ md5sum *
 41f8e7d98fcc26ea2319ac8da72ed8cd ABL800 Reference Manual English US.pdf
 a00e5f337bd2c65e513fda1202827c6a ABL800 Operators Manual English US.pdf
 
-I do not perform any algebraic optimization.
+Main statements:
+    * I do not perform any algebraic optimization
+    * Formulas is main importance with good documentation first, then call it inside class
 """
 
 import textwrap
@@ -37,6 +39,56 @@ live_pH = (6.8, 7.8)  # Live borders
 
 
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
+
+
+class HumanBlood(object):
+    """Repesents an human blood ABG status."""
+    def __init__(self):
+        self.pH = None
+        self.pCO2 = None       # kPa
+
+        self.Na = None         # mmol/L
+        self.K = None          # mmol/L
+        self.Cl = None         # mmol/L
+
+        self.albuminum = None  # g/dL
+        self.glucose = None    # mmol/L
+
+    # def __str__(self):
+    #     pass
+
+    # def is_init(self):
+    #     pass
+
+    @property
+    def be(self):
+        return calculate_cbase(self.pH, self.pCO2)
+
+    @property
+    def hco3p(self):
+        return calculate_hco3p(self.pH, self.pCO2)
+
+    @property
+    def anion_gapk(self):
+        return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
+
+    @property
+    def osmolarity(self):
+        return calculate_mosm(self.Na, self.glucose)
+
+    def describe(self):
+        """Describe pH and pCO2 - an old implementation considered stable.
+        """
+        info = """\
+        pCO2    {:2.1f} kPa
+        HCO3(P) {:2.1f} mmol/L
+        SBE     {:2.1f} mEq/L
+        Result: {}""".format(
+            self.pCO2,
+            self.hco3p,
+            self.be,
+            abg_approach_stable(self.pH, self.pCO2))
+        return textwrap.dedent(info)
 
 
 def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):

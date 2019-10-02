@@ -101,8 +101,9 @@ class HumanBlood(object):
 
     def describe_electrolytes(self):
         info = ""
-        info += "Anion gap (K+) {:.1f} mEq/L. ".format(self.anion_gapk)
-        info += "{}\n\n".format(calculate_anion_gap_delta(self.anion_gapk, self.hco3p))
+        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '\t'))
+        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '\t'))
+        info += "\n--- Anion gap assessment -----------------------\n"
         info += "Anion gap {:.1f} mEq/L. ".format(self.anion_gap)
         info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
         return info
@@ -162,7 +163,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
 
 
 def calculate_anion_gap_delta(AG, HCO3act):
-    """Delta gap ("gap-gap") to assess elevated anion gap metabolic acidosis.
+    """Delta gap, delta ratio, gap-gap to assess elevated anion gap metabolic acidosis.
 
     If gag-gap ~ 1, then AG and BE shifts are equal - acidosis caused by non-measured anion.
 
@@ -822,7 +823,7 @@ def abg_approach_research(pH, pCO2):
       * https://en.wikipedia.org/wiki/Winters%27_formula
       * https://jasn.asnjournals.org/content/21/6/920
     """
-    info += "[Winters'] pCO2 by cHCO3(P) (x)\texpected\n * acidisis {:.1f}±2 mmHg\n * alcalosis {:.1f}±1.5 mmHg".format(
+    info += "[Winters'] pCO2 by cHCO3(P) expected\n * acidisis {:.1f}±2 mmHg\n * alcalosis {:.1f}±1.5 mmHg".format(
         1.5 * HCO3act + 8, 0.7 * HCO3act + 20)
     return info
 

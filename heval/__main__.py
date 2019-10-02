@@ -26,7 +26,7 @@ class MainWindow(Frame):
         super(MainWindow, self).__init__(parent, *args, **kwargs)
         self.parent = parent
         self.parent.title("Heval — a human evaluator")
-        self.parent.geometry("600x420")
+        self.parent.geometry("600x590")
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.parent.style = Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
@@ -416,7 +416,7 @@ class CalcElectrolytes(Frame):
         info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
         info += "{}\n".format(self.human_blood.describe_electrolytes())
         weight = self.human_model.weight
-        info += "\n{}\n{}\n".format(
+        info += "\n--- Electrolyte abnormalities-------------------\n{}\n{}\n".format(
             electrolytes.kurek_electrolytes_K(weight, self.human_blood.K),
             electrolytes.kurek_electrolytes_Na(weight, self.human_blood.Na))
         self.TxtView.set_text(info)

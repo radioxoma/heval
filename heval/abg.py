@@ -70,10 +70,16 @@ class HumanBlood(object):
 
     @property
     def anion_gapk(self):
-        if self.K:
+        """Anion gap (K+)."""
+        if self.K is not None:
             return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
         else:
             raise ValueError("No potassium specified")
+
+    @property
+    def anion_gap(self):
+        """Anion gap without potassion 12 ± 4 meq/L."""
+        return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p)
 
     @property
     def osmolarity(self):
@@ -94,12 +100,16 @@ class HumanBlood(object):
         return textwrap.dedent(info)
 
     def describe_electrolytes(self):
-        info = "Anion Gap (K+) {:.1f} mEq/L".format(self.anion_gapk)
+        info = ""
+        info += "Anion gap (K+) {:.1f} mEq/L. ".format(self.anion_gapk)
+        info += "{}\n\n".format(calculate_anion_gap_delta(self.anion_gapk, self.hco3p))
+        info += "Anion gap {:.1f} mEq/L. ".format(self.anion_gap)
+        info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
         return info
 
 
 def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
-    """Calculate serum 'Anion Gap' or 'Anion Gap (K+)' if potassium is given.
+    """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
     Помогает при выявлении противонаправленных метаболических процессов.
     Напрмиер потеря Cl (алкалоз) и лактат-ацидоз.
@@ -116,7 +126,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     Examples
     --------
 
-    To reproduce 'Radiometer ABL800 Flex' Anion Gap calculation:
+    To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
 
     >>> abg.calculate_anion_gap(
         Na=173, Cl=77, HCO3act=abg.calculate_hco3p(pH=6.656, pCO2=27.9))
@@ -141,7 +151,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     :param float albuminum: Protein correction, g/dL. If not given,
         hypoalbuminemia leads to lower anion gap.
     :return:
-        Anion gap, mEq/L.
+        Anion gap or Anion gap (K+), mEq/L.
     :rtype: float
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
@@ -149,6 +159,75 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
         # Protein correction. Normal albuminum 2.5 g/dL see [1] p. 61.
         anion_gap += 2.5 * (4.4 - albuminum)
     return anion_gap
+
+
+def calculate_anion_gap_delta(AG, HCO3act):
+    """Delta gap ("gap-gap") to assess elevated anion gap metabolic acidosis.
+
+    If gag-gap ~ 1, then AG and BE shifts are equal - acidosis caused by non-measured anion.
+
+    Если изменение gap меньше изменения дефицита оснований, то проблема с
+    сильными анионами.
+
+    Increase in the AG should be equal to the decrease in bicarbonate:
+
+    AG = [Na+] - [Cl-] - [HCO3-]  # Increase by low [Cl-] or low [HCO3-]
+    HA + [HCO3-] = [A-] + H2O + CO2↑
+
+
+    If a wide-anion-gap metabolic acidosis is the only disturbance, then the
+    change in value of the anion gap should equal the change in bicarbonate (ie) ↑ AG = ↓ HCO3-
+    The delta gap = increase AG - decrease HCO3-
+    For purposes of calculation take normal AG as 12 and normal HCO3- as 24
+    Shortcut calculation: Δ AG - Δ HCO3- = (AG -12) - (24 - HCO3-) = Na+ - Cl- - 36
+    If the delta gap is < -6 there is also a non-anion gap metabolic acidosis.
+    Other causes of a delta gap < -6 are a respiratory alkalosis (with compensating non-anion gap acidosis), or a low anion gap state
+    If the delta gap > +6 there is a concurrent metabolic alkalosis.
+    Other causes of a delta gap > +6 are respiratory acidosis (with compensating metabolic alkalosis), or a non-acidotic high anion gap state
+
+
+    References
+    ----------
+    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 63
+    [2] https://en.wikipedia.org/wiki/Delta_Ratio
+    [3] [http://webcache.googleusercontent.com/search?q=cache:LVnXtJaMahkJ:www.emed.ie/Toxicology/ABG_Blood_Gases.php]
+
+    :param float AG: Anion gap without potassium, mEq/L.
+    :param float HCO3act: Actual bicarbonate, mmol/L.
+    :return:
+        Opinion.
+    :rtype: str
+    """
+    # 12 normal anion gap
+    # 24 - normal HCO3-, mmol/L
+    gg = (AG - 12) / (24 - HCO3act)
+    info = "Delta gap ({:.1f} - 12) / (24 - {:.1f}) = {:.1f}\n".format(AG, HCO3act, gg)
+    if gg < 0.4:
+        # При массивном введении NaCl (дилюционный ацидоз) почки экскретируют
+        # бикарбонат для компенсации гиперхлоремии
+        # При введении NaCL Gap не изменяется, но засчёт избытка Cl
+        # почки выводят HCO3.
+        return info + "gg < 0.4 Гиперхлоремический ацидоз с нормальной анионной разницей"
+        # Hyperchloraemic normal anion gap acidosis
+    elif 0.4 <= gg <= 0.8:
+        return info + "0.4 <= gg <= 0.8 Комбинированный метаболический ацидоз с увеличенной и нормальной анионной разницей, часто встречается при ацидозе, ассоциированном с почечной недостаточностью"
+        # Consider combined high AG & normal AG acidosis BUT note that the
+        # ratio is often < 1 in acidosis associated with renal failure
+    elif 0.8 < gg < 1:
+        return info + "0.8 < gg <= 1 Наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен"
+    elif 1 <= gg <= 2:
+        return info + "1 < gg <= 2 Типично для ацидоза с увеличенной анионной разницей"
+        # Usual for uncomplicated high-AG acidosis
+        # Lactic acidosis: average value 1.6
+        # DKA more likely to have a ratio closer to 1 due to urine ketone
+        # loss (especially if patient not dehydrated)
+    elif 2 < gg:
+        # Suggests a pre-existing elevated [HCO3-] level so consider:
+        #   * a concurrent metabolic alkalosis
+        #   * a pre-existing compensated respiratory acidosis
+        return info + "2 < gg Необходимо проверить наличие сопутствующего метаболического алкалоза или хронического респираторного ацидоза, сопровождающегося компенсаторным увеличением HCO3-"
+    else:
+        raise NotImplementedError(gg)
 
 
 def calculate_mosm(Na, glucosae):

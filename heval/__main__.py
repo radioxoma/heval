@@ -344,23 +344,24 @@ class CalcElectrolytes(Frame):
 
         Label(fr_elec_entry, text='K, mmol/L').grid(row=1, column=0)
         self.ctl_sbx_K = Spinbox(fr_elec_entry, width=3, from_=0, to=15,
-            format='%2.1f', increment=0.1, command=self.print)
-        self.ctl_sbx_K.bind("<Return>", self.print)
+            format='%2.1f', increment=0.1, command=self.set_model_K)
+        self.ctl_sbx_K.bind("<Return>", self.set_model_K)
         self.ctl_sbx_K.grid(row=1, column=1)
 
         Label(fr_elec_entry, text='Na, mmol/L').grid(row=2, column=0)
         self.ctl_sbx_Na = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
-            format='%3.0f', increment=1, command=self.print)
-        self.ctl_sbx_Na.bind("<Return>", self.print)
+            format='%3.0f', increment=1, command=self.set_model_Na)
+        self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
         self.ctl_sbx_Na.grid(row=2, column=1)
 
         Label(fr_elec_entry, text='Cl, mmol/L').grid(row=3, column=0)
         self.ctl_sbx_Cl = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
-            format='%3.0f', increment=1, command=self.print)
-        self.ctl_sbx_Cl.bind("<Return>", self.print)
+            format='%3.0f', increment=1, command=self.set_model_Cl)
+        self.ctl_sbx_Cl.bind("<Return>", self.set_model_Cl)
         self.ctl_sbx_Cl.grid(row=3, column=1)
 
-        ctl_btn_elec = Button(fr_elec_entry, text="Reset", command=self.set_input_elec_defaults)
+        ctl_btn_elec = Button(fr_elec_entry, text="Reset",
+            command=self.set_input_elec_defaults)
         ctl_btn_elec.grid(row=1, column=2)
 
         self.TxtView = TextView2(self)
@@ -380,10 +381,13 @@ class CalcElectrolytes(Frame):
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
         self.ctl_sbx_K.insert(0, 4.0)
+        self.set_model_K()
         self.ctl_sbx_Na.delete(0, END)
         self.ctl_sbx_Na.insert(0, 145)
+        self.set_model_Na()
         self.ctl_sbx_Cl.delete(0, END)
         self.ctl_sbx_Cl.insert(0, 95)
+        self.set_model_Cl()
 
     def set_model_pH(self, event=None):
         self.human_blood.pH = float(self.ctl_sbx_pH.get())
@@ -393,13 +397,25 @@ class CalcElectrolytes(Frame):
         self.human_blood.pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
         self.event_generate("<<HumanModelChanged>>")
 
+    def set_model_K(self, event=None):
+        self.human_blood.K = float(self.ctl_sbx_K.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_Na(self, event=None):
+        self.human_blood.Na = float(self.ctl_sbx_Na.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_Cl(self, event=None):
+        self.human_blood.Cl = float(self.ctl_sbx_Cl.get())
+        self.event_generate("<<HumanModelChanged>>")
+
     def print(self, event=None):
         info = self.human_blood.describe()
         info += "\n\nElectolyte calculations NOT INTENDED FOR CLINICAL USE\n\n"
         weight = self.human_model.weight
         info += "{}\n{}\n".format(
-            electrolytes.kurek_electrolytes_K(weight, float(self.ctl_sbx_K.get())),
-            electrolytes.kurek_electrolytes_Na(weight, float(self.ctl_sbx_Na.get())))
+            electrolytes.kurek_electrolytes_K(weight, self.human_blood.K),
+            electrolytes.kurek_electrolytes_Na(weight, self.human_blood.Na))
         self.TxtView.set_text(info)
 
 

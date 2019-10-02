@@ -380,13 +380,13 @@ class CalcElectrolytes(Frame):
 
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
-        self.ctl_sbx_K.insert(0, 4.0)
+        self.ctl_sbx_K.insert(0, 4.3)
         self.set_model_K()
         self.ctl_sbx_Na.delete(0, END)
-        self.ctl_sbx_Na.insert(0, 145)
+        self.ctl_sbx_Na.insert(0, 140)
         self.set_model_Na()
         self.ctl_sbx_Cl.delete(0, END)
-        self.ctl_sbx_Cl.insert(0, 95)
+        self.ctl_sbx_Cl.insert(0, 105)
         self.set_model_Cl()
 
     def set_model_pH(self, event=None):
@@ -410,8 +410,9 @@ class CalcElectrolytes(Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
-        info = self.human_blood.describe()
-        info += "\n\nElectolyte calculations NOT INTENDED FOR CLINICAL USE\n\n"
+        info = "{}\n".format(self.human_blood.describe_pH())
+        info += "\nElectolyte calculations NOT INTENDED FOR CLINICAL USE\n\n"
+        info += "{}\n".format(self.human_blood.describe_electrolytes())
         weight = self.human_model.weight
         info += "{}\n{}\n".format(
             electrolytes.kurek_electrolytes_K(weight, self.human_blood.K),

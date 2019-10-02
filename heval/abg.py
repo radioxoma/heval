@@ -70,13 +70,16 @@ class HumanBlood(object):
 
     @property
     def anion_gapk(self):
-        return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
+        if self.K:
+            return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
+        else:
+            raise ValueError("No potassium specified")
 
     @property
     def osmolarity(self):
         return calculate_mosm(self.Na, self.glucose)
 
-    def describe(self):
+    def describe_pH(self):
         """Describe pH and pCO2 - an old implementation considered stable.
         """
         info = """\
@@ -89,6 +92,10 @@ class HumanBlood(object):
             self.be,
             abg_approach_stable(self.pH, self.pCO2))
         return textwrap.dedent(info)
+
+    def describe_electrolytes(self):
+        info = "Anion Gap (K+) {:.1f} mEq/L".format(self.anion_gapk)
+        return info
 
 
 def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):

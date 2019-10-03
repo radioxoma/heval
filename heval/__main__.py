@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__description__ = """\
-Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \
-Не используйте лекарственное средство, если не читали его инструкцию.
-
-Written by Eugene Dvoretsky 2016-2019. Check source code for references and formulas.
-
-Heval is a free software and licensed under the terms of GNU General Public License version 3.
-"""
-
 import random
 import textwrap
 from tkinter import *
@@ -19,6 +10,28 @@ from tkinter.ttk import *
 from heval import human
 from heval import abg
 from heval import electrolytes
+
+
+__helptext__ = """\
+Введите пол и рост — этого достаточно для большей части антропометрических \
+расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически. \
+Снимите галочку 'Use IBW' и введите реальный вес, если знаете его.
+
+Мгновенно доступны: IBW, BSA, BMI, параметры вентиляции, суточная потребность \
+в энергии и жидкости, диурез, дозировки ЛС etc.
+
+При наведении курсора на поле ввода появляется всплывающая подсказка.
+
+""" + human.__abbr__
+
+__about__ = """\
+Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \
+Не используйте лекарственное средство, если не читали его инструкцию.
+
+Written by Eugene Dvoretsky 2016-2019. Check source code for references and formulas.
+
+Heval is a free software and licensed under the terms of GNU General Public License version 3.
+"""
 
 
 class MainWindow(Frame):
@@ -180,7 +193,7 @@ class HelpWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        self.lbl = Label(self, text=human.__abbr__, wraplength=500)
+        self.lbl = Label(self, text=__helptext__, wraplength=500)
         self.lbl.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self)
@@ -200,7 +213,7 @@ class AboutWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('About')
 
-        abouttext = __description__ + "And remember: {}".format(
+        abouttext = __about__ + "And remember: {}".format(
             random.choice(electrolytes.__EASTER_TEXT__))
         self.lbl = Label(self, text=abouttext, wraplength=500)
         self.lbl.pack(expand=True, fill=BOTH)
@@ -302,7 +315,8 @@ class MainText(Frame):
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.print()
+        self.TxtView.set_text("Got lost? Select 'Help' in menu, or just press F1 key.\n"
+            "Страшно и непонятно? Выберите 'Help' в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.")
 
     def print(self, event=None):
         """Calculate and print some evaluated data."""

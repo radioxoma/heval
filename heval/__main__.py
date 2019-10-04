@@ -17,7 +17,7 @@ __helptext__ = """\
 расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически. \
 Снимите галочку 'Use IBW' и введите реальный вес, если знаете его.
 
-Мгновенно доступны: IBW, BSA, BMI, параметры вентиляции, суточная потребность \
+Мгновенно доступны: IBW, BSA, BMI, объёмы вентиляции, суточная потребность \
 в энергии и жидкости, диурез, дозировки ЛС etc.
 
 При наведении курсора на поле ввода появляется всплывающая подсказка.
@@ -61,14 +61,14 @@ class MainWindow(Frame):
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
 
-        self.HModel = human.HumanModel()
+        self.HBody = human.HumanBodyModel()
 
         nb = Notebook(self)
         self.create_input()
         self.set_input_defaults()
-        self.MText = MainText(nb, self.HModel)
-        self.CElectrolytes = CalcElectrolytes(nb, self.HModel)
-        self.CGFR = CalcGFR(nb, self.HModel)
+        self.MText = MainText(nb, self.HBody)
+        self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
+        self.CGFR = CalcGFR(nb, self.HBody)
         nb.add(self.MText, text='Human')
         nb.add(self.CElectrolytes, text='Electrolytes')
         nb.add(self.CGFR, text='eGFR')
@@ -150,35 +150,35 @@ class MainWindow(Frame):
         self.set_model_body_temp()
 
     def set_model_sex(self, event=None):
-        self.HModel.sex = self.ctl_sex.get().lower()
+        self.HBody.sex = self.ctl_sex.get().lower()
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
-        self.HModel.height = float(self.ctl_height.get()) / 100
-        if self.HModel.use_ibw:
+        self.HBody.height = float(self.ctl_height.get()) / 100
+        if self.HBody.use_ibw:
             self.ctl_weight['state'] = NORMAL
             self.ctl_weight.delete(0, END)
-            self.ctl_weight.insert(0, round(self.HModel.weight, 1))
+            self.ctl_weight.insert(0, round(self.HBody.weight, 1))
             self.ctl_weight['state'] = self.lbl_weight['state']
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_weight(self, event=None):
-        self.HModel.weight = float(self.ctl_weight.get())
+        self.HBody.weight = float(self.ctl_weight.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_body_temp(self, event=None):
-        self.HModel.body_temp = float(self.ctl_sbx_temp.get())
+        self.HBody.body_temp = float(self.ctl_sbx_temp.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_use_ibw(self, event=None):
         if self.var_use_ibw.get() == 0:
-            self.HModel.use_ibw = False
+            self.HBody.use_ibw = False
             self.lbl_weight['state'] = NORMAL
             self.ctl_weight['state'] = NORMAL
         else:
-            self.HModel.use_ibw = True
+            self.HBody.use_ibw = True
             self.ctl_weight.delete(0, END)
-            self.ctl_weight.insert(0, round(self.HModel.weight, 1))
+            self.ctl_weight.insert(0, round(self.HBody.weight, 1))
             self.ctl_weight['state'] = DISABLED
             self.lbl_weight['state'] = DISABLED
         self.event_generate("<<HumanModelChanged>>")
@@ -308,10 +308,10 @@ class TextView2(scrolledtext.ScrolledText):
 
 
 class MainText(Frame):
-    def __init__(self, parent, human_model):
+    def __init__(self, parent, human_body):
         super(MainText, self).__init__(parent)
         self.parent = parent
-        self.human_model = human_model
+        self.human_body = human_body
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
@@ -320,16 +320,16 @@ class MainText(Frame):
 
     def print(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_model), self.human_model.medication()))
+        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_body), self.human_body.medication()))
 
 
 class CalcElectrolytes(Frame):
-    def __init__(self, parent, human_model):
+    def __init__(self, parent, human_body):
         super(CalcElectrolytes, self).__init__(parent)
         self.__form_ready = False
         self.parent = parent
-        self.human_model = human_model
-        self.human_blood = abg.HumanBlood()
+        self.human_body = human_body
+        self.human_blood = abg.HumanBloodModel()
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
 
@@ -429,7 +429,7 @@ class CalcElectrolytes(Frame):
         info = "{}\n".format(self.human_blood.describe_pH())
         info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
         info += "{}\n".format(self.human_blood.describe_electrolytes())
-        weight = self.human_model.weight
+        weight = self.human_body.weight
         info += "\n--- Electrolyte abnormalities-------------------\n{}\n{}\n".format(
             electrolytes.kurek_electrolytes_K(weight, self.human_blood.K),
             electrolytes.kurek_electrolytes_Na(weight, self.human_blood.Na))
@@ -438,10 +438,10 @@ class CalcElectrolytes(Frame):
 
 class CalcGFR(Frame):
     """Esimate glomerular filtration rate (eGFR)"""
-    def __init__(self, parent, human_model):
+    def __init__(self, parent, human_body):
         super(CalcGFR, self).__init__(parent)
         self.parent = parent
-        self.human_model = human_model
+        self.human_body = human_body
 
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
@@ -488,14 +488,14 @@ class CalcGFR(Frame):
         self.print()
 
     def set_model_age(self, event=None):
-        self.human_model.age = float(self.ctl_sbx_age.get())
+        self.human_body.age = float(self.ctl_sbx_age.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
-        sex = self.human_model.sex
+        sex = self.human_body.sex
         if sex in ('male', 'female'):
             cCrea = float(self.ctl_sbx_ccrea.get())
-            age = self.human_model.age
+            age = self.human_body.age
             black_skin = (self.var_isblack.get() == 1)
             mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
             epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)

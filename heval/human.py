@@ -81,7 +81,7 @@ paed = {  # 3 year old kid
     }
 
 
-class HumanModel(object):
+class HumanBodyModel(object):
     def __init__(self):
         self._height = None
         self._sex = None

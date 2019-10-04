@@ -41,7 +41,7 @@ live_pH = (6.8, 7.8)  # Live borders
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 
-class HumanBlood(object):
+class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
     def __init__(self):
         self.pH = None

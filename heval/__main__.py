@@ -70,7 +70,7 @@ class MainWindow(Frame):
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
         self.CGFR = CalcGFR(nb, self.HBody)
         nb.add(self.MText, text='Human')
-        nb.add(self.CElectrolytes, text='Electrolytes')
+        nb.add(self.CElectrolytes, text="ABG & Electrolytes")
         nb.add(self.CGFR, text='eGFR')
         nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
 
@@ -315,7 +315,7 @@ class MainText(Frame):
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.TxtView.set_text("Got lost? Select 'Help' in menu, or just press F1 key.\n"
+        self.TxtView.set_text("Got lost? Select 'Help' in menu, or just press F1 key.\n\n"
             "Страшно и непонятно? Выберите 'Help' в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.")
 
     def print(self, event=None):
@@ -384,7 +384,18 @@ class CalcElectrolytes(Frame):
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
-        self.TxtView.set_text("Make sure you set sex, body weight.")
+        self.TxtView.set_text(textwrap.dedent("""\
+            Make sure you set sex, body weight.
+
+            Use real patients' data: all electrolytes interconnected by
+            electroneutrality law, Henderson-Hasselbalch equation. So even
+            if you enter values each of which in reference range,
+            calculations can produce a broken result, especially anion gap.
+
+            Same applies for analytical errors in lab: garbage in - grabage out.
+            Some imagined book case studies will fail too.
+            """))
+        # This one not fail: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, END)

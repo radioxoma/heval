@@ -101,8 +101,8 @@ class HumanBloodModel(object):
 
     def describe_electrolytes(self):
         info = ""
-        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '\t'))
-        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '\t'))
+        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
         info += "\n--- Anion gap assessment -----------------------\n"
         info += "Anion gap {:.1f} mEq/L. ".format(self.anion_gap)
         info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
@@ -211,22 +211,27 @@ def calculate_anion_gap_delta(AG, HCO3act):
         return info + "gg < 0.4 Гиперхлоремический ацидоз с нормальной анионной разницей"
         # Hyperchloraemic normal anion gap acidosis
     elif 0.4 <= gg <= 0.8:
-        return info + "0.4 <= gg <= 0.8 Комбинированный метаболический ацидоз с увеличенной и нормальной анионной разницей, часто встречается при ацидозе, ассоциированном с почечной недостаточностью"
+        return info + "0.4 <= gg <= 0.8 Combined HAGMA + NAGMA, ratio <1 is often associated with renal failure - check urine and kidney"
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
     elif 0.8 < gg < 1:
         return info + "0.8 < gg <= 1 Наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен"
     elif 1 <= gg <= 2:
-        return info + "1 < gg <= 2 Типично для ацидоза с увеличенной анионной разницей"
-        # Usual for uncomplicated high-AG acidosis
+        return info + "1 < gg <= 2 Typical high Anion gap acidosis"
+        # Usual for uncomplicated high-AG acidosis - ("pure metabolic acidosis"?)
         # Lactic acidosis: average value 1.6
         # DKA more likely to have a ratio closer to 1 due to urine ketone
-        # loss (especially if patient not dehydrated)
+        # loss (especially if patient not dehydrated).
+
+        # Absence of ketones in the urine can be seen in early DKA due to the
+        # predominance of beta-hydroxybutyrate. The dipstick test for ketones
+        # detect acetoacetate but not beta-hydroxybutyrate.
+        # https://web.archive.org/web/20170831093311/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_2.html
     elif 2 < gg:
         # Suggests a pre-existing elevated [HCO3-] level so consider:
         #   * a concurrent metabolic alkalosis
         #   * a pre-existing compensated respiratory acidosis
-        return info + "2 < gg Необходимо проверить наличие сопутствующего метаболического алкалоза или хронического респираторного ацидоза, сопровождающегося компенсаторным увеличением HCO3-"
+        return info + "2 < gg Concurrent metabolic alkalosis или хронического респираторного ацидоза, сопровождающегося компенсаторным увеличением HCO3-"
     else:
         raise NotImplementedError(gg)
 
@@ -701,8 +706,7 @@ def abg_approach_stable(pH, pCO2):
                 guess += "background metabolic alcalosis, "
             else:
                 guess += "background metabolic acidosis, "
-        return "%(guess)sexpected pH %(ex_pH).2f" % {
-            'guess': guess, 'ex_pH': ex_pH}
+        return "{}expected pH {:.2f}".format(guess, ex_pH)
 
     if norm_pH[0] <= pH <= norm_pH[1]:  # pH is normal or compensated
         # Don't calculating expected CO2/pH values because both values are
@@ -730,7 +734,7 @@ def abg_approach_stable(pH, pCO2):
             # Достаточно ли такого изменения pH, чтобы дать такой pCO2?
             if pH < norm_pH[0]:
                 # Check anion gap here?
-                return "Metabolic acidosis, partial comp. by CO2 alcalosis [check BDG]"
+                return "Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]"
             elif pH > norm_pH[1]:
                 return "Respiratory alcalosis (%s)" % check_metabolic(pH, pCO2)
         elif pCO2 > norm_pCO2[1]:
@@ -780,7 +784,7 @@ def abg_approach_ryabov(pH, pCO2):
     info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
     pH_diff = pH - pH_expected
     be = pH_diff / 0.015
-    info += "found metabolic base excess ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L".format(pH, pH_expected, be)
+    info += "estimated BE ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L".format(pH, pH_expected, be)
     return info
 
 
@@ -817,14 +821,17 @@ def abg_approach_research(pH, pCO2):
         7.4 + 0.003 * (40 - pCO2mmHg))
 
     """
-    Winters' formula
+    Winters' formula - checks if respiratory response adequate for given pH and pCO2
       * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
       * https://www.ncbi.nlm.nih.gov/pubmed/6016545
       * https://en.wikipedia.org/wiki/Winters%27_formula
       * https://jasn.asnjournals.org/content/21/6/920
     """
-    info += "[Winters'] pCO2 by cHCO3(P) expected\n * acidisis {:.1f}±2 mmHg\n * alcalosis {:.1f}±1.5 mmHg".format(
-        1.5 * HCO3act + 8, 0.7 * HCO3act + 20)
+    wint_ac = 1.5 * HCO3act + 8
+    wint_alc = 0.7 * HCO3act + 20
+    info += "[Winters'] pCO2 by cHCO3(P) expected respiratory compensation:\n"
+    info += " * acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
+    info += " * alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
     return info
 
 

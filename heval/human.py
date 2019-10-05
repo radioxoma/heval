@@ -34,6 +34,7 @@ Function parameters tends to be in International System of Units.
 """
 
 __abbr__ = """\
+AG - anion gap
 BMI - body mass index, calculated
 BMR - basal metabolic rate
 BSA - body surface area, m^2, calculated
@@ -41,6 +42,8 @@ CKD - chronic kidney disease
 eGFR - estimated glomerular filtration rate
 IBW - ideal body weight, kg, calculated
 RBW - real body weight, kg
+HAGMA - high anion gap metabolic acidosis
+NAGMA - normal anion gap metabolic acidosis
 """
 
 # Average Belorussian male in 2008 >=18 years old

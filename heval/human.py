@@ -89,8 +89,8 @@ class HumanBodyModel(object):
         self._height = None
         self._sex = None
         self._age = None
-        self.weight_ideal = None
         self._use_ibw = False
+        self._weight_ideal_valid = False
 
         self.comment = list()
         self.weight = None
@@ -108,7 +108,10 @@ class HumanBodyModel(object):
             return "Human model not initialized with data"
         # Nutrition status
         info = "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
-        info += " IBW {:.1f} kg,".format(self.weight_ideal)
+        if self._weight_ideal_valid:
+            info += " IBW {:.1f} kg,".format(self.weight_ideal)
+        else:
+            info += " IBW cannot be calculated for this height,"
         bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
         if self.sex in ('male', 'female'):
             info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
@@ -148,7 +151,6 @@ class HumanBodyModel(object):
         :param value bool: Use or not IBW, bool
         """
         self._use_ibw = value
-        self.reinit()
 
     @property
     def sex(self):
@@ -157,7 +159,6 @@ class HumanBodyModel(object):
     @sex.setter
     def sex(self, value):
         self._sex = value
-        self.reinit()
 
     @property
     def height(self):
@@ -166,7 +167,6 @@ class HumanBodyModel(object):
     @height.setter
     def height(self, value):
         self._height = value
-        self.reinit()
 
     @property
     def weight(self):
@@ -184,6 +184,42 @@ class HumanBodyModel(object):
         self._weight = value
 
     @property
+    def weight_ideal(self):
+        """Evaluate ideal body weight (IBW) for all ages.
+
+        Check https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
+
+        Понятие идеальной массы тела было введено во время изучения клиренса лекарственных средств,
+        так как клиренс ЛС больше кореллирует с идеальной, чем с реальной массой тела.
+        Ideal weight for minute volume calculation taken from Hamilton G5 documentation
+            1. Formulas for adult male/female taken from Hamilton G5 Ventilator - Operators manual ru v2.6x 2017-02-24 page 197
+            2. Precalculated tables 4-1, 4-2 to check formulas was taken from RAPHAEL-ops-manual-ru-624150.02 2015-09-24
+            3. Traub-Kichen formula for paed taken directly from publications, not from hamilton docs
+
+        Определение должной массы тела (ДМТ) [посдеж 2014, страница 211]:
+            self.weight_ideal = 50 +   0.91   (height * 100 - 152.4);   # Для мужчин
+            self.weight_ideal = 45.5 + 0.91 (height * 100 - 152.4);   # Для женщин
+            Упрощенный вариант расчета для обоих полов: self.weight_ideal = height – 100
+        """
+        # IBW estimation formulas cover not all ranges. This flag helps prevent
+        # misuse of explicitly invalid IBW in e.g. respirarory calculations
+        self._weight_ideal_valid = True
+        if self.sex == 'male':  # Adult male, negative value with height <97 cm
+            # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
+            weight_ideal = 0.9079 * self.height * 100 - 88.022  # kg
+        elif self.sex == 'female':  # Adult female, negative value with height <101 cm
+            # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
+            weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
+        elif self.sex == 'paed':
+            if not 0.74 <= self.height <= 1.524:  # Ranges from paper
+                self._weight_ideal_valid = False
+                print("WARNING: paed IBW estimation accurate only for height 0.74-1.524 m.\n".format(self.height))
+            # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
+            # For children over 74 cm and aged 1 to 17 years.
+            weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
+        return weight_ideal
+
+    @property
     def age(self):
         return self._age
 
@@ -192,9 +228,6 @@ class HumanBodyModel(object):
         """Human age in years."""
         self._age = value
 
-    def reinit(self):
-        if self._sex and self._height:
-            self.weight_ideal = self.body_mass_ideal(sex=self._sex, height=self._height)
 
     def _info_in_respiration(self):
         """Calulate optimal Tidal Volume for given patient (any gase mixture).
@@ -226,11 +259,8 @@ class HumanBodyModel(object):
         По дыхательным объёмам у детей TV одинаковый, F у новорождённых больше, MV разный.
         [Курек 2013 стр. 63, 71]
         """
-        VDaw = 2.2 * self.weight_ideal
-        Tv_min = 2 * VDaw  # ml Lowest reasonable tidal volume
-
         def normal_minute_ventilation(ibw):
-            """Calculate normal minute ventilation for humans with IBw >=3 kg.
+            """Calculate normal minute ventilation for humans with IBW >=3 kg.
 
             Calculation accomplished according to ASV ventilation mode from
             Hamilton G5 Ventilator - Operators manual en v2.6x 2016-03-07 p 451 or C-11
@@ -256,17 +286,27 @@ class HumanBodyModel(object):
                 mv = 0.1
             return mv
 
-        info = ""
-        mv = normal_minute_ventilation(self.weight_ideal)  
-        Vd = mv * self.weight_ideal  # l/min
-        if self.weight_ideal < 3:
-            info += " * WARNING: MV calculation for paed <3 kg is not supported\n"
+        # Use RBW for neonates:
+        #    * I don't know how to calculate IBW for neonates
+        #    * Neonate's weight must be known in advance
+        #    * They RBW must be near IBW
+        if self._weight_ideal_valid:
+            weight_type = "IBW"
+            weight_chosen = self.weight_ideal
         else:
-            info += "IBW respiration for {} {:.1f} kg [Hamilton ASV]\n".format(self.sex, self.weight_ideal)
-            info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
-            info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
-            info += " * TV x6.5={:.0f} ml, RR {:.0f}/min\n".format(self.weight_ideal * 6.5, Vd * 1000 / (self.weight_ideal * 6.5))
-            info += " * TV x8.5={:.0f} ml, RR {:.0f}/min".format(self.weight_ideal * 8.5, Vd * 1000 / (self.weight_ideal * 8.5))
+            weight_type = "RBW"
+            weight_chosen = self.weight
+
+        VDaw = 2.2 * weight_chosen  # Dead space
+        Tv_min = 2 * VDaw  # ml Lowest reasonable tidal volume
+        info = ""
+        mv = normal_minute_ventilation(weight_chosen)
+        Vd = mv * weight_chosen  # l/min
+        info += "{} respiration for {} {:.1f} kg [Hamilton ASV]\n".format(weight_type, self.sex, weight_chosen)
+        info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
+        info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
+        info += " * TV x6.5={:.0f} ml, RR {:.0f}/min\n".format(weight_chosen * 6.5, Vd * 1000 / (weight_chosen * 6.5))
+        info += " * TV x8.5={:.0f} ml, RR {:.0f}/min".format(weight_chosen * 8.5, Vd * 1000 / (weight_chosen * 8.5))
         return info
 
     def _info_in_fluids(self):
@@ -415,37 +455,6 @@ class HumanBodyModel(object):
             return "Medication not initialized"
         else:
             return "\n".join(["* " + str(d) for d in self.drug_list])
-
-    def body_mass_ideal(self, sex, height):
-        """Evaluate ideal body weight (IBW) for all ages.
-
-        Check https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
-
-        Понятие идеальной массы тела было введено во время изучения клиренса лекарственных средств,
-        так как клиренс ЛС больше кореллирует с идеальной, чем с реальной массой тела.
-        Ideal weight for minute volume calculation taken from Hamilton G5 documentation
-            1. Formulas for adult male/female taken from Hamilton G5 Ventilator - Operators manual ru v2.6x 2017-02-24 page 197
-            2. Precalculated tables 4-1, 4-2 to check formulas was taken from RAPHAEL-ops-manual-ru-624150.02 2015-09-24
-            3. Traub-Kichen formula for paed taken directly from publications, not from hamilton docs
-
-        Определение должной массы тела (ДМТ) [посдеж 2014, страница 211]:
-            self.weight_ideal = 50 +   0.91   (height * 100 - 152.4);   # Для мужчин
-            self.weight_ideal = 45.5 + 0.91 (height * 100 - 152.4);   # Для женщин
-            Упрощенный вариант расчета для обоих полов: self.weight_ideal = height – 100
-        """
-        if sex == 'male':  # Adult male, negative value with height <97 cm
-            # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
-            weight_ideal = 0.9079 * height * 100 - 88.022  # kg
-        elif sex == 'female':  # Adult female, negative value with height <101 cm
-            # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
-            weight_ideal = 0.9049 * height * 100 - 92.006  # kg
-        elif sex == 'paed':
-            if not 0.74 <= height <= 1.524:  # Ranges from paper
-                print("WARNING: paed IBW estimation accurate only for height 0.74-1.524 m.\n".format(height))
-            # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
-            # For children over 74 cm and aged 1 to 17 years.
-            weight_ideal = 2.396 * math.exp(0.01863 * height * 100)
-        return weight_ideal
 
 
 def body_mass_index(height, weight):

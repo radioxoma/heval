@@ -70,7 +70,7 @@ class HumanBloodModel(object):
 
     @property
     def anion_gapk(self):
-        """Anion gap (K+)."""
+        """Anion gap (K+), usually not needed"""
         if self.K is not None:
             return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
         else:
@@ -147,8 +147,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     :param float HCO3act: Serum actual bicarbonate (HCO3(P)), mmol/L.
     :param float K: Serum potassium, mmol/L.
         If not given returns AG, otherwise AG(K). Serum potassium value
-        usually low and frequently omitted. Normal reference values different
-        for potassium and non-potassium anion gap.
+        usually low and frequently omitted. Usually not used.
     :param float albuminum: Protein correction, g/dL. If not given,
         hypoalbuminemia leads to lower anion gap.
     :return:
@@ -741,6 +740,7 @@ def abg_approach_stable(pH, pCO2):
             if pH < norm_pH[0]:
                 return "Respiratory acidosis (%s)" % check_metabolic(pH, pCO2)
             elif pH > norm_pH[1]:
+                # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
                 return "Metabolic alcalosis, partial comp. by CO2 acidosis [check Na, Cl, albumin]"
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)

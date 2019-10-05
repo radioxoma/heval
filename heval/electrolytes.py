@@ -117,7 +117,7 @@ def kurek_electrolytes_K(weight, K_serum):
         * CaCl2 - только если есть изменения на ЭКГ [PICU: Electrolyte Emergencies]
         * гипервентиляция
     """
-    K_high = 7  # Курек 131
+    K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
     K_low = 3.5  # Курек 132
 
@@ -145,7 +145,7 @@ def kurek_electrolytes_K(weight, K_serum):
         glu_mass = K_deficiency * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
         info += glucosae_solution(glu_mass, weight)
 
-    elif K_serum > K_high:
+    elif K_serum >= K_high:
         glu_mass = 0.5 * weight
         info += "K is dangerously high (>{} mmol/L)\n".format(K_high)
         info += "Inject bolus for paed "

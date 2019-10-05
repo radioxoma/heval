@@ -111,7 +111,7 @@ class HumanBodyModel(object):
         if self._weight_ideal_valid:
             info += " IBW {:.1f} kg,".format(self.weight_ideal)
         else:
-            info += " IBW cannot be calculated for this height,"
+            info += " IBW can't be calculated for this height, enter weight."
         bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
         if self.sex in ('male', 'female'):
             info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
@@ -319,9 +319,8 @@ class HumanBodyModel(object):
             h2o_min = 30 * self.weight
             h2o_max = 35 * self.weight
             info += "RBW adult fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(h2o_min, h2o_max)
-            info += "Max speed {:.0f} ml/h (120 ml/kg/h) [Курек]\n".format(2 * 60 * self.weight)  # [2.0 ml/kg/min Курек 2013 с 127]
-            info += "Bolus {:.0f} ml (20-30 ml/kg)".format(self.weight * 25)
-
+            # [2.0 ml/kg/min Курек 2013 с 127]
+            info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (120 ml/kg/h) [Курек]".format(self.weight * 25, 2 * 60 * self.weight)
             # Видимо к жидкости потребления нужно добавлять перспирационные потери
             # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
             # info += "\nRBW Perspiration: {:.0f} ml/24h [Расенок]".format(persp_ros)
@@ -342,7 +341,8 @@ class HumanBodyModel(object):
             """
             hs_fluid = fluid_req_holidaysegar_mod(self.weight)
             info += "RBW paed fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid/24)
-            info += "Max speed {:.0f} ml/h (72 ml/kg/h) [Курек]".format(1.2 * 60 * self.weight)  # [1.2 ml/kg/min Курек 2013 с 127]
+            # [1.2 ml/kg/min Курек 2013 с 127]
+            info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (72 ml/kg/h) [Курек]".format(self.weight * 25, 1.2 * 60 * self.weight)
             """
             Тестовый болюс при низком давлении у детей 20 мл/кг?
             [IV Fluids in Children](https://www.ncbi.nlm.nih.gov/books/NBK349484/)

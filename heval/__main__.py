@@ -434,11 +434,7 @@ class CalcElectrolytes(Frame):
     def print(self, event=None):
         info = "{}\n".format(self.human_model.blood.describe_pH())
         info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
-        info += "{}\n".format(self.human_model.blood.describe_electrolytes())
-        weight = self.human_model.weight
-        info += "\n--- Electrolyte abnormalities-------------------\n{}\n{}\n".format(
-            electrolytes.kurek_electrolytes_K(weight, self.human_model.blood.K),
-            electrolytes.kurek_electrolytes_Na(weight, self.human_model.blood.Na))
+        info += "{}\n".format(self.human_model.blood.describe_experimental())
         self.TxtView.set_text(info)
 
 

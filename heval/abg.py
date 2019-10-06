@@ -23,6 +23,7 @@ Main statements:
     * Formulas is main importance with good documentation first, then call it inside class
 """
 
+from heval import electrolytes
 import textwrap
 try:
     from uncertainties import umath as math
@@ -44,6 +45,7 @@ kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
     def __init__(self, parent=None):
+        self.parent = parent
         self.pH = None
         self.pCO2 = None       # kPa
 
@@ -61,9 +63,9 @@ class HumanBloodModel(object):
     #     pass
 
     @property
-    def be(self):
+    def sbe(self):
         return calculate_cbase(self.pH, self.pCO2)
-
+ 
     @property
     def hco3p(self):
         return calculate_hco3p(self.pH, self.pCO2)
@@ -95,17 +97,39 @@ class HumanBloodModel(object):
         Result: {}""".format(
             self.pCO2,
             self.hco3p,
-            self.be,
+            self.sbe,
             abg_approach_stable(self.pH, self.pCO2))
         return textwrap.dedent(info)
 
-    def describe_electrolytes(self):
+    def describe_experimental(self):
         info = ""
+        info += "-- pH abnormalities -----------------------------\n"
+        # Metabolic acidosis correction
+        # "pH < 7.26 or hco3p < 15" requres correction with NaHCO3 [Курек 2013, с 47]
+        # Both values pretty close to BE -9 meq/L, so I use it as threshold
+        if self.sbe < -9:
+            info += "Metabolic acidosis (low SBE), could use ".format(self.pH)
+            # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Курек 2013, с 47
+            NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
+            NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
+            NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
+            NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
+            info += "NaHCO3 -0.3*SBE/kg={:.0f} mmol during 30-60 minutes, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for paed and adult
+            for dilution in (4, 8.4):
+                NaHCO3_ml = NaHCO3_g / dilution * 100
+                NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
+                info += "  * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
+            info += "\n"
+
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
         info += "\n-- Anion gap assessment for metabolic acidosis --\n"
         info += "Anion gap {:.1f} mEq/L. ".format(self.anion_gap)
-        info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+        info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+
+        info += "\n-- Electrolyte abnormalities --------------------\n"
+        info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.K))
+        info += "{}\n".format(electrolytes.kurek_electrolytes_Na(self.parent.weight, self.Na))
         return info
 
 
@@ -727,7 +751,7 @@ def abg_approach_stable(pH, pCO2):
             else:
                 return "Metabolic alcalosis, full comp. by CO2 acidosis"
         else:
-            return "ABG normal"
+            return "Normal ABG"
     else:
         # pH decompensation
         if pCO2 < norm_pCO2[0]:  # Low (respiratory alcalosis)
@@ -811,7 +835,7 @@ def abg_approach_research(pH, pCO2):
 
     try:
         y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
-        info += "y = ΔpH/ΔpCO2×100 = {:.2f}\n".format(y)
+        info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table to assess]\n".format(y)
     except ZeroDivisionError:
         info += "ZeroDivisionError\n"
 

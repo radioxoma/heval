@@ -3,6 +3,7 @@
 
 import math
 from heval.drugs import *
+from heval import abg
 
 """
 Calculations based on human height and weight.
@@ -92,7 +93,8 @@ class HumanBodyModel(object):
         self._use_ibw = False
         self._weight_ideal_valid = False
 
-        self.comment = list()
+        self.blood = abg.HumanBloodModel(self)
+        self.comment = dict()  # For warnings
         self.weight = None
         self.body_temp = 36.6
         self.drug_list = [
@@ -133,7 +135,7 @@ class HumanBodyModel(object):
         info += "\n--- OUT ----------------------------------------\n"  # Also CO2, feces
         info += "{}\n".format(self._info_out_fluids())
         if self.comment:
-            info += "\nComments:\n{}\n".format('\n'.join(self.comment))
+            info += "\nComments:\n{}\n".format(self.comment)
         return info
 
     def is_init(self):

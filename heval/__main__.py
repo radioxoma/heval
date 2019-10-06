@@ -308,10 +308,10 @@ class TextView2(scrolledtext.ScrolledText):
 
 
 class MainText(Frame):
-    def __init__(self, parent, human_body):
+    def __init__(self, parent, human_model):
         super(MainText, self).__init__(parent)
         self.parent = parent
-        self.human_body = human_body
+        self.human_model = human_model
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
@@ -320,16 +320,15 @@ class MainText(Frame):
 
     def print(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_body), self.human_body.medication()))
+        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_model), self.human_model.medication()))
 
 
 class CalcElectrolytes(Frame):
-    def __init__(self, parent, human_body):
+    def __init__(self, parent, human_model):
         super(CalcElectrolytes, self).__init__(parent)
         self.__form_ready = False
         self.parent = parent
-        self.human_body = human_body
-        self.human_blood = abg.HumanBloodModel()
+        self.human_model = human_model
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
 
@@ -413,42 +412,42 @@ class CalcElectrolytes(Frame):
         self.set_model_Cl()
 
     def set_model_pH(self, event=None):
-        self.human_blood.pH = float(self.ctl_sbx_pH.get())
+        self.human_model.blood.pH = float(self.ctl_sbx_pH.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_pCO2(self, event=None):
-        self.human_blood.pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
+        self.human_model.blood.pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_K(self, event=None):
-        self.human_blood.K = float(self.ctl_sbx_K.get())
+        self.human_model.blood.K = float(self.ctl_sbx_K.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Na(self, event=None):
-        self.human_blood.Na = float(self.ctl_sbx_Na.get())
+        self.human_model.blood.Na = float(self.ctl_sbx_Na.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Cl(self, event=None):
-        self.human_blood.Cl = float(self.ctl_sbx_Cl.get())
+        self.human_model.blood.Cl = float(self.ctl_sbx_Cl.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
-        info = "{}\n".format(self.human_blood.describe_pH())
+        info = "{}\n".format(self.human_model.blood.describe_pH())
         info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
-        info += "{}\n".format(self.human_blood.describe_electrolytes())
-        weight = self.human_body.weight
+        info += "{}\n".format(self.human_model.blood.describe_electrolytes())
+        weight = self.human_model.weight
         info += "\n--- Electrolyte abnormalities-------------------\n{}\n{}\n".format(
-            electrolytes.kurek_electrolytes_K(weight, self.human_blood.K),
-            electrolytes.kurek_electrolytes_Na(weight, self.human_blood.Na))
+            electrolytes.kurek_electrolytes_K(weight, self.human_model.blood.K),
+            electrolytes.kurek_electrolytes_Na(weight, self.human_model.blood.Na))
         self.TxtView.set_text(info)
 
 
 class CalcGFR(Frame):
     """Esimate glomerular filtration rate (eGFR)"""
-    def __init__(self, parent, human_body):
+    def __init__(self, parent, human_model):
         super(CalcGFR, self).__init__(parent)
         self.parent = parent
-        self.human_body = human_body
+        self.human_model = human_model
 
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
@@ -495,14 +494,14 @@ class CalcGFR(Frame):
         self.print()
 
     def set_model_age(self, event=None):
-        self.human_body.age = float(self.ctl_sbx_age.get())
+        self.human_model.age = float(self.ctl_sbx_age.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
-        sex = self.human_body.sex
+        sex = self.human_model.sex
         if sex in ('male', 'female'):
             cCrea = float(self.ctl_sbx_ccrea.get())
-            age = self.human_body.age
+            age = self.human_model.age
             black_skin = (self.var_isblack.get() == 1)
             mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
             epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)

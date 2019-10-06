@@ -43,7 +43,7 @@ kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
-    def __init__(self):
+    def __init__(self, parent=None):
         self.pH = None
         self.pCO2 = None       # kPa
 

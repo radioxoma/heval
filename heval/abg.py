@@ -103,7 +103,7 @@ class HumanBloodModel(object):
         info = ""
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
-        info += "\n--- Anion gap assessment -----------------------\n"
+        info += "\n-- Anion gap assessment for metabolic acidosis --\n"
         info += "Anion gap {:.1f} mEq/L. ".format(self.anion_gap)
         info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
         return info
@@ -112,10 +112,10 @@ class HumanBloodModel(object):
 def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
-    Помогает при выявлении противонаправленных метаболических процессов.
-    Напрмиер потеря Cl (алкалоз) и лактат-ацидоз.
-
     May be known as SID [1], AG. Don't get confused with 'osmol gap'.
+
+    Помогает при выявлении противонаправленных метаболических процессов.
+    Напрмиер потеря Cl- (алкалоз) и лактат-ацидоз.
 
     Corresponds to phosphates, sulphates, proteins (albuminum).
     High gap: acute kidney injury, lactate, ketoacidosis, salicylate ->
@@ -210,9 +210,10 @@ def calculate_anion_gap_delta(AG, HCO3act):
         return info + "gg < 0.4 Гиперхлоремический ацидоз с нормальной анионной разницей"
         # Hyperchloraemic normal anion gap acidosis
     elif 0.4 <= gg <= 0.8:
-        return info + "0.4 <= gg <= 0.8 Combined HAGMA + NAGMA, ratio <1 is often associated with renal failure - check urine and kidney"
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
+        # Renal tubular acidosis https://web.archive.org/web/20170802021754/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_5.html
+        return info + "0.4 <= gg <= 0.8 Combined HAGMA + NAGMA, ratio <1 is often associated with renal failure - check urine electrolytes and kidney function"
     elif 0.8 < gg < 1:
         return info + "0.8 < gg <= 1 Наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен"
     elif 1 <= gg <= 2:
@@ -830,8 +831,8 @@ def abg_approach_research(pH, pCO2):
     wint_ac = 1.5 * HCO3act + 8
     wint_alc = 0.7 * HCO3act + 20
     info += "[Winters'] pCO2 by cHCO3(P) expected respiratory compensation:\n"
-    info += " * acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
-    info += " * alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
+    info += " * metabolic acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
+    info += " * metabloic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
     return info
 
 

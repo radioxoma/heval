@@ -193,7 +193,7 @@ class HelpWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        self.lbl = Label(self, text=__helptext__, wraplength=500)
+        self.lbl = Label(self, text=__helptext__, wraplength=500, padding=8)
         self.lbl.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self)
@@ -215,10 +215,10 @@ class AboutWindow(Toplevel):
 
         abouttext = __about__ + "And remember: {}".format(
             random.choice(electrolytes.__EASTER_TEXT__))
-        self.lbl = Label(self, text=abouttext, wraplength=500)
+        self.lbl = Label(self, text=abouttext, wraplength=500, padding=8)
         self.lbl.pack(expand=True, fill=BOTH)
 
-        self.ctl_frame = Frame(self)
+        self.ctl_frame = Frame(self, padding=8)
         self.ctl_btn_website = Button(self.ctl_frame, text="Visit website", command=self.visit_website)
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=RIGHT)
@@ -316,7 +316,7 @@ class MainText(Frame):
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.TxtView.set_text("Got lost? Select 'Help' in menu, or just press F1 key.\n\n"
-            "Страшно и непонятно? Выберите 'Help' в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.")
+            "Не знаете с чего начать? Выберите 'Help' в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.")
 
     def print(self, event=None):
         """Calculate and print some evaluated data."""
@@ -387,15 +387,11 @@ class CalcElectrolytes(Frame):
         self.TxtView.set_text(textwrap.dedent("""\
             Make sure you set sex, body weight.
 
-            Use real patients' data: all electrolytes interconnected by
-            electroneutrality law, Henderson-Hasselbalch equation. So even
-            if you enter values each of which in reference range,
-            calculations can produce a broken result, especially anion gap.
+            Use real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap.
 
-            Same applies for analytical errors in lab: garbage in - grabage out.
-            Some imagined book case studies will fail too.
+            Same applies for analytical errors in lab: garbage in - grabage out. Some imagined book case studies will fail too.
             """))
-        # This one not fail: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
+        # This one is good: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, END)

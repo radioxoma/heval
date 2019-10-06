@@ -65,7 +65,11 @@ def glucosae_solution(glu_mass, body_weight):
         speed_low = (g_low * body_weight) / dilution * 100
         speed_max = (g_max * body_weight) / dilution * 100
         vol = glu_mass / dilution * 100
-        info += " * Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.2f} g/kg/h)\n".format(dilution, vol, speed_low, speed_max, g_low, g_max)
+        info += " * Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.2f} g/kg/h)".format(dilution, vol, speed_low, speed_max, g_low, g_max)
+        if dilution == 5:
+            info += " isotonic"
+        info += "\n"
+
     return info
 
 
@@ -86,6 +90,7 @@ def kurek_electrolytes_K(weight, K_serum):
 
     * Содержание K до 5 лет значительно выше [Курек 2013 с 38]
     * Если K+ <3 mmol/L, то введение глюкозы с инсулином может усугубить гипокалиемию, поэтому K+ вводить вместе с NaCl. [Курек ИТ 557]
+    * Metabolic acidosis raises plasma K+ level by displacing it from cells [Рябов 1994, с 70]
 
     [130]:
         * Высшая суточная доза 4 mmol/kg/24h

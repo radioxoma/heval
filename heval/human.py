@@ -40,10 +40,10 @@ BMR - basal metabolic rate
 BSA - body surface area, m^2, calculated
 CKD - chronic kidney disease
 eGFR - estimated glomerular filtration rate
-IBW - ideal body weight, kg, calculated
-RBW - real body weight, kg
 HAGMA - high anion gap metabolic acidosis
+IBW - ideal body weight, kg, calculated
 NAGMA - normal anion gap metabolic acidosis
+RBW - real body weight, kg
 """
 
 # Average Belorussian male in 2008 >=18 years old

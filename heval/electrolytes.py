@@ -143,7 +143,7 @@ def kurek_electrolytes_K(weight, K_serum):
         K_deficiency = (K_target - K_serum) * weight * coefficient
         # K_deficiency += weight * 1  # mmol/kg/24h Should I add also суточная потребность?
 
-        info += "Estimated K_deficiency (for paed too?) is {:.0f} mmol + ".format(K_deficiency)
+        info += "Estimated K deficiency (for paed too?) is {:.0f} mmol + ".format(K_deficiency)
         if K_deficiency > 4 * weight:
             info += "Too much potassium for 24 hours"
 

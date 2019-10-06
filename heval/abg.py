@@ -104,8 +104,19 @@ class HumanBloodModel(object):
     def describe_experimental(self):
         info = ""
         info += "-- pH abnormalities -----------------------------\n"
+        # Various facts
+        # * Target urine pH 8, serum 7.34 [посдеж 379]
+        # * When pH increases, K level decreases
+        # * ACLS (paed and adult): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]
+        # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
+        # * Control pH after eash NaHCO3 infusion or every 4 hours
+        # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
+        # TCA poisining calculation?
+
+        # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
         # Metabolic acidosis correction
         # "pH < 7.26 or hco3p < 15" requres correction with NaHCO3 [Курек 2013, с 47]
+        # Максимальная доза NaHCO3 is 4-5 mmol/kg
         # Both values pretty close to BE -9 meq/L, so I use it as threshold
         if self.sbe < -9:
             info += "Metabolic acidosis (low SBE), could use ".format(self.pH)
@@ -114,7 +125,7 @@ class HumanBloodModel(object):
             NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
             NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
             NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
-            info += "NaHCO3 -0.3*SBE/kg={:.0f} mmol during 30-60 minutes, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for paed and adult
+            info += "NaHCO3 -0.3*SBE/kg={:.0f} mmol during 30-60 minutes with adequate ventilation, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for paed and adult
             for dilution in (4, 8.4):
                 NaHCO3_ml = NaHCO3_g / dilution * 100
                 NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
@@ -124,7 +135,7 @@ class HumanBloodModel(object):
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
         info += "\n-- Anion gap assessment for metabolic acidosis --\n"
-        info += "Anion gap {:.1f} mEq/L. ".format(self.anion_gap)
+        info += "Anion gap {:.1f} mEq/L [normal 7-16]. ".format(self.anion_gap)
         info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
 
         info += "\n-- Electrolyte abnormalities --------------------\n"

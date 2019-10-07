@@ -155,7 +155,7 @@ def kurek_electrolytes_K(weight, K_serum):
         info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
         info += "RBW NaHCO3 4% {:.0f} ml (x2={:.0f} mmol) [Курек 2013]\n".format(2 * weight * M_NaHCO3 / 40, 2 * weight)
         info += "Don't forget furesemide, hyperventilation\n"
-        info += "Don't forget Ca gluconate if ECG changes [PICU: Electrolyte Emergencies]"
+        info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
     else:
         info += "K is ok"
     return info

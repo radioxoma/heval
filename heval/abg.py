@@ -114,7 +114,7 @@ class HumanBloodModel(object):
         # Максимальная доза NaHCO3 is 4-5 mmol/kg [Курек 273]
         # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
         if self.sbe < -9:
-            info += "-- pH corection ---------------------------------\n"
+            info += "\n-- pH corection ---------------------------------\n"
             info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
             info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
 
@@ -133,8 +133,11 @@ class HumanBloodModel(object):
                   * Must hyperventilate to make use of bicarbonate buffer
                   * Control ABG after eash NaHCO3 infusion or every 4 hours
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
-                  * When pH increases, K level decreases\n
+                  * When pH increases, K level decreases
                 """)
+
+        info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
+
         info += "-- pH description -------------------------------\n"
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))

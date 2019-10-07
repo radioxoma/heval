@@ -433,7 +433,6 @@ class CalcElectrolytes(Frame):
 
     def print(self, event=None):
         info = "{}\n".format(self.human_model.blood.describe_pH())
-        info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
         info += "{}\n".format(self.human_model.blood.describe_experimental())
         self.TxtView.set_text(info)
 

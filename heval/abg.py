@@ -12,7 +12,7 @@ Check abg
         check anion gap
 Check A-a gradient? [< 2.6 kPa (20 mmHg)]
 
-[The Computing Techniques](http://www.acid-base.com/computing.php)
+[The Computing Techniques](https://www.acid-base.com/computing.php)
 
 $ md5sum *
 41f8e7d98fcc26ea2319ac8da72ed8cd ABL800 Reference Manual English US.pdf
@@ -90,7 +90,7 @@ class HumanBloodModel(object):
     def describe_pH(self):
         """Describe pH and pCO2 - an old implementation considered stable.
         """
-        info = """\
+        info = textwrap.dedent("""\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
         SBE     {:2.1f} mEq/L
@@ -98,40 +98,44 @@ class HumanBloodModel(object):
             self.pCO2,
             self.hco3p,
             self.sbe,
-            abg_approach_stable(self.pH, self.pCO2))
-        return textwrap.dedent(info)
+            abg_approach_stable(self.pH, self.pCO2)))
+        return info
 
     def describe_experimental(self):
         info = ""
-        info += "-- pH abnormalities -----------------------------\n"
-        # Various facts
-        # * Target urine pH 8, serum 7.34 [посдеж 379]
-        # * When pH increases, K level decreases
-        # * ACLS (paed and adult): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]
+        # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
-        # * Control pH after eash NaHCO3 infusion or every 4 hours
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
-        # TCA poisining calculation?
+        # TCA poisoning calculation?
 
+        # Calculate needed NaHCO3 for correction of metabolic acidosis
+        # "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
+        # but both values pretty close to BE -9 meq/L, so I use it as threshold.
+        # Максимальная доза NaHCO3 is 4-5 mmol/kg [Курек 273]
         # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
-        # Metabolic acidosis correction
-        # "pH < 7.26 or hco3p < 15" requres correction with NaHCO3 [Курек 2013, с 47]
-        # Максимальная доза NaHCO3 is 4-5 mmol/kg
-        # Both values pretty close to BE -9 meq/L, so I use it as threshold
         if self.sbe < -9:
-            info += "Metabolic acidosis (low SBE), could use ".format(self.pH)
-            # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Курек 2013, с 47
+            info += "-- pH corection ---------------------------------\n"
+            info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
+            info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
+
+            # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
             NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
             NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
             NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
             NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
-            info += "NaHCO3 -0.3*SBE/kg={:.0f} mmol during 30-60 minutes with adequate ventilation, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for paed and adult
+            info += "  * NaHCO3 {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for paed and adult
             for dilution in (4, 8.4):
                 NaHCO3_ml = NaHCO3_g / dilution * 100
                 NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
-                info += "  * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
-            info += "\n"
-
+                info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
+            info += textwrap.dedent("""\
+                Main concept of NaHCO3 usage:
+                  * Must hyperventilate to make use of bicarbonate buffer
+                  * Control ABG after eash NaHCO3 infusion or every 4 hours
+                  * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
+                  * When pH increases, K level decreases\n
+                """)
+        info += "-- pH description -------------------------------\n"
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
         info += "\n-- Anion gap assessment for metabolic acidosis --\n"

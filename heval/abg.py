@@ -701,7 +701,11 @@ def gfr_describe(gfr):
 
 
 def expected_pH(pCO2, status='acute'):
-    """Calculate expected pH for given pCO2 (chronic or acute respiratory acidosis).
+    """Calculate pH for given pCO2.
+
+    Positioned as formula for respiratory acidosis (chronic or acute).
+
+    What is the original paper?
 
     References
     ----------
@@ -710,12 +714,15 @@ def expected_pH(pCO2, status='acute'):
     [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
 
     :param float pCO2: kPa
+    :param str status: 'acute' or 'chronic'
     :return:
         Expected pH.
     :rtype: float
     """
-    st = {'acute': 0.008, 'chronic': 0.003}
-    return 7.4 + st[status] * (40.0 - pCO2 / kPa)
+    if status == 'acute':
+        return 7.4 + 0.008 * (40.0 - pCO2 / kPa)
+    else:
+        return 7.4 + 0.003 * (40.0 - pCO2 / kPa)
 
 
 def abg_approach_stable(pH, pCO2):
@@ -793,7 +800,7 @@ def abg_approach_stable(pH, pCO2):
 
 
 def abg_approach_ryabov(pH, pCO2):
-    """Describe ABG by Ryabov algorithm [1].
+    """Describe ABG by Ryabov algorithm.
 
     1. Calculate how measured pCO2 will change normal pH 7.4
     2. Compare measured and calculated pH. Big difference between measured and
@@ -807,8 +814,8 @@ def abg_approach_ryabov(pH, pCO2):
     Examples
     --------
 
-    abg_approach_ryabov(7.36, 55)
-    >>> pH, calculated by pCO2, is 7.40-0.12=7.28, found metabolic Base excess (7.36-7.28)/0.015=+5.33 mEq/L
+    >>> abg_approach_ryabov(7.36, 55*kPa)
+    'pH, calculated by pCO2, is 7.28, estimated SBE (7.36-7.28)/0.015=+5.33 mEq/L'
 
 
     References
@@ -817,16 +824,14 @@ def abg_approach_ryabov(pH, pCO2):
     [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США (AHA?)
 
     :param float pH:
-    :param float pCO2: mmHg
+    :param float pCO2: kPa
     """
-    info = ""
-    pCO2mmHg = pCO2 / kPa
-    pH_shift = 0.008 * (40 - pCO2mmHg)  # Formula for acute respiratory acidosis
-    pH_expected = 7.4 + pH_shift
-    info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
+    # Same as `pH_expected = expected_pH(pCO2, status='acute')`
+    pH_expected = 7.4 + 0.008 * (40 - pCO2 / kPa)
+    info = "pH, calculated by pCO2, is {:.02f}, ".format(pH_expected)
     pH_diff = pH - pH_expected
-    be = pH_diff / 0.015
-    info += "estimated BE ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L".format(pH, pH_expected, be)
+    sbe = pH_diff / 0.015
+    info += "estimated SBE ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L".format(pH, pH_expected, sbe)
     return info
 
 
@@ -856,12 +861,9 @@ def abg_approach_research(pH, pCO2):
     except ZeroDivisionError:
         info += "ZeroDivisionError\n"
 
-    # Expected pH (acute, chronic)
-    # [Костюченко, с 55]
-    info += "[Genderson?] pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
-        7.4 + 0.008 * (40 - pCO2mmHg),
-        7.4 + 0.003 * (40 - pCO2mmHg))
-
+    info += "pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
+        expected_pH(pCO2, 'acute'),
+        expected_pH(pCO2, 'chronic'))
     """
     Winters' formula - checks if respiratory response adequate for given pH and pCO2
       * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine

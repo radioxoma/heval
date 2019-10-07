@@ -36,13 +36,13 @@ Function parameters tends to be in International System of Units.
 
 __abbr__ = """\
 AG - anion gap
-BMI - body mass index, calculated
+BMI - body mass index
 BMR - basal metabolic rate
-BSA - body surface area, m^2, calculated
+BSA - body surface area, m^2
 CKD - chronic kidney disease
 eGFR - estimated glomerular filtration rate
 HAGMA - high anion gap metabolic acidosis
-IBW - ideal body weight, kg, calculated
+IBW - ideal body weight, kg
 NAGMA - normal anion gap metabolic acidosis
 RBW - real body weight, kg
 """
@@ -369,8 +369,10 @@ class HumanBodyModel(object):
             * быстрого увеличения Na после коррекции гипонатриемии > Быстрого увличения осмолярности > центрального понтинного миелинолиза.
             * Восполнение Na не быстрее 10 mmol/L/24h
         """
+        info = ""
         if self.sex in ('male', 'female'):
-            info = " * Na+\t{:.0f} mmol/24h [~1 mmol/kg/24h]\n".format(self.weight)
+            info += "\nElectrolytes daily requirements:\n"
+            info += " * Na+\t{:.0f} mmol/24h [~1 mmol/kg/24h]\n".format(self.weight)
             info += " * K+\t{:.0f} mmol/24h [~1 mmol/kg/24h]".format(self.weight)
             return info
         else:

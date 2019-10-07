@@ -133,8 +133,8 @@ class HumanBloodModel(object):
                   * When pH increases, K level decreases
                 """)
         info += "-- pH description -------------------------------\n"
-        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
+        # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+        info += "{}\n".format(abg_approach_research(self.pH, self.pCO2))
         return info
 
     def describe_electrolytes(self):
@@ -855,12 +855,6 @@ def abg_approach_research(pH, pCO2):
     HCO3act = calculate_hco3p(pH, pCO2)
     pCO2mmHg = pCO2 / kPa
 
-    try:
-        y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
-        info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table to assess]\n".format(y)
-    except ZeroDivisionError:
-        info += "ZeroDivisionError\n"
-
     info += "pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
         expected_pH(pCO2, 'acute'),
         expected_pH(pCO2, 'chronic'))
@@ -873,9 +867,15 @@ def abg_approach_research(pH, pCO2):
     """
     wint_ac = 1.5 * HCO3act + 8
     wint_alc = 0.7 * HCO3act + 20
-    info += "[Winters'] pCO2 by cHCO3(P) expected respiratory compensation:\n"
+    info += "pCO2 by cHCO3(P) expected respiratory compensation [Winters]:\n"
     info += " * metabolic acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
-    info += " * metabloic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
+    info += " * metabloic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
+
+    try:
+        y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
+        info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table to assess]\n".format(y)
+    except ZeroDivisionError:
+        info += "ZeroDivisionError\n"
     return info
 
 

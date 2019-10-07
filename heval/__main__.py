@@ -196,7 +196,7 @@ class HelpWindow(Toplevel):
         self.lbl = Label(self, text=__helptext__, wraplength=500, padding=8)
         self.lbl.pack(expand=True, fill=BOTH)
 
-        self.ctl_frame = Frame(self)
+        self.ctl_frame = Frame(self, padding=8)
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=RIGHT)
         self.ctl_frame.pack(expand=True, fill=BOTH)

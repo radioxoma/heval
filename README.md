@@ -5,7 +5,7 @@ The program describes an human being, small or grown. It takes basic anthropomet
 * Minimal user input
 * Some unknown values (like weight) can be estimated using others (height)
 * No need to input same data into multiple forms
-* No "Calculate" button - when Heval will know enough about your human, it will push back evaluated data immediately
+* No "Calculate" button — when Heval will know enough about your human, it will push back evaluated data immediately
 * Every calculation referenced and explained in source code, so one can reproduce it
 
 Heval gives help to those who can accept it. You have to be familiar with english medical culture (abbreviations, scales etc) or, at least, be able to read. Russian translations known to be ambiguous and too broad.
@@ -17,9 +17,9 @@ An web or Android application is planned, but implementation deferred until calc
 
 ## Installation
 
-`build.bat` creates *pyinstaller* standalone Windows executable (one 'exe' file).
+`build.bat` creates pyinstaller standalone Windows executable (one 'exe' file).
 
-Install in with pip:
+Install Heval with pip:
 
     $ pip install https://github.com/radioxoma/heval/archive/master.zip
 

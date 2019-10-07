@@ -343,14 +343,14 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_pH.bind("<Return>", self.set_model_pH)
         self.ctl_sbx_pH.grid(row=1, column=1)
 
-        ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
-        ctl_btn_abg.grid(row=1, column=2)
-
         Label(fr_abg_entry, text="pCO2, mmHg").grid(row=2, column=0)
         self.ctl_sbx_pCO2 = Spinbox(fr_abg_entry, width=4, from_=0.0, to=150.0,
-            format='%.1f', increment=0.1, command=self.set_model_pCO2)
+            format='%.1f', increment=1, command=self.set_model_pCO2)
         self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)
         self.ctl_sbx_pCO2.grid(row=2, column=1)  # Default pCO2 40.0 mmHg
+
+        ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
+        ctl_btn_abg.grid(row=1, column=2)
 
         # ELECTROLYTE INPUT
         fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
@@ -432,8 +432,10 @@ class CalcElectrolytes(Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):
-        info = "{}\n".format(self.human_model.blood.describe_pH())
-        info += "{}\n".format(self.human_model.blood.describe_experimental())
+        info = "ABG basic\n=========\n"
+        info += "{}".format(self.human_model.blood.describe_abg_basic())
+        info += "\nElectrolytes\n============\n"
+        info += "{}".format(self.human_model.blood.describe_electrolytes())
         self.TxtView.set_text(info)
 
 

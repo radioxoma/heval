@@ -87,22 +87,19 @@ class HumanBloodModel(object):
     def osmolarity(self):
         return calculate_mosm(self.Na, self.glucose)
 
-    def describe_pH(self):
+    def describe_abg_basic(self):
         """Describe pH and pCO2 - an old implementation considered stable.
         """
         info = textwrap.dedent("""\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
         SBE     {:2.1f} mEq/L
-        Result: {}""".format(
+        Result: {}\n""".format(
             self.pCO2,
             self.hco3p,
             self.sbe,
             abg_approach_stable(self.pH, self.pCO2)))
-        return info
 
-    def describe_experimental(self):
-        info = ""
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
@@ -113,8 +110,9 @@ class HumanBloodModel(object):
         # but both values pretty close to BE -9 meq/L, so I use it as threshold.
         # Максимальная доза NaHCO3 is 4-5 mmol/kg [Курек 273]
         # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
+        # info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
         if self.sbe < -9:
-            info += "\n-- pH corection ---------------------------------\n"
+            info += "-- pH correction ---------------------------------\n"
             info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
             info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
 
@@ -131,16 +129,18 @@ class HumanBloodModel(object):
             info += textwrap.dedent("""\
                 Main concept of NaHCO3 usage:
                   * Must hyperventilate to make use of bicarbonate buffer
-                  * Control ABG after eash NaHCO3 infusion or every 4 hours
+                  * Control ABG after each NaHCO3 infusion or every 4 hours
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
                   * When pH increases, K level decreases
                 """)
+        return info
 
-        info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
-
+    def describe_electrolytes(self):
+        info = ""
         info += "-- pH description -------------------------------\n"
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
+
         info += "\n-- Anion gap assessment for metabolic acidosis --\n"
         info += "Anion gap {:.1f} mEq/L [normal 7-16]. ".format(self.anion_gap)
         info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
@@ -271,9 +271,10 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # https://web.archive.org/web/20170831093311/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_2.html
     elif 2 < gg:
         # Suggests a pre-existing elevated [HCO3-] level so consider:
-        #   * a concurrent metabolic alkalosis
+        #   * a concurrent metabolic alcalosis
         #   * a pre-existing compensated respiratory acidosis
-        return info + "2 < gg Concurrent metabolic alkalosis или хронического респираторного ацидоза, сопровождающегося компенсаторным увеличением HCO3-"
+        # tiazide siuretics?
+        return info + "2 < gg Concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
     else:
         raise NotImplementedError(gg)
 
@@ -718,8 +719,7 @@ def abg_approach_stable(pH, pCO2):
     pCO2 /= kPa
 
     def expected_pH(pCO2, status='acute'):
-        """Calculate expected pH for given pCO2 (chronic or acute patient status).
-
+        """Calculate expected pH for given pCO2 (chronic or acute respiratory acidosis).
 
         References
         ----------
@@ -741,7 +741,8 @@ def abg_approach_stable(pH, pCO2):
         Does this pH and pCO2 means hidden metabolic process?
         """
         guess = ''
-        magic_threshold = 0.07
+        # magic_threshold = 0.07
+        magic_threshold = 0.04  # To conform this case: https://web.archive.org/web/20170729124831/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_6.html
         ex_pH = expected_pH(pCO2)
         if abs(pH - ex_pH) > magic_threshold:
             if pH > ex_pH:
@@ -822,7 +823,7 @@ def abg_approach_ryabov(pH, pCO2):
     """
     info = ""
     pCO2mmHg = pCO2 / kPa
-    pH_shift = 0.008 * (40 - pCO2mmHg)
+    pH_shift = 0.008 * (40 - pCO2mmHg)  # Formula for acute respiratory acidosis
     pH_expected = 7.4 + pH_shift
     info += "pH, calculated by pCO2, is 7.40{:+.02f}={:.02f}, ".format(pH_shift, pH_expected)
     pH_diff = pH - pH_expected

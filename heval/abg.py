@@ -30,16 +30,15 @@ try:
 except ImportError:
     import math
 
+kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 # Arterial blood reference
 norm_pH = (7.35, 7.45)
-norm_pCO2 = (35., 45.)  # 4.7-6.0 kPa
-norm_HCO3 = (22., 26.)
-norm_pO2 = (80., 100.)
+norm_pCO2 = (4.666, 6)  # kPa
+# norm_pCO2mmHg = (35, 45)
+norm_HCO3 = (22, 26)
+norm_pO2 = (80, 100)
 live_pH = (6.8, 7.8)  # Live borders
-
-
-kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 
 class HumanBloodModel(object):
@@ -133,15 +132,14 @@ class HumanBloodModel(object):
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
                   * When pH increases, K level decreases
                 """)
+        info += "-- pH description -------------------------------\n"
+        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
         return info
 
     def describe_electrolytes(self):
         info = ""
-        info += "-- pH description -------------------------------\n"
-        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(self.pH, self.pCO2), '  '))
-
-        info += "\n-- Anion gap assessment for metabolic acidosis --\n"
+        info += "-- Anion gap assessment for metabolic acidosis --\n"
         info += "Anion gap {:.1f} mEq/L [normal 7-16]. ".format(self.anion_gap)
         info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
 
@@ -702,6 +700,24 @@ def gfr_describe(gfr):
         return "CKD5, kidney failure (<15 %). Needs dialysis or kidney transplant"
 
 
+def expected_pH(pCO2, status='acute'):
+    """Calculate expected pH for given pCO2 (chronic or acute respiratory acidosis).
+
+    References
+    ----------
+
+    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
+    [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
+
+    :param float pCO2: kPa
+    :return:
+        Expected pH.
+    :rtype: float
+    """
+    st = {'acute': 0.008, 'chronic': 0.003}
+    return 7.4 + st[status] * (40.0 - pCO2 / kPa)
+
+
 def abg_approach_stable(pH, pCO2):
     """Evaluate arterial blood gas status.
 
@@ -716,24 +732,6 @@ def abg_approach_stable(pH, pCO2):
     # https://www.kernel.org/doc/Documentation/CodingStyle
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.
-    pCO2 /= kPa
-
-    def expected_pH(pCO2, status='acute'):
-        """Calculate expected pH for given pCO2 (chronic or acute respiratory acidosis).
-
-        References
-        ----------
-
-        [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
-        [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
-
-        :param float pCO2: mmHg
-        :return:
-            Expected pH.
-        :rtype: float
-        """
-        st = {'acute': 0.008, 'chronic': 0.003}
-        return 7.4 + st[status] * (40.0 - pCO2)
 
     def check_metabolic(pH, pCO2):
         """Check metabolic status by expected pH level.
@@ -764,7 +762,7 @@ def abg_approach_stable(pH, pCO2):
                 return "Metabolic acidosis, full comp. by CO2 alcalosis"
         elif pCO2 > norm_pCO2[1]:
             # High (respiratory acidosis)
-            if pH <= 7.39:  # pH almost acidotic
+            if pH <= 7.39:  # pH almost acidic
                 # Classic "chronic" COPD gas
                 return "Respiratory acidosis, full comp. by metabolic alcalosis. COPD?"
             else:
@@ -779,10 +777,10 @@ def abg_approach_stable(pH, pCO2):
                 # Check anion gap here?
                 return "Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]"
             elif pH > norm_pH[1]:
-                return "Respiratory alcalosis (%s)" % check_metabolic(pH, pCO2)
+                return "Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2))
         elif pCO2 > norm_pCO2[1]:
             if pH < norm_pH[0]:
-                return "Respiratory acidosis (%s)" % check_metabolic(pH, pCO2)
+                return "Respiratory acidosis ({})".format(check_metabolic(pH, pCO2))
             elif pH > norm_pH[1]:
                 # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
                 return "Metabolic alcalosis, partial comp. by CO2 acidosis [check Na, Cl, albumin]"
@@ -877,27 +875,6 @@ def abg_approach_research(pH, pCO2):
     info += " * metabolic acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
     info += " * metabloic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
     return info
-
-
-def describe(pH, pCO2):
-    """An old implementation considered stable.
-
-    :param float pH:
-    :param float pCO2: kPa
-    :return:
-        Opinion.
-    :rtype: unicode
-    """
-    info = """\
-    pCO2    {:2.1f} kPa
-    HCO3(P) {:2.1f} mmol/L
-    SBE     {:2.1f} mEq/L
-    Result: {}""".format(
-        pCO2,
-        calculate_hco3p(pH, pCO2),
-        calculate_cbase(pH, pCO2),
-        abg_approach_stable(pH, pCO2))
-    return textwrap.dedent(info)
 
 
 def test():

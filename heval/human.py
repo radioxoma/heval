@@ -87,16 +87,18 @@ paed = {  # 3 year old kid
 
 class HumanBodyModel(object):
     def __init__(self):
-        self._height = None
         self._sex = None
+        self._height = None
         self._age = None
+
+        self.weight = None
         self._use_ibw = False
         self._weight_ideal_valid = False
+        self.weight_ideal = None  # Changes only at sex/weight change
 
         self.blood = abg.HumanBloodModel(self)
-        self.comment = dict()  # For warnings
-        self.weight = None
         self.body_temp = 36.6
+        self.comment = dict()  # For warnings
         self.drug_list = [
             Fentanyl(self),
             Propofol(self),
@@ -119,8 +121,8 @@ class HumanBodyModel(object):
             info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
         else:
             # Adult normal ranges cannot be applied to children
-            info += " BMI {:.1f},".format(body_mass_index(height=self.height, weight=self.weight)[0])
-        info += " BSA {:.3f} m^2.\n".format(body_surface_area(height=self.height, weight=self.weight))
+            info += " BMI {:.1f},".format(bmi_idx)
+        info += " BSA {:.3f} m^2.\n".format(self.bsa)
         # Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
         # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
         info += "RBW blood volume {:.0f}-{:.0f} ml (70-80 ml/kg для всех людей старше 3 мес, у новорождённых больше)\n".format(self.weight * 70, self.weight * 80)
@@ -161,6 +163,8 @@ class HumanBodyModel(object):
     @sex.setter
     def sex(self, value):
         self._sex = value
+        if all((self.height, self.sex)):  # optimization
+            self._set_weight_ideal()
 
     @property
     def height(self):
@@ -169,6 +173,8 @@ class HumanBodyModel(object):
     @height.setter
     def height(self, value):
         self._height = value
+        if all((self.height, self.sex)):  # optimization
+            self._set_weight_ideal()
 
     @property
     def weight(self):
@@ -185,8 +191,7 @@ class HumanBodyModel(object):
         """
         self._weight = value
 
-    @property
-    def weight_ideal(self):
+    def _set_weight_ideal(self):
         """Evaluate ideal body weight (IBW) for all ages.
 
         Check https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
@@ -219,7 +224,11 @@ class HumanBodyModel(object):
             # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
             # For children over 74 cm and aged 1 to 17 years.
             weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
-        return weight_ideal
+        self.weight_ideal = weight_ideal
+
+    @property
+    def bsa(self):
+        return body_surface_area(height=self.height, weight=self.weight)
 
     @property
     def age(self):

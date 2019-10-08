@@ -116,7 +116,7 @@ class HumanBloodModel(object):
         # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
         # info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
         if self.sbe < -9:
-            info += "-- pH correction ---------------------------------\n"
+            info += "-- Metabolic acidosis correction ----------------\n"
             info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
             info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
 
@@ -141,13 +141,13 @@ class HumanBloodModel(object):
 
     def describe_electrolytes(self):
         info = ""
-        info += "-- Anion gap assessment of metabolic acidosis --\n"
+        info += "-- Anion gap assessment of metabolic acidosis ---\n"
         if norm_gap[1] < self.anion_gap:
             # Since AG elevated, calculate delta ratio to test for coexistant NAGMA or metabolic alkalosis
             info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], ".format(self.anion_gap, *norm_gap)
             info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
         elif self.anion_gap < norm_gap[0]:
-            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
+            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia?\n".format(self.anion_gap, *norm_gap)
         else:
             info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
 
@@ -885,7 +885,7 @@ def abg_approach_research(pH, pCO2):
         y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
         info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table to assess]\n".format(y)
     except ZeroDivisionError:
-        info += "ZeroDivisionError\n"
+        pass
     return info
 
 

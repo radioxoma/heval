@@ -157,7 +157,7 @@ def kurek_electrolytes_K(weight, K_serum):
         info += "Don't forget furesemide, hyperventilation\n"
         info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
     else:
-        info += "K is ok"
+        info += "K in range [{:.1f}-{:.1f} mmol/L]".format(K_low, K_high)
     return info
 
 
@@ -217,7 +217,7 @@ def kurek_electrolytes_Na(weight, Na_serum):
         Na_deficiency = (Na_target - Na_serum) * weight * coefficient
         info += "Na_deficiency is {:.0f} mmol [Курек]".format(Na_deficiency)
     else:
-        info += "Na is ok"
+        info += "Na in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
     return info
 
 

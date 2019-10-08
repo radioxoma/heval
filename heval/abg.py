@@ -34,11 +34,12 @@ kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 # Arterial blood reference
 norm_pH = (7.35, 7.45)
+live_pH = (6.8, 7.8)  # Live borders
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
-norm_HCO3 = (22, 26)
-norm_pO2 = (80, 100)
-live_pH = (6.8, 7.8)  # Live borders
+norm_HCO3 = (22, 26)  # mmHg
+norm_pO2 = (80, 100)  # mmHg
+norm_gap = (7, 16)  # mEq/L
 
 
 class HumanBloodModel(object):
@@ -99,6 +100,10 @@ class HumanBloodModel(object):
             self.sbe,
             abg_approach_stable(self.pH, self.pCO2)))
 
+        info += "-- pH check -------------------------------------\n"
+        # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+        info += "{}".format(abg_approach_research(self.pH, self.pCO2))
+
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
@@ -132,16 +137,19 @@ class HumanBloodModel(object):
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
                   * When pH increases, K level decreases
                 """)
-        info += "-- pH description -------------------------------\n"
-        # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-        info += "{}\n".format(abg_approach_research(self.pH, self.pCO2))
         return info
 
     def describe_electrolytes(self):
         info = ""
-        info += "-- Anion gap assessment for metabolic acidosis --\n"
-        info += "Anion gap {:.1f} mEq/L [normal 7-16]. ".format(self.anion_gap)
-        info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+        info += "-- Anion gap assessment of metabolic acidosis --\n"
+        if norm_gap[1] < self.anion_gap:
+            # Since AG elevated, calculate delta ratio to test for coexistant NAGMA or metabolic alkalosis
+            info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], ".format(self.anion_gap, *norm_gap)
+            info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+        elif self.anion_gap < norm_gap[0]:
+            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
+        else:
+            info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
 
         info += "\n-- Electrolyte abnormalities --------------------\n"
         info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.K))
@@ -241,23 +249,25 @@ def calculate_anion_gap_delta(AG, HCO3act):
     # 12 normal anion gap
     # 24 - normal HCO3-, mmol/L
     gg = (AG - 12) / (24 - HCO3act)
-    info = "Delta gap ({:.1f} - 12) / (24 - {:.1f}) = {:.1f}\n".format(AG, HCO3act, gg)
+    info = ""
+    # info += "Delta gap ({:.1f} - 12) / (24 - {:.1f}) = {:.1f}\n".format(AG, HCO3act, gg)
+    info += "delta ratio {:.1f} ".format(gg)
     if gg < 0.4:
         # При массивном введении NaCl (дилюционный ацидоз) почки экскретируют
         # бикарбонат для компенсации гиперхлоремии
         # При введении NaCL Gap не изменяется, но засчёт избытка Cl
         # почки выводят HCO3.
-        return info + "gg < 0.4 Гиперхлоремический ацидоз с нормальной анионной разницей"
+        return info + "(gg < 0.4) гиперхлоремический ацидоз с нормальной анионной разницей"
         # Hyperchloraemic normal anion gap acidosis
     elif 0.4 <= gg <= 0.8:
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
         # Renal tubular acidosis https://web.archive.org/web/20170802021754/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_5.html
-        return info + "0.4 <= gg <= 0.8 Combined HAGMA + NAGMA, ratio <1 is often associated with renal failure - check urine electrolytes and kidney function"
+        return info + "(0.4 ≤ gg ≤ 0.8) combined HAGMA + NAGMA, ratio <1 is often associated with renal failure - check urine electrolytes and kidney function"
     elif 0.8 < gg < 1:
-        return info + "0.8 < gg <= 1 Наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен"
+        return info + "(0.8 < gg < 1) наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен)"
     elif 1 <= gg <= 2:
-        return info + "1 < gg <= 2 Typical high Anion gap acidosis"
+        return info + "(1 ≤ gg ≤ 2) classic high anion gap acidosis"
         # Usual for uncomplicated high-AG acidosis - ("pure metabolic acidosis"?)
         # Lactic acidosis: average value 1.6
         # DKA more likely to have a ratio closer to 1 due to urine ketone
@@ -271,8 +281,8 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # Suggests a pre-existing elevated [HCO3-] level so consider:
         #   * a concurrent metabolic alcalosis
         #   * a pre-existing compensated respiratory acidosis
-        # tiazide siuretics?
-        return info + "2 < gg Concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
+        # tiazide diuretics?
+        return info + "(2 < gg) concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
     else:
         raise NotImplementedError(gg)
 

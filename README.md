@@ -21,11 +21,13 @@ Heval is an experimental software. Whatever it calculates, it's *your* decisions
 An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
 
 
-## Installation
+## Download
 
-`build.bat` creates pyinstaller standalone Windows executable (one 'exe' file).
+Go to [Releases page](https://github.com/radioxoma/heval/releases/) and download precompiled binary for Windows. Just run it - no installation required.
 
-Install Heval with pip:
+### Development version
+
+If you have python installed, latest development version can be installed with pip:
 
     $ pip install https://github.com/radioxoma/heval/archive/master.zip
 
@@ -34,3 +36,5 @@ Run development version:
     $ git clone https://github.com/radioxoma/heval.git
     $ cd heval
     $ python -m heval
+
+`build.bat` creates pyinstaller standalone Windows executable (one 'exe' file).

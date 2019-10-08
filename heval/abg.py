@@ -80,7 +80,7 @@ class HumanBloodModel(object):
 
     @property
     def anion_gap(self):
-        """Anion gap without potassion 12 ± 4 meq/L."""
+        """Anion gap without potassion 7-16 mEq/L."""
         return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p)
 
     @property
@@ -147,7 +147,7 @@ class HumanBloodModel(object):
             info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], ".format(self.anion_gap, *norm_gap)
             info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
         elif self.anion_gap < norm_gap[0]:
-            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia?\n".format(self.anion_gap, *norm_gap)
+            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia or low Na?\n".format(self.anion_gap, *norm_gap)
         else:
             info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
 
@@ -161,6 +161,8 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
     May be known as SID [1], AG. Don't get confused with 'osmol gap'.
+        * Normal value without potassium 7-16 mEq/L
+        * Normal value with potassuim 10-20 mEq/L
 
     Помогает при выявлении противонаправленных метаболических процессов.
     Напрмиер потеря Cl- (алкалоз) и лактат-ацидоз.
@@ -189,6 +191,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
         Acid base balance in critical care medicine
     [3] https://en.wikipedia.org/wiki/Anion_gap
+    [4] Курек 2013, с 47
 
     :param float Na: Serum sodium, mmol/L.
     :param float Cl: Serum chloride, mmol/L.

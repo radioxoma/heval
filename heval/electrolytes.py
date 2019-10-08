@@ -153,6 +153,7 @@ def kurek_electrolytes_K(weight, K_serum):
         info += "Inject bolus for paed "
         info += glucosae_solution(glu_mass, weight)
         info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
+        # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, с 47]
         info += "RBW NaHCO3 4% {:.0f} ml (x2={:.0f} mmol) [Курек 2013]\n".format(2 * weight * M_NaHCO3 / 40, 2 * weight)
         info += "Don't forget furesemide, hyperventilation\n"
         info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"

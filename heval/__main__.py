@@ -13,12 +13,20 @@ from heval import electrolytes
 
 
 __helptext__ = """\
+  HUMAN BODY
 Введите пол и рост — этого достаточно для большей части антропометрических \
 расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически. \
 Снимите галочку 'Use IBW' и введите реальный вес, если знаете его.
 
 Мгновенно доступны: IBW, BSA, BMI, объёмы вентиляции, суточная потребность \
 в энергии и жидкости, диурез, дозировки ЛС etc.
+
+  ABG & ELECTROLYTES
+Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае метаболического \
+ацидоза необходимо ввести концентрации K, Na, Cl, чтобы программа смогла \
+рассчитать анионный промежуток и попыталась найти скрытые метаболические \
+процессы при помощи delta ratio.
+Пол и вес влияют на рассчитанную инфузионную терапию.
 
 При наведении курсора на поле ввода появляется всплывающая подсказка.
 
@@ -69,7 +77,7 @@ class MainWindow(Frame):
         self.MText = MainText(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
         self.CGFR = CalcGFR(nb, self.HBody)
-        nb.add(self.MText, text='Human')
+        nb.add(self.MText, text="Human body")
         nb.add(self.CElectrolytes, text="ABG & Electrolytes")
         nb.add(self.CGFR, text='eGFR')
         nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows

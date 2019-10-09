@@ -41,6 +41,7 @@ BMR - basal metabolic rate
 BSA - body surface area, m^2
 CKD - chronic kidney disease
 eGFR - estimated glomerular filtration rate
+gg - gap-gap, delta gap
 HAGMA - high anion gap metabolic acidosis
 IBW - ideal body weight, kg
 NAGMA - normal anion gap metabolic acidosis

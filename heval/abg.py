@@ -100,7 +100,7 @@ class HumanBloodModel(object):
             self.sbe,
             abg_approach_stable(self.pH, self.pCO2)))
 
-        info += "-- pH check -------------------------------------\n"
+        info += "-- Manual pH check ------------------------------\n"
         # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "{}".format(abg_approach_research(self.pH, self.pCO2))
 
@@ -266,7 +266,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
         # Renal tubular acidosis https://web.archive.org/web/20170802021754/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_5.html
-        return info + "(0.4 ≤ gg ≤ 0.8) combined HAGMA + NAGMA, ratio <1 is often associated with renal failure - check urine electrolytes and kidney function"
+        return info + "(0.4 ≤ gg ≤ 0.8) combined HAGMA + NAGMA (gg ratio <1 is often associated with renal failure - check urine electrolytes and kidney function)"
     elif 0.8 < gg < 1:
         return info + "(0.8 < gg < 1) наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен)"
     elif 1 <= gg <= 2:
@@ -868,11 +868,12 @@ def abg_approach_research(pH, pCO2):
     HCO3act = calculate_hco3p(pH, pCO2)
     pCO2mmHg = pCO2 / kPa
 
-    info += "pH by pCO2 from acute {:.2f} to chronic {:.2f} \n".format(
+    info += "pH by pCO2: acute {:.2f}, chronic {:.2f} [AHA?]\n".format(
         expected_pH(pCO2, 'acute'),
         expected_pH(pCO2, 'chronic'))
     """
-    Winters' formula - checks if respiratory response adequate for given pH and pCO2
+    Winters' formula - checks if respiratory response adequate for current
+    metabolic acidosis or alcalisis (for given pH and pCO2)
       * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
       * https://www.ncbi.nlm.nih.gov/pubmed/6016545
       * https://en.wikipedia.org/wiki/Winters%27_formula
@@ -886,7 +887,7 @@ def abg_approach_research(pH, pCO2):
 
     try:
         y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
-        info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table to assess]\n".format(y)
+        info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)
     except ZeroDivisionError:
         pass
     return info

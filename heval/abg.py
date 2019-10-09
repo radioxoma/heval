@@ -103,6 +103,19 @@ class HumanBloodModel(object):
         info += "-- Manual pH check ------------------------------\n"
         # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "{}".format(abg_approach_research(self.pH, self.pCO2))
+        return info
+
+    def describe_electrolytes(self):
+        info = ""
+        info += "-- Anion gap assessment of metabolic acidosis ---\n"
+        if norm_gap[1] < self.anion_gap:
+            # Since AG elevated, calculate delta ratio to test for coexistant NAGMA or metabolic alkalosis
+            info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], ".format(self.anion_gap, *norm_gap)
+            info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+        elif self.anion_gap < norm_gap[0]:
+            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia or low Na?\n".format(self.anion_gap, *norm_gap)
+        else:
+            info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
 
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
@@ -114,9 +127,9 @@ class HumanBloodModel(object):
         # but both values pretty close to BE -9 meq/L, so I use it as threshold.
         # Максимальная доза NaHCO3 is 4-5 mmol/kg [Курек 273]
         # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
-        # info += "\nTHE BELOW INFORMATION NOT INTENDED FOR CLINICAL USE\n\n"
+        info += "\nTHE BELOW INFORMATION UNTESTED AND NOT INTENDED FOR CLINICAL USE\n"
         if self.sbe < -9:
-            info += "-- Metabolic acidosis correction ----------------\n"
+            info += "\n-- Metabolic acidosis correction ----------------\n"
             info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
             info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
 
@@ -137,20 +150,6 @@ class HumanBloodModel(object):
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
                   * When pH increases, K level decreases
                 """)
-        return info
-
-    def describe_electrolytes(self):
-        info = ""
-        info += "-- Anion gap assessment of metabolic acidosis ---\n"
-        if norm_gap[1] < self.anion_gap:
-            # Since AG elevated, calculate delta ratio to test for coexistant NAGMA or metabolic alkalosis
-            info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], ".format(self.anion_gap, *norm_gap)
-            info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
-        elif self.anion_gap < norm_gap[0]:
-            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia or low Na?\n".format(self.anion_gap, *norm_gap)
-        else:
-            info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
-
         info += "\n-- Electrolyte abnormalities --------------------\n"
         info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.K))
         info += "{}\n".format(electrolytes.kurek_electrolytes_Na(self.parent.weight, self.Na))

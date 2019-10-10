@@ -7,6 +7,10 @@ M_C6H12O6 = 180
 M_NaCl = 58.5
 M_KCl = 74.5
 
+norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
+norm_Na = (130, 155)  # mmol/L, Radiometer, adult
+norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
+
 """
 Electrolyte disturbances and correction.
 
@@ -119,6 +123,9 @@ def kurek_electrolytes_K(weight, K_serum):
         * CaCl2 - только если есть изменения на ЭКГ [PICU: Electrolyte Emergencies]
         * гипервентиляция
     """
+    if norm_K[0] <= K_serum <= norm_K[1]:
+        return "K is ok [{:.1f}-{:.1f} mmol/L]".format(norm_K[0], norm_K[1])
+
     K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
     K_low = 3.5  # Курек 132
@@ -201,6 +208,9 @@ def kurek_electrolytes_Na(weight, Na_serum):
         * coefficient 0.2
         * Скорость снижения не быстрее 20 ммоль/л в сутки
     """
+    if norm_Na[0] <= Na_serum <= norm_Na[1]:
+        return "Na is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
+
     Na_high = 150  # Курек 133
     Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
     Na_low = 130  # Курек 133
@@ -236,6 +246,9 @@ def krylov_electrolytes_Na(weight, Na_serum):
 
     Осмоляльность (мОсм/кг) = 2×(Na+ + K+) + Глю/18 + Моч/2,8 {Норма 280-285 мОсм/кг воды}
     """
+    if norm_Na[0] <= Na_serum <= norm_Na[1]:
+        return "Na is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
+
     coefficient = 0.6
     Na_target = 125  # mmol/L, minimal acceptable value from book
     Na_low = Na_target
@@ -248,6 +261,13 @@ def krylov_electrolytes_Na(weight, Na_serum):
     else:
         raise NotImplementedError
     return info
+
+
+def electrolytes_Cl(weight, Cl_serum):
+    if norm_Cl[0] <= Cl_serum <= norm_Cl[1]:
+        return "Cl is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
+    else:
+        return "Cl is not ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
 
 
 if __name__ == '__main__':

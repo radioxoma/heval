@@ -172,6 +172,7 @@ class HumanBloodModel(object):
         info += "\n-- Electrolyte abnormalities --------------------\n"
         info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.K))
         info += "{}\n".format(electrolytes.kurek_electrolytes_Na(self.parent.weight, self.Na))
+        info += "{}\n".format(electrolytes.electrolytes_Cl(self.parent.weight, self.Cl))
         return info
 
 

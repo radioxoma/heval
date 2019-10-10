@@ -106,16 +106,23 @@ class HumanBloodModel(object):
         return info
 
     def describe_electrolytes(self):
+        # https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
+        # TODO: need to detect metabolic acidosis by `abg_approach_stable()` function, not that 'if':
+        metabolic_acidosis = self.pH < norm_pH[0] and self.pCO2 < norm_pCO2[1]
         info = ""
-        info += "-- Anion gap assessment of metabolic acidosis ---\n"
+        info += "-- Anion gap assessment ---\n"
         if norm_gap[1] < self.anion_gap:
             # Since AG elevated, calculate delta ratio to test for coexistant NAGMA or metabolic alkalosis
-            info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], ".format(self.anion_gap, *norm_gap)
+            info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] (KULT?), ".format(self.anion_gap, *norm_gap)
             info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
         elif self.anion_gap < norm_gap[0]:
             info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia or low Na?\n".format(self.anion_gap, *norm_gap)
         else:
-            info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]. \n".format(self.anion_gap, *norm_gap)
+            if metabolic_acidosis:
+                info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], associated with metabolic acidosis. Diarrhea or renal tubular acidosis?\n".format(self.anion_gap, *norm_gap)
+            else:
+                info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]\n".format(self.anion_gap, *norm_gap)
+
 
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]

@@ -98,7 +98,7 @@ class HumanBloodModel(object):
             self.pCO2,
             self.hco3p,
             self.sbe,
-            abg_approach_stable(self.pH, self.pCO2)))
+            abg_approach_stable(self.pH, self.pCO2)[0]))
 
         info += "-- Manual pH check ------------------------------\n"
         # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
@@ -106,22 +106,34 @@ class HumanBloodModel(object):
         return info
 
     def describe_electrolytes(self):
-        # https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
-        # TODO: need to detect metabolic acidosis by `abg_approach_stable()` function, not that 'if':
-        metabolic_acidosis = self.pH < norm_pH[0] and self.pCO2 < norm_pCO2[1]
+        """Main approach:
+            * Always calculate AG, even if no primary metabolic acidosis
+            * If AG is high, calculate Delta gap
+
+        https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
+        """
         info = ""
         info += "-- Anion gap assessment ---\n"
-        if norm_gap[1] < self.anion_gap:
-            # Since AG elevated, calculate delta ratio to test for coexistant NAGMA or metabolic alkalosis
-            info += "High AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] (KULT?), ".format(self.anion_gap, *norm_gap)
-            info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
-        elif self.anion_gap < norm_gap[0]:
-            info += "Low AG {:.1f} mEq/L [normal {:.0f}-{:.0f}] - hypoalbuminemia or low Na?\n".format(self.anion_gap, *norm_gap)
-        else:
-            if metabolic_acidosis:
-                info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}], associated with metabolic acidosis. Diarrhea or renal tubular acidosis?\n".format(self.anion_gap, *norm_gap)
+        desc = "{:.1f} mEq/L [normal {:.0f}-{:.0f}]".format(self.anion_gap, *norm_gap)
+
+        if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
+            if norm_gap[1] < self.anion_gap:
+                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alcalosis
+                info += "HAGMA {} (KULT?), ".format(desc)
+                info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+            elif self.anion_gap < norm_gap[0]:
+                info += "Low AG {} - hypoalbuminemia or low Na?\n".format(desc)
             else:
-                info += "Normal AG {:.1f} mEq/L [normal {:.0f}-{:.0f}]\n".format(self.anion_gap, *norm_gap)
+                info += "NAGMA {}. Diarrhea or renal tubular acidosis?\n".format(desc)
+        else:
+            if norm_gap[1] < self.anion_gap:
+                info += "Unexpected high AG {} without main metabolic acidosis; ".format(desc)
+                # Can catch COPD or concurrent metabolic alcalosis here
+                info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+            elif self.anion_gap < norm_gap[0]:
+                info += "Unexpected low {} without main metabolic acidosis. Check your input.\n".format(desc)
+            else:
+                info += "Normal AG {}\n".format(desc)
 
 
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
@@ -266,17 +278,17 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # бикарбонат для компенсации гиперхлоремии
         # При введении NaCL Gap не изменяется, но засчёт избытка Cl
         # почки выводят HCO3.
-        return info + "(gg < 0.4) гиперхлоремический ацидоз с нормальной анионной разницей"
+        return info + "(gg < 0.4): гиперхлоремический ацидоз с нормальной анионной разницей"
         # Hyperchloraemic normal anion gap acidosis
     elif 0.4 <= gg <= 0.8:
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
         # Renal tubular acidosis https://web.archive.org/web/20170802021754/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_5.html
-        return info + "(0.4 ≤ gg ≤ 0.8) combined HAGMA + NAGMA (gg ratio <1 is often associated with renal failure - check urine electrolytes and kidney function)"
+        return info + "(0.4 ≤ gg ≤ 0.8): combined HAGMA + NAGMA (gg ratio <1 is often associated with renal failure - check urine electrolytes and kidney function)"
     elif 0.8 < gg < 1:
-        return info + "(0.8 < gg < 1) наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен)"
+        return info + "(0.8 < gg < 1): наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен)"
     elif 1 <= gg <= 2:
-        return info + "(1 ≤ gg ≤ 2) classic high anion gap acidosis"
+        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis"
         # Usual for uncomplicated high-AG acidosis - ("pure metabolic acidosis"?)
         # Lactic acidosis: average value 1.6
         # DKA more likely to have a ratio closer to 1 due to urine ketone
@@ -291,7 +303,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         #   * a concurrent metabolic alcalosis
         #   * a pre-existing compensated respiratory acidosis
         # tiazide diuretics?
-        return info + "(2 < gg) concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
+        return info + "(2 < gg): concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
     else:
         raise NotImplementedError(gg)
 
@@ -775,6 +787,8 @@ def abg_approach_stable(pH, pCO2):
                 guess += "background metabolic acidosis, "
         return "{}expected pH {:.2f}".format(guess, ex_pH)
 
+    main_disturbance = None
+
     if norm_pH[0] <= pH <= norm_pH[1]:  # pH is normal or compensated
         # Don't calculating expected CO2/pH values because both values are
         # normal or represent two opposed processes (no need for searching
@@ -783,39 +797,49 @@ def abg_approach_stable(pH, pCO2):
         if pCO2 < norm_pCO2[0]:
             # Low (respiratory alcalosis)
             if pH >= 7.41:
-                return "Respiratory alcalosis, full comp. by metabolic acidosis"
+                return ("Respiratory alcalosis, full comp. by metabolic acidosis",
+                    "respiratory_alcalosis")
             else:
-                return "Metabolic acidosis, full comp. by CO2 alcalosis"
+                return ("Metabolic acidosis, full comp. by CO2 alcalosis",
+                    "metabolic_acidosis")
         elif pCO2 > norm_pCO2[1]:
             # High (respiratory acidosis)
             if pH <= 7.39:  # pH almost acidic
                 # Classic "chronic" COPD gas
-                return "Respiratory acidosis, full comp. by metabolic alcalosis. COPD?"
+                return ("Respiratory acidosis, full comp. by metabolic alcalosis. COPD?",
+                    "respiratory_acidosis")
             else:
-                return "Metabolic alcalosis, full comp. by CO2 acidosis"
+                return ("Metabolic alcalosis, full comp. by CO2 acidosis",
+                    "metabolic_alcalosis")
         else:
-            return "Normal ABG"
+            return ("Normal ABG", None)
     else:
         # pH decompensation
         if pCO2 < norm_pCO2[0]:  # Low (respiratory alcalosis)
             # Достаточно ли такого изменения pH, чтобы дать такой pCO2?
             if pH < norm_pH[0]:
                 # Check anion gap here?
-                return "Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]"
+                return ("Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]",
+                    "metabolic_acidosis")
             elif pH > norm_pH[1]:
-                return "Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2))
+                return ("Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2)),
+                    "respiratory_alcalosis")
         elif pCO2 > norm_pCO2[1]:
             if pH < norm_pH[0]:
-                return "Respiratory acidosis ({})".format(check_metabolic(pH, pCO2))
+                return ("Respiratory acidosis ({})".format(check_metabolic(pH, pCO2)),
+                    "respiratory_acidosis")
             elif pH > norm_pH[1]:
                 # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
-                return "Metabolic alcalosis, partial comp. by CO2 acidosis [check Na, Cl, albumin]"
+                return ("Metabolic alcalosis, partial comp. by CO2 acidosis [check Na, Cl, albumin]",
+                    "metabolic_alcalosis")
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)
             if pH < norm_pH[0]:
-                return "Metabolic acidosis, no respiratory comp."
+                return ("Metabolic acidosis, no respiratory comp.",
+                    "metabolic_acidosis")
             elif pH > norm_pH[1]:
-                return "Metabolic alcalosis, no respiratory comp."
+                return ("Metabolic alcalosis, no respiratory comp.",
+                    "metabolic_alcalosis")
 
 
 def abg_approach_ryabov(pH, pCO2):
@@ -925,7 +949,7 @@ def test():
         info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f} ".format(
             pH, pCO2mmHg, HCO3act, be)
         info += "'{}'\n".format(comment)
-        info += "Abg stable:\n{}\n".format(textwrap.indent(abg_approach_stable(pH, pCO2), '\t'))
+        info += "Abg stable:\n{}\n".format(textwrap.indent(abg_approach_stable(pH, pCO2)[0], '\t'))
         info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(pH, pCO2), '\t'))
         info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(pH, pCO2), '\t'))
         print(info)

@@ -44,6 +44,7 @@ eGFR - estimated glomerular filtration rate
 gg - gap-gap, delta gap
 HAGMA - high anion gap metabolic acidosis
 IBW - ideal body weight, kg
+KULT - Ketones, Uremia, Lactate, Toxins
 NAGMA - normal anion gap metabolic acidosis
 RBW - real body weight, kg
 """

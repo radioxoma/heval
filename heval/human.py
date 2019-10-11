@@ -104,6 +104,7 @@ class HumanBodyModel(object):
         self.weight = None
         self._use_ibw = False
         self._weight_ideal_valid = False
+        self._weight_ideal_method = ""
         self.weight_ideal = None  # Changes only at sex/weight change
 
         self.blood = abg.HumanBloodModel(self)
@@ -119,20 +120,31 @@ class HumanBodyModel(object):
 
     def __str__(self):
         if not self.is_init():
-            return "Human model not initialized with data"
-        # Nutrition status
-        info = "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
+            return "Empty human model (set sex, weight, height)"
+        info = ""
+        if self.sex == 'paed':
+            try:
+                br_code, br_age, br_weight = get_broselow_code(self.height)
+                info += "BROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(br_code.upper(), br_age, br_weight)
+            except ValueError:
+                pass
+
+        info += "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
+
         if self._weight_ideal_valid:
-            info += " IBW {:.1f} kg,".format(self.weight_ideal)
+            info += " IBW {:.1f} kg [{}],".format(self.weight_ideal, self._weight_ideal_method)
         else:
-            info += " IBW can't be calculated for this height, enter weight."
+            info += " IBW can't be calculated for this height, enter weight manually."
         bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
+
         if self.sex in ('male', 'female'):
             info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
         else:
             # Adult normal ranges cannot be applied to children
             info += " BMI {:.1f},".format(bmi_idx)
+
         info += " BSA {:.3f} m^2.\n".format(self.bsa)
+
         # Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
         # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
         info += "RBW blood volume {:.0f}-{:.0f} ml (70-80 ml/kg для всех людей старше 3 мес, у новорождённых больше)\n".format(self.weight * 70, self.weight * 80)
@@ -227,18 +239,27 @@ class HumanBodyModel(object):
         self._weight_ideal_valid = True
         if self.sex == 'male':  # Adult male, negative value with height <97 cm
             # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
-            weight_ideal = 0.9079 * self.height * 100 - 88.022  # kg
+            self.weight_ideal = 0.9079 * self.height * 100 - 88.022  # kg
+            self._weight_ideal_method = "Hamilton"
         elif self.sex == 'female':  # Adult female, negative value with height <101 cm
             # Hamilton manual, table 4-1. Hamilton adopted from Pennsylvania Medical Center
-            weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
+            self.weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
+            self._weight_ideal_method = "Hamilton"
         elif self.sex == 'paed':
-            # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
-            # For children over 74 cm and aged 1 to 17 years.
-            if not 0.74 <= self.height <= 1.524:  # Ranges from paper
+            # Brocelow tape range. Temporary and only for lowest height
+            if 0.468 <= self.height < 0.74:
+                print("WARNING: Braselow IBW for range 0.468-0.74 m")
+                self._weight_ideal_method = "Broselow"
+                self.weight_ideal = get_broselow_code(self.height)[2]
+            elif 0.74 <= self.height <= 1.524:
+                # Traub-Kichen 1983 can predict IBW for children aged 1 to 17 years
+                # and height 0.74-1.524 m
+                # [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
+                self._weight_ideal_method = "Traub-Kichen 1983"
+                self.weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
+            else:
+                print("WARNING: IBW cannot be calculated for paed with this height")
                 self._weight_ideal_valid = False
-                print("WARNING: paed IBW estimation accurate only for height 0.74-1.524 m.\n".format(self.height))
-            weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
-        self.weight_ideal = weight_ideal
 
     @property
     def bsa(self):
@@ -746,3 +767,78 @@ WETFlAG report for {} yo, weight {} kg paed:
     Adrenaline {:.0f} mcg
     Glucosae 10 % {:.0f} ml""".format(age, W, E, T, Fl, A, G)
     return info
+
+
+def get_broselow_code(height):
+    """Get Brocelow color code by height.
+
+    Broselow tape https://www.ncbi.nlm.nih.gov/pubmed/3377285
+    How to use Broselow tape https://www.jems.com/2019/04/29/a-tale-of-two-tapes-broselow-luten-tapes-2011-vs-2017/
+
+    Kinder-sicher T.O Zugck (numbers taken from this tape) https://kindersicher.biz
+    Each color zone of Broselow tape estimates the 50th percentile weight for length
+    Color   Age,     Height,      Ideal body weight
+    Grey    Newborn  46.8- 51.9,   3    kg
+    Grey    Newborn  51.9- 55.0,   4    kg
+    Grey     2 mos   55.0- 59.2,   5    kg
+    Pink     4 mos   59.2- 66.9,   6- 7 kg (13-15 lbs)
+    Red      8 mos   66.9- 74.2,   8- 9 kg (17-20 lbs)
+    Purple   1 yr    74.2- 83.8,  10-11 kg (22-24 lbs)
+    Yellow   2 yr    83.8- 95.4,  12-14 kg (26-30 lbs)
+    White    4 yr    95.4-108.3,  15-18 kg (33-40 lbs)
+    Blue     6 yr   108.3-121.5,  19-23 kg (42-50 lbs)
+    Orange   8 yr   121.5-130.7,  24-29 kg (53-64 lbs)
+    Green   10 yr   130.7-143.3,  30-36 kg (66-80 lbs)
+
+
+    An remark
+    ---------
+    I don't think that estimating child weight by age is a good idea.
+    "Weight-by-height" approach declared as more accurate and objective.
+
+    The accuracy of emergency weight estimation systems:
+        * https://www.ncbi.nlm.nih.gov/pubmed/28936627
+        * https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6223606/
+    Real body weight estimation (not IBW!)
+        * PW10 70.9%, PW20 95.3% Mercy Tape method
+        * PW10 78.0%, PW20 96.6% PAWPER tape http://www.wjem.com.cn/default/articlef/index/id/674
+        * PW10 69.8%, PW20 87.1% parental estimates
+        * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
+        * Age-based estimates achieved a very low accuracy - use length-based
+
+    But unfortunately I'm not able to find decent calculations
+    "weight-by-height", although it definitely exists:
+    https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
+    https://www.who.int/childgrowth/
+    http://www.who.int/childgrowth/standards/Technical_report.pdf
+    So I have to use Broselow height ranges and it's weight percentiles for now.
+
+    :param float height: Child height in meters.
+    :return: Color code, approx age, approx weight (kg).
+    :rtype: typle
+    """
+    height *= 100
+    if 46.8 <= height < 51.9:
+         return "Grey", "Newborn", 3
+    elif 51.9 <= height < 55.0:
+         return "Grey", "Newborn", 4
+    elif 55.0 <= height < 59.2:
+         return "Grey", "2 months", 5
+    elif 59.2 <= height < 66.9:
+         return "Pink", "4 months", 6.5  # 6-7
+    elif 66.9 <= height < 74.2:
+         return "Red", "8 months", 8.5  # 8-9
+    elif 74.2 <= height < 83.8:
+         return "Purple", "1 year", 10.5  # 10-11
+    elif 83.8 <= height < 95.4:
+         return "Yellow", "2 years", 13  # 12-14
+    elif 95.4 <= height < 108.3:
+         return "White", "4 years", 16.5  # 15-18
+    elif 108.3 <= height < 121.5:
+         return "Blue", "6 years", 21  # 19-23
+    elif 121.5 <= height < 130.7:
+         return "Orange",  "8 years", 26.5  # 24-29
+    elif 130.7 <= height <= 143.3:
+         return "Green", "10 years", 33  # 30-36
+    else:
+        raise ValueError("Out from Broselow height range")

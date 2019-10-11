@@ -49,6 +49,7 @@ NAGMA - normal anion gap metabolic acidosis
 RBW - real body weight, kg
 """
 
+# https://news.tut.by/society/311809.html
 # Average Belorussian male in 2008 >=18 years old
 male_generic_by = {
     'height': 1.77,
@@ -85,6 +86,13 @@ paed = {  # 3 year old kid
     'sex': 'paed',
     'body_temp': 36.6
     }
+
+newborn = {
+    'height': 50,
+    'weight': 3.6,
+    'sex': 'paed',
+    'body_temp': 36.6
+}
 
 
 class HumanBodyModel(object):
@@ -198,6 +206,10 @@ class HumanBodyModel(object):
 
         Check https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
 
+        For children:
+          * https://en.wikipedia.org/wiki/Birth_weight
+          * https://en.wikipedia.org/wiki/Growth_chart
+
         Понятие идеальной массы тела было введено во время изучения клиренса лекарственных средств,
         так как клиренс ЛС больше кореллирует с идеальной, чем с реальной массой тела.
         Ideal weight for minute volume calculation taken from Hamilton G5 documentation
@@ -217,14 +229,14 @@ class HumanBodyModel(object):
             # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
             weight_ideal = 0.9079 * self.height * 100 - 88.022  # kg
         elif self.sex == 'female':  # Adult female, negative value with height <101 cm
-            # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
+            # Hamilton manual, table 4-1. Hamilton adopted from Pennsylvania Medical Center
             weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
         elif self.sex == 'paed':
+            # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
+            # For children over 74 cm and aged 1 to 17 years.
             if not 0.74 <= self.height <= 1.524:  # Ranges from paper
                 self._weight_ideal_valid = False
                 print("WARNING: paed IBW estimation accurate only for height 0.74-1.524 m.\n".format(self.height))
-            # Traub-Kichen formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
-            # For children over 74 cm and aged 1 to 17 years.
             weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
         self.weight_ideal = weight_ideal
 
@@ -240,7 +252,6 @@ class HumanBodyModel(object):
     def age(self, value):
         """Human age in years."""
         self._age = value
-
 
     def _info_in_respiration(self):
         """Calulate optimal Tidal Volume for given patient (any gase mixture).
@@ -511,6 +522,8 @@ def body_mass_index(height, weight):
 def body_surface_area(height, weight):
     """Human body surface area (Du Bois formula).
 
+    Sutable for newborn, adult, fat.
+
     BSA = (W ** 0.425 * H ** 0.725) * 0.007184
 
     :param float height: Patient height, meters
@@ -695,7 +708,8 @@ def wetflag(age=None, weight=None):
 
     https://www.resus.org.uk/faqs/faqs-paediatric-life-support/
 
-    EPALS course uses the simple acronym W E T Fl A G for children over the age of 1 year and up to 10 years old. This equates to:
+    EPALS course uses the simple acronym W E T Fl A G for children over
+    the age of 1 year and up to 10 years old. This equates to:
 
     Example for a 2 year old child:
     W  = (2 + 4) x 2 = 12 kg
@@ -705,9 +719,8 @@ def wetflag(age=None, weight=None):
     A  = 10 micrograms x 12 kg = 120 micrograms 1:10,000 = 1.2 mL
     G  = 2 mL x 12 kg = 24 mL 10% Dextrose
 
-    Whilst this is not evidence based, it provides a simple, easy to remember framework in a stressful situation reducing the risk or error.
-
-    June 2016
+    Whilst this is not evidence based, it provides a simple, easy to remember
+    framework in a stressful situation reducing the risk or error.
 
     :param float age: years, 1-10
     :param float weight: kg, jus a fallback now

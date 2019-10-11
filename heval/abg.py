@@ -34,7 +34,7 @@ kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
 # Arterial blood reference
 norm_pH = (7.35, 7.45)
-live_pH = (6.8, 7.8)  # Live borders
+norm_pH_alive = (6.8, 7.8)  # Live borders
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
 norm_HCO3 = (22, 26)  # mmHg
@@ -55,6 +55,7 @@ class HumanBloodModel(object):
 
         self.albuminum = None  # g/dL
         self.glucose = None    # mmol/L
+        self.bun = None
 
     # def __str__(self):
     #     pass
@@ -768,6 +769,8 @@ def abg_approach_stable(pH, pCO2):
         Opinion.
     :rtype: unicode
     """
+    # Inspired by https://abg.ninja/abg
+
     # https://www.kernel.org/doc/Documentation/CodingStyle
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.

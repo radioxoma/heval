@@ -11,27 +11,6 @@ Calculations based on human height and weight.
 Author: Eugene Dvoretsky
 
 Function parameters tends to be in International System of Units.
-
-------------------------
-
-По росту и весу рассчитывается: BMI, BSA, идеальный вес.
-
-На идеальный вес рассчитываются:
-* Метаболические потребности: калории, масса пищи
-    Курек 341
-    При ожогах Курек 425-426
-* Респираторные потребности: дыхательный объём, минутный объём, мёртвое пространство
-
-На реальный вес рассчитываются:
-* BMI, BSA
-* Потребность в воде и электролитах?
-    Курек 418
-    + Перспирация ИВЛ/без ИВЛ?
-* Диурез
-* Дозировки некоторых лекарственных стредсв
-
-Неизвестно:
-* АД, ЧСС, ЧД.
 """
 
 __abbr__ = """\
@@ -125,7 +104,8 @@ class HumanBodyModel(object):
         if self.sex == 'paed':
             try:
                 br_code, br_age, br_weight = get_broselow_code(self.height)
-                info += "BROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(br_code.upper(), br_age, br_weight)
+                info += "BROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
+                    br_code.upper(), br_age.lower(), br_weight)
             except ValueError:
                 pass
 
@@ -216,14 +196,34 @@ class HumanBodyModel(object):
     def _set_weight_ideal(self):
         """Evaluate ideal body weight (IBW) for all ages.
 
-        Check https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
-
-        For children:
+          * https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
           * https://en.wikipedia.org/wiki/Birth_weight
           * https://en.wikipedia.org/wiki/Growth_chart
 
-        Понятие идеальной массы тела было введено во время изучения клиренса лекарственных средств,
-        так как клиренс ЛС больше кореллирует с идеальной, чем с реальной массой тела.
+        По росту и весу рассчитывается: BMI, BSA, идеальный вес.
+
+        IBW is used for calculation of:
+            * Metabolic needs: kcal/24h
+                Курек 341
+                При ожогах Курек 425-426
+            * Respiratory volumes: TV, MV, dead space
+            * Some drug dosage
+
+        Real body weight is used for:
+            * BMI, BSA
+            * In children?
+            * Потребность в воде и электролитах?
+                Курек 418
+                + Перспирация ИВЛ/без ИВЛ?
+            * Urine output
+            * Some drug dosage
+
+        Unknown RBW or IBW:
+            * Blood pressure, heart rate.
+
+        Понятие идеальной массы тела было введено во время изучения клиренса
+        лекарственных средств, так как клиренс ЛС больше кореллирует с
+        идеальной, чем с реальной массой тела.
         Ideal weight for minute volume calculation taken from Hamilton G5 documentation
             1. Formulas for adult male/female taken from Hamilton G5 Ventilator - Operators manual ru v2.6x 2017-02-24 page 197
             2. Precalculated tables 4-1, 4-2 to check formulas was taken from RAPHAEL-ops-manual-ru-624150.02 2015-09-24
@@ -770,13 +770,13 @@ WETFlAG report for {} yo, weight {} kg paed:
 
 
 def get_broselow_code(height):
-    """Get Brocelow color code by height.
+    """Get Brocelow-Luten color zone by height.
 
     Broselow tape https://www.ncbi.nlm.nih.gov/pubmed/3377285
     How to use Broselow tape https://www.jems.com/2019/04/29/a-tale-of-two-tapes-broselow-luten-tapes-2011-vs-2017/
 
     Kinder-sicher T.O Zugck (numbers taken from this tape) https://kindersicher.biz
-    Each color zone of Broselow tape estimates the 50th percentile weight for length
+    Each color zone estimates the 50th percentile weight for length
     Color   Age,     Height,      Ideal body weight
     Grey    Newborn  46.8- 51.9,   3    kg
     Grey    Newborn  51.9- 55.0,   4    kg
@@ -795,6 +795,12 @@ def get_broselow_code(height):
     ---------
     I don't think that estimating child weight by age is a good idea.
     "Weight-by-height" approach declared as more accurate and objective.
+    But unfortunately I'm not able to find decent calculations
+    "weight-by-height", although it definitely exists:
+      * https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
+      * https://www.who.int/childgrowth/
+      * http://www.who.int/childgrowth/standards/Technical_report.pdf
+    So I have to use Broselow height ranges and it's weight percentiles for now.
 
     The accuracy of emergency weight estimation systems:
         * https://www.ncbi.nlm.nih.gov/pubmed/28936627
@@ -806,12 +812,6 @@ def get_broselow_code(height):
         * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
         * Age-based estimates achieved a very low accuracy - use length-based
 
-    But unfortunately I'm not able to find decent calculations
-    "weight-by-height", although it definitely exists:
-    https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
-    https://www.who.int/childgrowth/
-    http://www.who.int/childgrowth/standards/Technical_report.pdf
-    So I have to use Broselow height ranges and it's weight percentiles for now.
 
     :param float height: Child height in meters.
     :return: Color code, approx age, approx weight (kg).
@@ -841,4 +841,4 @@ def get_broselow_code(height):
     elif 130.7 <= height <= 143.3:
          return "Green", "10 years", 33  # 30-36
     else:
-        raise ValueError("Out from Broselow height range")
+        raise ValueError("Out of Broselow height range")

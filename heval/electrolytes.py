@@ -135,7 +135,7 @@ def kurek_electrolytes_K(weight, K_serum):
         info += "K is dangerously low (<{:.0f} mmol/L). Often associated with low Mg (Mg should be at least 1 mmol/L) and low Cl-.\n".format(K_low)
         info += "NB! Potassium calculations considered inaccurate, so use standard replacement speed and check ABG every 2-4 hours: "
         if weight < 40:
-            info += "KCl {:.0f}-{:.0f} mmol/h for paed.\n".format(0.25 * weight, 0.5 * weight)
+            info += "KCl {:.0f}-{:.0f} mmol/h for child.\n".format(0.25 * weight, 0.5 * weight)
         else:
             info += "KCl 10-20 mmol/h (standard speed) for all adults will be ok.\n"
 
@@ -147,7 +147,7 @@ def kurek_electrolytes_K(weight, K_serum):
         K_deficiency = (K_target - K_serum) * weight * coefficient
         # K_deficiency += weight * 1  # mmol/kg/24h Should I add also суточная потребность?
 
-        info += "Estimated K deficiency (for paed too?) is {:.0f} mmol + ".format(K_deficiency)
+        info += "Estimated K deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
         if K_deficiency > 4 * weight:
             info += "Too much potassium for 24 hours"
 
@@ -157,7 +157,7 @@ def kurek_electrolytes_K(weight, K_serum):
     elif K_serum >= K_high:
         glu_mass = 0.5 * weight
         info += "K is dangerously high (>{} mmol/L)\n".format(K_high)
-        info += "Inject bolus for paed "
+        info += "Inject bolus for child "
         info += glucosae_solution(glu_mass, weight)
         info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
         # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, с 47]
@@ -197,6 +197,9 @@ def kurek_electrolytes_Na(weight, Na_serum):
         * Было мало Na {вводится NaCl гипертонический} -> быстрое увличение осмолярности -> центральный понтинный миелинолиз
 
     Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0,25-0,5 мл/кг/час [ПосДеж 90]
+    [Заболоцкий Д.В. 20-я сессия МНОАР в Голицыно 2019]: Предупреждение о невозможности коррекции Na, K за одни сутки без угрозы
+        * быстрого увеличения Na после коррекции гипонатриемии > Быстрого увличения осмолярности > центрального понтинного миелинолиза.
+        * Восполнение Na не быстрее 10 mmol/L/24h
 
     Гипернатриеамия
     ---------------

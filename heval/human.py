@@ -59,17 +59,17 @@ male_thin = {  # Me
     'body_temp': 36.6
     }
 
-paed = {  # 3 year old kid
+child = {  # 3 year old kid
     'height': 0.95,
     'weight': 16.5,
-    'sex': 'paed',
+    'sex': 'child',
     'body_temp': 36.6
     }
 
 newborn = {
     'height': 50,
     'weight': 3.6,
-    'sex': 'paed',
+    'sex': 'child',
     'body_temp': 36.6
 }
 
@@ -101,7 +101,7 @@ class HumanBodyModel(object):
         if not self.is_init():
             return "Empty human model (set sex, weight, height)"
         info = ""
-        if self.sex == 'paed':
+        if self.sex == 'child':
             try:
                 br_code, br_age, br_weight = get_broselow_code(self.height)
                 info += "BROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
@@ -129,7 +129,7 @@ class HumanBodyModel(object):
         # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
         info += "RBW blood volume {:.0f}-{:.0f} ml (70-80 ml/kg для всех людей старше 3 мес, у новорождённых больше)\n".format(self.weight * 70, self.weight * 80)
 
-        # if self.sex == 'paed':
+        # if self.sex == 'child':
         #     info += "{}\n".format(wetflag(weight=self.weight))
         info += "\n--- IN -----------------------------------------\n"
         info += "{}\n".format(self._info_in_respiration())
@@ -227,7 +227,7 @@ class HumanBodyModel(object):
         Ideal weight for minute volume calculation taken from Hamilton G5 documentation
             1. Formulas for adult male/female taken from Hamilton G5 Ventilator - Operators manual ru v2.6x 2017-02-24 page 197
             2. Precalculated tables 4-1, 4-2 to check formulas was taken from RAPHAEL-ops-manual-ru-624150.02 2015-09-24
-            3. Traub-Kichen formula for paed taken directly from publications, not from hamilton docs
+            3. Traub-Kichen formula for children taken directly from publications, not from Hamilton docs
 
         Определение должной массы тела (ДМТ) [посдеж 2014, страница 211]:
             self.weight_ideal = 50 +   0.91   (height * 100 - 152.4);   # Для мужчин
@@ -245,7 +245,7 @@ class HumanBodyModel(object):
             # Hamilton manual, table 4-1. Hamilton adopted from Pennsylvania Medical Center
             self.weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
             self._weight_ideal_method = "Hamilton"
-        elif self.sex == 'paed':
+        elif self.sex == 'child':
             # Brocelow tape range. Temporary and only for lowest height
             if 0.468 <= self.height < 0.74:
                 print("WARNING: Braselow IBW for range 0.468-0.74 m")
@@ -258,7 +258,7 @@ class HumanBodyModel(object):
                 self._weight_ideal_method = "Traub-Kichen 1983"
                 self.weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
             else:
-                print("WARNING: IBW cannot be calculated for paed with this height")
+                print("WARNING: IBW cannot be calculated for children with this height")
                 self._weight_ideal_valid = False
 
     @property
@@ -298,7 +298,7 @@ class HumanBodyModel(object):
                 Удерживать на нижней границе нормы, чтобы не поддыхивал
 
         
-        Dead space is 2.2 ml/kg IBW for both adults and paed, so TV _must_ be
+        Dead space is 2.2 ml/kg IBW for both adults and children, so TV _must_ be
         double of 2.2 ml/kg [Hamilton p.455; Курек 2013 стр. 63]
 
         По дыхательным объёмам у детей TV одинаковый, F у новорождённых больше, MV разный.
@@ -314,12 +314,12 @@ class HumanBodyModel(object):
             mv, l/kg * ibw, kg = Vd, l/min
             0.2 l/kg * 15 kg = 3 l/min
 
-            :param float ibw: Ideal body mass for given adult or paed >=3 kg.
+            :param float ibw: Ideal body mass for given adult or child >=3 kg.
             :return: l/kg/min
             """
             # Approximation to Hamilton graph
             if ibw < 3:
-                print("WARNING: MV calculation for paed <3 kg is not supported")
+                print("WARNING: MV calculation for child <3 kg is not supported")
                 mv = 0
             elif 3 <= ibw < 5:
                 mv = 0.3
@@ -355,8 +355,6 @@ class HumanBodyModel(object):
         return info
 
     def _info_in_fluids(self):
-        """Fluids.
-        """
         # Панкреатит жидкость 50-70 мл/кг/сут, [Пособие дежуранта 2014, стр. 259]
         info = ""
         info = "BSA all ages fluids demand {:.0f} ml/24h\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)
@@ -377,16 +375,16 @@ class HumanBodyModel(object):
                 info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°С)".format(
                     5 * self.weight * deg,
                     7 * self.weight * deg)
-        elif self.sex == 'paed':
+        elif self.sex == 'child':
             """
-            Объём инфузии = ЖП + текущие потери
+            Infusion volume = ЖП + текущие потери
 
             * ФП рассчитывается по формуле Валлачи `100 - (3 х возраст в годах) = ml/kg/24h`
             * Холидей и Сигар (https://meduniver.com/Medical/nefrologia/raschet_poddergivaiuchei_infuzionnoi_terapii.html).
             """
             hs_fluid = fluid_req_holidaysegar_mod(self.weight)
-            info += "RBW paed fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid/24)
-            # [1.2 ml/kg/min Курек 2013 с 127]
+            info += "RBW child fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid / 24)
+            # Max speed [1.2 ml/kg/min Курек 2013 с 127]
             info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (72 ml/kg/h) [Курек]".format(self.weight * 25, 1.2 * 60 * self.weight)
             """
             Тестовый болюс при низком давлении у детей 20 мл/кг?
@@ -398,10 +396,6 @@ class HumanBodyModel(object):
 
     def _info_in_electrolytes(self):
         """Daily electrolytes demand.
-
-         [Заболоцкий Д.В. 20-я сессия МНОАР в Голицыно 2019]: Предупреждение о невозможности коррекции Na, K за одни сутки без угрозы
-            * быстрого увеличения Na после коррекции гипонатриемии > Быстрого увличения осмолярности > центрального понтинного миелинолиза.
-            * Восполнение Na не быстрее 10 mmol/L/24h
         """
         info = ""
         if self.sex in ('male', 'female'):
@@ -410,7 +404,7 @@ class HumanBodyModel(object):
             info += " * K+\t{:.0f} mmol/24h [~1 mmol/kg/24h]".format(self.weight)
             return info
         else:
-            return "Don't know how to calculate electrolytes for paed. Check Курек 2013 расчёт дефицита K, Na стр. 130"
+            return "Don't know how to calculate electrolytes for children. Check Курек 2013 расчёт дефицита K, Na стр. 130"
 
     def _info_in_energy(self):
         """Attempt to calculate energy requirements for an human.
@@ -474,9 +468,9 @@ class HumanBodyModel(object):
             else:
                 info += "Enter age to calculate BMR"
         else:
-            # Looks like paed needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
+            # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
-            info += "Don't know how to calculate energy for paed. Check Курек АиИТ у детей 3-е изд. 2013, стр. 137"
+            info += "Don't know how to calculate energy for children. Check Курек АиИТ у детей 3-е изд. 2013, стр. 137"
         return info
 
 
@@ -490,9 +484,9 @@ class HumanBodyModel(object):
             out = "RBW adult urinary output:\n"
             out += " * x0.5={:.0f} ml/h, {:.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
             out += " * x1  ={:.0f} ml/h, {:.0f} ml/24h".format(self.weight, self.weight * 24)
-        if self.sex == 'paed':
-            # Not lower than 1 ml/kg/h in paed [Курек 2013 122, 129]
-            out = "RBW paed urinary output:\n"
+        if self.sex == 'child':
+            # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
+            out = "RBW child urinary output:\n"
             out += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(self.weight, self.weight * 24)
             out += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(3.5 * self.weight, 3.5 * self.weight * 24)
         return out
@@ -594,8 +588,8 @@ def bmr_harris_benedict(height, weight, sex, age):
         bmr = 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
     elif sex == 'female':
         bmr = 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
-    elif sex == 'paed':
-        raise ValueError("Harris-Benedict equation BMR calculation for paed not supported")
+    elif sex == 'child':
+        raise ValueError("Harris-Benedict equation BMR calculation for children not supported")
     return bmr
 
 
@@ -632,8 +626,8 @@ def bmr_mifflin(height, weight, sex, age):
         bmr += 5
     elif sex == 'female':
         bmr -= 161
-    elif sex == 'paed':
-        raise ValueError("Mufflin BMR calculation for paed not supported")
+    elif sex == 'child':
+        raise ValueError("Mufflin BMR calculation for children not supported")
     return bmr
 
 
@@ -760,7 +754,7 @@ def wetflag(age=None, weight=None):
     A = 10 * W  # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
     G = 2 * W # 2 mL/kg Glucose 10 %
     info = """\
-WETFlAG report for {} yo, weight {} kg paed:
+WETFlAG report for {} yo, weight {} kg child:
     Energy for defib {:.0f} J
     Tube {:.1f} mm
     Fluid bolus {:.0f} ml of isotonic fluid

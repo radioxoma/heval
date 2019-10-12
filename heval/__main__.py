@@ -99,7 +99,7 @@ class MainWindow(Frame):
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
         Label(fr_entry, text='Sex').pack(side=LEFT)
-        self.ctl_sex = Combobox(fr_entry, values=['Male', 'Female', 'Paed'], width=7)
+        self.ctl_sex = Combobox(fr_entry, values=['Male', 'Female', 'Child'], width=7)
         self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
         self.ctl_sex.pack(side=LEFT)
         CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and infants")
@@ -518,7 +518,7 @@ class CalcGFR(Frame):
             {}
             """.format(cCrea / 88.4, mdrd, epi, abg.gfr_describe(epi))
         else:
-            info = "Don't know how to calculate eGFR in paed"
+            info = "Don't know how to calculate eGFR in children"
         self.TxtView.set_text(textwrap.dedent(info))
 
 

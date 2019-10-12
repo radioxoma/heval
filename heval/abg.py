@@ -158,7 +158,7 @@ class HumanBloodModel(object):
             NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
             NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
             NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
-            info += "  * NaHCO3 {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for paed and adult
+            info += "  * NaHCO3 {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
             for dilution in (4, 8.4):
                 NaHCO3_ml = NaHCO3_g / dilution * 100
                 NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
@@ -669,8 +669,8 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     egfr = 175 * (cCrea / 88.4) ** -1.154 * age ** -0.203
     if sex == 'female':
         egfr *= 0.742
-    elif sex == 'paed':
-        raise ValueError("MDRD eGFR for paed not supported")
+    elif sex == 'child':
+        raise ValueError("MDRD eGFR for children not supported")
     if black_skin:
         egfr *= 1.210
     return egfr
@@ -708,8 +708,8 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
             egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993 ** age * 1.018
         else:
             egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993 ** age * 1.018
-    elif sex == 'paed':
-        raise ValueError("CKD-EPI eGFR for paed not supported")
+    elif sex == 'child':
+        raise ValueError("CKD-EPI eGFR for children not supported")
 
     if black_skin:
         egfr *= 1.159

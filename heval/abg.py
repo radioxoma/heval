@@ -114,7 +114,7 @@ class HumanBloodModel(object):
         https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
         """
         info = ""
-        info += "-- Anion gap assessment ---\n"
+        info += "-- Anion gap assessment -------------------------\n"
         desc = "{:.1f} mEq/L [normal {:.0f}-{:.0f}]".format(self.anion_gap, *norm_gap)
 
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":

@@ -6,29 +6,31 @@ Arterial blood gas interpreter.
 
 Eugene Dvoretsky, 2015-05-20
 
-
-Check abg
-    if metabolic alcalosis:
-        check anion gap
-Check A-a gradient? [< 2.6 kPa (20 mmHg)]
-
-[The Computing Techniques](https://www.acid-base.com/computing.php)
-
 $ md5sum *
 41f8e7d98fcc26ea2319ac8da72ed8cd ABL800 Reference Manual English US.pdf
 a00e5f337bd2c65e513fda1202827c6a ABL800 Operators Manual English US.pdf
 
 Main statements:
-    * I do not perform any algebraic optimization
-    * Formulas is main importance with good documentation first, then call it inside class
+    * Use International System of Units (m, kPa, mmol/L)
+    * No algebraic optimizations reducing readability
+    * All voodoo calculations must be outside class and documented
+    * Heuristic can be anywhere - it complicated anyway.
+        At least class can gather all parameters in one place.
+
+Main approach:
+0. Read this https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
+1. Describe ABG with `abg_approach_stable(pH, pCO2)`
+2. Calculate HCO3act, BE
+3. Always calculate and check anion gap, even if no primary metabolic acidosis
+    * If AG is high, calculate Delta gap
 """
 
-from heval import electrolytes
 import textwrap
 try:
     from uncertainties import umath as math
 except ImportError:
     import math
+from heval import electrolytes
 
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
@@ -107,12 +109,6 @@ class HumanBloodModel(object):
         return info
 
     def describe_electrolytes(self):
-        """Main approach:
-            * Always calculate AG, even if no primary metabolic acidosis
-            * If AG is high, calculate Delta gap
-
-        https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
-        """
         info = ""
         info += "-- Anion gap assessment -------------------------\n"
         desc = "{:.1f} mEq/L [normal {:.0f}-{:.0f}]".format(self.anion_gap, *norm_gap)
@@ -733,12 +729,8 @@ def gfr_describe(gfr):
         return "CKD5, kidney failure (<15 %). Needs dialysis or kidney transplant"
 
 
-def expected_pH(pCO2, status='acute'):
-    """Calculate pH for given pCO2.
-
-    Positioned as formula for respiratory acidosis (chronic or acute).
-
-    What is the original paper?
+def resp_acidosis_pH(pCO2, status='acute'):
+    """Calculate expected pH by pCO2 for simple respiratory acidosis.
 
 
     Metabolic acidosis compensated by respiratory alcalosis
@@ -757,7 +749,7 @@ def expected_pH(pCO2, status='acute'):
 
     pCO2 can be predicted more accurately by Winters' formula:
         
-        pCO2_ac = 1.5 * HCO3act + 8  # mmHg
+        pCO2_acid = 1.5 * HCO3act + 8  # mmHg
 
 
     Metabolic alcalosis, compensated by respiratory acidosis
@@ -779,9 +771,9 @@ def expected_pH(pCO2, status='acute'):
     every 10 mmHg rise in the PCO2:
 
         Acute:   HCO3act = (pCO2 - 40) / 10 * 1   + 24
-            also pH = 7.4 + 0.008 * (40 - pCO2)
+            also pH = 7.4 + 0.008 * (40 - pCO2)  # What is the original paper?
         Chronic: HCO3act = (pCO2 - 40) / 10 * 3.5 + 24
-            also pH = 7.4 + 0.003 * (40 - pCO2)
+            also pH = 7.4 + 0.003 * (40 - pCO2)  # What is the original paper?
 
         pH = 6.1 + math.log10(HCO3act / (0.03 * pCO2))
 
@@ -802,9 +794,11 @@ def expected_pH(pCO2, status='acute'):
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
     [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
     [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
+    [4] https://web.archive.org/web/20170904175146/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_summary.html
 
     :param float pCO2: kPa
-    :param str status: 'acute' or 'chronic'
+    :param str status: 'acute' (no renal compensation) or 'chronic'
+        (renal compensation turns on after 3-5 days).
     :return:
         Expected pH.
     :rtype: float
@@ -816,19 +810,19 @@ def expected_pH(pCO2, status='acute'):
 
 
 def abg_approach_stable(pH, pCO2):
-    """Evaluate arterial blood gas status.
+    """Evaluate arterial blood gas status for complex acid-base disorders.
 
     http://en.wikipedia.org/wiki/Arterial_blood_gas
 
     :param float pH:
     :param float pCO2: kPa
     :return:
-        Opinion.
-    :rtype: unicode
+        Two strings: verbose opinion and main disorder.
+    :rtype: tuple
     """
     # Inspired by https://abg.ninja/abg
 
-    # https://www.kernel.org/doc/Documentation/CodingStyle
+    # https://www.kernel.org/doc/Documentation/process/coding-style.rst
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.
 
@@ -840,7 +834,7 @@ def abg_approach_stable(pH, pCO2):
         guess = ''
         # magic_threshold = 0.07
         magic_threshold = 0.04  # To conform this case: https://web.archive.org/web/20170729124831/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_6.html
-        ex_pH = expected_pH(pCO2)
+        ex_pH = resp_acidosis_pH(pCO2)
         if abs(pH - ex_pH) > magic_threshold:
             if pH > ex_pH:
                 guess += "background metabolic alcalosis, "
@@ -879,7 +873,7 @@ def abg_approach_stable(pH, pCO2):
         if pCO2 < norm_pCO2[0]:  # Low (respiratory alcalosis)
             # Достаточно ли такого изменения pH, чтобы дать такой pCO2?
             if pH < norm_pH[0]:
-                # Check anion gap here?
+                # Always check anion gap here
                 return ("Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]",
                     "metabolic_acidosis")
             elif pH > norm_pH[1]:
@@ -896,6 +890,7 @@ def abg_approach_stable(pH, pCO2):
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)
             if pH < norm_pH[0]:
+                # Always check anion gap here
                 return ("Metabolic acidosis, no respiratory comp.",
                     "metabolic_acidosis")
             elif pH > norm_pH[1]:
@@ -930,8 +925,8 @@ def abg_approach_ryabov(pH, pCO2):
     :param float pH:
     :param float pCO2: kPa
     """
-    # Same as `pH_expected = expected_pH(pCO2, status='acute')`
-    pH_expected = 7.4 + 0.008 * (40 - pCO2 / kPa)
+    # Same as `pH_expected = resp_acidosis_pH(pCO2, status='acute')`
+    pH_expected = 7.4 + 0.008 * (40 - pCO2 / kPa)  # What is the original paper?
     info = "pH, calculated by pCO2, is {:.02f}, ".format(pH_expected)
     pH_diff = pH - pH_expected
     sbe = pH_diff / 0.015
@@ -960,8 +955,8 @@ def abg_approach_research(pH, pCO2):
     pCO2mmHg = pCO2 / kPa
 
     info += "pH by pCO2: acute {:.2f}, chronic {:.2f} [AHA?]\n".format(
-        expected_pH(pCO2, 'acute'),
-        expected_pH(pCO2, 'chronic'))
+        resp_acidosis_pH(pCO2, 'acute'),
+        resp_acidosis_pH(pCO2, 'chronic'))
 
     """
     Winters' formula - checks if respiratory response (pCO2 level) adequate

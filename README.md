@@ -1,13 +1,13 @@
 ## Heval — a human evaluator. Calculate what your human crave!
 
-The program describes an human being, small or grown. It takes basic anthropometric values (sex, height) and calculates BMI, BSA, IBW, fluid, respiratory and energy demands, urinary output, some drugs dosage and more. Heval also incorporates sophisticated ABG analyzer.
+The program describes an human being, small or grown. It takes basic anthropometric values (sex, height) and calculates [BMI](https://en.wikipedia.org/wiki/Body_mass_index), [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [energy](https://en.wikipedia.org/wiki/Basal_metabolic_rate) demands, urinary output, some drugs dosage and more. Heval also incorporates sophisticated [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis).
 
 Main features:
 
-* Minimal user input — some unknown values (like weight) can be estimated using others (height)
+* Minimal user input — some unknown values (like weight) can be estimated automatically using others (height)
 * Only measurable parameters — no need to speak with a human of interest or it's congeners
 * No need to input same data into multiple forms
-* No "Calculate" button — when Heval will know enough about your human, it will push back evaluated data immediately
+* No "Calculate" button — evaluated data changes immediately with your input
 * Every calculation referenced and explained in source code, so everyone can reproduce it
 * It's got electrolytes
 
@@ -25,7 +25,7 @@ Main features:
 > Tip: You can test Heval's ability to interpret ABG with [these case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html).
 
 * Enter pH and pCO2 for overall acid-base status assessment
-* Use electrolytes panel to assess hidden processes of metabolic acidosis (anion gap, delta-gap) and, of course, electrolyte disturbances
+* Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and, of course, electrolyte disturbances
 * Sex and weight used only for dosage calculations, for not ABG diagnostics
 
 

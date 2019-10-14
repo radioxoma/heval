@@ -66,7 +66,7 @@ class HumanBloodModel(object):
     @property
     def sbe(self):
         return calculate_cbase(self.pH, self.pCO2)
- 
+
     @property
     def hco3p(self):
         return calculate_hco3p(self.pH, self.pCO2)
@@ -658,7 +658,7 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     :rtype: float
     """
     # cCrea (μmol/L) = 88.4 × cCrea (mg/dL)
-    
+
     # Original equation from 1999 (для наборов без стандартизации креатинина)
     # egfr = 186 * (cCrea / 88.4) ** -1.154 * age ** -0.203
 
@@ -740,11 +740,68 @@ def expected_pH(pCO2, status='acute'):
 
     What is the original paper?
 
+
+    Metabolic acidosis compensated by respiratory alcalosis
+    -------------------------------------------------------
+    https://web.archive.org/web/20170824094226/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_metabolic_acidosis.html
+    Respiratory comp. results in a 1.2 mmHg reduction in PCO2 for every
+    1.0 meq/L reduction in the plasma HCO3- concentration down to a
+    minimum PCO2 of 10 to 15 mmHg:
+
+        pCO2 = 40 - (24 - HCO3act) * 1.2,
+        where 40 is normal pCO2, 24 is normal HCO2act and 1.2 - coefficient.
+
+    So, if HCO3act is 9 mmHg, then expected pCO2 will be equal:
+
+        40 - (24 - 9) * 1.2 = 22 mmHg
+
+    pCO2 can be predicted more accurately by Winters' formula:
+        
+        pCO2_ac = 1.5 * HCO3act + 8  # mmHg
+
+
+    Metabolic alcalosis, compensated by respiratory acidosis
+    ---------------------------------------------------------
+    https://web.archive.org/web/20170829100840/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_metabolic_alkalosis.html
+
+        pCO2 = (HCO3act - 24) * 0.7 + 40
+
+    pCO2 can be predicted more accurately by Winters' formula:
+        
+        pCO2_alc = 0.7 * HCO3act + 20  # mmHg
+
+
+    Respiratory acidosis
+    --------------------
+    https://web.archive.org/web/20170815212711/http://fitsweb.uchc.edu/student/selectives/TimurGraham/compensatory_responses_respiratory%20acidosis.html
+    Note: COPD patient can tolerate 90-110 mmHg/
+    Acutely, there is an increase in the plasma [HCO3-], averaging 1 meq/L for
+    every 10 mmHg rise in the PCO2:
+
+        Acute:   HCO3act = (pCO2 - 40) / 10 * 1   + 24
+            also pH = 7.4 + 0.008 * (40 - pCO2)
+        Chronic: HCO3act = (pCO2 - 40) / 10 * 3.5 + 24
+            also pH = 7.4 + 0.003 * (40 - pCO2)
+
+        pH = 6.1 + math.log10(HCO3act / (0.03 * pCO2))
+
+
+    Respiratory alcalosis
+    ---------------------
+    https://web.archive.org/web/20170918201557/http://fitsweb.uchc.edu/student/selectives/TimurGraham/compensatory_responses_respiratory_alkalosis.html
+
+        Acute:  HCO3act = 24 - ((40 - pCO2) / 10 * 2)
+        Chronic HCO3act = 24 - ((40 - pCO2) / 10 * 4)
+
+        pH = 6.1 + math.log10(HCO3act / (0.03 * pCO2))
+
+
     References
     ----------
 
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
     [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
+    [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
 
     :param float pCO2: kPa
     :param str status: 'acute' or 'chronic'
@@ -753,9 +810,9 @@ def expected_pH(pCO2, status='acute'):
     :rtype: float
     """
     if status == 'acute':
-        return 7.4 + 0.008 * (40.0 - pCO2 / kPa)
+        return 7.4 + 0.008 * (40.0 - pCO2 / kPa)  # Acute
     else:
-        return 7.4 + 0.003 * (40.0 - pCO2 / kPa)
+        return 7.4 + 0.003 * (40.0 - pCO2 / kPa)  # Chronic
 
 
 def abg_approach_stable(pH, pCO2):
@@ -905,9 +962,10 @@ def abg_approach_research(pH, pCO2):
     info += "pH by pCO2: acute {:.2f}, chronic {:.2f} [AHA?]\n".format(
         expected_pH(pCO2, 'acute'),
         expected_pH(pCO2, 'chronic'))
+
     """
-    Winters' formula - checks if respiratory response adequate for current
-    metabolic acidosis or alcalisis (for given pH and pCO2)
+    Winters' formula - checks if respiratory response (pCO2 level) adequate
+    for current metabolic acidosis or alcalosis (for given pH and pCO2)
       * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
       * https://www.ncbi.nlm.nih.gov/pubmed/6016545
       * https://en.wikipedia.org/wiki/Winters%27_formula
@@ -949,7 +1007,7 @@ def test():
         comment = v[3]
         be = calculate_cbase(pH, pCO2)
         HCO3act = calculate_hco3p(pH, pCO2)
-        
+
         info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f} ".format(
             pH, pCO2mmHg, HCO3act, be)
         info += "'{}'\n".format(comment)

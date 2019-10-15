@@ -5,11 +5,10 @@ import random
 import textwrap
 from tkinter import *
 from tkinter import scrolledtext
-from tkinter import filedialog
 from tkinter.ttk import *
-from heval import human
 from heval import abg
 from heval import electrolytes
+from heval import human
 
 
 __helptext__ = """\
@@ -224,13 +223,16 @@ class HelpWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        self.lbl = Label(self, text=__helptext__, wraplength=500, padding=8)
-        self.lbl.pack(expand=True, fill=BOTH)
+        text = scrolledtext.ScrolledText(self, wrap='word')
+        text.insert(1.0, __helptext__)
+        text.configure(relief=FLAT, state=DISABLED)
+        text.configure(bg=self.cget('bg'))
+        text.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self, padding=8)
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=RIGHT)
-        self.ctl_frame.pack(expand=True, fill=BOTH)
+        self.ctl_frame.pack(fill=BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
 
@@ -254,7 +256,7 @@ class AboutWindow(Toplevel):
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=RIGHT)
         self.ctl_btn_website.pack(side=RIGHT)
-        self.ctl_frame.pack(expand=True, fill=BOTH)
+        self.ctl_frame.pack(fill=BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
 

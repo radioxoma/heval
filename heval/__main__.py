@@ -225,8 +225,9 @@ class HelpWindow(Toplevel):
 
         text = scrolledtext.ScrolledText(self, wrap='word')
         text.insert(1.0, __helptext__)
-        text.configure(relief=FLAT, state=DISABLED)
-        text.configure(bg=self.cget('bg'))
+
+        bg = Style().lookup('TLabel', 'background')  # Mimic like Label
+        text.configure(relief=FLAT, state=DISABLED, bg=bg)
         text.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self, padding=8)

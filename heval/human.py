@@ -13,21 +13,6 @@ Author: Eugene Dvoretsky
 Function parameters tends to be in International System of Units.
 """
 
-__abbr__ = """\
-AG - anion gap
-BMI - body mass index
-BMR - basal metabolic rate
-BSA - body surface area, m^2
-CKD - chronic kidney disease
-eGFR - estimated glomerular filtration rate
-gg - gap-gap, delta gap
-HAGMA - high anion gap metabolic acidosis
-IBW - ideal body weight, kg
-KULT - Ketones, Uremia, Lactate, Toxins
-NAGMA - normal anion gap metabolic acidosis
-RBW - real body weight, kg
-"""
-
 # https://news.tut.by/society/311809.html
 # Average Belorussian male in 2008 >=18 years old
 male_generic_by = {
@@ -342,7 +327,8 @@ class HumanBodyModel(object):
             weight_type = "RBW"
             weight_chosen = self.weight
 
-        VDaw = 2.2 * weight_chosen  # Dead space
+        # Dead space https://www.openanesthesia.org/aba_respiratory_function_-_dead_space
+        VDaw = 2.2 * weight_chosen
         Tv_min = 2 * VDaw  # ml Lowest reasonable tidal volume
         info = ""
         mv = normal_minute_ventilation(weight_chosen)

@@ -59,7 +59,7 @@ class Dithylin(object):
         return (
             "%s IBW intubation 5-10 mins relaxation: %.0f mg adult, %.0f mg child." % (
                 self.name, 1.5 * self._parent.weight_ideal, 1 * self._parent.weight_ideal) +
-            " Max maintenance dose %.0f mg every 5 mins (adult and children)." % (
+            " Max maintenance dose %.0f mg every 5 mins (all ages)." % (
                 self._parent.weight_ideal * 1))
 
 
@@ -132,7 +132,7 @@ class Tracrium(object):
                 0.1 * self._parent.weight, 0.2 * self._parent.weight,
                 percent_corr(0.1 * self._parent.weight, -30),
                 percent_corr(0.2 * self._parent.weight, -30)) +
-            " child same as adults.")
+            " Same dosage for all ages.")
 
 
 class Arduan(object):

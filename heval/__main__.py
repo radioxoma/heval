@@ -30,7 +30,30 @@ __helptext__ = """\
 
 При наведении курсора на поле ввода появляется всплывающая подсказка.
 
-""" + human.__abbr__
+  ABBREVIATIONS
+ABG - arterial blood gas test
+BMI - body mass index
+BMR - basal metabolic rate
+BSA - body surface area, m^2
+IBW - ideal body weight, kg
+RBW - real body weight, kg
+NMT - neuromuscular monitoring
+TIVA - total intravenous anesthesia
+
+CKD - chronic kidney disease
+eGFR - estimated glomerular filtration rate
+
+AG - anion gap
+  NAGMA - normal anion gap metabolic acidosis
+  HAGMA - high anion gap metabolic acidosis
+  KULT - Ketones, Uremia, Lactate, Toxins
+gg - gap-gap, delta gap
+
+MV - minute volume
+VDaw - dead space airway volume
+TV - tidal volume
+RR - respiratory rate
+"""
 
 __about__ = """\
 Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \

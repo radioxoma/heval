@@ -15,7 +15,7 @@ __helptext__ = """\
   HUMAN BODY
 Введите пол и рост — этого достаточно для большей части антропометрических \
 расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически. \
-Снимите галочку 'Use IBW' и введите реальный вес, если знаете его.
+Снимите галочку "Use IBW" и введите реальный вес, если знаете его.
 
 Мгновенно доступны: IBW, BSA, BMI, объёмы вентиляции, суточная потребность \
 в энергии и жидкости, диурез, дозировки ЛС etc.
@@ -73,6 +73,7 @@ class MainWindow(Frame):
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.parent.style = Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
+        self.parent.style.configure('TButton', padding=2)
         self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
         # self.bind('<r>', lambda e: self.set_input_defaults())
         # self.bind('<Control-s>', lambda e: self.save_text())
@@ -223,11 +224,13 @@ class HelpWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        text = scrolledtext.ScrolledText(self, wrap='word')
+        text = scrolledtext.ScrolledText(self, wrap=WORD)
         text.insert(1.0, __helptext__)
 
-        bg = Style().lookup('TLabel', 'background')  # Mimic like Label
-        text.configure(relief=FLAT, state=DISABLED, bg=bg)
+        # Mimic like Label
+        lbl_bg = Style().lookup('TLabel', 'background')
+        lbl_font = Style().lookup('TLabel', 'font')  # TkDefaultFont
+        text.configure(relief=FLAT, state=DISABLED, bg=lbl_bg, font=lbl_font)
         text.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self, padding=8)

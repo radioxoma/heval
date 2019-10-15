@@ -224,14 +224,14 @@ class HelpWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        text = scrolledtext.ScrolledText(self, wrap=WORD)
-        text.insert(1.0, __helptext__)
+        self.text = scrolledtext.ScrolledText(self, wrap=WORD)
+        self.text.insert(1.0, __helptext__)
 
         # Mimic like Label
         lbl_bg = Style().lookup('TLabel', 'background')
         lbl_font = Style().lookup('TLabel', 'font')  # TkDefaultFont
-        text.configure(relief=FLAT, state=DISABLED, bg=lbl_bg, font=lbl_font)
-        text.pack(expand=True, fill=BOTH)
+        self.text.configure(relief=FLAT, state=DISABLED, bg=lbl_bg, font=lbl_font)
+        self.text.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self, padding=8)
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
@@ -239,6 +239,24 @@ class HelpWindow(Toplevel):
         self.ctl_frame.pack(fill=BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
+
+        self.popup_menu = Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
+        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
+        self.bind("<ButtonRelease-3>", self.popup)
+        self.bind('<Control-C>', self.copy)
+
+    def popup(self, event):
+        self.popup_menu.tk_popup(event.x_root, event.y_root)
+
+    def copy(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.text.get("sel.first", "sel.last"))
+        self.update()  # Force copy
+
+    def copy_all(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.text.get(1.0, END))
 
 
 class AboutWindow(Toplevel):
@@ -325,8 +343,22 @@ class TextView2(scrolledtext.ScrolledText):
         self.config(font=('consolas', 10), wrap='word')
 
         self.popup_menu = Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
         self.bind("<ButtonRelease-3>", self.popup)
+        self.bind('<Control-C>', self.copy)
+
+    def popup(self, event):
+        self.popup_menu.tk_popup(event.x_root, event.y_root)
+
+    def copy(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.get("sel.first", "sel.last"))
+        self.update()  # Force copy
+
+    def copy_all(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.get(1.0, END))
 
     def set_text(self, text):
         """Replace current text."""
@@ -334,14 +366,6 @@ class TextView2(scrolledtext.ScrolledText):
         self.delete(1.0, END)
         self.insert(END, text)
         self['state'] = DISABLED
-
-    def copy_all(self, event=None):
-        self.clipboard_clear()
-        text = self.get(1.0, END)
-        self.clipboard_append(text)
-
-    def popup(self, event):
-        self.popup_menu.tk_popup(event.x_root, event.y_root)
 
 
 class MainText(Frame):

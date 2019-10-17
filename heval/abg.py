@@ -130,10 +130,9 @@ class HumanBloodModel(object):
                 # Can catch COPD or concurrent metabolic alcalosis here
                 info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low {} without main metabolic acidosis. Check your input.\n".format(desc)
+                info += "Unexpected low AG {} without main metabolic acidosis. Check your input.\n".format(desc)
             else:
                 info += "Normal AG {}\n".format(desc)
-
 
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]

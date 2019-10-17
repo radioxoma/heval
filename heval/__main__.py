@@ -386,7 +386,8 @@ class MainText(Frame):
 
     def print(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(str(self.human_model), self.human_model.medication()))
+        self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(
+            self.human_model.describe_body(), self.human_model.describe_drugs()))
 
 
 class CalcElectrolytes(Frame):

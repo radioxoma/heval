@@ -82,7 +82,7 @@ class HumanBodyModel(object):
             Arduan(self),
             Esmeron(self)]
 
-    def __str__(self):
+    def describe_body(self):
         if not self.is_init():
             return "Empty human model (set sex, weight, height)"
         info = ""
@@ -149,6 +149,7 @@ class HumanBodyModel(object):
 
     @sex.setter
     def sex(self, value):
+        """One from: 'male', 'female', 'child'."""
         self._sex = value
         if all((self.height, self.sex)):  # optimization
             self._set_weight_ideal()
@@ -159,6 +160,7 @@ class HumanBodyModel(object):
 
     @height.setter
     def height(self, value):
+        """Human height in meters."""
         self._height = value
         if all((self.height, self.sex)):  # optimization
             self._set_weight_ideal()
@@ -172,8 +174,9 @@ class HumanBodyModel(object):
 
     @weight.setter
     def weight(self, value):
-        """You always can set real body weight, but not get it.
-
+        """Human weight in kilograms.
+        
+        You always can set real body weight, but not get it.
         Never use 'self._weight' directly beyond setter/getter code.
         """
         self._weight = value
@@ -248,6 +251,7 @@ class HumanBodyModel(object):
 
     @property
     def bsa(self):
+        """Body surface area, m2, square meters."""
         return body_surface_area(height=self.height, weight=self.weight)
 
     @property
@@ -386,8 +390,8 @@ class HumanBodyModel(object):
         info = ""
         if self.sex in ('male', 'female'):
             info += "\nElectrolytes daily requirements:\n"
-            info += " * Na+\t{:.0f} mmol/24h [~1 mmol/kg/24h]\n".format(self.weight)
-            info += " * K+\t{:.0f} mmol/24h [~1 mmol/kg/24h]".format(self.weight)
+            info += " * Na⁺\t{:.0f} mmol/24h [~1 mmol/kg/24h]\n".format(self.weight)
+            info += " * K⁺\t{:.0f} mmol/24h [~1 mmol/kg/24h]".format(self.weight)
             return info
         else:
             return "Electrolytes calculation for children not implemented. Refer to [Курек 2013, с 130]"
@@ -477,7 +481,7 @@ class HumanBodyModel(object):
             out += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(3.5 * self.weight, 3.5 * self.weight * 24)
         return out
 
-    def medication(self):
+    def describe_drugs(self):
         if not self.is_init():
             return "Medication not initialized"
         else:

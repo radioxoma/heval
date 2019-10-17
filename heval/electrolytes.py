@@ -124,7 +124,7 @@ def kurek_electrolytes_K(weight, K_serum):
         * гипервентиляция
     """
     if norm_K[0] <= K_serum <= norm_K[1]:
-        return "K is ok [{:.1f}-{:.1f} mmol/L]".format(norm_K[0], norm_K[1])
+        return "K⁺ is ok [{:.1f}-{:.1f} mmol/L]".format(norm_K[0], norm_K[1])
 
     K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
@@ -132,7 +132,7 @@ def kurek_electrolytes_K(weight, K_serum):
 
     info = ''
     if K_serum < K_low:
-        info += "K is dangerously low (<{:.0f} mmol/L). Often associated with low Mg (Mg should be at least 1 mmol/L) and low Cl-.\n".format(K_low)
+        info += "K⁺ is dangerously low (<{:.0f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
         info += "NB! Potassium calculations considered inaccurate, so use standard replacement speed and check ABG every 2-4 hours: "
         if weight < 40:
             info += "KCl {:.0f}-{:.0f} mmol/h for child.\n".format(0.25 * weight, 0.5 * weight)
@@ -147,7 +147,7 @@ def kurek_electrolytes_K(weight, K_serum):
         K_deficiency = (K_target - K_serum) * weight * coefficient
         # K_deficiency += weight * 1  # mmol/kg/24h Should I add also суточная потребность?
 
-        info += "Estimated K deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
+        info += "Estimated K⁺ deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
         if K_deficiency > 4 * weight:
             info += "Too much potassium for 24 hours"
 
@@ -156,7 +156,7 @@ def kurek_electrolytes_K(weight, K_serum):
 
     elif K_serum >= K_high:
         glu_mass = 0.5 * weight
-        info += "K is dangerously high (>{} mmol/L)\n".format(K_high)
+        info += "K⁺ is dangerously high (>{} mmol/L)\n".format(K_high)
         info += "Inject bolus for child "
         info += glucosae_solution(glu_mass, weight)
         info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
@@ -165,7 +165,7 @@ def kurek_electrolytes_K(weight, K_serum):
         info += "Don't forget furesemide, hyperventilation\n"
         info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
     else:
-        info += "K in range [{:.1f}-{:.1f} mmol/L]".format(K_low, K_high)
+        info += "K⁺ in range [{:.1f}-{:.1f} mmol/L]".format(K_low, K_high)
     return info
 
 
@@ -212,7 +212,7 @@ def kurek_electrolytes_Na(weight, Na_serum):
         * Скорость снижения не быстрее 20 ммоль/л в сутки
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
-        return "Na is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
+        return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
 
     Na_high = 150  # Курек 133
     Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
@@ -220,18 +220,18 @@ def kurek_electrolytes_Na(weight, Na_serum):
 
     info = ''
     if Na_serum > Na_high:
-        info += "Na is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide, NOT IMPLEMENTED".format(Na_high)
+        info += "Na⁺ is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide, NOT IMPLEMENTED".format(Na_high)
     elif Na_serum < Na_low:
         # Коэффициенты общие для восполнения дефицита Na, K?
         # coefficient = 0.45  # новорождённые
         # coefficient = 0.4   # грудные
         # coefficient = 0.3   # < 5 лет
         coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой]
-        info += "Na is dangerously low (<{} mmol/L), expect seizure\n".format(Na_low)
+        info += "Na⁺ is dangerously low (<{} mmol/L), expect seizure\n".format(Na_low)
         Na_deficiency = (Na_target - Na_serum) * weight * coefficient
-        info += "Na_deficiency is {:.0f} mmol [Курек]".format(Na_deficiency)
+        info += "Na⁺ deficiency is {:.0f} mmol [Курек]".format(Na_deficiency)
     else:
-        info += "Na in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
+        info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
     return info
 
 
@@ -250,7 +250,7 @@ def krylov_electrolytes_Na(weight, Na_serum):
     Осмоляльность (мОсм/кг) = 2×(Na+ + K+) + Глю/18 + Моч/2,8 {Норма 280-285 мОсм/кг воды}
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
-        return "Na is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
+        return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
 
     coefficient = 0.6
     Na_target = 125  # mmol/L, minimal acceptable value from book
@@ -258,9 +258,9 @@ def krylov_electrolytes_Na(weight, Na_serum):
 
     info = ''
     if Na_serum < Na_target:
-        info += "Na is dangerously low (<{} mmol/L)\n".format(Na_low)
+        info += "Na⁺ is dangerously low (<{} mmol/L)\n".format(Na_low)
         Na_deficiency = (Na_target - Na_serum) * weight * coefficient
-        info += "Na_deficiency is {} mmol [Крылов]".format(Na_deficiency)
+        info += "Na⁺ deficiency is {} mmol [Крылов]".format(Na_deficiency)
     else:
         raise NotImplementedError
     return info
@@ -268,9 +268,9 @@ def krylov_electrolytes_Na(weight, Na_serum):
 
 def electrolytes_Cl(weight, Cl_serum):
     if norm_Cl[0] <= Cl_serum <= norm_Cl[1]:
-        return "Cl is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
+        return "Cl⁻ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
     else:
-        return "Cl is not ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
+        return "Cl⁻ is not ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
 
 
 if __name__ == '__main__':

@@ -423,19 +423,19 @@ class CalcElectrolytes(Frame):
         CreateToolTip(fr_elec_entry, "Find electrolyte imbalance and unmeasurable anion disturbances")
         fr_elec_entry.pack(side=LEFT, anchor=N)
 
-        Label(fr_elec_entry, text='K, mmol/L').grid(row=1, column=0)
+        Label(fr_elec_entry, text='K⁺, mmol/L').grid(row=1, column=0)
         self.ctl_sbx_K = Spinbox(fr_elec_entry, width=3, from_=0, to=15,
             format='%2.1f', increment=0.1, command=self.set_model_K)
         self.ctl_sbx_K.bind("<Return>", self.set_model_K)
         self.ctl_sbx_K.grid(row=1, column=1)
 
-        Label(fr_elec_entry, text='Na, mmol/L').grid(row=2, column=0)
+        Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=2, column=0)
         self.ctl_sbx_Na = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f', increment=1, command=self.set_model_Na)
         self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
         self.ctl_sbx_Na.grid(row=2, column=1)
 
-        Label(fr_elec_entry, text='Cl, mmol/L').grid(row=3, column=0)
+        Label(fr_elec_entry, text='Cl⁻, mmol/L').grid(row=3, column=0)
         self.ctl_sbx_Cl = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f', increment=1, command=self.set_model_Cl)
         self.ctl_sbx_Cl.bind("<Return>", self.set_model_Cl)

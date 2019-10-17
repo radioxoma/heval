@@ -21,10 +21,10 @@ __helptext__ = """\
 в энергии и жидкости, диурез, дозировки ЛС etc.
 
   ABG & ELECTROLYTES
-Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае метаболического \
-ацидоза необходимо ввести концентрации K, Na, Cl, чтобы программа смогла \
-рассчитать анионный промежуток и попыталась найти скрытые метаболические \
-процессы при помощи delta ratio.
+Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае \
+метаболического ацидоза необходимо ввести концентрации K⁺, Na⁺, Cl⁻, чтобы \
+программа смогла рассчитать анионный промежуток и попыталась найти скрытые \
+метаболические процессы при помощи Delta ratio.
 Пол и вес влияют на рассчитанную инфузионную терапию.
 
 При наведении курсора на поле ввода появляется всплывающая подсказка.
@@ -33,7 +33,7 @@ __helptext__ = """\
 ABG - arterial blood gas test
 BMI - body mass index
 BMR - basal metabolic rate
-BSA - body surface area, m^2
+BSA - body surface area, m²
 IBW - ideal body weight, kg
 RBW - real body weight, kg
 NMT - neuromuscular monitoring
@@ -56,14 +56,17 @@ RR - respiratory rate
 """
 
 __about__ = """\
-Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \
-Не используйте лекарственное средство, если не читали его инструкцию.
+Heval — экспериментальное программное обеспечение, предназначенное для \
+использования врачами-анестезиологами-реаниматологами. Программа \
+предоставляется "как есть". Автор не несёт ответственности за ваши \
+действия и не предоставляет никаких гарантий.
 
-Heval is an experimental medical software intended for healthcare specialists. \
-You supposed to be grown and well-educated on order to decide to never use it \
-in clinical practice.
+Heval is an experimental medical software intended for healthcare \
+specialists. Software is provided ​"as is". Developer makes no warranties, \
+express or implied.
 
-Written by Eugene Dvoretsky 2016-2019. Check source code for references and formulas.
+Written by Eugene Dvoretsky 2016-2019. Check source code for references and \
+formulas.
 
 Heval is a free software and licensed under the terms of \
 GNU General Public License version 3. """
@@ -381,8 +384,11 @@ class MainText(Frame):
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.TxtView.set_text("Got lost? Select 'Help' in menu, or just press F1 key.\n\n"
-            "Не знаете с чего начать? Выберите 'Help' в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.")
+        self.TxtView.set_text(
+            "Got lost? Select \"Help\" in menu, or just press F1 key.\n\n"
+            "Не знаете с чего начать? Выберите \"Help\" в меню, чтобы "
+            "вызвать краткую справку на русском языке. Или просто "
+            "нажмите клавишу F1.")
 
     def print(self, event=None):
         """Calculate and print some evaluated data."""
@@ -507,7 +513,7 @@ class CalcElectrolytes(Frame):
 
 
 class CalcGFR(Frame):
-    """Esimate glomerular filtration rate (eGFR)"""
+    """Esimate glomerular filtration rate (eGFR)."""
     def __init__(self, parent, human_model):
         super(CalcGFR, self).__init__(parent)
         self.parent = parent
@@ -532,7 +538,8 @@ class CalcGFR(Frame):
 
         self.var_isblack = IntVar()  # No real body weight
         self.var_isblack.set(0)
-        self.ctl_ckb_isblack = Checkbutton(fr_entry, variable=self.var_isblack, onvalue=1, offvalue=0, text="Black human", command=self.print)
+        self.ctl_ckb_isblack = Checkbutton(fr_entry, variable=self.var_isblack,
+            onvalue=1, offvalue=0, text="Black human", command=self.print)
         self.ctl_ckb_isblack.pack(side=LEFT)
         CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
 

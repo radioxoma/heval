@@ -4,7 +4,7 @@ The program describes an human being, small or grown. It takes basic anthropomet
 
 Main features:
 
-* Minimal user input — some unknown values (like weight) can be estimated automatically using others (height)
+* Minimal user input — some unknown values can be estimated automatically using others (e.g. weight by height)
 * Only measurable parameters — no need to speak with a human of interest or it's congeners
 * No need to input same data into multiple forms
 * No "Calculate" button — evaluated data changes immediately with your input
@@ -17,7 +17,7 @@ Main features:
 > Tip: Get yourself a ruler, not all humans are able to talk.
 
 * Just enter sex and height
-* No input for human age, even for children, because of it poor prediction power. Incorporated Broselow-Luten color zones and weight-by-height formulas at your service
+* No input field for a human age, even for children, because of it poor prediction power. Incorporated [Broselow-Luten color zones](https://en.wikipedia.org/wiki/Broselow_tape) and weight-by-height formulas at your service
 
 
 ### Arterial blood gas & Electrolytes
@@ -35,9 +35,9 @@ Heval is an experimental software. Whatever it calculates, it's *your* decisions
 An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
 
 
-## Download
+## Download [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/)
 
-You can download Windows build from [releases page](https://github.com/radioxoma/heval/releases/). Just run it — installation is not required. Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`).
+You can download Windows build from [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required. Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`).
 
 ### Development version
 

@@ -11,6 +11,8 @@ $ md5sum *
 a00e5f337bd2c65e513fda1202827c6a ABL800 Operators Manual English US.pdf
 
 Main statements:
+    * You need deep theoretical background to understand this code,
+        ABG is hard and functions' docs couldn't be self-explaining
     * Use International System of Units (m, kPa, mmol/L)
     * No algebraic optimizations reducing readability
     * All voodoo calculations must be outside class and documented
@@ -21,7 +23,7 @@ Main approach:
 0. Read this https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
 1. Describe ABG with `abg_approach_stable(pH, pCO2)`
 2. Calculate HCO3act, BE
-3. Always calculate and check anion gap, even if no primary metabolic acidosis
+3. *Always* calculate and check anion gap, even if no primary metabolic acidosis
     * If AG is high, calculate Delta gap
 """
 
@@ -75,7 +77,7 @@ class HumanBloodModel(object):
 
     @property
     def anion_gapk(self):
-        """Anion gap (K+), usually not needed"""
+        """Anion gap (K+), usually not used."""
         if self.K is not None:
             return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
         else:
@@ -83,7 +85,7 @@ class HumanBloodModel(object):
 
     @property
     def anion_gap(self):
-        """Anion gap without potassion 7-16 mEq/L."""
+        """Default anion gap calculation method without potassium."""
         return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p)
 
     @property
@@ -178,16 +180,21 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
 
     May be known as SID [1], AG. Don't get confused with 'osmol gap'.
         * Normal value without potassium 7-16 mEq/L
-        * Normal value with potassuim 10-20 mEq/L
-
-    Помогает при выявлении противонаправленных метаболических процессов.
-    Напрмиер потеря Cl- (алкалоз) и лактат-ацидоз.
+        * Normal value with potassium 10-20 mEq/L
 
     Corresponds to phosphates, sulphates, proteins (albuminum).
+    Helpful in distinguishing causes of metabolic acidosis like KULT:
+        K — Ketoacidosis (DKA, Alcoholic ketoacidosis, AKA)
+        U — Uremia
+        L — Lactic acidosis
+        T — Toxins (Ethylene glycol, methanol, as well as drugs, such as aspirin, Metformin)
+    
     High gap: acute kidney injury, lactate, ketoacidosis, salicylate ->
         secondary loss of HCO3− which is a buffer, without a concurrent
         increase in Cl− for electroneutrality equilibrium support.
     Low gap: increase in Cl−, low albuminum.
+
+    See also Delta ration - an derived calculation for more complex conditions.
 
 
     Examples
@@ -233,9 +240,6 @@ def calculate_anion_gap_delta(AG, HCO3act):
 
     If gag-gap ~ 1, then AG and BE shifts are equal - acidosis caused by non-measured anion.
 
-    Если изменение gap меньше изменения дефицита оснований, то проблема с
-    сильными анионами.
-
     Increase in the AG should be equal to the decrease in bicarbonate:
 
     AG = [Na+] - [Cl-] - [HCO3-]  # Increase by low [Cl-] or low [HCO3-]
@@ -272,38 +276,31 @@ def calculate_anion_gap_delta(AG, HCO3act):
     # info += "Delta gap ({:.1f} - 12) / (24 - {:.1f}) = {:.1f}\n".format(AG, HCO3act, gg)
     info += "delta ratio {:.1f} ".format(gg)
     if gg < 0.4:
-        # При массивном введении NaCl (дилюционный ацидоз) почки экскретируют
-        # бикарбонат для компенсации гиперхлоремии
-        # При введении NaCL Gap не изменяется, но засчёт избытка Cl
-        # почки выводят HCO3.
-        return info + "(gg < 0.4): гиперхлоремический ацидоз с нормальной анионной разницей"
-        # Hyperchloraemic normal anion gap acidosis
+        # Usually due to mass transfusion of NaCl (dilution acidosis)
+        # Normal gap because kidney excrete HCO3-
+        return info + "(gg < 0.4): hyperchloremic normal anion gap metabolic acidosis (NAGMA)"
     elif 0.4 <= gg <= 0.8:
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
         # Renal tubular acidosis https://web.archive.org/web/20170802021754/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_5.html
         return info + "(0.4 ≤ gg ≤ 0.8): combined HAGMA + NAGMA (gg ratio <1 is often associated with renal failure - check urine electrolytes and kidney function)"
     elif 0.8 < gg < 1:
-        return info + "(0.8 < gg < 1): наиболее характерно для диабетического кетоацидоза вследствие потерь кетоновых тел с мочой (особенно когда пациент еще не обезвожен)"
+        return info + "(0.8 < gg < 1): most likely caused by diabetic ketoacidosis due to urine ketone bodies loss (when patient not dehydrated yet)"
     elif 1 <= gg <= 2:
-        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis"
         # Usual for uncomplicated high-AG acidosis - ("pure metabolic acidosis"?)
-        # Lactic acidosis: average value 1.6
-        # DKA more likely to have a ratio closer to 1 due to urine ketone
-        # loss (especially if patient not dehydrated).
-
+        # * lactic acidosis: average value 1.6
+        # * DKA more likely to have a ratio closer to 1 due to urine ketone loss (especially if patient not dehydrated).
         # Absence of ketones in the urine can be seen in early DKA due to the
         # predominance of beta-hydroxybutyrate. The dipstick test for ketones
         # detect acetoacetate but not beta-hydroxybutyrate.
         # https://web.archive.org/web/20170831093311/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_2.html
+        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis (HAGMA)"
     elif 2 < gg:
         # Suggests a pre-existing elevated [HCO3-] level so consider:
         #   * a concurrent metabolic alcalosis
         #   * a pre-existing compensated respiratory acidosis
         # tiazide diuretics?
         return info + "(2 < gg): concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
-    else:
-        raise NotImplementedError(gg)
 
 
 def calculate_mosm(Na, glucosae):
@@ -378,14 +375,14 @@ def calculate_hco3p(pH, pCO2):
     :rtype: float
     """
     pKp = 6.125 - math.log10(1 + 10 ** (pH - 8.7))  # Dissociation constant
-    # aCO2(P) solubility coefficient for 37 °С = 0.230 mmol/L/kPa
+    # aCO2(P) solubility coefficient for 37 °C = 0.230 mmol/L/kPa
     return 0.230 * pCO2 * 10 ** (pH - pKp)
 
 
 def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     """Standard Bicarbonate, the concentration of HCO3- in the plasma
     from blood which is equilibrated with a gas mixture with
-    pCO2 = 5.33 kPa (40 mmHg) and pO2 >= 13.33 kPa (100 mmHg) at 37 °С.
+    pCO2 = 5.33 kPa (40 mmHg) and pO2 >= 13.33 kPa (100 mmHg) at 37 °C.
     (Normal pCO2 and pO2 level enough to saturate Hb.)
 
     Also known as cHCO3(P,st)) [1].
@@ -575,7 +572,7 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
     # ctHb(mmol/L) == ctHb(g/dL) / 1.61140 == ctHb(g/dL) * 0.62058
     # Vol % == 2.241 (mmol/L)
     # By [1] p. 6-14 or 6-49.
-    # O2 solubility coefficient in blood at 37 °С.
+    # O2 solubility coefficient in blood at 37 °C.
     alphaO2 = 9.83 * 10 ** -3  # mmol/L/kPa
     return alphaO2 * pO2 + sO2 * (1 - FCOHb - FMetHb) * ctHb
 
@@ -655,13 +652,12 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     """
     # cCrea (μmol/L) = 88.4 × cCrea (mg/dL)
 
-    # Original equation from 1999 (для наборов без стандартизации креатинина)
+    # Original equation from 1999 (non IDMS)
     # egfr = 186 * (cCrea / 88.4) ** -1.154 * age ** -0.203
 
     # Revised equation from 2005, to accommodate for standardization of
-    # creatinine assays over isotope dilution mass spectrometry (IDMS).
+    # creatinine assays over isotope dilution mass spectrometry (IDMS) SRM 967.
     # Equation being used by Radiometer devices
-    # Для наборов со стандартизацией креатинина по референтному реактиву SRM 967
     egfr = 175 * (cCrea / 88.4) ** -1.154 * age ** -0.203
     if sex == 'female':
         egfr *= 0.742
@@ -871,7 +867,7 @@ def abg_approach_stable(pH, pCO2):
     else:
         # pH decompensation
         if pCO2 < norm_pCO2[0]:  # Low (respiratory alcalosis)
-            # Достаточно ли такого изменения pH, чтобы дать такой pCO2?
+            # Can this pH lead to given pCO2?
             if pH < norm_pH[0]:
                 # Always check anion gap here
                 return ("Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]",
@@ -971,12 +967,11 @@ def abg_approach_research(pH, pCO2):
     info += "pCO2 by cHCO3(P) expected respiratory compensation [Winters]:\n"
     info += " * metabolic acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
     info += " * metabloic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
-
-    try:
-        y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
-        info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)
-    except ZeroDivisionError:
-        pass
+    # try:
+    #     y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
+    #     info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)
+    # except ZeroDivisionError:
+    #     pass
     return info
 
 

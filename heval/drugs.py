@@ -5,41 +5,6 @@
 Drug dosage calculator for humans.
 
 Author: Eugene Dvoretsky
-
-Propofol (индукция пока не срубит и поддержка по K мг каждые N минут)
-Тиопентал
-Кетамин
-Фентанил
-Dithylin (индукция и поддержка)
-Tracrium (индукция и поддержка)
-
-промедол
-    Курек 423
-налоксон
-    детям болюсами по 0.4 мг [Курек 435]
-Тахибен - по эффекту
-Нитраты - по эффекту
-Нимотоп - по эффекту
-
-Адреналин в/в
-    Курек 10 мкг/кг с 380.
-Mesaton
-Допамин
-    Курек 419
-Маннитол
-Гепарин
-
-Питание
-    Глюкоза (скорость, количество инсулина у детей и взрослых)
-    Инсулин для кетоацидотической комы
-    Калийснижающий болюс [Курек 2013 131]
-
-Электролиты? K?
-Бикарбонат
-    * Курек 47
-    * Маневич, Плохой 118 (на BE, вес)
-
-Анальгин для детей?
 """
 
 class Dithylin(object):
@@ -50,8 +15,7 @@ class Dithylin(object):
         self.name = "Dithylin"
         self.concentration = 20  # mg/ml
         # self.volume = 5  # ml
-        # На идеальный вес
-        # Частота введения поддерживающего болюса
+        # For IBW
 
     def __str__(self):
         # print("%s for intubation %.0f mg (5-10 mins)." % (
@@ -71,10 +35,9 @@ class Propofol(object):
         self.name = "Propofol"
         self.concentration = 10  # mg/ml
         self.maintenance_dosage = 10  # mg/kg/h
-        # Индукция в течение минуты
+        # Induction in one minute
         # self.volume = 20  # ml
-        # На вес
-        # Частота введения поддерживающего болюса
+        # For RBW
 
     def delay(self, bolus=50):
         """Delay in minutes between boluses. Tupical bolus is 25-50 mg.
@@ -110,8 +73,8 @@ class Fentanyl(object):
 class Tracrium(object):
     """According to GlaxoSmithKline.
 
-    Метаболизируется неспецефическими эстеразами плазмы. Не кумулирует.
-    Скорость снятия блока от метаболизма печени и почек не зависит.
+    Eleminated by nonspecific plasma esterases.
+    No cumulation, block recovery not dependent from kidney/liver metabolism.
     """
     def __init__(self, parent=None):
         self._parent = parent

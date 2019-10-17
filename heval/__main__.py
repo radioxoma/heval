@@ -38,6 +38,7 @@ IBW - ideal body weight, kg
 RBW - real body weight, kg
 NMT - neuromuscular monitoring
 TIVA - total intravenous anesthesia
+TOF - train of four
 
 CKD - chronic kidney disease
 eGFR - estimated glomerular filtration rate
@@ -58,10 +59,14 @@ __about__ = """\
 Программа медицинская, поэтому состоит из допущений чуть менее чем полностью. \
 Не используйте лекарственное средство, если не читали его инструкцию.
 
+Heval is an experimental medical software intended for healthcare specialists. \
+You supposed to be grown and well-educated on order to decide to never use it \
+in clinical practice.
+
 Written by Eugene Dvoretsky 2016-2019. Check source code for references and formulas.
 
-Heval is a free software and licensed under the terms of GNU General Public License version 3.
-"""
+Heval is a free software and licensed under the terms of \
+GNU General Public License version 3. """
 
 
 class MainWindow(Frame):

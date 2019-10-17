@@ -38,7 +38,7 @@ FOR /F "skip=1 tokens=1-6" %%G IN ('WMIC Path Win32_LocalTime Get Day^,Hour^,Min
       Set _minute=%_minute:~-2%
       Set _second=%_second:~-2%
 
-Set timestamp=%_yyyy%-%_mm%-%_dd%_%_hour%_%_minute%_%_second%
+Set timestamp=%_yyyy%-%_mm%-%_dd%_%_hour%-%_minute%-%_second%
 goto make_dump
 
 :s_error

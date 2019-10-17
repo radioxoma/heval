@@ -112,7 +112,7 @@ class HumanBodyModel(object):
 
         # Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
         # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
-        info += "RBW blood volume {:.0f}-{:.0f} ml (70-80 ml/kg для всех людей старше 3 мес, у новорождённых больше)\n".format(self.weight * 70, self.weight * 80)
+        info += "RBW blood volume {:.0f}-{:.0f} ml (70-80 ml/kg for humans older than 3 month, more in neonates)\n".format(self.weight * 70, self.weight * 80)
 
         # if self.sex == 'child':
         #     info += "{}\n".format(wetflag(weight=self.weight))
@@ -358,7 +358,7 @@ class HumanBodyModel(object):
             # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
             if self.body_temp > 37:
                 deg = self.body_temp - 37
-                info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°С)".format(
+                info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
                     5 * self.weight * deg,
                     7 * self.weight * deg)
         elif self.sex == 'child':
@@ -390,7 +390,7 @@ class HumanBodyModel(object):
             info += " * K+\t{:.0f} mmol/24h [~1 mmol/kg/24h]".format(self.weight)
             return info
         else:
-            return "Don't know how to calculate electrolytes for children. Check Курек 2013 расчёт дефицита K, Na стр. 130"
+            return "Electrolytes calculation for children not implemented. Refer to [Курек 2013, с 130]"
 
     def _info_in_energy(self):
         """Attempt to calculate energy requirements for an human.
@@ -456,7 +456,7 @@ class HumanBodyModel(object):
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
-            info += "Don't know how to calculate energy for children. Check Курек АиИТ у детей 3-е изд. 2013, стр. 137"
+            info += "Energy calculations for children not implemented. Reref to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
         return info
 
 
@@ -683,7 +683,7 @@ def parcland_volume(weight, burned_surface):
 
 
 def fluid_req_holidaysegar_mod(rbm):
-    """Расчёт суточной потребности в жидкости.
+    """Daily fluid requirement for children.
 
     Looks like Holliday-Segar method, but modified for infants with body weight <3 kg.
 

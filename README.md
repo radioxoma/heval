@@ -22,11 +22,13 @@ Main features:
 
 ### Arterial blood gas & Electrolytes
 
-> Tip: You can test Heval's ability to interpret ABG with [these case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html).
+> Tip: You can test Heval's ability to interpret ABG with [these case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html). Some books provide case studies with invalid data (see below).
 
 * Enter pH and pCO2 for overall acid-base status assessment
 * Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and, of course, electrolyte disturbances
 * Sex and weight used only for dosage calculations, for not ABG diagnostics
+
+Please use a *real patient's data*: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap. **Some imagined book case studies will fail too.**
 
 
 ## Disclaimer

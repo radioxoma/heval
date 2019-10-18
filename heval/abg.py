@@ -24,6 +24,8 @@ Main approach:
 1. Describe ABG with `abg_approach_stable(pH, pCO2)`
 2. Calculate HCO3act, BE
 3. *Always* calculate and check anion gap, even if no primary metabolic acidosis
+    * You must use AG without potassium, as Anion Gap (K+) is incompatible
+        with Delta gap. Also K is tricky to measure.
     * If AG is high, calculate Delta gap
 """
 
@@ -34,7 +36,9 @@ except ImportError:
     import math
 from heval import electrolytes
 
+
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
+m_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
 
 # Arterial blood reference
 norm_pH = (7.35, 7.45)
@@ -323,7 +327,7 @@ def calculate_mosm(Na, glucosae):
     return 2 * Na + glucosae
 
 
-def approx_hco3(pH, pCO2):
+def simple_hco3(pH, pCO2):
     """Concentration of HCO3 in plasma (actual bicarbonate).
 
     Also known as cHCO3(P), HCO3act.
@@ -343,7 +347,7 @@ def approx_hco3(pH, pCO2):
         cHCO3(P), mmol/L.
     :rtype: float
     """
-    # 0.03 - CO2 solubility coefficient mmol/L/hg
+    # 0.03 - CO2 solubility coefficient mmol/L/mmHg
     # 6.1 - dissociation constant for H2CO3
     return 0.03 * pCO2 / kPa * 10 ** (pH - 6.1)
 
@@ -405,13 +409,13 @@ def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     return 24.47 + 0.919 * Z + Z * a * (Z - 8)
 
 
-def approx_be(pH, HCO3act):
+def simple_be(pH, HCO3act):
     """Calculate base excess (BE), Siggaard Andersen approximation.
 
     Synonym for cBase(Ecf) and SBE?
 
     To reproduce original [1] calculations:
-    approx_be(approx_hco3(pH, pCO2))
+    simple_be(simple_hco3(pH, pCO2))
 
 
     References
@@ -649,15 +653,13 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
         eGFR, mL/min/1.73 m2
     :rtype: float
     """
-    # cCrea (μmol/L) = 88.4 × cCrea (mg/dL)
-
     # Original equation from 1999 (non IDMS)
-    # egfr = 186 * (cCrea / 88.4) ** -1.154 * age ** -0.203
+    # egfr = 186 * (cCrea / m_Crea) ** -1.154 * age ** -0.203
 
     # Revised equation from 2005, to accommodate for standardization of
     # creatinine assays over isotope dilution mass spectrometry (IDMS) SRM 967.
     # Equation being used by Radiometer devices
-    egfr = 175 * (cCrea / 88.4) ** -1.154 * age ** -0.203
+    egfr = 175 * (cCrea / m_Crea) ** -1.154 * age ** -0.203
     if sex == 'female':
         egfr *= 0.742
     elif sex == 'child':
@@ -688,7 +690,7 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
         eGFR, mL/min/1.73 m2
     :rtype: float
     """
-    cCrea /= 88.4  # to mg/dl
+    cCrea /= m_Crea  # to mg/dl
     if sex == 'male':
         if cCrea <= 0.9:
             egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993 ** age
@@ -832,10 +834,10 @@ def abg_approach_stable(pH, pCO2):
         ex_pH = resp_acidosis_pH(pCO2)
         if abs(pH - ex_pH) > magic_threshold:
             if pH > ex_pH:
-                guess += "background metabolic alcalosis, "
+                guess += "background metabolic alcalosis:"
             else:
-                guess += "background metabolic acidosis, "
-        return "{}expected pH {:.2f}".format(guess, ex_pH)
+                guess += "background metabolic acidosis:"
+        return "{} expected pH {:.2f}".format(guess, ex_pH)
 
     main_disturbance = None
 
@@ -963,9 +965,9 @@ def abg_approach_research(pH, pCO2):
     """
     wint_ac = 1.5 * HCO3act + 8
     wint_alc = 0.7 * HCO3act + 20
-    info += "pCO2 by cHCO3(P) expected respiratory compensation [Winters]:\n"
-    info += " * metabolic acidisis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
-    info += " * metabloic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
+    info += "pCO2 by cHCO3(P) - expected respiratory compensation [Winters]:\n"
+    info += " * for metabolic acidosis {:.1f}±2 mmHg ({:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
+    info += " * for metabolic alcalosis {:.1f}±1.5 mmHg ({:.1f}-{:.1f})\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
     # try:
     #     y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
     #     info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)
@@ -978,9 +980,9 @@ def test():
     variants = (
         # pH, pCO2, HCO3, comment
         (7.4, 40, None, 'Normal ABG'),
-        (7.46, 35., 27., "Metabolic Alkalosis"),
+        (7.46, 35., 27., "Metabolic Alcalosis"),
         (7.30, 35., 20., "Metabolic Acidosis"),
-        (7.47, 32., 23., "Respiratory Alkalosis"),
+        (7.47, 32., 23., "Respiratory Alcalosis"),
         (7.4,  40.01, 25., "Normal"),
         (7.1, 28., 14., "Костюченко 1 вариант"),
         (7.1, 68., None, "Костюченко 2 вариант"),

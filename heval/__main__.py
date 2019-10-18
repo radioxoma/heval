@@ -416,7 +416,7 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_pH.bind("<Return>", self.set_model_pH)
         self.ctl_sbx_pH.grid(row=1, column=1)
 
-        Label(fr_abg_entry, text="pCO2, mmHg").grid(row=2, column=0)
+        Label(fr_abg_entry, text="pCO₂, mmHg").grid(row=2, column=0)
         self.ctl_sbx_pCO2 = Spinbox(fr_abg_entry, width=4, from_=0.0, to=150.0,
             format='%.1f', increment=1, command=self.set_model_pCO2)
         self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)

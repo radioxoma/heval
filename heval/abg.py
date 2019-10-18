@@ -127,6 +127,7 @@ class HumanBloodModel(object):
             elif self.anion_gap < norm_gap[0]:
                 info += "Low AG {} - hypoalbuminemia or low Na?\n".format(desc)
             else:
+                # Гипокортицизм [Henessy 2018, с 113 (Clinical case 23)]
                 info += "NAGMA {}. Diarrhea or renal tubular acidosis?\n".format(desc)
         else:
             if norm_gap[1] < self.anion_gap:
@@ -169,7 +170,7 @@ class HumanBloodModel(object):
                   * Must hyperventilate to make use of bicarbonate buffer
                   * Control ABG after each NaHCO3 infusion or every 4 hours
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
-                  * When pH increases, K level decreases
+                  * When pH increases, K⁺ level decreases
                 """)
         info += "\n-- Electrolyte abnormalities --------------------\n"
         info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.K))
@@ -297,7 +298,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # predominance of beta-hydroxybutyrate. The dipstick test for ketones
         # detect acetoacetate but not beta-hydroxybutyrate.
         # https://web.archive.org/web/20170831093311/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_2.html
-        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis (HAGMA)"
+        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis"
     elif 2 < gg:
         # Suggests a pre-existing elevated [HCO3-] level so consider:
         #   * a concurrent metabolic alcalosis
@@ -834,10 +835,10 @@ def abg_approach_stable(pH, pCO2):
         ex_pH = resp_acidosis_pH(pCO2)
         if abs(pH - ex_pH) > magic_threshold:
             if pH > ex_pH:
-                guess += "background metabolic alcalosis:"
+                guess += "background metabolic alcalosis: "
             else:
-                guess += "background metabolic acidosis:"
-        return "{} expected pH {:.2f}".format(guess, ex_pH)
+                guess += "background metabolic acidosis: "
+        return "{}expected pH {:.2f}".format(guess, ex_pH)
 
     main_disturbance = None
 
@@ -852,7 +853,7 @@ def abg_approach_stable(pH, pCO2):
                 return ("Respiratory alcalosis, full comp. by metabolic acidosis",
                     "respiratory_alcalosis")
             else:
-                return ("Metabolic acidosis, full comp. by CO2 alcalosis",
+                return ("Metabolic acidosis, full comp. by CO₂ alcalosis",
                     "metabolic_acidosis")
         elif pCO2 > norm_pCO2[1]:
             # High (respiratory acidosis)
@@ -861,7 +862,7 @@ def abg_approach_stable(pH, pCO2):
                 return ("Respiratory acidosis, full comp. by metabolic alcalosis. COPD?",
                     "respiratory_acidosis")
             else:
-                return ("Metabolic alcalosis, full comp. by CO2 acidosis",
+                return ("Metabolic alcalosis, full comp. by CO₂ acidosis",
                     "metabolic_alcalosis")
         else:
             return ("Normal ABG", None)
@@ -871,7 +872,7 @@ def abg_approach_stable(pH, pCO2):
             # Can this pH lead to given pCO2?
             if pH < norm_pH[0]:
                 # Always check anion gap here
-                return ("Metabolic acidosis, partial comp. by CO2 alcalosis [check AG]",
+                return ("Metabolic acidosis, partial comp. by CO₂ alcalosis [check AG]",
                     "metabolic_acidosis")
             elif pH > norm_pH[1]:
                 return ("Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2)),
@@ -882,7 +883,7 @@ def abg_approach_stable(pH, pCO2):
                     "respiratory_acidosis")
             elif pH > norm_pH[1]:
                 # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
-                return ("Metabolic alcalosis, partial comp. by CO2 acidosis [check Na, Cl, albumin]",
+                return ("Metabolic alcalosis, partial comp. by CO₂ acidosis [check Na, Cl, albumin]",
                     "metabolic_alcalosis")
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)

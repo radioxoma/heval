@@ -108,7 +108,7 @@ class HumanBodyModel(object):
             # Adult normal ranges cannot be applied to children
             info += " BMI {:.1f},".format(bmi_idx)
 
-        info += " BSA {:.3f} m^2.\n".format(self.bsa)
+        info += " BSA {:.3f} m².\n".format(self.bsa)
 
         # Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
         # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
@@ -236,7 +236,7 @@ class HumanBodyModel(object):
         elif self.sex == 'child':
             # Brocelow tape range. Temporary and only for lowest height
             if 0.468 <= self.height < 0.74:
-                print("WARNING: Braselow IBW for range 0.468-0.74 m")
+                # print("WARNING: Braselow IBW for range 0.468-0.74 m")
                 self._weight_ideal_method = "Broselow"
                 self.weight_ideal = get_broselow_code(self.height)[2]
             elif 0.74 <= self.height <= 1.524:
@@ -347,7 +347,7 @@ class HumanBodyModel(object):
     def _info_in_fluids(self):
         # Панкреатит жидкость 50-70 мл/кг/сут, [Пособие дежуранта 2014, стр. 259]
         info = ""
-        info = "BSA all ages fluids demand {:.0f} ml/24h\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)
+        info = "BSA all ages fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)
         if self.sex in ('male', 'female'):
             h2o_min = 30 * self.weight
             h2o_max = 35 * self.weight

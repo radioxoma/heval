@@ -54,19 +54,19 @@ class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
     def __init__(self, parent=None):
         self.parent = parent
-        self._int_prop = ('pH', 'pCO2', 'K', 'Na', 'Cl')
+        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu')
         self._txt_prop = ()
 
         self.pH = None
         self.pCO2 = None       # kPa
 
-        self.K = None          # mmol/L
-        self.Na = None         # mmol/L
-        self.Cl = None         # mmol/L
+        self.cK = None          # mmol/L
+        self.cNa = None         # mmol/L
+        self.cCl = None         # mmol/L
 
         self.albuminum = None  # g/dL
-        self.glucose = None    # mmol/L
-        self.bun = None
+        self.cGlu = None    # mmol/L
+        # self.bun = None
 
     def populate(self, properties):
         """Popultae model from data structure.
@@ -102,19 +102,23 @@ class HumanBloodModel(object):
     @property
     def anion_gapk(self):
         """Anion gap (K+), usually not used."""
-        if self.K is not None:
-            return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p, K=self.K)
+        if self.cK is not None:
+            return calculate_anion_gap(
+                Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
+                K=self.cK, albuminum=self.albuminum)
         else:
             raise ValueError("No potassium specified")
 
     @property
     def anion_gap(self):
         """Default anion gap calculation method without potassium."""
-        return calculate_anion_gap(Na=self.Na, Cl=self.Cl, HCO3act=self.hco3p)
+        return calculate_anion_gap(
+            Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
+            albuminum=self.albuminum)
 
     @property
     def osmolarity(self):
-        return calculate_mosm(self.Na, self.glucose)
+        return calculate_mosm(self.cNa, self.cGlu)
 
     def describe_abg_basic(self):
         """Describe pH and pCO2 - an old implementation considered stable.
@@ -193,9 +197,9 @@ class HumanBloodModel(object):
                   * When pH increases, K⁺ level decreases
                 """)
         info += "\n-- Electrolyte abnormalities --------------------\n"
-        info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.K))
-        info += "{}\n".format(electrolytes.kurek_electrolytes_Na(self.parent.weight, self.Na))
-        info += "{}\n".format(electrolytes.electrolytes_Cl(self.parent.weight, self.Cl))
+        info += "{}\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.cK))
+        info += "{}\n".format(electrolytes.kurek_electrolytes_Na(self.parent.weight, self.cNa))
+        info += "{}\n".format(electrolytes.electrolytes_Cl(self.parent.weight, self.cCl))
         return info
 
 

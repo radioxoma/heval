@@ -493,15 +493,15 @@ class CalcElectrolytes(Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_K(self, event=None):
-        self.human_model.blood.K = float(self.ctl_sbx_K.get())
+        self.human_model.blood.cK = float(self.ctl_sbx_K.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Na(self, event=None):
-        self.human_model.blood.Na = float(self.ctl_sbx_Na.get())
+        self.human_model.blood.cNa = float(self.ctl_sbx_Na.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Cl(self, event=None):
-        self.human_model.blood.Cl = float(self.ctl_sbx_Cl.get())
+        self.human_model.blood.cCl = float(self.ctl_sbx_Cl.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def print(self, event=None):

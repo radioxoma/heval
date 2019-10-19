@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
+import copy
 from heval.drugs import *
 from heval import abg
 
@@ -85,23 +86,25 @@ class HumanBodyModel(object):
             Esmeron(self)]
 
     def populate(self, properties):
-        """Popultae model from data structure.
+        """Populate model from data structure.
 
         :param dict properties: Dictionary with model properties to set.
             Key names must be equal to class properties names.
         :return:
-            Not applied properties
+            Not applied properties (including nested models)
         :rtype: dict
         """
+        prop = copy.deepcopy(properties)  # Avoid changing passed object
         for item in self._int_prop:
-            if item in properties:
-                setattr(self, item, float(properties.pop(item)))
+            if item in prop:
+                setattr(self, item, float(prop.pop(item)))
         for item in self._txt_prop:
-            if item in properties:
-                setattr(self, item, properties.pop(item))
+            if item in prop:
+                setattr(self, item, prop.pop(item))
+
         # Push the rest of the dict deeper
-        self.blood.populate(properties)
-        return properties
+        self.blood.populate(prop)
+        return prop
 
     def describe_body(self):
         if not self.is_init():

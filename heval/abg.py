@@ -29,6 +29,7 @@ Main approach:
     * If AG is high, calculate Delta gap
 """
 
+import copy
 import textwrap
 try:
     from uncertainties import umath as math
@@ -69,7 +70,9 @@ class HumanBloodModel(object):
         # self.bun = None
 
     def populate(self, properties):
-        """Popultae model from data structure.
+        """Populate model from data structure.
+
+        NB! Function changes passed property dictionary.
 
         :param dict properties: Dictionary with model properties to set.
             Key names must be equal to class properties names.

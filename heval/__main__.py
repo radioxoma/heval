@@ -509,6 +509,7 @@ class CalcElectrolytes(Frame):
         info += "{}".format(self.human_model.blood.describe_abg_basic())
         info += "\nElectrolytes\n============\n"
         info += "{}".format(self.human_model.blood.describe_electrolytes())
+        info += "{}".format(self.human_model.blood.describe_unstable())
         self.TxtView.set_text(info)
 
 

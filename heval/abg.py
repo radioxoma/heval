@@ -165,7 +165,9 @@ class HumanBloodModel(object):
                 info += "Unexpected low AG {} without main metabolic acidosis. Check your input.\n".format(desc)
             else:
                 info += "Normal AG {}\n".format(desc)
+        return info
 
+    def describe_unstable(self):
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
@@ -176,7 +178,7 @@ class HumanBloodModel(object):
         # but both values pretty close to BE -9 meq/L, so I use it as threshold.
         # Максимальная доза NaHCO3 is 4-5 mmol/kg [Курек 273]
         # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
-        info += "\nTHE BELOW INFORMATION UNTESTED AND NOT INTENDED FOR CLINICAL USE\n"
+        info = "\nTHE BELOW INFORMATION UNTESTED AND NOT INTENDED FOR CLINICAL USE\n"
         if self.sbe < -9:
             info += "\n-- Metabolic acidosis correction ----------------\n"
             info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)

@@ -52,7 +52,7 @@ child = {  # 3 year old kid
     }
 
 newborn = {
-    'height': 50,
+    'height': 0.5,
     'weight': 3.6,
     'sex': 'child',
     'body_temp': 36.6
@@ -61,6 +61,8 @@ newborn = {
 
 class HumanBodyModel(object):
     def __init__(self):
+        self._int_prop = ('height', 'age', 'weight', 'body_temp')
+        self._txt_prop = ('sex', 'comment')
         self._sex = None
         self._height = None
         self._age = None
@@ -81,6 +83,25 @@ class HumanBodyModel(object):
             Tracrium(self),
             Arduan(self),
             Esmeron(self)]
+
+    def populate(self, properties):
+        """Popultae model from data structure.
+
+        :param dict properties: Dictionary with model properties to set.
+            Key names must be equal to class properties names.
+        :return:
+            Not applied properties
+        :rtype: dict
+        """
+        for item in self._int_prop:
+            if item in properties:
+                setattr(self, item, float(properties.pop(item)))
+        for item in self._txt_prop:
+            if item in properties:
+                setattr(self, item, properties.pop(item))
+        # Push the rest of the dict deeper
+        self.blood.populate(properties)
+        return properties
 
     def describe_body(self):
         if not self.is_init():

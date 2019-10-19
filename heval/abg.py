@@ -54,16 +54,36 @@ class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
     def __init__(self, parent=None):
         self.parent = parent
+        self._int_prop = ('pH', 'pCO2', 'K', 'Na', 'Cl')
+        self._txt_prop = ()
+
         self.pH = None
         self.pCO2 = None       # kPa
 
-        self.Na = None         # mmol/L
         self.K = None          # mmol/L
+        self.Na = None         # mmol/L
         self.Cl = None         # mmol/L
 
         self.albuminum = None  # g/dL
         self.glucose = None    # mmol/L
         self.bun = None
+
+    def populate(self, properties):
+        """Popultae model from data structure.
+
+        :param dict properties: Dictionary with model properties to set.
+            Key names must be equal to class properties names.
+        :return:
+            Not applied properties
+        :rtype: dict
+        """
+        for item in self._int_prop:
+            if item in properties:
+                setattr(self, item, float(properties.pop(item)))
+        for item in self._txt_prop:
+            if item in properties:
+                setattr(self, item, properties.pop(item))
+        return properties
 
     # def __str__(self):
     #     pass

@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 from os import path
+import heval
 
 here = path.abspath(path.dirname(__file__))
 
@@ -9,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='heval',
-    version='0.0.3',
+    version=heval.__version__,
     description='Heval - a human evaluator',
     long_description=long_description,
     long_description_content_type='text/markdown',

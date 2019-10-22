@@ -9,6 +9,7 @@ from tkinter.ttk import *
 from heval import abg
 from heval import electrolytes
 from heval import human
+from heval import __version__
 
 
 __helptext__ = """\
@@ -76,7 +77,7 @@ class MainWindow(Frame):
     def __init__(self, parent=None, *args, **kwargs):
         super(MainWindow, self).__init__(parent, *args, **kwargs)
         self.parent = parent
-        self.parent.title("Heval — a human evaluator")
+        self.parent.title("Heval — a human evaluator v{}".format(__version__))
         self.parent.geometry("600x590")
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.parent.style = Style()
@@ -274,7 +275,7 @@ class AboutWindow(Toplevel):
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
-        self.title('About')
+        self.title('About v{}'.format(__version__))
 
         abouttext = __about__ + "And remember: {}".format(
             random.choice(electrolytes.__EASTER_TEXT__))

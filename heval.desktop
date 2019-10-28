@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Heval
+Comment=Heval — a human evaluator
+Exec=python3 -m heval
+Terminal=false
+Icon=text-x-python
+Categories=Science;MedicalSoftware;Calculator;
+GenericName=Medical calculator

@@ -40,16 +40,23 @@ An web or Android application is planned, but implementation deferred until calc
 
 ## Download [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/)
 
+
+### Windows
+
 You can download Windows build from [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required. Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`).
 
-### Development version
-
-Heval is written in pure python and uses tkinter for GUI. If you have python, latest development version can be installed with pip:
+Also, latest development version can be installed with `pip`.
 
     $ pip install https://github.com/radioxoma/heval/archive/master.zip
 
-Run development version:
 
+### Debian / Ubuntu
+
+Heval is written in pure python3 and uses tkinter for GUI.
+
+    $ sudo apt install git python3-tk
     $ git clone https://github.com/radioxoma/heval.git
     $ cd heval
-    $ python -m heval
+    $ python3 -m heval
+
+Instead of executing `python3 -m heval` it is possible to double-click 'heval.desktop'.

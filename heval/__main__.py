@@ -3,9 +3,14 @@
 
 import random
 import textwrap
-from tkinter import *
-from tkinter import scrolledtext
-from tkinter.ttk import *
+try:
+    from tkinter import *
+    from tkinter import scrolledtext
+    from tkinter.ttk import *
+except ImportError as e:
+    from Tkinter import *
+    import ScrolledText as scrolledtext
+    from ttk import *
 from heval import abg
 from heval import electrolytes
 from heval import human
@@ -117,9 +122,9 @@ class MainWindow(Frame):
         self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
-        self.bind_all('<<HumanModelChanged>>', self.MText.print)
-        self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.print, add='+')
-        self.bind_all('<<HumanModelChanged>>', self.CGFR.print, add='+')
+        self.bind_all('<<HumanModelChanged>>', self.MText.eval)
+        self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.eval, add='+')
+        self.bind_all('<<HumanModelChanged>>', self.CGFR.eval, add='+')
 
         # self.statusbar_str = StringVar()
         # self.statusbar_str.set("Hello world!")
@@ -391,7 +396,7 @@ class MainText(Frame):
             "вызвать краткую справку на русском языке. Или просто "
             "нажмите клавишу F1.")
 
-    def print(self, event=None):
+    def eval(self, event=None):
         """Calculate and print some evaluated data."""
         self.TxtView.set_text("{}\n--- Drugs --------------------------------------\n{}".format(
             self.human_model.describe_body(), self.human_model.describe_drugs()))
@@ -505,7 +510,7 @@ class CalcElectrolytes(Frame):
         self.human_model.blood.cCl = float(self.ctl_sbx_Cl.get())
         self.event_generate("<<HumanModelChanged>>")
 
-    def print(self, event=None):
+    def eval(self, event=None):
         info = "ABG basic\n=========\n"
         info += "{}".format(self.human_model.blood.describe_abg_basic())
         info += "\nElectrolytes\n============\n"
@@ -526,8 +531,8 @@ class CalcGFR(Frame):
 
         Label(fr_entry, text="cCrea, μmol/L").pack(side=LEFT)
         self.ctl_sbx_ccrea = Spinbox(fr_entry, width=4, from_=0.0, to=1000.0,
-            format='%.1f', increment=1, command=self.print)
-        self.ctl_sbx_ccrea.bind("<Return>", self.print)
+            format='%.1f', increment=1, command=self.eval)
+        self.ctl_sbx_ccrea.bind("<Return>", self.eval)
         self.ctl_sbx_ccrea.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
@@ -541,7 +546,7 @@ class CalcGFR(Frame):
         self.var_isblack = IntVar()  # No real body weight
         self.var_isblack.set(0)
         self.ctl_ckb_isblack = Checkbutton(fr_entry, variable=self.var_isblack,
-            onvalue=1, offvalue=0, text="Black human", command=self.print)
+            onvalue=1, offvalue=0, text="Black human", command=self.eval)
         self.ctl_ckb_isblack.pack(side=LEFT)
         CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
 
@@ -564,13 +569,13 @@ class CalcGFR(Frame):
         self.set_model_age()
 
         self.var_isblack.set(0)
-        self.print()
+        self.eval()
 
     def set_model_age(self, event=None):
         self.human_model.age = float(self.ctl_sbx_age.get())
         self.event_generate("<<HumanModelChanged>>")
 
-    def print(self, event=None):
+    def eval(self, event=None):
         sex = self.human_model.sex
         if sex in ('male', 'female'):
             cCrea = float(self.ctl_sbx_ccrea.get())

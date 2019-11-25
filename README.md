@@ -50,11 +50,13 @@ Also, latest development version can be installed with `pip`.
     $ pip install https://github.com/radioxoma/heval/archive/master.zip
 
 
-### Debian / Ubuntu
+### Linux
 
 Heval is written in pure python3 and uses tkinter for GUI.
 
-    $ sudo apt install git python3-tk
+    $ sudo apt install git python3-tk  # Debian / Ubuntu
+    $ sudo pacman -S git python tk  # Archlinux
+
     $ git clone https://github.com/radioxoma/heval.git
     $ cd heval
     $ python3 -m heval

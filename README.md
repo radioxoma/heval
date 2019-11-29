@@ -1,6 +1,6 @@
 ## Heval — a human evaluator. Calculate what your human crave!
 
-The program describes an human being, small or grown. It takes basic anthropometric values (sex, height) and calculates [BMI](https://en.wikipedia.org/wiki/Body_mass_index), [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [energy](https://en.wikipedia.org/wiki/Basal_metabolic_rate) demands, urinary output, some drugs dosage and more. Heval also incorporates sophisticated [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis).
+The program describes an human being, small or grown. It takes basic anthropometric values (sex, height) and calculates [BMI](https://en.wikipedia.org/wiki/Body_mass_index), [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [energy](https://en.wikipedia.org/wiki/Basal_metabolic_rate) demands, urinary output, some drugs dosage and more. Heval also incorporates sophisticated [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis). **See [screenshots](https://github.com/radioxoma/heval#screenshots).**
 
 Main features:
 

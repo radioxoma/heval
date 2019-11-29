@@ -62,3 +62,8 @@ Heval is written in pure python3 and uses tkinter for GUI.
     $ python3 -m heval
 
 Instead of executing `python3 -m heval` it is possible to double-click 'heval.desktop'.
+
+## Screenshots
+
+![2019-11-29_heval_human_body](https://user-images.githubusercontent.com/4701641/69869967-632a6e00-12bf-11ea-932d-3dcc9e21936d.png)
+![2019-11-29_heval_abg](https://user-images.githubusercontent.com/4701641/69870313-8dc8f680-12c0-11ea-9bef-58f9d2ab32a7.png)

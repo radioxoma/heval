@@ -52,6 +52,8 @@ Also, latest development version can be installed with `pip`.
 
 ### Linux
 
+> Tip: Archlinux [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository) package [`heval-git`](https://aur.archlinux.org/packages/heval-git/) available.
+
 Heval is written in pure python3 and uses tkinter for GUI.
 
     $ sudo apt install git python3-tk  # Debian / Ubuntu
@@ -62,6 +64,7 @@ Heval is written in pure python3 and uses tkinter for GUI.
     $ python3 -m heval
 
 Instead of executing `python3 -m heval` it is possible to double-click 'heval.desktop'.
+
 
 ## Screenshots
 

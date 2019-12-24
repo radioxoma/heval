@@ -28,7 +28,7 @@ Main features:
 * Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and, of course, electrolyte disturbances
 * Sex and weight used only for dosage calculations, for not ABG diagnostics
 
-Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24 > 16` mEq/L!).
+Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).
 **Some imagined case studies from books aren't designed well and will fail too.**
 
 
@@ -47,7 +47,7 @@ An web or Android application is planned, but implementation deferred until calc
 | Human body: drug dosage | Medium | Verified, but limited drug list |
 | ABG: anion gap | **Good** | Excellent prediction, but USE REAL DATA |
 | ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation impossible. High/low warnings still usable though. |
-| ABG: pH correction | Partial | Dubious benefit. Lack of theory. Not all pH range covered. |
+| ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all pH range covered. |
 | eGFR | **Good** | Straightforward implementation |
 
 

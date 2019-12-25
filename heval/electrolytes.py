@@ -16,8 +16,19 @@ Electrolyte disturbances and correction.
 
 Author: Eugene Dvoretsky
 
-Натрий и вода
--------------
+
+Looks like popular generic formula below correlate better with daily
+electrolyte requirement, bot not with the specific to patient deficiency.
+So it useless.
+
+    (electrolyte_target - electrolyte_serum) * weight * coefficient
+
+Obviously it's not possible to use same formula with the same coefficient
+for both intracellular and extracellular ions depletion calculation.
+
+
+Na and water
+------------
 1. Потеря чистой выоды через лёгкие и при потоотделении (лихорадка)
     Жажда появляется при дефиците воды массой 2 % от RBW, концентрированная моча, высокий Hct, Na 160 mmol/L, осмоляльность >300 мосм/кг.
     Вводить D50 до снижения осмоляльности до 290 мосм/кг, снижения Na до 140 mmol/L.
@@ -36,13 +47,15 @@ Author: Eugene Dvoretsky
         гипонатриемия - натрия хлорид гипертонический
 """
 
-def glucosae_solution(glu_mass, body_weight):
-    """Глюкоза и инсулин.
 
-    :param float glu_mass: масса глюкозы, г
+def glucosae_solution(glu_mass, body_weight):
+    """Glucose and insulin solution calculation.
+
+    :param float glu_mass: glucose mass, grams
     :param float body_weight: patient body weight, kg
 
-    Соотношение глюкоза/инсулин, видимо, верно для питания и для болюсов при гиперкалиемии.
+    Probably such glucose/insulin ratio can be used for both nutrition
+    and as hyperkalemia bolus.
 
     * 1 ЕД на 3-5 г сухой глюкозы, скорость инфузии <= 0.5 г/кг/ч чтобы избежать глюкозурии [Мартов, Карманный справочник врача; RLSNET, Крылов Нейрореаниматология] (Ins 0.33-0.2 UI/г)
     * 1 ЕД на 4 г сухой глюкозы (если глюкозурия, то добавить инсулин или снизить скорость введения) [Курек, с 143; калькулятор BBraun; другие источники]
@@ -75,26 +88,26 @@ def glucosae_solution(glu_mass, body_weight):
 
 
 def kurek_electrolytes_K(weight, K_serum):
-    """Расчёт дефицита и избытка K+.
+    """Assess blood serum potassium level.
 
     :param float weight: Real body weight, kg
     :param float K_serum: Potassium serum level, mmol/L
 
-    Гипокалиемия (восполнение калия <3.5 mmol/L)
-    --------------------------------------------
-    # Комментарий:
-    # 1. Так как на практике рассчитать дефицит калия невозможно, то вводим его
-    # непрерывно в/в со скоростью 10 mmol/h и контролируем по КЩС каждые 2-4 часа в остром периоде
-    #     * При изменениях на ЭКГ и мышечной дисфункции ускоряем до 20 mmol/h [Курек 2009 с 557]
-    # 2. При выраженной гипокалиемии (<= 3 mmol/L) вводим сначала с физраствором
-    #     * При восстановлении калия > 3 mmol/L вводим с глюкозо-инсулиновой смесью
+    Hypokalemia (additional K if <3.5 mmol/L)
+    -----------------------------------------
+    # Comment:
+    # 1. As far it's practically impossible to calculate K deficiency,
+    # administer continuously i/v with speed 10 mmol/h and check ABG  every 2-4 hour in acute period
+    #     * If there are ECG changes and muscle relaxation, speed up to 20 mmol/h [Курек 2009 с 557]
+    # 2. In severe hypokalemia (<= 3 mmol/L) administrate with NaCl, not glucose
+    #     * When deficiency compensated (> 3 mmol/L) it's now possible to switch to glucose+insulin
 
     * Содержание K до 5 лет значительно выше [Курек 2013 с 38]
     * Если K+ <3 mmol/L, то введение глюкозы с инсулином может усугубить гипокалиемию, поэтому K+ вводить вместе с NaCl. [Курек ИТ 557]
     * Metabolic acidosis raises plasma K+ level by displacing it from cells [Рябов 1994, с 70]
 
     [130]:
-        * Высшая суточная доза 4 mmol/kg/24h
+        * Top 24h dose 4 mmol/kg/24h
         * Полностью восполнять дефицит не быстрее чем за 48 ч
         * Допустимая скорость 0.5 mmol/kg/h (тогда суточная доза введётся за 8 часов)
         * На каждый mmol K+ вводить 10 kcal glucosae
@@ -113,8 +126,8 @@ def kurek_electrolytes_K(weight, K_serum):
     [Hypokalemia: a clinical update](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5881435/)
         Standard infusion rate KCl: 10 mmol/h
 
-    Гиперкалиемия
-    -------------
+    Hyperkalemia
+    ------------
     Неотложеные мероприятия при K >= 7 mmol/L или ЭКГ-признаках гиперкалиемии [131]
         * Glu 20 % 0.5 g/kg + Ins 0.3 IU/g
 
@@ -184,14 +197,15 @@ def kurek_electrolytes_K(weight, K_serum):
 
 
 def kurek_electrolytes_Na(weight, Na_serum):
-    """Расчёт дефицита и избытка Na+ [Курек 2013 стр. 130, 132].
+    """Assess blood serum sodium level.
 
-    :param float weight: kg
+    :param float weight: Real body weight, kg
     :param float Na_serum: mmol/L
 
-    Гипонатриемия
-    -------------
-    Целевой 140 mmol/L выглядит неплохо.
+    Расчёт дефицита и избытка Na+ [Курек 2013 стр. 130, 132]
+
+    Hyponatremia
+    ------------
     Корректировать Na медленно, иначе:
         * Было много Na (>145 mmol/L) {и вводится D50} -> отёк мозга
         * Было мало Na {вводится NaCl гипертонический} -> быстрое увличение осмолярности -> центральный понтинный миелинолиз
@@ -202,8 +216,8 @@ def kurek_electrolytes_Na(weight, Na_serum):
         * Восполнение Na не быстрее 10 mmol/L/24h
     Возможно имеется гипокортицизм и потребуется вводить гидрокортизон.
 
-    Гипернатриеамия
-    ---------------
+    Hypernatremia
+    -------------
         * Устраняется постепенно за 48 часов
         * Скорость снижния Na <0.5 ммоль/л час или 12-15 ммоль/24h
 
@@ -240,12 +254,12 @@ def kurek_electrolytes_Na(weight, Na_serum):
 def krylov_electrolytes_Na(weight, Na_serum):
     """Восполнение дефицита Na согласно [Нейрореаниматология: практическое руководство 2017]
 
-    :param float weight: kg
+    :param float weight: Real body weight, kg
     :param float Na_serum: mmol/L
 
     Гипонатриемия
     -------------
-    Формула отличается от Курека только коэффицинтом и указанием Na_target.
+    Формула отличается от Курека только другим коэффицинтом и Na_target.
     Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
     Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
 
@@ -269,16 +283,12 @@ def krylov_electrolytes_Na(weight, Na_serum):
 
 
 def electrolytes_Cl(weight, Cl_serum):
+    """Assess blood serum chloride level.
+
+    :param float weight: Real body weight, kg
+    :param float Cl_serum: mmol/L
+    """
     if norm_Cl[0] <= Cl_serum <= norm_Cl[1]:
         return "Cl⁻ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
     else:
         return "Cl⁻ is not ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
-
-
-if __name__ == '__main__':
-    WEIGHT = 60  # kg
-    NA_SERUM = 145
-    K_SERUM = 2.
-    # print(kurek_electrolytes_Na(WEIGHT, NA_SERUM))
-    # print(krylov_electrolytes_Na(WEIGHT, NA_SERUM))
-    print(kurek_electrolytes_K(WEIGHT, K_SERUM))

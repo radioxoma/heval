@@ -28,7 +28,7 @@ Main features:
 * Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and, of course, electrolyte disturbances
 * Sex and weight used only for dosage calculations, for not ABG diagnostics
 
-Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24 > 16` mEq/L!).
+Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).
 **Some imagined case studies from books aren't designed well and will fail too.**
 
 
@@ -36,6 +36,19 @@ Please use a real patient's data: all electrolytes interconnected by electroneut
 Heval is an experimental software. Whatever it calculates, it's *your* decisions will affect your human's live longevity. I have no responsibility for your collateral damage.
 
 An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
+
+| Function | Status | Comment |
+| --- | --- | --- |
+| Human body: anthropometry | **Good** | Straightforward implementation. Broselow for children. Small issues with IBW |
+| Human body: respiration | **Good** | Use as start ventilator settings for adults and children |
+| Human body: energy & electrolytes | Limited | Generic approximation for healthy human |
+| Human body: fluid demand | Limited | Generic approximation for healthy human, pathologic fluid loss must be taken into account |
+| Human body: urinary output | **Good** | Adults and children, though eGFR estimation may be necessary |
+| Human body: drug dosage | Medium | Verified, but limited drug list |
+| ABG: anion gap | **Good** | Excellent prediction, but USE REAL DATA |
+| ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation impossible. High/low warnings still usable though. |
+| ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all pH range covered. |
+| eGFR | **Good** | Straightforward implementation |
 
 
 ## Download [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/)

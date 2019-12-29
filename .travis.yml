@@ -1,0 +1,79 @@
+env:
+  global:
+  - PY34PATH=/c/Python34:/c/Python34/Scripts:/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts
+
+# Windows
+# wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi
+# chocolatey installs:
+#  * choco install python-x86_32 --version=3.4.2 to '/c/tools/python-x86_32'
+#  * choco install python --version=3.4.4        to '/c/Python34'
+# mingw already in PATH, it will brake python/pip search
+# cmd.exe //c RefreshEnv.cmd;
+
+# Mac OS X
+# brew upgrade python ?
+# Mac OS X 10.13.6 uses Python 2.7.17 as default interpreter /usr/local/bin/python
+# Brew installs python3 by default to /usr/local/bin/python3
+
+language: python
+
+jobs:
+  allow_failures:
+  - env: ALLOW_FAILURES=true
+  include:
+  - os: linux
+    name: Ubuntu
+    dist: bionic
+  - os: windows
+    name: Windows
+    language: shell
+    env: PATH=$PY34PATH:$PATH
+    install:
+    - choco install python-x86_32 --version=3.4.2
+    - python -m pip install --upgrade pip
+    - pip install pyinstaller
+  - os: osx
+    name: Mac OS X
+    language: shell
+    install:
+    - brew install tree;
+    - pip3 install pipenv;
+    - pipenv --three;
+    - pipenv run pip install pyinstaller;
+
+# These scripts should be able to build project on Travis and locally
+script:
+  - echo "Running script on $TRAVIS_OS_NAME platform"
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+        echo "Windows script start";
+        .\\build.bat;
+        export RELEASE_FILE="dist/sandbox.exe";
+        echo "End of windows script";
+    elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        echo "Linux script start";
+        python -m sandbox;
+        echo "End of linux script";
+    elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        echo "OS X script start";
+        ./build_osx.sh;
+        export RELEASE_FILE="dist/sandbox.dmg";
+        echo "End of OS X script";
+    fi
+
+deploy:
+  provider: releases
+  api_key:
+    secure: bg9dutWoSyTDJ8nHXwWoOlQlrFzicmxU7yn17rxzSrpfgOeKuXkT4rJS+5HFtSRwNaLwj/Fts/JZ8HQmnopK5MaCLqNkF8AdgY/yPqPtBFF26t3V7dcniDEwoCUMWpMiitleUBZexxJNGcv1V8WFLN3ylWvHDnHEfOZMwGI6RqilLnK6FdDnhZFcP8CzRB9RRgcV/SwcgkOMf7ZnaaD2D2epLQsOgjeZCV8S4NLABFMX5c0yVBcCVW1/W9coCFwmwOCrFxkrLPoYbLMnlHIMzljgW5SQc7r386zRLmSA8CUGdgcBwn0nQzz/yZ5UQjRGr6DRsTg98mDpTSDcW+y7rZaqzrPnsuQwAKciuywBYvp3Q2m+DXrcD7Ve5j2J991GqrcBCh9Mh4bpWLw6aLoTA7PVM64lFZ+epxi1EvdkbOYLV5dqjidoazYwyFFuOynsZlT8QZdbwXG8l0DTEw8apn337+A2RiuryGicl8Z74KOpRuPfpqKwr+q7gTiOx2Ru3ET2OXwu9TI+ToRQOwuGqwCAgs2uT2is/dWcMjtp52qsQx4UvlPD7fPJ6nRBzOEJqtDg5qB0/2CWnoCqpzePbXKT3btgy8rxp4RWLIlcwmXTqY6w96rJFHGbGOp5Johs5p/7T3Q3DRWyAyMzSd24BEqHLFWr+I5KmGeJXYaugNg=
+  file_glob: true
+  file: "dist/sandbox.*"
+#  file: "${RELEASE_FILE}"
+  skip_cleanup: true
+  draft: true
+  overwrite: true
+  tag_name: "continuous"
+  # name: "Auto dev build by Travis CI"
+  body: "Body text"
+  on:
+    repo: radioxoma/sandbox
+#     tags: true
+    condition: "\"$TRAVIS_OS_NAME\" != \"linux\""

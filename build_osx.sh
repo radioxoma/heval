@@ -7,3 +7,4 @@ rm -rfv dist/heval
 echo Remove heval.app directory
 rm -rfv dist/heval.app
 export OSX_FILE="dist/heval.dmg"
+# xattr -dr com.apple.quarantine "unidentified_thirdparty.app"

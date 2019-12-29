@@ -21,9 +21,9 @@ jobs:
   allow_failures:
   - env: ALLOW_FAILURES=true
   include:
-  - os: linux
-    name: Ubuntu
-    dist: bionic
+#  - os: linux
+#    name: Ubuntu
+#    dist: bionic
   - os: windows
     name: Windows
     language: shell

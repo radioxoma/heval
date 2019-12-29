@@ -25,7 +25,6 @@ jobs:
 #    name: Ubuntu
 #    dist: bionic
   - os: windows
-    name: Windows
     language: shell
     env: PATH=$PY34PATH:$PATH
     install:
@@ -33,7 +32,6 @@ jobs:
     - python -m pip install --upgrade pip
     - pip install pyinstaller
   - os: osx
-    name: Mac OS X
     language: shell
     install:
     - brew install tree;
@@ -65,7 +63,7 @@ deploy:
   api_key:
     secure: bg9dutWoSyTDJ8nHXwWoOlQlrFzicmxU7yn17rxzSrpfgOeKuXkT4rJS+5HFtSRwNaLwj/Fts/JZ8HQmnopK5MaCLqNkF8AdgY/yPqPtBFF26t3V7dcniDEwoCUMWpMiitleUBZexxJNGcv1V8WFLN3ylWvHDnHEfOZMwGI6RqilLnK6FdDnhZFcP8CzRB9RRgcV/SwcgkOMf7ZnaaD2D2epLQsOgjeZCV8S4NLABFMX5c0yVBcCVW1/W9coCFwmwOCrFxkrLPoYbLMnlHIMzljgW5SQc7r386zRLmSA8CUGdgcBwn0nQzz/yZ5UQjRGr6DRsTg98mDpTSDcW+y7rZaqzrPnsuQwAKciuywBYvp3Q2m+DXrcD7Ve5j2J991GqrcBCh9Mh4bpWLw6aLoTA7PVM64lFZ+epxi1EvdkbOYLV5dqjidoazYwyFFuOynsZlT8QZdbwXG8l0DTEw8apn337+A2RiuryGicl8Z74KOpRuPfpqKwr+q7gTiOx2Ru3ET2OXwu9TI+ToRQOwuGqwCAgs2uT2is/dWcMjtp52qsQx4UvlPD7fPJ6nRBzOEJqtDg5qB0/2CWnoCqpzePbXKT3btgy8rxp4RWLIlcwmXTqY6w96rJFHGbGOp5Johs5p/7T3Q3DRWyAyMzSd24BEqHLFWr+I5KmGeJXYaugNg=
   file_glob: true
-  file: "dist/heval.*"
+  file: "dist/heval*"
 #  file: "${RELEASE_FILE}"
   skip_cleanup: true
   draft: true

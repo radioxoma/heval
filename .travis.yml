@@ -28,10 +28,10 @@ jobs:
   - os: osx
     language: shell
     install:
-    - brew install tree;
-    - pip3 install pipenv;
-    - pipenv --three;
-    - pipenv run pip install pyinstaller;
+    - brew install tree
+    - pip3 install pipenv
+    - pipenv --three
+    - pipenv run pip install pyinstaller
 
 # These scripts should be able to build project on Travis and locally
 script:

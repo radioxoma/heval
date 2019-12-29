@@ -7,6 +7,6 @@ sleep 1
 hdiutil create "dist/$BASENAME.dmg" -srcfolder "dist/Heval.app" -ov
 echo Remove heval directory
 rm -rf dist/heval
-echo Remove heval.app directory
-rm -rf dist/heval.app
+echo Remove Heval.app directory
+rm -rf dist/Heval.app
 export OSX_FILE="dist/$BASENAME.dmg"

@@ -1,10 +1,13 @@
 echo Mac OS X build script invoked
-pipenv run pyinstaller --noconsole heval/__main__.py --name heval
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+BASENAME="heval_$TIMESTAMP"
+echo "pyinstaller target name $BASENAME"
+pipenv run pyinstaller --noconsole heval/__main__.py --name $BASENAME
 sleep 1
-hdiutil create dist/heval.dmg -srcfolder dist/heval.app -ov
+hdiutil create "dist/$BASENAME.dmg" -srcfolder "dist/$BASENAME.app" -ov
 echo Remove heval directory
 rm -rfv dist/heval
 echo Remove heval.app directory
 rm -rfv dist/heval.app
-export OSX_FILE="dist/heval.dmg"
+export OSX_FILE="dist/$BASENAME.dmg"
 # xattr -dr com.apple.quarantine "unidentified_thirdparty.app"

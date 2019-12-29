@@ -47,9 +47,10 @@ Set timestamp=_
 
 :make_dump
 
-set FILENAME=heval_%timestamp%
+set BASENAME=heval_%timestamp%
 
-pyinstaller --onefile --noconsole heval\__main__.py --name %FILENAME%
+pyinstaller --onefile --noconsole heval\__main__.py --name %BASENAME%
+Set OSX_FILE="dist/$BASENAME.exe"
 
 del /q *.spec
 rmdir /s /q build

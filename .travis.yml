@@ -62,12 +62,12 @@ deploy:
   file: "dist/heval*"
 #  file: "${RELEASE_FILE}"
   skip_cleanup: true
-#  draft: true
-  prerelease: true
+  draft: true
+#  prerelease: true
   overwrite: true
   name: "Automatical dev build by Travis CI"
   body: "Body text"
   on:
     repo: radioxoma/heval
-#     tags: true
+    tags: true
     condition: "\"$TRAVIS_OS_NAME\" != \"linux\""

@@ -66,9 +66,10 @@ deploy:
   file: "dist/heval*"
 #  file: "${RELEASE_FILE}"
   skip_cleanup: true
-  draft: true
+#  draft: true
+  prerelease: true
   overwrite: true
-  tag_name: "continuous"
+#  tag_name: "continuous"
   # name: "Auto dev build by Travis CI"
   body: "Body text"
   on:

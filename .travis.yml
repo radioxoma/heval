@@ -47,16 +47,16 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
         echo "Windows script start";
         .\\build.bat;
-        export RELEASE_FILE="dist/sandbox.exe";
+        export RELEASE_FILE="dist/heval.exe";
         echo "End of windows script";
     elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
         echo "Linux script start";
-        python -m sandbox;
+        python -m heval;
         echo "End of linux script";
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         echo "OS X script start";
         ./build_osx.sh;
-        export RELEASE_FILE="dist/sandbox.dmg";
+        export RELEASE_FILE="dist/heval.dmg";
         echo "End of OS X script";
     fi
 
@@ -65,7 +65,7 @@ deploy:
   api_key:
     secure: bg9dutWoSyTDJ8nHXwWoOlQlrFzicmxU7yn17rxzSrpfgOeKuXkT4rJS+5HFtSRwNaLwj/Fts/JZ8HQmnopK5MaCLqNkF8AdgY/yPqPtBFF26t3V7dcniDEwoCUMWpMiitleUBZexxJNGcv1V8WFLN3ylWvHDnHEfOZMwGI6RqilLnK6FdDnhZFcP8CzRB9RRgcV/SwcgkOMf7ZnaaD2D2epLQsOgjeZCV8S4NLABFMX5c0yVBcCVW1/W9coCFwmwOCrFxkrLPoYbLMnlHIMzljgW5SQc7r386zRLmSA8CUGdgcBwn0nQzz/yZ5UQjRGr6DRsTg98mDpTSDcW+y7rZaqzrPnsuQwAKciuywBYvp3Q2m+DXrcD7Ve5j2J991GqrcBCh9Mh4bpWLw6aLoTA7PVM64lFZ+epxi1EvdkbOYLV5dqjidoazYwyFFuOynsZlT8QZdbwXG8l0DTEw8apn337+A2RiuryGicl8Z74KOpRuPfpqKwr+q7gTiOx2Ru3ET2OXwu9TI+ToRQOwuGqwCAgs2uT2is/dWcMjtp52qsQx4UvlPD7fPJ6nRBzOEJqtDg5qB0/2CWnoCqpzePbXKT3btgy8rxp4RWLIlcwmXTqY6w96rJFHGbGOp5Johs5p/7T3Q3DRWyAyMzSd24BEqHLFWr+I5KmGeJXYaugNg=
   file_glob: true
-  file: "dist/sandbox.*"
+  file: "dist/heval.*"
 #  file: "${RELEASE_FILE}"
   skip_cleanup: true
   draft: true
@@ -74,6 +74,6 @@ deploy:
   # name: "Auto dev build by Travis CI"
   body: "Body text"
   on:
-    repo: radioxoma/sandbox
+    repo: radioxoma/heval
 #     tags: true
     condition: "\"$TRAVIS_OS_NAME\" != \"linux\""

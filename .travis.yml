@@ -14,8 +14,6 @@
 language: python
 
 jobs:
-  allow_failures:
-  - env: ALLOW_FAILURES=true
   include:
 #  - os: linux
 #    name: Ubuntu
@@ -41,17 +39,14 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
         echo "Windows script start";
         .\\build.bat;
-        export RELEASE_FILE="dist/heval.exe";
         echo "End of windows script";
-    elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-        echo "Linux script start";
-        python -m heval;
-        echo "End of linux script";
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         echo "OS X script start";
         ./build_osx.sh;
-        export RELEASE_FILE="dist/heval.dmg";
         echo "End of OS X script";
+    elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        echo "Linux script start";
+        echo "End of linux script";
     fi
 
 deploy:
@@ -66,7 +61,7 @@ deploy:
 #  prerelease: true
   overwrite: true
   name: "Automatical dev build by Travis CI"
-  body: "Body text"
+#  body: "Body text"
   on:
     repo: radioxoma/heval
     tags: true

@@ -63,7 +63,7 @@ Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see 
 
 ### Mac OS X
 
-Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Application unsigned, so warning may appear.
+Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Application unsigned, so warning may appear. You can disable it with `xattr -dr com.apple.quarantine "Heval.app"`.
 
 
 ### Linux

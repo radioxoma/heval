@@ -6,8 +6,7 @@ pipenv run pyinstaller --noconsole heval/__main__.py --name Heval
 sleep 1
 hdiutil create "dist/$BASENAME.dmg" -srcfolder "dist/Heval.app" -ov
 echo Remove heval directory
-rm -rfv dist/heval
+rm -rf dist/heval
 echo Remove heval.app directory
-rm -rfv dist/heval.app
+rm -rf dist/heval.app
 export OSX_FILE="dist/$BASENAME.dmg"
-# xattr -dr com.apple.quarantine "unidentified_thirdparty.app"

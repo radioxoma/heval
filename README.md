@@ -56,11 +56,14 @@ An web or Android application is planned, but implementation deferred until calc
 
 ### Windows
 
-You can download Windows build from [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required. Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`).
+Download *exe* file from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required.
 
-Also, latest development version can be installed with `pip`.
+Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`). Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`.
 
-    $ pip install https://github.com/radioxoma/heval/archive/master.zip
+
+### Mac OS X
+
+Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Application unsigned, so warning may appear.
 
 
 ### Linux

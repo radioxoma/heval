@@ -1,7 +1,3 @@
-env:
-  global:
-  - PY34PATH=/c/Python34:/c/Python34/Scripts:/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts
-
 # Windows
 # wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi
 # chocolatey installs:
@@ -26,7 +22,7 @@ jobs:
 #    dist: bionic
   - os: windows
     language: shell
-    env: PATH=$PY34PATH:$PATH
+    env: PATH=/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts:$PATH
     install:
     - choco install python-x86_32 --version=3.4.2
     - python -m pip install --upgrade pip

@@ -62,7 +62,11 @@ Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see 
 
 ### Mac OS X
 
-Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Application unsigned, so warning will appear. You can disable it with `xattr -dr com.apple.quarantine "Heval.app"`.
+Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Unpack *Heval.app* from *dmg*. Application unsigned, so warning "*macOS cannot verify the developer of "Heval"*" will appear if you try to run it. You can overcome this in one of two ways:
+
+* Press <kbd>Control</kbd> and simultaneously click on unpacked *Heval.app*. Click *Open* in appeared context menu. Click *Open* in appeared window
+* Run in terminal `xattr -dr com.apple.quarantine "Heval.app"`. Now "Heval" can be run by click
+
 
 ### Linux
 

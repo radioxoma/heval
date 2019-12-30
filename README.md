@@ -5,8 +5,8 @@ The program describes an human being, small or grown. It takes basic anthropomet
 Main features:
 
 * Minimal user input — some unknown values can be estimated automatically using others (e.g. weight by height)
-* Only measurable parameters — no need to speak with a human of interest or it's congeners
 * No need to input same data into multiple forms
+* Only measurable parameters — no need to speak with a human of interest or it's congeners
 * No "Calculate" button — evaluated data changes immediately with your input
 * Every calculation referenced and explained in source code, so everyone can reproduce it
 * It's got electrolytes
@@ -32,6 +32,7 @@ Please use a real patient's data: all electrolytes interconnected by electroneut
 **Some imagined case studies from books aren't designed well and will fail too.**
 
 
+
 ## Disclaimer
 Heval is an experimental software. Whatever it calculates, it's *your* decisions will affect your human's live longevity. I have no responsibility for your collateral damage.
 
@@ -51,8 +52,8 @@ An web or Android application is planned, but implementation deferred until calc
 | eGFR | **Good** | Straightforward implementation |
 
 
-## Download [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![Build Status](https://travis-ci.org/radioxoma/heval.svg?branch=master)](https://travis-ci.org/radioxoma/heval)
 
+## Installation [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![Build Status](https://travis-ci.org/radioxoma/heval.svg?branch=master)](https://travis-ci.org/radioxoma/heval)
 
 ### Windows
 
@@ -60,17 +61,15 @@ Download *exe* file from the [releases page](https://github.com/radioxoma/heval/
 
 Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`). Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`.
 
-
 ### Mac OS X
 
 Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Application unsigned, so warning will appear. You can disable it with `xattr -dr com.apple.quarantine "Heval.app"`.
-
 
 ### Linux
 
 > Tip: Archlinux [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository) package [`heval-git`](https://aur.archlinux.org/packages/heval-git/) available.
 
-Heval is written in pure python3 and uses tkinter for GUI.
+Heval is written in pure python3 and uses tkinter for GUI. Install dependencies and run python code directly:
 
     $ sudo apt install git python3-tk  # Debian / Ubuntu
     $ sudo pacman -S git python tk  # Archlinux
@@ -79,7 +78,7 @@ Heval is written in pure python3 and uses tkinter for GUI.
     $ cd heval
     $ python3 -m heval
 
-Instead of executing `python3 -m heval` it is possible to double-click 'heval.desktop'.
+Instead of executing `python3 -m heval` it's possible to double-click 'heval.desktop'.
 
 
 ## Screenshots

@@ -4,8 +4,7 @@ The program describes an human being, small or grown. It takes basic anthropomet
 
 Main features:
 
-* Minimal user input — some unknown values can be estimated automatically using others (e.g. weight by height)
-* No need to input same data into multiple forms
+* Minimal user input — unknown values estimated automatically whenever possible (e.g. weight by height)
 * Only measurable parameters — no need to speak with a human of interest or it's congeners
 * No "Calculate" button — evaluated data changes immediately with your input
 * Every calculation referenced and explained in source code, so everyone can reproduce it
@@ -25,8 +24,8 @@ Main features:
 > Tip: You can test Heval's ability to interpret ABG with [case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html). Some books provide case studies with invalid data (see below).
 
 * Enter pH and pCO2 for overall acid-base status assessment
-* Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and, of course, electrolyte disturbances
-* Sex and weight used only for dosage calculations, for not ABG diagnostics
+* Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
+* Sex and weight used only for dosage calculations, not for ABG diagnostics itself
 
 Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).
 **Some imagined case studies from books aren't designed well and will fail too.**
@@ -42,12 +41,12 @@ An web or Android application is planned, but implementation deferred until calc
 | --- | --- | --- |
 | Human body: anthropometry | **Good** | Straightforward implementation. Broselow for children. Small issues with IBW |
 | Human body: respiration | **Good** | Use as start ventilator settings for adults and children |
-| Human body: energy & electrolytes | Limited | Generic approximation for healthy human |
-| Human body: fluid demand | Limited | Generic approximation for healthy human, pathologic fluid loss must be taken into account |
+| Human body: energy & electrolytes | Limited | Generic approximation for healthy human. Real demands are unpredictably dependent on body fat/muscle, fever, sepsis, burns etc |
+| Human body: fluid demand | Limited | Generic approximation for healthy human. Pathologic [fluid loss](https://en.wikipedia.org/wiki/Volume_contraction) must be taken into account |
 | Human body: urinary output | **Good** | Adults and children, though eGFR estimation may be necessary |
 | Human body: drug dosage | Medium | Verified, but limited drug list |
-| ABG: anion gap | **Good** | Excellent prediction, but USE REAL DATA |
-| ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation impossible. High/low warnings still usable though. |
+| ABG: anion gap | **Good** | Excellent prediction, but please USE REAL DATA |
+| ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation is impossible. High/low warnings still usable though. |
 | ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all pH range covered. |
 | eGFR | **Good** | Straightforward implementation |
 

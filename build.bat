@@ -3,15 +3,24 @@
 rem Build Heval as one-file standalone windows executable
 rem on Windows XP SP3 32 bit or Windows 7 SP1 32 bit
 rem Moving to python 3.5 means dropping support for Windows XP.
-rem https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi Python 3.4.4 v3.4.4:737efcadf5a6, Dec 20 2015, 19:28:18 [MSC v.1600 32 bit Intel] on win32
-rem https://www.python.org/ftp/python/3.4.4/python-3.4.4.amd64.msi
 
+rem Manual Windows environment
 rem echo Prepare python virtualenv
 rem cd C:\Python34\
 rem python -m venv c:\dev\pyvenv\pyinst
 rem call C:\dev\pyvenv\pyinst\Scripts\activate.bat
 rem pip install --upgrade pip
 rem pip install pyinstaller
+
+rem Some Travis & choco info
+rem Python 3.4.4 v3.4.4:737efcadf5a6, Dec 20 2015, 19:28:18 [MSC v.1600 32 bit Intel] on win32
+rem wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi
+rem chocolatey installs:
+rem  * choco install python-x86_32 --version=3.4.2 to '/c/tools/python-x86_32'
+rem  * choco install python --version=3.4.4        to '/c/Python34'
+rem mingw' python already in PATH, it will break python/pip search
+rem Update path with choco
+rem cmd.exe //c RefreshEnv.cmd;
 
 : Sets the proper date and time stamp with 24Hr Time for log file naming
 : convention

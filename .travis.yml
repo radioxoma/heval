@@ -1,16 +1,3 @@
-# Windows
-# wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi
-# chocolatey installs:
-#  * choco install python-x86_32 --version=3.4.2 to '/c/tools/python-x86_32'
-#  * choco install python --version=3.4.4        to '/c/Python34'
-# mingw already in PATH, it will brake python/pip search
-# cmd.exe //c RefreshEnv.cmd;
-
-# Mac OS X
-# brew upgrade python ?
-# Mac OS X 10.13.6 uses Python 2.7.17 as default interpreter /usr/local/bin/python
-# Brew installs python3 by default to /usr/local/bin/python3
-
 language: python
 
 jobs:
@@ -28,6 +15,11 @@ jobs:
   - os: osx
     language: shell
     install:
+# Mac OS X 10.13.6 uses Python 2.7.17 as default interpreter /usr/local/bin/python
+# Travis has python3 preinstalled
+# Brew installs python3 by default to /usr/local/bin/python3
+#    - brew upgrade python
+    - python --version
     - brew install tree
     - pip3 install pipenv
     - pipenv --three

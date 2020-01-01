@@ -15,6 +15,8 @@ rem pip install pyinstaller
 rem Some Travis & choco info
 rem Python 3.4.4 v3.4.4:737efcadf5a6, Dec 20 2015, 19:28:18 [MSC v.1600 32 bit Intel] on win32
 rem wget -q https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi -O python.msi
+rem start msiexec /i python.msi /qn /norestart ALLUSERS=1 TARGETDIR="C:\tools\python-x86_32"
+rem echo Returncode: %ERRORLEVEL%
 
 rem chocolatey installs:
 rem  * choco install python-x86_32 --version=3.4.2 to '/c/tools/python-x86_32'

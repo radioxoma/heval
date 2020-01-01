@@ -10,7 +10,9 @@ jobs:
     env: PATH=/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts:$PATH
     install:
 #    - choco install python-x86_32 --version=3.4.3.20150501
-    - wget https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi -O python.msi
+    - pwd
+    - wget -q https://www.python.org/ftp/python/3.4.4/python-3.4.4.msi -O python.msi
+    - sleep 1
     - msiexec /i python.msi /qn /norestart ALLUSERS=1 TARGETDIR="C:\tools\python-x86_32"
     - python -m pip install --upgrade pip
     - pip install pyinstaller

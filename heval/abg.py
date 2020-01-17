@@ -610,22 +610,57 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
     return alphaO2 * pO2 + sO2 * (1 - FCOHb - FMetHb) * ctHb
 
 
-def calculate_pO2_FO2_fraction(pO2, FO2):
-    """The ratio of pO2 and fraction of inspired oxygen.
+def calculate_pO2_FO2_fraction(pO2, FiO2):
+    """pO2(a)/FO2(I) - the ratio of pO2 and fraction of inspired oxygen.
 
-    Also known as pO2(a)/FO2(I).
+    Simplest calculation to diagnose ARDS. Known as:
+        * PaO2/FiO2 ratio
+        * p/f ratio
 
-    https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2.2FFiO2_ratio
-    Eq. 17
+    [1] Radiometer ABL800 Flex Reference Manual English US.
+        chapter 6-32, p. 268, equation 17.
+    [2] https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2.2FFiO2_ratio
+    [3] https://litfl.com/pao2-fio2-ratio
 
     :param float pO2: kPa
     :param float FO2: Fraction of oxygen in dry inspired air, fraction.
     :return:
-        pO2(a)/FO2(I), mmHg.
+        pO2(a)/FO2(I), dimensionless quantity - no units
+        if pf < 100:
+            return "Severe, 45% mortality"
+        elif 100 <= pf <= 200:
+            return "Moderate 32% mortality"
+        elif 200 <= pf <= 300:
+            return "Mild, 27% mortality"
+        else:
+            return "All well, no ARDS"
     :rtype: float
     """
-    pO2 /= kPa
-    return pO2 / FO2
+    # Example: mmHg/oxygen fraction, i.e. 105 / 0.21 = 500
+    pf = pO2 / kPa / FiO2
+    return pO2 / FiO2
+
+
+def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
+    """Calculate Alveolar–arterial gradient.
+
+    Determine source of hypoxemia: low air pO2 or damaged alveolar wall.
+
+    [1] https://en.wikipedia.org/wiki/Alveolar–arterial_gradient
+
+    Normal A-a gradient is:
+        * Normal   PAO2, kPa  < 2.6 [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
+        * Expected PAO2, kPa = (age + 10) / 4 * kPa [https://www.ncbi.nlm.nih.gov/books/NBK545153/]
+            >>> ((40 / 4) + 4) * kPa
+            1.866513152  # kPa
+
+    :param float pCO2: CO2 partial pressure, kPa
+    :param float pO2: O2 partial pressure, kPa
+    :param float FiO2: FiO2 fraction, uses 0.21 (atmosphere air), if not given
+    """
+    # Also PAO2 = (20 - 5 / 4 * pCO2) - pO2 [1]
+    PAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
+    return PAO2 - pO2
 
 
 def calculate_Ca74(pH, Ca):

@@ -121,7 +121,7 @@ class HumanBloodModel(object):
 
     @property
     def osmolarity(self):
-        return calculate_mosm(self.cNa, self.cGlu)
+        return calculate_osmolarity(self.cNa, self.cGlu)
 
     def describe_abg_basic(self):
         """Describe pH and pCO2 - an old implementation considered stable.
@@ -168,16 +168,22 @@ class HumanBloodModel(object):
         return info
 
     def describe_unstable(self):
+        """
         # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
-        # TCA poisoning calculation?
+        # TCA poisoning calculation? Titrate to effect?
 
-        # Calculate needed NaHCO3 for correction of metabolic acidosis
-        # "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
-        # but both values pretty close to BE -9 meq/L, so I use it as threshold.
-        # Максимальная доза NaHCO3 is 4-5 mmol/kg [Курек 273]
-        # https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
+        Calculate needed NaHCO3 for metabolic acidosis correction
+        Using SBE (not pH) as threshold point guaranties that bicarbonate
+        administration won't be suggested in case of respiratory acidosis.
+        https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
+
+        "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
+        but both values pretty close to BE -9 meq/L, so I use it as threshold.
+
+        Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
+        """
         info = "\nTHE BELOW INFORMATION UNTESTED AND NOT INTENDED FOR CLINICAL USE\n"
         if self.sbe < -9:
             info += "\n-- Metabolic acidosis correction ----------------\n"
@@ -336,10 +342,10 @@ def calculate_anion_gap_delta(AG, HCO3act):
         return info + "(2 < gg): concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
 
 
-def calculate_mosm(Na, glucosae):
-    """Calculate serum osmolarity (mOsm).
+def calculate_osmolarity(Na, glucosae):
+    """Calculate serum osmotic concentration (osmolarity, mOsm/L).
 
-    NB! This is not an osmolality.
+    NB! This is not an osmolality (mOsm/kg), measured by an osmometer.
 
 
     References
@@ -347,13 +353,16 @@ def calculate_mosm(Na, glucosae):
 
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-41, p. 277, equation 48.
+    [2] https://en.wikipedia.org/wiki/Osmotic_concentration
 
     :param float Na: mmol/L
     :param float glucosae: mmol/L
     :return:
-        Serum osmolarity, mmol/kg.
+        Serum osmolarity, mmol/L (mOsm/L).
     :rtype: float
     """
+    # Sometimes `2 * (Na + K) + Glucose + Urea` all in mmol/L
+    # Also etanol can cause https://en.wikipedia.org/wiki/Osmol_gap
     return 2 * Na + glucosae
 
 

@@ -11,3 +11,4 @@ echo Remove Heval.app directory
 rm -rf dist/Heval.app
 tree dist/
 export OSX_FILE="dist/$BASENAME.dmg"
+# dmg2img -p 4 -i "heval*.dmg" -o heval.img

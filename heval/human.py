@@ -136,7 +136,17 @@ class HumanBodyModel(object):
 
         # Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
         # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
-        info += "RBW blood volume {:.0f}-{:.0f} ml (70-80 ml/kg for humans older than 3 month, more in neonates)\n".format(self.weight * 70, self.weight * 80)
+
+        # [Feldschuh, J., & Enson, Y. (1977). Prediction of the normal blood volume. Relation of blood volume to body habitus. Circulation, 56(4), 605–612. doi:10.1161/01.cir.56.4.605]:
+        #    * Blood volume to body mass ration doesn't remain constant
+        #    * Thin man has higher (95-105 ml/kg) than fat (45 ml/kg)
+        #    * Men: 72.6 ml/kg, 2566 ml/m2; women: 66.3 ml/kg, 2245 ml/m2
+        #
+        # 1. There should be some blood volume calculation based on IBW?
+        # 2. Seems like a bad idea to link ideal blood volume with
+        # infusion volume calculaton
+        # Value used in ardiopulmonary bypass (70 ml/kg)
+        info += "RBW blood volume {:.0f}-{:.0f} ml (65-75 ml/kg for humans older than 3 month, more in neonates and underweight)\n".format(self.weight * 65, self.weight * 75)
 
         # if self.sex == 'child':
         #     info += "{}\n".format(wetflag(weight=self.weight))

@@ -3,6 +3,7 @@
 
 import random
 import textwrap
+from datetime import datetime
 try:
     from tkinter import *
     from tkinter import scrolledtext
@@ -71,7 +72,7 @@ Heval is an experimental medical software intended for healthcare \
 specialists. Software is provided ​"as is". Developer makes no warranties, \
 express or implied.
 
-Written by Eugene Dvoretsky 2016-2019. Check source code for references and \
+Written by Eugene Dvoretsky 2016-2020. Check source code for references and \
 formulas.
 
 Heval is a free software and licensed under the terms of \
@@ -587,16 +588,18 @@ class CalcGFR(Frame):
         if sex in ('male', 'female'):
             cCrea = float(self.ctl_sbx_ccrea.get())
             age = self.human_model.age
+            dob = datetime.now().year - age  # timedelta is complicated
             black_skin = (self.var_isblack.get() == 1)
             mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
             epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)
             info = """\
-            cCrea {:.2f} mg/dl
+            Year of birth: {:.0f}
+            cCrea\t{:.2f} mg/dl
             MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
             CKD-EPI\t{:3.0f} mL/min/1.73 m2
 
             {}
-            """.format(cCrea / 88.4, mdrd, epi, abg.gfr_describe(epi))
+            """.format(dob, cCrea / 88.4, mdrd, epi, abg.gfr_describe(epi))
         else:
             info = "Don't know how to calculate eGFR in children"
         self.TxtView.set_text(textwrap.dedent(info))

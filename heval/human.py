@@ -470,11 +470,11 @@ class HumanBodyModel(object):
         """
         info = ''
         if self.sex in ('male', 'female'):
-            info += "Суточная потребность в энергии для взрослых [ПосДеж]:\n"
+            info += "Daily nutrition requirements for adults [ПосДеж]:\n"
             info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW):\n".format(25 * self.weight_ideal, 25)
-            info += " * Аминокислоты {:3.0f}-{:3.0f} г/24h (1.2-1.5 г/кг/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Жиры         {:3.0f}-{:3.0f} г/24h (1.0-1.5 г/кг/24h) (30-40% от общей энергии)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Глюкоза      {:3.0f}-{:3.0f} г/24h (4.0-5.0 г/кг/24h) (60-70% от общей энергии)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
+            info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
+            info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
+            info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             if self.age:
                 info += "Basal metabolic rate for adults:\n"
                 info += " * {:.0f} kcal/24h Harris-Benedict (1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))

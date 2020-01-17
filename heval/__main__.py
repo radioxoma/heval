@@ -60,6 +60,8 @@ MV - minute volume
 VDaw - dead space airway volume
 TV - tidal volume
 RR - respiratory rate
+
+ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
 """
 
 __about__ = """\

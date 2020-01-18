@@ -134,19 +134,10 @@ class HumanBodyModel(object):
 
         info += " BSA {:.3f} m².\n".format(self.bsa)
 
-        # Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
-        # Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
-
-        # [Feldschuh, J., & Enson, Y. (1977). Prediction of the normal blood volume. Relation of blood volume to body habitus. Circulation, 56(4), 605–612. doi:10.1161/01.cir.56.4.605]:
-        #    * Blood volume to body mass ration doesn't remain constant
-        #    * Thin man has higher (95-105 ml/kg) than fat (45 ml/kg)
-        #    * Men: 72.6 ml/kg, 2566 ml/m2; women: 66.3 ml/kg, 2245 ml/m2
-        #
-        # 1. There should be some blood volume calculation based on IBW?
-        # 2. Seems like a bad idea to link ideal blood volume with
-        # infusion volume calculaton
-        # Value used in ardiopulmonary bypass (70 ml/kg)
-        info += "RBW blood volume {:.0f}-{:.0f} ml (65-75 ml/kg for humans older than 3 month, more in neonates and underweight)\n".format(self.weight * 65, self.weight * 75)
+        # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
+        # older than 3 month. ml/kg ratio more in neonates and underweight
+        info += "Total blood volume {:.0f} ml (70 ml/kg) or weight indexed {:.0f} ml [Lemmens].\n".format(
+            self.weight * 70, self.total_blood_volume)
 
         # if self.sex == 'child':
         #     info += "{}\n".format(wetflag(weight=self.weight))
@@ -287,6 +278,29 @@ class HumanBodyModel(object):
     def bsa(self):
         """Body surface area, m2, square meters."""
         return body_surface_area(height=self.height, weight=self.weight)
+
+    @property
+    def total_blood_volume(self):
+        """Calculate total blood volume (TBV) by Lemmens-Bernstein-Brodsky.
+
+        Considered as more accurate, than Nadler 1962 method.
+
+        [1] Lemmens HJ, Bernstein DP, Brodsky JB. Estimating blood volume in obese and morbidly obese patients. Obes Surg. 2006 Jun;16(6):773-6. 
+            https://www.ncbi.nlm.nih.gov/pubmed/16756741
+        [2] https://www.ncbi.nlm.nih.gov/books/NBK526077/
+
+        Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
+        Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
+
+        [Feldschuh, J., & Enson, Y. (1977). Prediction of the normal blood volume. Relation of blood volume to body habitus. Circulation, 56(4), 605–612. doi:10.1161/01.cir.56.4.605]:
+           * Blood volume to body mass ration in doesn't remain constant even in one individual during one month
+           * Thin man has higher TBV (95-105 ml/kg) than fat (45 ml/kg)
+           * Men: 72.6 ml/kg, 2566 ml/m2; women: 66.3 ml/kg, 2245 ml/m2
+
+        :return: Total blood volume, ml
+        """
+        bmi = self.weight / self.height ** 2
+        return 70 / math.sqrt(bmi / 22) * self.weight
 
     @property
     def age(self):
@@ -860,3 +874,33 @@ def get_broselow_code(height):
          return "Green", "10 years", 33  # 30-36
     else:
         raise ValueError("Out of Broselow height range")
+
+
+def nadler_total_blood_volume(sex, height, weight):
+    """Calculate total blood volume (TBV) for adult by Nadler 1962 formula.
+
+    This formula is widely known and popular.
+
+    Plasma volume (PV) can be derived with hematocrit (hct) value:
+
+        PV = TBV * (1 – hct)
+
+    Reference
+    ---------
+
+    [1] Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
+
+    :param height float: Human height, meters
+    :param weight float: Human weight, kg
+    :param str sex: Choose 'male', 'female'.
+    :return:
+        Total blood volume, ml
+    :rtype: float
+    """
+    # Same as http://apheresisnurses.org/apheresis-calculators
+    if sex == 'male':
+        return ((0.3669 * height ** 3) + (0.03219 * weight) + 0.6041) * 1000
+    elif sex == 'female':
+        return ((0.3561 * height ** 3) + (0.03308 * weight) + 0.1833) * 1000
+    else:
+        raise ValueError("Nadler formula isn't applicable to children")

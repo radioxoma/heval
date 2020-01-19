@@ -87,6 +87,32 @@ def solution_glucose(glu_mass, body_weight):
     return info
 
 
+def solution_normal_saline(salt_mmol):
+    """Convert mmol of NaCl to volume of saline solution (several dilutions).
+
+    Administration speed limiting:
+        By ml/min for bolus
+        By ml/h for continuous
+        By mmol/h of sodioum
+
+    NaCl 0.9%, 0.15385 mmol/ml
+    NaCl 3%  , 0.51282 mmol/ml
+    NaCl 10% , 1.70940 mmol/ml
+
+    :param float salt_mmol: Amount of substance (NaCl or single ion ecvivalent), mmol
+    :return: Info string
+    """
+    info = ''
+    for dilution in (0.9, 3, 10):
+        conc = 1000 * (dilution / 100) / M_NaCl  # mmol/ml
+        vol = salt_mmol / conc  # ml
+        info += " * NaCl {:>4.1f}% {:>4.0f} ml".format(dilution, vol)
+        if dilution == 0.9:
+            info += " isotonic"
+        info += "\n"
+    return info
+
+
 def kurek_electrolytes_K(weight, K_serum):
     """Assess blood serum potassium level.
 
@@ -234,18 +260,28 @@ def kurek_electrolytes_Na(weight, Na_serum):
     Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
     Na_low = 130  # Курек 133
 
+    # Коэффициенты разные для восполнения дефицита Na, K?
+    coef = 0.6  # for adult, non-elderly males (**default for hyponatremia**);
+    # coef = 0.5  # for adult elderly males, malnourished males, or females;
+    # coef = 0.45  # for adult elderly or malnourished females.
+
+    # coef = 0.45  # новорождённые
+    # coef = 0.4   # грудные
+    # coef = 0.3   # < 5 лет
+    # coef = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
+
+    total_body_water = weight * coef
     info = ''
     if Na_serum > Na_high:
-        info += "Na⁺ is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide, NOT IMPLEMENTED".format(Na_high)
+        volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml
+        volume_deficiency2 = (Na_serum - 145) / 3 * 1000 # ml Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43].
+        info += "Na⁺ is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide, NOT IMPLEMENTED\n".format(Na_high)
+        info += "volume_deficiency\t{:.0f} ml\n".format(volume_deficiency)
+        info += "volume_deficiency '3 mmol' \t{:.0f} ml".format(volume_deficiency2)
     elif Na_serum < Na_low:
-        # Коэффициенты общие для восполнения дефицита Na, K?
-        # coefficient = 0.45  # новорождённые
-        # coefficient = 0.4   # грудные
-        # coefficient = 0.3   # < 5 лет
-        coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
-        info += "Na⁺ is dangerously low (<{} mmol/L), expect seizure\n".format(Na_low)
-        Na_deficiency = (Na_target - Na_serum) * weight * coefficient
-        info += "Na⁺ deficiency is {:.0f} mmol [Курек]".format(Na_deficiency)
+        Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
+        info += "Na⁺ is dangerously low (<{} mmol/L), expect seizure, cerebral edema. Deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
+        info += "{}".format(solution_normal_saline(Na_deficiency))
     else:
         info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
     return info

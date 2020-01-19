@@ -48,7 +48,7 @@ Na and water
 """
 
 
-def glucosae_solution(glu_mass, body_weight):
+def solution_glucose(glu_mass, body_weight):
     """Glucose and insulin solution calculation.
 
     :param float glu_mass: glucose mass, grams
@@ -165,13 +165,13 @@ def kurek_electrolytes_K(weight, K_serum):
             info += "Too much potassium for 24 hours"
 
         glu_mass = K_deficiency * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
-        info += glucosae_solution(glu_mass, weight)
+        info += solution_glucose(glu_mass, weight)
 
     elif K_serum >= K_high:
         glu_mass = 0.5 * weight
         info += "K⁺ is dangerously high (>{} mmol/L)\n".format(K_high)
         info += "Inject bolus for child "
-        info += glucosae_solution(glu_mass, weight)
+        info += solution_glucose(glu_mass, weight)
         info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
         # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
         info += "RBW NaHCO3 4% {:.0f} ml (x2={:.0f} mmol) [Курек 2013]\n".format(2 * weight * M_NaHCO3 / 40, 2 * weight)

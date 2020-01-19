@@ -30,13 +30,13 @@ for both intracellular and extracellular ions depletion calculation.
 Na and water
 ------------
 1. Потеря чистой выоды через лёгкие и при потоотделении (лихорадка)
-    Жажда появляется при дефиците воды массой 2 % от RBW, концентрированная моча, высокий Hct, Na 160 mmol/L, осмоляльность >300 мосм/кг.
+    Жажда появляется при дефиците воды массой 2 % от RBW, осмолярности >290 mOsm/kg. Концентрированная моча, высокий Hct
     Вводить D50 до снижения осмоляльности до 290 мосм/кг, снижения Na до 140 mmol/L.
 2. Потеря внеклеточной жидкости (кишечная непроходимость - 3-е пространство, рвота, понос)
     * Рвота - метаболический алкозоз, восполнять Cl- физраствором
     * Понос - метаболический алкалоз? восполнять NaHCO3, NaCL, KCl?
 
-    volume_deficiency = (1 - 0.4 / Hct) * 0.2 * body_weight  # Рябов 1994, с 36
+    volume_deficiency = (1 - 0.4 / Hct) * 0.2 * body_weight  # Рябов 1994, с 36; Маневич Плохой, с 113
     Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43]
 
 Если слишком высокий или слишком низкий, то
@@ -242,7 +242,7 @@ def kurek_electrolytes_Na(weight, Na_serum):
         # coefficient = 0.45  # новорождённые
         # coefficient = 0.4   # грудные
         # coefficient = 0.3   # < 5 лет
-        coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой]
+        coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
         info += "Na⁺ is dangerously low (<{} mmol/L), expect seizure\n".format(Na_low)
         Na_deficiency = (Na_target - Na_serum) * weight * coefficient
         info += "Na⁺ deficiency is {:.0f} mmol [Курек]".format(Na_deficiency)

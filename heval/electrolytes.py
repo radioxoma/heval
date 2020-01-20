@@ -273,14 +273,17 @@ def kurek_electrolytes_Na(weight, Na_serum):
     total_body_water = weight * coef
     info = ''
     if Na_serum > Na_high:
-        volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml
-        volume_deficiency2 = (Na_serum - 145) / 3 * 1000 # ml Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43].
-        info += "Na⁺ is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide, NOT IMPLEMENTED\n".format(Na_high)
-        info += "volume_deficiency\t{:.0f} ml\n".format(volume_deficiency)
-        info += "volume_deficiency '3 mmol' \t{:.0f} ml".format(volume_deficiency2)
+        volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml Just a proportion
+        # volume_deficiency2 = (Na_serum - 145) / 3 * 1000 # ml Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43].
+        info += "Na⁺ is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide. ".format(Na_high)
+        info += "Volume deficiency {:.0f} ml.".format(volume_deficiency)
+        # info += " ('3 mmol' {:.0f} ml)\n".format(volume_deficiency2)
+
     elif Na_serum < Na_low:
         Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
-        info += "Na⁺ is dangerously low (<{} mmol/L), expect seizure, cerebral edema. Deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
+        # N.B.! Hypervolemic patient has low Na because of diluted plasma,
+        # so it needs furosemide, not extra Na administration.
+        info += "Na⁺ is dangerously low (<{} mmol/L), expect seizures, coma and death due to cerebral edema. Deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
         info += "{}".format(solution_normal_saline(Na_deficiency))
     else:
         info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)

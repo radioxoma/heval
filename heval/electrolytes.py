@@ -78,7 +78,7 @@ def solution_normal_saline(salt_mmol):
     :return: Info string
     """
     info = ''
-    for dilution in (0.9, 3, 10):
+    for dilution in (0.9, 3, 5, 10):
         conc = 1000 * (dilution / 100) / M_NaCl  # mmol/ml
         vol = salt_mmol / conc  # ml
         info += " * NaCl {:>4.1f}% {:>4.0f} ml".format(dilution, vol)
@@ -156,10 +156,10 @@ def electrolyte_K(weight, K_serum):
         # coefficient = 0.45  # новорождённые
         # coefficient = 0.4   # грудные
         # coefficient = 0.3   # < 5 лет
-        coefficient = 0.2   # >5 лет
+        coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
 
         K_deficiency = (K_target - K_serum) * weight * coefficient
-        # K_deficiency += weight * 1  # mmol/kg/24h Should I add also суточная потребность?
+        # K_deficiency += weight * 1  # mmol/kg/24h Should I also add daily requirement?
 
         info += "Estimated K⁺ deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
         if K_deficiency > 4 * weight:
@@ -248,28 +248,21 @@ def electrolyte_Na(weight, Na_serum):
     coef = 0.6  # for adult, non-elderly males (**default for hyponatremia**);
     # coef = 0.5  # for adult elderly males, malnourished males, or females;
     # coef = 0.45  # for adult elderly or malnourished females.
-
-    # coef = 0.45  # новорождённые
-    # coef = 0.4   # грудные
-    # coef = 0.3   # < 5 лет
-    # coef = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
-
     total_body_water = weight * coef
     info = ''
     if Na_serum > Na_high:
-        info += "Na⁺ is high (>{} mmol/L), expect coma, use D50 & furesemide. ".format(Na_high)
-        volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml just a proportion
-        info += "\n{}\n".format(total_body_water * (1 - 1))
-        info += "Free water deficit is {:.0f} ml. Check osmolarity in ABG.".format(volume_deficiency)
+        info += "Na⁺ is high (>{} mmol/L), expect coma, use D50, consider furesemide. ".format(Na_high)
+        free_water_def = (1 - Na_target / Na_serum) * total_body_water * 1000  # ml just a proportion
+        info += "Free water deficit is {:.0f} ml. Check osmolarity in ABG.".format(free_water_def)
         # Every 3 mmol above 145 mmol/L corresponds of 1 L volume deficiency [Рябов 1994, с 37, 43]
-        # volume_deficiency2 = (Na_serum - 145) / 3 * 1000
-        # info += " ('3 mmol' {:.0f} ml)\n".format(volume_deficiency2)
+        # free_water_def2 = (Na_serum - 145) / 3 * 1000
+        # info += " ('3 mmol' {:.0f} ml)\n".format(free_water_def2)
 
     elif Na_serum < Na_low:
         Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += "Na⁺ is low (<{} mmol/L), expect seizures, coma and death due to cerebral edema. Na⁺ deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
+        info += "Na⁺ is low (<{} mmol/L), expect cerebral edema leading to seizures, coma and death. Na⁺ deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
         info += "{}".format(solution_normal_saline(Na_deficiency))
     else:
         info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)

@@ -1048,39 +1048,3 @@ def abg_approach_research(pH, pCO2):
     # except ZeroDivisionError:
     #     pass
     return info
-
-
-def test():
-    variants = (
-        # pH, pCO2, HCO3, comment
-        (7.4, 40, None, 'Normal ABG'),
-        (7.46, 35., 27., "Metabolic Alcalosis"),
-        (7.30, 35., 20., "Metabolic Acidosis"),
-        (7.47, 32., 23., "Respiratory Alcalosis"),
-        (7.4,  40.01, 25., "Normal"),
-        (7.1, 28., 14., "Костюченко 1 вариант"),
-        (7.1, 68., None, "Костюченко 2 вариант"),
-        (7.3, 68., None, "Костюченко 3 вариант"),
-        (7.37, 58., None, "Untagged"),
-        (7.07, 53.2, None, "Resp. acidosis + metabolic"),
-        (7.39, 47., None, "Resp. acidosis, met. alcalosis, full comp. (COPD)")
-    )
-    for v in variants:
-        pH = v[0]
-        pCO2mmHg = v[1]
-        pCO2 = v[1] * kPa
-        comment = v[3]
-        be = calculate_cbase(pH, pCO2)
-        HCO3act = calculate_hco3p(pH, pCO2)
-
-        info = "pH {:.2f}, pCO2 {:.2f} mmHg: HCO3act {:.2f}, BE {:+.2f} ".format(
-            pH, pCO2mmHg, HCO3act, be)
-        info += "'{}'\n".format(comment)
-        info += "Abg stable:\n{}\n".format(textwrap.indent(abg_approach_stable(pH, pCO2)[0], '\t'))
-        info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(pH, pCO2), '\t'))
-        info += "Abg research:\n{}\n".format(textwrap.indent(abg_approach_research(pH, pCO2), '\t'))
-        print(info)
-
-
-if __name__ == '__main__':
-    test()

@@ -19,6 +19,7 @@ M_KCl = 74.5
 
 norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
 norm_Na = (130, 155)  # mmol/L, Radiometer, adult
+# norm_Na = (130, 150)  # Курек 2013 c 133, children
 norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
 
 
@@ -248,26 +249,13 @@ def kurek_electrolytes_Na(weight, Na_serum):
 
     Obviously it's not possible to use same formula with the same coefficient
     for both intracellular and extracellular ions depletion calculation.
-
-
-    Na and water
-    ------------
-    1. Потеря чистой выоды через лёгкие и при потоотделении (лихорадка)
-        Жажда появляется при дефиците воды массой 2 % от RBW, осмолярности >290 mOsm/kg. Концентрированная моча, высокий Hct
-        Вводить D50 до снижения осмоляльности до 290 мосм/кг, снижения Na до 140 mmol/L.
-    2. Потеря внеклеточной жидкости (кишечная непроходимость - 3-е пространство, рвота, понос)
-        * Рвота - метаболический алкозоз, восполнять Cl- физраствором
-        * Понос - метаболический алкалоз? восполнять NaHCO3, NaCL, KCl?
-
-        volume_deficiency = (1 - 0.4 / Hct) * 0.2 * body_weight  # Рябов 1994, с 36; Маневич Плохой, с 113
-        Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43]
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
         return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
 
-    Na_high = 150  # Курек 133
+    Na_high = norm_Na[1]
     Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
-    Na_low = 130  # Курек 133
+    Na_low = norm_Na[0]
 
     # Коэффициенты разные для восполнения дефицита Na, K?
     coef = 0.6  # for adult, non-elderly males (**default for hyponatremia**);
@@ -283,9 +271,10 @@ def kurek_electrolytes_Na(weight, Na_serum):
     info = ''
     if Na_serum > Na_high:
         volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml Just a proportion
-        # volume_deficiency2 = (Na_serum - 145) / 3 * 1000 # ml Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43].
         info += "Na⁺ is high (>{} mmol/L), expect coma, use D50 & furesemide. ".format(Na_high)
         info += "Volume deficiency is {:.0f} ml. Check osmolarity in ABG.".format(volume_deficiency)
+        # Every 3 mmol above 145 mmol/L corresponds of 1 L volume deficiency [Рябов 1994, с 37, 43]
+        # volume_deficiency2 = (Na_serum - 145) / 3 * 1000
         # info += " ('3 mmol' {:.0f} ml)\n".format(volume_deficiency2)
 
     elif Na_serum < Na_low:

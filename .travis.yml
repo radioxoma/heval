@@ -10,7 +10,8 @@ jobs:
     env: PATH=/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts:$PATH
     install:
     - choco install python-x86_32 --version=3.4.3.20150501
-    - python -m pip install --upgrade pip==19.1.1  # 19.2 requires python >=3.5
+    # pip 19.2 drops support for python 3.4 (despite 19.3.1 been working fine)
+    - python -m pip install --upgrade pip==19.1.1
     - pip install pyinstaller  
   - os: osx
     language: shell

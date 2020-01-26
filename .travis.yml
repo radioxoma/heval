@@ -11,7 +11,7 @@ jobs:
     install:
     - choco install python-x86_32 --version=3.4.3.20150501
     - python -m pip install --upgrade pip
-    - pip install pyinstaller
+    - pip install pyinstaller==3.5  # 3.6 requires python >=3.5
   - os: osx
     language: shell
     install:

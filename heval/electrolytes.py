@@ -200,7 +200,8 @@ def kurek_electrolytes_K(weight, K_serum):
         info += solution_glucose(glu_mass, weight)
         info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
         # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-        info += "RBW NaHCO3 4% {:.0f} ml (x2={:.0f} mmol) [Курек 2013]\n".format(2 * weight * M_NaHCO3 / 40, 2 * weight)
+        info += "RBW NaHCO3 4% {:.0f} ml (x2={:.0f} mmol) [Курек 2013]\n".format(
+            2 * weight * M_NaHCO3 / 40, 2 * weight)
         info += "Don't forget furesemide, hyperventilation\n"
         info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
     else:
@@ -245,7 +246,7 @@ def kurek_electrolytes_Na(weight, Na_serum):
     Hypernatremia
     -------------
         * Устраняется постепенно за 48 часов
-        * Скорость снижния Na <0.5 ммоль/л час или 12-15 ммоль/24h
+        * Скорость снижния Na <0.5 ммоль/л/ч или 12-15 ммоль/24h
 
     Маневич, Плохой 2000 с. 116:
         * Na_target 140 mmol/L
@@ -275,15 +276,15 @@ def kurek_electrolytes_Na(weight, Na_serum):
     if Na_serum > Na_high:
         volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml Just a proportion
         # volume_deficiency2 = (Na_serum - 145) / 3 * 1000 # ml Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43].
-        info += "Na⁺ is dangerously high (>{} mmol/L), expect coma, use D50 & furesemide. ".format(Na_high)
-        info += "Volume deficiency {:.0f} ml.".format(volume_deficiency)
+        info += "Na⁺ is high (>{} mmol/L), expect coma, use D50 & furesemide. ".format(Na_high)
+        info += "Volume deficiency is {:.0f} ml. Check osmolarity in ABG.".format(volume_deficiency)
         # info += " ('3 mmol' {:.0f} ml)\n".format(volume_deficiency2)
 
     elif Na_serum < Na_low:
         Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += "Na⁺ is dangerously low (<{} mmol/L), expect seizures, coma and death due to cerebral edema. Deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
+        info += "Na⁺ is low (<{} mmol/L), expect seizures, coma and death due to cerebral edema. Na⁺ deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
         info += "{}".format(solution_normal_saline(Na_deficiency))
     else:
         info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
@@ -327,7 +328,11 @@ def electrolytes_Cl(weight, Cl_serum):
     :param float weight: Real body weight, kg
     :param float Cl_serum: mmol/L
     """
-    if norm_Cl[0] <= Cl_serum <= norm_Cl[1]:
-        return "Cl⁻ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
+    Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
+    if Cl_serum > Cl_high:
+        return "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion?".format(Cl_high)
+    elif Cl_serum < Cl_low:
+        # KCL replacement?
+        return "Cl⁻ is low (<{} mmol/L). Vomit?".format(Cl_low)
     else:
-        return "Cl⁻ is not ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
+        return "Cl⁻ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])

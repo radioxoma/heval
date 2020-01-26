@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Electrolyte disturbances and correction.
+
+Author: Eugene Dvoretsky
+
+If too low or too high, then
+    * Warn of danger electrolyte values
+    * Suggest correction boluses
+"""
+
 __EASTER_TEXT__ = ("It's got what plants crave!", "It's got electrolytes!")
 M_NaHCO3 = 84  # g/mol or mg/mmol
 M_C6H12O6 = 180
@@ -10,42 +20,6 @@ M_KCl = 74.5
 norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
 norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
-
-"""
-Electrolyte disturbances and correction.
-
-Author: Eugene Dvoretsky
-
-
-Looks like popular generic formula below correlate better with daily
-electrolyte requirement, bot not with the specific to patient deficiency.
-So it useless.
-
-    (electrolyte_target - electrolyte_serum) * weight * coefficient
-
-Obviously it's not possible to use same formula with the same coefficient
-for both intracellular and extracellular ions depletion calculation.
-
-
-Na and water
-------------
-1. Потеря чистой выоды через лёгкие и при потоотделении (лихорадка)
-    Жажда появляется при дефиците воды массой 2 % от RBW, осмолярности >290 mOsm/kg. Концентрированная моча, высокий Hct
-    Вводить D50 до снижения осмоляльности до 290 мосм/кг, снижения Na до 140 mmol/L.
-2. Потеря внеклеточной жидкости (кишечная непроходимость - 3-е пространство, рвота, понос)
-    * Рвота - метаболический алкозоз, восполнять Cl- физраствором
-    * Понос - метаболический алкалоз? восполнять NaHCO3, NaCL, KCl?
-
-    volume_deficiency = (1 - 0.4 / Hct) * 0.2 * body_weight  # Рябов 1994, с 36; Маневич Плохой, с 113
-    Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43]
-
-Если слишком высокий или слишком низкий, то
-    * Предупреждать об опасных диапазонах электролитов
-    * Предлагать расчётные болюсы для коррекции:
-        гиперкалиемия - глюкоза с инсулином (детский на кг и взрослый)
-        гиперкалиемия - сода
-        гипонатриемия - натрия хлорид гипертонический
-"""
 
 
 def solution_glucose(glu_mass, body_weight):
@@ -248,11 +222,45 @@ def kurek_electrolytes_Na(weight, Na_serum):
         * Устраняется постепенно за 48 часов
         * Скорость снижния Na <0.5 ммоль/л/ч или 12-15 ммоль/24h
 
-    Маневич, Плохой 2000 с. 116:
-        * Na_target 140 mmol/L
-        * coefficient 0.2
-        * Скорость снижения не быстрее 20 ммоль/л в сутки
-        * Spironolactone 25 mg, Furosemide 10-20 mg
+
+    Другие источники
+    ================
+        Маневич, Плохой 2000 с. 116:
+            * Na_target 140 mmol/L
+            * coefficient 0.2
+            * Скорость снижения не быстрее 20 ммоль/л в сутки
+            * Spironolactone 25 mg, Furosemide 10-20 mg
+    
+        Нейрореаниматология: практическое руководство 2017 - Гипонатриемия
+            Формула отличается от Курека только другим коэффицинтом и Na_target.
+            Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
+            Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
+
+            Осмоляльность (мОсм/кг) = 2×(Na+ + K+) + Глю/18 + Моч/2,8 {Норма 280-285 мОсм/кг воды}
+
+                                ***
+
+    Looks like popular generic formula below correlate better with daily
+    electrolyte requirement, bot not with the specific to patient deficiency.
+    So it useless.
+
+        (electrolyte_target - electrolyte_serum) * weight * coefficient
+
+    Obviously it's not possible to use same formula with the same coefficient
+    for both intracellular and extracellular ions depletion calculation.
+
+
+    Na and water
+    ------------
+    1. Потеря чистой выоды через лёгкие и при потоотделении (лихорадка)
+        Жажда появляется при дефиците воды массой 2 % от RBW, осмолярности >290 mOsm/kg. Концентрированная моча, высокий Hct
+        Вводить D50 до снижения осмоляльности до 290 мосм/кг, снижения Na до 140 mmol/L.
+    2. Потеря внеклеточной жидкости (кишечная непроходимость - 3-е пространство, рвота, понос)
+        * Рвота - метаболический алкозоз, восполнять Cl- физраствором
+        * Понос - метаболический алкалоз? восполнять NaHCO3, NaCL, KCl?
+
+        volume_deficiency = (1 - 0.4 / Hct) * 0.2 * body_weight  # Рябов 1994, с 36; Маневич Плохой, с 113
+        Каждые 3 mmol сверх 145 mmol/L соответствуют дефициту 1 литра дистиллированной воды [Рябов 1994, с 37, 43]
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
         return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
@@ -288,37 +296,6 @@ def kurek_electrolytes_Na(weight, Na_serum):
         info += "{}".format(solution_normal_saline(Na_deficiency))
     else:
         info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
-    return info
-
-
-def krylov_electrolytes_Na(weight, Na_serum):
-    """Восполнение дефицита Na согласно [Нейрореаниматология: практическое руководство 2017]
-
-    :param float weight: Real body weight, kg
-    :param float Na_serum: mmol/L
-
-    Гипонатриемия
-    -------------
-    Формула отличается от Курека только другим коэффицинтом и Na_target.
-    Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
-    Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
-
-    Осмоляльность (мОсм/кг) = 2×(Na+ + K+) + Глю/18 + Моч/2,8 {Норма 280-285 мОсм/кг воды}
-    """
-    if norm_Na[0] <= Na_serum <= norm_Na[1]:
-        return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
-
-    coefficient = 0.6
-    Na_target = 125  # mmol/L, minimal acceptable value from book
-    Na_low = Na_target
-
-    info = ''
-    if Na_serum < Na_target:
-        info += "Na⁺ is dangerously low (<{} mmol/L)\n".format(Na_low)
-        Na_deficiency = (Na_target - Na_serum) * weight * coefficient
-        info += "Na⁺ deficiency is {} mmol [Крылов]".format(Na_deficiency)
-    else:
-        raise NotImplementedError
     return info
 
 

@@ -65,7 +65,7 @@ def solution_glucose(glu_mass, body_weight):
 def solution_normal_saline(salt_mmol):
     """Convert mmol of NaCl to volume of saline solution (several dilutions).
 
-    Administration speed limiting:
+    Administration rate limiting:
         By ml/min for bolus
         By ml/h for continuous
         By mmol/h of sodioum
@@ -88,7 +88,7 @@ def solution_normal_saline(salt_mmol):
     return info
 
 
-def kurek_electrolytes_K(weight, K_serum):
+def electrolyte_K(weight, K_serum):
     """Assess blood serum potassium level.
 
     :param float weight: Real body weight, kg
@@ -98,7 +98,7 @@ def kurek_electrolytes_K(weight, K_serum):
     -----------------------------------------
     # Comment:
     # 1. As far it's practically impossible to calculate K deficiency,
-    # administer continuously i/v with speed 10 mmol/h and check ABG  every 2-4 hour in acute period
+    # administer continuously i/v with rate 10 mmol/h and check ABG  every 2-4 hour in acute period
     #     * If there are ECG changes and muscle relaxation, speed up to 20 mmol/h [Курек 2009 с 557]
     # 2. In severe hypokalemia (<= 3 mmol/L) administrate with NaCl, not glucose
     #     * When deficiency compensated (> 3 mmol/L) it's now possible to switch to glucose+insulin
@@ -147,11 +147,11 @@ def kurek_electrolytes_K(weight, K_serum):
     info = ''
     if K_serum < K_low:
         info += "K⁺ is dangerously low (<{:.0f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
-        info += "NB! Potassium calculations considered inaccurate, so use standard replacement speed and check ABG every 2-4 hours: "
+        info += "NB! Potassium calculations considered inaccurate, so use standard replacement rate and check ABG every 2-4 hours: "
         if weight < 40:
             info += "KCl {:.0f}-{:.0f} mmol/h for child.\n".format(0.25 * weight, 0.5 * weight)
         else:
-            info += "KCl 10-20 mmol/h (standard speed) for all adults will be ok.\n"
+            info += "KCl 10-20 mmol/h (standard rate) for all adults will be ok.\n"
 
         # coefficient = 0.45  # новорождённые
         # coefficient = 0.4   # грудные
@@ -198,7 +198,7 @@ def kurek_electrolytes_K(weight, K_serum):
 #         raise NotImplementedError
 
 
-def kurek_electrolytes_Na(weight, Na_serum):
+def electrolyte_Na(weight, Na_serum):
     """Assess blood serum sodium level.
 
     :param float weight: Real body weight, kg
@@ -211,17 +211,15 @@ def kurek_electrolytes_Na(weight, Na_serum):
     Корректировать Na медленно, иначе:
         * Было много Na (>145 mmol/L) {и вводится D50} -> отёк мозга
         * Было мало Na {вводится NaCl гипертонический} -> быстрое увличение осмолярности -> центральный понтинный миелинолиз
-
-    Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0,25-0,5 мл/кг/час [ПосДеж 90]
-    [Заболоцкий Д.В. 20-я сессия МНОАР в Голицыно 2019]: Предупреждение о невозможности коррекции Na, K за одни сутки без угрозы
-        * быстрого увеличения Na после коррекции гипонатриемии > Быстрого увличения осмолярности > центрального понтинного миелинолиза.
-        * Восполнение Na не быстрее 10 mmol/L/24h
+    Скорость:
+        * Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0,25-0,5 мл/кг/час [ПосДеж 90]
+        * Восполнение Na не быстрее 10 mmol/L/24h    
     Возможно имеется гипокортицизм и потребуется вводить гидрокортизон.
 
     Hypernatremia
     -------------
         * Устраняется постепенно за 48 часов
-        * Скорость снижния Na <0.5 ммоль/л/ч или 12-15 ммоль/24h
+        * Скорость снижения Na_serum <0.5 ммоль/л/ч или 12-15 ммоль/24h
 
 
     Другие источники
@@ -231,24 +229,13 @@ def kurek_electrolytes_Na(weight, Na_serum):
             * coefficient 0.2
             * Скорость снижения не быстрее 20 ммоль/л в сутки
             * Spironolactone 25 mg, Furosemide 10-20 mg
-    
+
         Нейрореаниматология: практическое руководство 2017 - Гипонатриемия
             Формула отличается от Курека только другим коэффицинтом и Na_target.
             Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
             Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
 
-            Осмоляльность (мОсм/кг) = 2×(Na+ + K+) + Глю/18 + Моч/2,8 {Норма 280-285 мОсм/кг воды}
-
                                 ***
-
-    Looks like popular generic formula below correlate better with daily
-    electrolyte requirement, bot not with the specific to patient deficiency.
-    So it useless.
-
-        (electrolyte_target - electrolyte_serum) * weight * coefficient
-
-    Obviously it's not possible to use same formula with the same coefficient
-    for both intracellular and extracellular ions depletion calculation.
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
         return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
@@ -270,9 +257,10 @@ def kurek_electrolytes_Na(weight, Na_serum):
     total_body_water = weight * coef
     info = ''
     if Na_serum > Na_high:
-        volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml Just a proportion
         info += "Na⁺ is high (>{} mmol/L), expect coma, use D50 & furesemide. ".format(Na_high)
-        info += "Volume deficiency is {:.0f} ml. Check osmolarity in ABG.".format(volume_deficiency)
+        volume_deficiency = (1 - 140 / Na_serum) * total_body_water * 1000  # ml just a proportion
+        info += "\n{}\n".format(total_body_water * (1 - 1))
+        info += "Free water deficit is {:.0f} ml. Check osmolarity in ABG.".format(volume_deficiency)
         # Every 3 mmol above 145 mmol/L corresponds of 1 L volume deficiency [Рябов 1994, с 37, 43]
         # volume_deficiency2 = (Na_serum - 145) / 3 * 1000
         # info += " ('3 mmol' {:.0f} ml)\n".format(volume_deficiency2)
@@ -288,7 +276,7 @@ def kurek_electrolytes_Na(weight, Na_serum):
     return info
 
 
-def electrolytes_Cl(weight, Cl_serum):
+def electrolyte_Cl(weight, Cl_serum):
     """Assess blood serum chloride level.
 
     :param float weight: Real body weight, kg

@@ -108,7 +108,7 @@ class HumanBodyModel(object):
 
     def describe_body(self):
         if not self.is_init():
-            return "Empty human model (set sex, weight, height)"
+            return "Empty human model (set sex, height, weight)"
         info = ""
         if self.sex == 'child':
             try:

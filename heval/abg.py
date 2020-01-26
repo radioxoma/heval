@@ -208,9 +208,9 @@ class HumanBloodModel(object):
                   * When pH increases, K⁺ level decreases
                 """)
         info += "\n-- Electrolyte abnormalities --------------------\n"
-        info += "{}\n\n".format(electrolytes.kurek_electrolytes_K(self.parent.weight, self.cK))
-        info += "{}\n\n".format(electrolytes.kurek_electrolytes_Na(self.parent.weight, self.cNa))
-        info += "{}\n\n".format(electrolytes.electrolytes_Cl(self.parent.weight, self.cCl))
+        info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
+        info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
+        info += "{}\n\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
         return info
 
 

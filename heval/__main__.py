@@ -587,23 +587,28 @@ class CalcGFR(Frame):
 
     def eval(self, event=None):
         sex = self.human_model.sex
+        cCrea = float(self.ctl_sbx_ccrea.get())
+        cCrea_mgdl = cCrea / 88.4
         if sex in ('male', 'female'):
-            cCrea = float(self.ctl_sbx_ccrea.get())
             age = self.human_model.age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = (self.var_isblack.get() == 1)
             mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
             epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)
             info = """\
-            Year of birth: {:.0f}
             cCrea\t{:.2f} mg/dl
+            Year of birth: {:.0f}
             MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
             CKD-EPI\t{:3.0f} mL/min/1.73 m2
-
             {}
-            """.format(dob, cCrea / 88.4, mdrd, epi, abg.gfr_describe(epi))
-        else:
-            info = "Don't know how to calculate eGFR in children"
+            """.format(cCrea_mgdl, dob, mdrd, epi, abg.gfr_describe(epi))
+        elif sex == 'child':
+            schwartz = abg.egfr_schwartz(cCrea, self.human_model.height)
+            info = """\
+            cCrea\t{:.2f} mg/dl
+            {:.0f} mL/min/1.73 m2 [Schwartz revised 2009]
+            {}
+            """.format(cCrea_mgdl, schwartz, abg.gfr_describe(schwartz))
         self.TxtView.set_text(textwrap.dedent(info))
 
 

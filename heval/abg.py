@@ -783,6 +783,40 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     return egfr
 
 
+def egfr_schwartz(cCrea, height):
+    """Estimated glomerular filtration rate (revised Schwartz formula for children).
+
+    * Not for adults.
+    * Revised Schwartz formula with fixed 'k = 0.413' for 1-16 years and
+        IDMS-calibrated creatinine.
+    * Most accurate in range 15-75 ml/min per 1.73 m2.
+
+    Example
+    -------
+    >>> egfr_schwartz(40, 1.15)
+    104.96395
+
+    References
+    ----------
+    [1] New Equations to Estimate GFR in Children with CKD. J Am Soc Nephrol. 2009 Mar; 20(3): 629–637.
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2653687/
+
+    [2] Creatinine Clearance: Revised Schwartz Estimate
+        http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
+
+    :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+    :return:
+        eGFR, mL/min/1.73 m2.
+    :rtype: float
+    """
+    cCrea /= m_Crea  # to mg/dl
+    # k = 0.33  # First year of life, pre-term infants
+    # k = 0.45  # First year of life, full-term infants
+    # k = 0.55  # 1-12 years
+    k = 0.413   # 1 to 16 years. Updated in 2009
+    return k * height * 100 / cCrea
+
+
 def gfr_describe(gfr):
     """Describe GFR value meaning and stage of Chronic Kidney Disease.
     """

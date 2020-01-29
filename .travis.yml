@@ -12,8 +12,10 @@ jobs:
     - choco install python-x86_32 --version=3.4.3.20150501
     # pip 19.2 drops support for python 3.4 (despite 19.3.1 been working fine)
     - pip install --user --upgrade pip==19.1.1
-    - pip install pipenv
-    - pip install pyinstaller
+    - pip install --user pipenv
+#    - pip install pyinstaller
+    - pipenv --three
+    - pipenv run pip install pyinstaller
   - os: osx
     language: shell
     install:

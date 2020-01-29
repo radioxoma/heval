@@ -28,6 +28,7 @@ jobs:
 
 # These scripts should be able to build project on Travis and locally
 script:
+  - python -m unittest
   - echo "Running script on $TRAVIS_OS_NAME platform"
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
         echo "Windows script start";

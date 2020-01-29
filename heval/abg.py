@@ -241,9 +241,8 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
 
     To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
 
-    >>> abg.calculate_anion_gap(
-        Na=173, Cl=77, HCO3act=abg.calculate_hco3p(pH=6.656, pCO2=27.9))
-    93.0681487508615
+    >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
+    93.07578958435911
 
 
     References
@@ -660,8 +659,7 @@ def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
     Normal A-a gradient is:
         * Normal   PAO2, kPa  < 2.6 [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
         * Expected PAO2, kPa = (age + 10) / 4 * kPa [https://www.ncbi.nlm.nih.gov/books/NBK545153/]
-            >>> ((40 / 4) + 4) * kPa
-            1.866513152  # kPa
+            ((40 / 4) + 4) * kPa == 1.866513152 
 
     :param float pCO2: CO2 partial pressure, kPa
     :param float pO2: O2 partial pressure, kPa

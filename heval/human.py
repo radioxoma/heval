@@ -585,8 +585,8 @@ def body_surface_area(height, weight):
         m2, square meters
     :rtype: float
 
-    body_surface_area(1.86, 70)
-    >>> 1.932
+    >>> body_surface_area(1.86, 70)
+    1.931656390627583
 
     References
     ----------
@@ -603,7 +603,7 @@ def bmr_harris_benedict(height, weight, sex, age):
     Examples
     --------
 
-    >>> bmr_harris_benedict(168, 59, 'female', 55)
+    >>> bmr_harris_benedict(1.68, 59, 'female', 55)
     1275.4799999999998
 
     References
@@ -639,7 +639,7 @@ def bmr_mifflin(height, weight, sex, age):
     Examples
     --------
 
-    >>> bmr_mifflin(168, 59, 'female', 55)
+    >>> bmr_mifflin(1.68, 59, 'female', 55)
     1204.0
 
     References
@@ -679,8 +679,9 @@ def mean_arterial_pressure(SysP, DiasP):
     :rtype: float
 
     >>> mean_arterial_pressure(120, 87)
-    >>> 98.0  # (120 + 2 * 87) / 3
+    98.0
     """
+    # (120 + 2 * 87) / 3
     # return (SysP - DiasP) / 3 + DiasP  # Just different algebra
     return (SysP + 2 * DiasP) / 3
 

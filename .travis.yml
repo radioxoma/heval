@@ -2,50 +2,53 @@ language: python
 
 jobs:
   include:
-#  - os: linux
-#    name: Ubuntu
-#    dist: bionic
+  - os: linux
   - os: windows
     language: shell
     env: PATH=/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts:$PATH
     install:
-    - choco install python-x86_32 --version=3.4.3.20150501
+    # I need python3.4 for compatibility with Windows XP
     # pip 19.2 drops support for python 3.4 (despite 19.3.1 been working fine)
-    - python -m pip install --upgrade pip==19.1.1
-    - python -m pip install pyinstaller
+    # Key '--user' is mandatory outside virtualenv 'language: python'
+    - choco install python-x86_32 --version=3.4.3.20150501
+    - python -m pip install --user --upgrade pip==19.1.1
+    - python -m pip install --user pyinstaller  # Avoid old binary in PATH
   - os: osx
     language: shell
     install:
-# Mac OS X 10.13.6 uses Python 2.7.17 as default interpreter /usr/local/bin/python
-# Travis has python3 preinstalled
-# Brew installs python3 by default to /usr/local/bin/python3
-#    - brew upgrade python
-    - python --version
-    - brew install tree
-    - pip3 install pipenv
-    - pipenv --three
-    - pipenv run pip install pyinstaller
+    # - brew upgrade python
+    # - brew install tree
+    # Travis has python3 preinstalled with Brew to `/usr/local/bin/python3`
+    # python2 is default python for Mac
+    - unlink /usr/local/bin/python
+    - ln -s /usr/local/bin/python3 /usr/local/bin/python
+    - python -m pip install --user --upgrade pip
+    - python -m pip install --user pyinstaller
+    # - pip3 install pipenv
+    # - pipenv --three
+    # - pipenv run pip install pyinstaller
 
 # These scripts should be able to build project on Travis and locally
 script:
+  - python --version
   - python -m unittest
   - echo "Running script on $TRAVIS_OS_NAME platform"
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
         echo "Windows script start";
         .\\build.bat;
-        echo "End of windows script";
+        echo "Windows script end";
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         echo "OS X script start";
         ./build_osx.sh;
-        echo "End of OS X script";
+        echo "OS X script end";
     elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
         echo "Linux script start";
-        echo "End of linux script";
+        echo "Linux script end";
     fi
 
 deploy:
   provider: releases
-  api_key:
+  token:
     secure: bg9dutWoSyTDJ8nHXwWoOlQlrFzicmxU7yn17rxzSrpfgOeKuXkT4rJS+5HFtSRwNaLwj/Fts/JZ8HQmnopK5MaCLqNkF8AdgY/yPqPtBFF26t3V7dcniDEwoCUMWpMiitleUBZexxJNGcv1V8WFLN3ylWvHDnHEfOZMwGI6RqilLnK6FdDnhZFcP8CzRB9RRgcV/SwcgkOMf7ZnaaD2D2epLQsOgjeZCV8S4NLABFMX5c0yVBcCVW1/W9coCFwmwOCrFxkrLPoYbLMnlHIMzljgW5SQc7r386zRLmSA8CUGdgcBwn0nQzz/yZ5UQjRGr6DRsTg98mDpTSDcW+y7rZaqzrPnsuQwAKciuywBYvp3Q2m+DXrcD7Ve5j2J991GqrcBCh9Mh4bpWLw6aLoTA7PVM64lFZ+epxi1EvdkbOYLV5dqjidoazYwyFFuOynsZlT8QZdbwXG8l0DTEw8apn337+A2RiuryGicl8Z74KOpRuPfpqKwr+q7gTiOx2Ru3ET2OXwu9TI+ToRQOwuGqwCAgs2uT2is/dWcMjtp52qsQx4UvlPD7fPJ6nRBzOEJqtDg5qB0/2CWnoCqpzePbXKT3btgy8rxp4RWLIlcwmXTqY6w96rJFHGbGOp5Johs5p/7T3Q3DRWyAyMzSd24BEqHLFWr+I5KmGeJXYaugNg=
   file_glob: true
   file: "dist/heval*"

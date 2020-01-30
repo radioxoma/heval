@@ -467,10 +467,26 @@ class CalcElectrolytes(Frame):
             command=self.set_input_elec_defaults)
         ctl_btn_elec.grid(row=1, column=2)
 
+        # EXTRA INPUT
+        fr_extra_entry = LabelFrame(fr_entry, text="Extra")
+        fr_extra_entry.pack(side=LEFT, anchor=N)
+
+        ctl_btn_elec = Button(fr_extra_entry, text="Reset",
+            command=self.set_input_extra_defaults)
+        ctl_btn_elec.grid(row=1, column=0)
+
+        Label(fr_extra_entry, text="ctAlb, g/dl").grid(row=2, column=0)
+        self.ctl_sbx_ctAlb = Spinbox(fr_extra_entry, width=3, from_=0, to=10,
+            format='%.1f', increment=0.1, command=self.set_model_ctAlb)
+        CreateToolTip(self.ctl_sbx_ctAlb, "Low albumin causes low AG in starved humans. Enter if anion gap is surprisingly low, for more precise AG calculations")
+        self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
+        self.ctl_sbx_ctAlb.grid(row=2, column=1)
+
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
+        self.set_input_extra_defaults()
         self.TxtView.set_text(textwrap.dedent("""\
             Make sure you set sex, body weight.
 
@@ -499,6 +515,11 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_Cl.insert(0, 105)
         self.set_model_Cl()
 
+    def set_input_extra_defaults(self, event=None):
+        self.ctl_sbx_ctAlb.delete(0, END)
+        self.ctl_sbx_ctAlb.insert(0, 4.4)
+        self.set_model_ctAlb()
+
     def set_model_pH(self, event=None):
         self.human_model.blood.pH = float(self.ctl_sbx_pH.get())
         self.event_generate("<<HumanModelChanged>>")
@@ -517,6 +538,10 @@ class CalcElectrolytes(Frame):
 
     def set_model_Cl(self, event=None):
         self.human_model.blood.cCl = float(self.ctl_sbx_Cl.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_ctAlb(self, event=None):
+        self.human_model.blood.ctAlb = float(self.ctl_sbx_ctAlb.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):

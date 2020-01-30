@@ -162,7 +162,7 @@ class HumanBloodModel(object):
                 # Can catch COPD or concurrent metabolic alcalosis here
                 info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input.\n".format(desc)
+                info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input and enter ctAlb if known.\n".format(desc)
             else:
                 info += "Normal AG {}\n".format(desc)
         return info

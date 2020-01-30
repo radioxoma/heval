@@ -25,6 +25,7 @@ Main features:
 
 * Enter pH and pCO2 for overall acid-base status assessment
 * Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
+* Algorithm able to detect vomiting, hypoalbuminemia
 * Sex and weight used only for dosage calculations, not for ABG diagnostics itself
 
 Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).

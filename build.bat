@@ -61,7 +61,7 @@ Set timestamp=_
 
 set BASENAME=heval_%timestamp%
 
-pyinstaller --onefile --noconsole heval\__main__.py --name %BASENAME%
+python -m PyInstaller --onefile --noconsole heval\__main__.py --name %BASENAME%
 Set OSX_FILE="dist/$BASENAME.exe"
 
 del /q *.spec

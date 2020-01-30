@@ -2,7 +2,7 @@ echo Mac OS X build script invoked
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 BASENAME="heval_$TIMESTAMP"
 echo "target dmg name $BASENAME.dmg"
-pyinstaller --noconsole heval/__main__.py --name Heval
+python -m PyInstaller --noconsole heval/__main__.py --name Heval
 sleep 1
 hdiutil create "dist/$BASENAME.dmg" -srcfolder "dist/Heval.app" -ov
 echo Remove heval directory

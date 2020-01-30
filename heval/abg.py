@@ -55,7 +55,7 @@ class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
     def __init__(self, parent=None):
         self.parent = parent
-        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu')
+        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb')
         self._txt_prop = ()
 
         self.pH = None
@@ -65,7 +65,7 @@ class HumanBloodModel(object):
         self.cNa = None         # mmol/L
         self.cCl = None         # mmol/L
 
-        self.albuminum = None  # g/dL
+        self.ctAlb = None  # g/dL albumin
         self.cGlu = None    # mmol/L
         # self.bun = None
 
@@ -108,7 +108,7 @@ class HumanBloodModel(object):
         if self.cK is not None:
             return calculate_anion_gap(
                 Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
-                K=self.cK, albuminum=self.albuminum)
+                K=self.cK, albumin=self.ctAlb)
         else:
             raise ValueError("No potassium specified")
 
@@ -117,7 +117,7 @@ class HumanBloodModel(object):
         """Default anion gap calculation method without potassium."""
         return calculate_anion_gap(
             Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
-            albuminum=self.albuminum)
+            albumin=self.ctAlb)
 
     @property
     def osmolarity(self):
@@ -162,7 +162,7 @@ class HumanBloodModel(object):
                 # Can catch COPD or concurrent metabolic alcalosis here
                 info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low AG {} without main metabolic acidosis. Check your input.\n".format(desc)
+                info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input.\n".format(desc)
             else:
                 info += "Normal AG {}\n".format(desc)
         return info
@@ -214,14 +214,14 @@ class HumanBloodModel(object):
         return info
 
 
-def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
+def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
     May be known as SID [1], AG. Don't get confused with 'osmol gap'.
         * Normal value without potassium 7-16 mEq/L
         * Normal value with potassium 10-20 mEq/L
 
-    Corresponds to phosphates, sulphates, proteins (albuminum).
+    Corresponds to phosphates, sulphates, proteins (albumin).
     Helpful in distinguishing causes of metabolic acidosis like KULT:
         K — Ketoacidosis (DKA, Alcoholic ketoacidosis, AKA)
         U — Uremia
@@ -231,16 +231,21 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     High gap: acute kidney injury, lactate, ketoacidosis, salicylate ->
         secondary loss of HCO3− which is a buffer, without a concurrent
         increase in Cl− for electroneutrality equilibrium support.
-    Low gap: increase in Cl−, low albuminum.
+    Low gap: increase in Cl−, low albumin.
 
     See also Delta ration - an derived calculation for more complex conditions.
 
 
     Examples
     --------
+    >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
+    14
+
+    With albumin:
+    >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=calculate_hco3p(pH=7.499, pCO2=4.77294), K=0, albumin=3.39)
+    3.9175115055719747
 
     To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
-
     >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
     93.07578958435911
 
@@ -260,16 +265,16 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0.0, albuminum=None):
     :param float K: Serum potassium, mmol/L.
         If not given returns AG, otherwise AG(K). Serum potassium value
         usually low and frequently omitted. Usually not used.
-    :param float albuminum: Protein correction, g/dL. If not given,
+    :param float albumin: Protein correction, g/dL. If not given,
         hypoalbuminemia leads to lower anion gap.
     :return:
         Anion gap or Anion gap (K+), mEq/L.
     :rtype: float
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
-    if albuminum is not None:
-        # Protein correction. Normal albuminum 2.5 g/dL see [1] p. 61.
-        anion_gap += 2.5 * (4.4 - albuminum)
+    if albumin is not None:
+        # Protein correction. Normal albumin 2.5 g/dL see [1] p. 61
+        anion_gap += 2.5 * (4.4 - albumin)
     return anion_gap
 
 

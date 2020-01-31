@@ -26,10 +26,10 @@ Main approach:
 3. *Always* calculate and check anion gap, even if no primary metabolic acidosis
     * You must use AG without potassium, as Anion Gap (K+) is incompatible
         with Delta gap. Also K is tricky to measure.
+    * Use albumin correction if AG is low
     * If AG is high, calculate Delta gap
 """
 
-import copy
 import textwrap
 try:
     from uncertainties import umath as math
@@ -130,13 +130,13 @@ class HumanBloodModel(object):
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
         SBE     {:2.1f} mEq/L
-        Result: {}\n""".format(
+        Result: {}\n\n""".format(
             self.pCO2,
             self.hco3p,
             self.sbe,
             abg_approach_stable(self.pH, self.pCO2)[0]))
 
-        info += "-- Manual pH check ------------------------------\n"
+        info += "-- Deep manual pH check -------------------------\n"
         # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "{}".format(abg_approach_research(self.pH, self.pCO2))
         return info
@@ -154,7 +154,7 @@ class HumanBloodModel(object):
             elif self.anion_gap < norm_gap[0]:
                 info += "Low AG {} - hypoalbuminemia or low Na?\n".format(desc)
             else:
-                # Гипокортицизм [Henessy 2018, с 113 (Clinical case 23)]
+                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
                 info += "NAGMA {}. Diarrhea or renal tubular acidosis?\n".format(desc)
         else:
             if norm_gap[1] < self.anion_gap:
@@ -250,14 +250,23 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     93.07578958435911
 
 
+    Anion gap is surprisingly low in starved patients because of low albumin.
+    Multiplier 2.5 mEq/L is widely accepted, though blood pH
+         has influence on albumin charge and respectively AG
+        pH 7.0 2.3 mEq/L
+        pH 7.4 2.8 mEq/L
+        pH 7.6 3.0 mEq/L
+
+    Normal (target) albumin value varies 4-4.5 g/dl among papers and books.
+
+
     References
     ----------
 
-    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 59
+    [1] https://en.wikipedia.org/wiki/Anion_gap
     [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
         Acid base balance in critical care medicine
-    [3] https://en.wikipedia.org/wiki/Anion_gap
-    [4] Курек 2013, с 47
+    [3] Курек 2013, с 47
 
     :param float Na: Serum sodium, mmol/L.
     :param float Cl: Serum chloride, mmol/L.
@@ -273,7 +282,6 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
     if albumin is not None:
-        # Protein correction. Normal albumin 2.5 g/dL see [1] p. 61
         anion_gap += 2.5 * (4.4 - albumin)
     return anion_gap
 
@@ -326,7 +334,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # Consider combined high AG & normal AG acidosis BUT note that the
         # ratio is often < 1 in acidosis associated with renal failure
         # Renal tubular acidosis https://web.archive.org/web/20170802021754/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_5.html
-        return info + "(0.4 ≤ gg ≤ 0.8): combined HAGMA + NAGMA (gg ratio <1 is often associated with renal failure - check urine electrolytes and kidney function)"
+        return info + "(0.4 ≤ gg ≤ 0.8): combined HAGMA + NAGMA (gg ratio <1 often associated with renal failure - check urine electrolytes and kidney function)"
     elif 0.8 < gg < 1:
         return info + "(0.8 < gg < 1): most likely caused by diabetic ketoacidosis due to urine ketone bodies loss (when patient not dehydrated yet)"
     elif 1 <= gg <= 2:
@@ -343,7 +351,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         #   * a concurrent metabolic alcalosis
         #   * a pre-existing compensated respiratory acidosis
         # tiazide diuretics?
-        return info + "(2 < gg): concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO3-"
+        return info + "(2 < gg): concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO₃⁻"
 
 
 def calculate_osmolarity(Na, glucosae):
@@ -982,7 +990,7 @@ def abg_approach_stable(pH, pCO2):
             # Can this pH lead to given pCO2?
             if pH < norm_pH[0]:
                 # Always check anion gap here
-                return ("Metabolic acidosis, partial comp. by CO₂ alcalosis [check AG]",
+                return ("Metabolic acidosis, partial comp. by CO₂ alcalosis (check AG)",
                     "metabolic_acidosis")
             elif pH > norm_pH[1]:
                 return ("Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2)),
@@ -993,7 +1001,7 @@ def abg_approach_stable(pH, pCO2):
                     "respiratory_acidosis")
             elif pH > norm_pH[1]:
                 # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
-                return ("Metabolic alcalosis, partial comp. by CO₂ acidosis [check Na, Cl, albumin]",
+                return ("Metabolic alcalosis, partial comp. by CO₂ acidosis (check Na, Cl, albumin)",
                     "metabolic_alcalosis")
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)

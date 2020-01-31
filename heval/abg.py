@@ -48,7 +48,7 @@ norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
 norm_HCO3 = (22, 26)  # mmHg
 norm_pO2 = (80, 100)  # mmHg
-norm_gap = (7, 16)  # mEq/L
+norm_gap = (7, 16)  # mEq/L without potassium
 
 
 class HumanBloodModel(object):
@@ -67,7 +67,7 @@ class HumanBloodModel(object):
 
         self.ctAlb = None  # g/dL albumin
         self.cGlu = None    # mmol/L
-        # self.bun = None
+        # self.ctBun = None
 
     def populate(self, properties):
         """Populate model from data structure.
@@ -289,30 +289,36 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
 def calculate_anion_gap_delta(AG, HCO3act):
     """Delta gap, delta ratio, gap-gap to assess elevated anion gap metabolic acidosis.
 
-    If gag-gap ~ 1, then AG and BE shifts are equal - acidosis caused by non-measured anion.
+    Formula "gg = (AG - 12) / (24 - HCO3act)" reveals combinations of
+    concurrent metabolic processes:
 
-    Increase in the AG should be equal to the decrease in bicarbonate:
+    < 1 HAGMA + NAGMA
+        Sometimes it can be causes chronic respiratory alkalosis (with
+        compensating non-anion gap acidosis), or a low anion gap state
 
-    AG = [Na+] - [Cl-] - [HCO3-]  # Increase by low [Cl-] or low [HCO3-]
-    HA + [HCO3-] = [A-] + H2O + CO2↑
+    ~ 1 HAGMA pure
+        AG and BE shifts are equal - acidosis caused by non-measured anion.
+        Increase in the AG should be equal to the decrease in bicarbonate:
 
+        AG = [Na+] - [Cl-] - [HCO3-]  # Increase by low [Cl-] or low [HCO3-]
+        HA + [HCO3-] = [A-] + H2O + CO2↑
 
-    If a wide-anion-gap metabolic acidosis is the only disturbance, then the
-    change in value of the anion gap should equal the change in bicarbonate (ie) ↑ AG = ↓ HCO3-
-    The delta gap = increase AG - decrease HCO3-
-    For purposes of calculation take normal AG as 12 and normal HCO3- as 24
-    Shortcut calculation: Δ AG - Δ HCO3- = (AG -12) - (24 - HCO3-) = Na+ - Cl- - 36
-    If the delta gap is < -6 there is also a non-anion gap metabolic acidosis.
-    Other causes of a delta gap < -6 are a respiratory alkalosis (with compensating non-anion gap acidosis), or a low anion gap state
-    If the delta gap > +6 there is a concurrent metabolic alkalosis.
-    Other causes of a delta gap > +6 are respiratory acidosis (with compensating metabolic alkalosis), or a non-acidotic high anion gap state
+        If a wide-anion-gap metabolic acidosis is the only disturbance, then the
+        change in value of the anion gap should equal the change in bicarbonate (ie) ↑ AG = ↓ HCO3-
+        The delta gap = increase AG - decrease HCO3-
+        For purposes of calculation take normal AG as 12 and normal HCO3- as 24
+        Shortcut calculation: Δ AG - Δ HCO3- = (AG -12) - (24 - HCO3-) = Na+ - Cl- - 36
+
+    > 1 HAGMA + concurrent metabolic alcalosis
+        Other causes are chronic respiratory acidosis (with compensating
+        metabolic alkalosis), or a non-acidotic high anion gap state
 
 
     References
     ----------
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 63
     [2] https://en.wikipedia.org/wiki/Delta_Ratio
-    [3] [http://webcache.googleusercontent.com/search?q=cache:LVnXtJaMahkJ:www.emed.ie/Toxicology/ABG_Blood_Gases.php]
+    [3] http://webcache.googleusercontent.com/search?q=cache:LVnXtJaMahkJ:www.emed.ie/Toxicology/ABG_Blood_Gases.php
 
     :param float AG: Anion gap without potassium, mEq/L.
     :param float HCO3act: Actual bicarbonate, mmol/L.
@@ -320,7 +326,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         Opinion.
     :rtype: str
     """
-    # 12 normal anion gap
+    # 12 - normal anion gap without potassium
     # 24 - normal HCO3-, mmol/L
     gg = (AG - 12) / (24 - HCO3act)
     info = ""
@@ -338,7 +344,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
     elif 0.8 < gg < 1:
         return info + "(0.8 < gg < 1): most likely caused by diabetic ketoacidosis due to urine ketone bodies loss (when patient not dehydrated yet)"
     elif 1 <= gg <= 2:
-        # Usual for uncomplicated high-AG acidosis - ("pure metabolic acidosis"?)
+        # Usual for uncomplicated high-AG acidosis - "pure metabolic acidosis"?
         # * lactic acidosis: average value 1.6
         # * DKA more likely to have a ratio closer to 1 due to urine ketone loss (especially if patient not dehydrated).
         # Absence of ketones in the urine can be seen in early DKA due to the

@@ -50,6 +50,12 @@ norm_HCO3 = (22, 26)  # mmHg
 norm_pO2 = (80, 100)  # mmHg
 norm_gap = (7, 16)  # mEq/L without potassium
 
+# mOsm without BUN needed. Is it is?
+norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
+
+fasting_cGlu = 5.5  # mmol/L Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
+mean_ctAlb = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
+
 
 class HumanBloodModel(object):
     """Repesents an human blood ABG status."""
@@ -144,7 +150,7 @@ class HumanBloodModel(object):
     def describe_electrolytes(self):
         info = ""
         info += "-- Anion gap assessment -------------------------\n"
-        desc = "{:.1f} mEq/L [normal {:.0f}-{:.0f}]".format(self.anion_gap, *norm_gap)
+        desc = "{:.1f} mEq/L (normal {:.0f}-{:.0f})".format(self.anion_gap, *norm_gap)
 
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
             if norm_gap[1] < self.anion_gap:
@@ -208,6 +214,7 @@ class HumanBloodModel(object):
                   * When pH increases, K⁺ level decreases
                 """)
         info += "\n-- Electrolyte abnormalities --------------------\n"
+        info += "{}\n".format(describe_osmolarity(self.osmolarity))
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
         info += "{}\n\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
@@ -382,6 +389,26 @@ def calculate_osmolarity(Na, glucosae):
     # Sometimes `2 * (Na + K) + Glucose + Urea` all in mmol/L
     # Also etanol can cause https://en.wikipedia.org/wiki/Osmol_gap
     return 2 * Na + glucosae
+
+
+def describe_osmolarity(osmolarity):
+    """Verbally describe osmolarity impact on human.
+    """
+    info = "Osmolarity {:.1f} mOsm/L is ".format(osmolarity)
+    if osmolarity > norm_mOsm[1]:
+        info += "high"
+    elif osmolarity < norm_mOsm[0]:
+        info += "low"
+    else:
+        info += "ok"
+    info += " ({:.0f}-{:.0f})".format(norm_mOsm[0], norm_mOsm[1])
+    # if osmolarity >=282: # mOsm/kg
+    #     info += " vasopressin released"
+    if osmolarity > 290: # mOsm/kg
+        # plasma thirst point reached
+        info += ", human is thirsty (>290 mOsm/kg)"
+    info += "."
+    return info
 
 
 def simple_hco3(pH, pCO2):

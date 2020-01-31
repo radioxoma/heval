@@ -106,6 +106,7 @@ class MainWindow(Frame):
         menubar.add_cascade(label="File", menu=menu_file)
         menu_about = Menu(menubar, tearoff=0)
         menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
+        menu_about.add_command(label="Website and updates", command=visit_website)
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
@@ -294,17 +295,13 @@ class AboutWindow(Toplevel):
         self.lbl.pack(expand=True, fill=BOTH)
 
         self.ctl_frame = Frame(self, padding=8)
-        self.ctl_btn_website = Button(self.ctl_frame, text="Visit website", command=self.visit_website)
+        self.ctl_btn_website = Button(self.ctl_frame, text="Visit website", command=visit_website)
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=RIGHT)
         self.ctl_btn_website.pack(side=RIGHT)
         self.ctl_frame.pack(fill=BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
-
-    def visit_website(self, event=None):
-        import webbrowser
-        webbrowser.open_new_tab("https://github.com/radioxoma/heval")
 
 
 class TextView(Frame):
@@ -422,10 +419,10 @@ class CalcElectrolytes(Frame):
 
         # ABG INPUT
         fr_abg_entry = LabelFrame(fr_entry, text="ABG basic")
-        CreateToolTip(fr_abg_entry, "Compare respiratory and metabolic impact on blood pH")
         fr_abg_entry.pack(side=LEFT, anchor=N)
 
         ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
+        CreateToolTip(ctl_btn_abg, "Compare respiratory and metabolic impact on blood pH")
         ctl_btn_abg.grid(row=1, column=0)
 
         Label(fr_abg_entry, text="pH").grid(row=2, column=0)
@@ -443,11 +440,11 @@ class CalcElectrolytes(Frame):
 
         # ELECTROLYTE INPUT
         fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
-        CreateToolTip(fr_elec_entry, "Find electrolyte imbalance and unmeasurable anion disturbances")
         fr_elec_entry.pack(side=LEFT, anchor=N)
 
         ctl_btn_elec = Button(fr_elec_entry, text="Reset",
             command=self.set_input_elec_defaults)
+        CreateToolTip(ctl_btn_elec, "Find electrolyte imbalance and unmeasurable anion disturbances")
         ctl_btn_elec.grid(row=1, column=0)
 
         Label(fr_elec_entry, text='K⁺, mmol/L').grid(row=2, column=0)
@@ -459,6 +456,7 @@ class CalcElectrolytes(Frame):
         Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=3, column=0)
         self.ctl_sbx_Na = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f', increment=1, command=self.set_model_Na)
+        CreateToolTip(self.ctl_sbx_Na, "Na⁺ and cGlu are used for serum osmolarity calculations")
         self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
         self.ctl_sbx_Na.grid(row=3, column=1)
 
@@ -470,19 +468,27 @@ class CalcElectrolytes(Frame):
 
 
         # EXTRA INPUT
-        fr_extra_entry = LabelFrame(fr_entry, text="Extra")
+        fr_extra_entry = LabelFrame(fr_entry, text="Optional data")
         fr_extra_entry.pack(side=LEFT, anchor=N)
 
         ctl_btn_elec = Button(fr_extra_entry, text="Reset",
             command=self.set_input_extra_defaults)
+        CreateToolTip(ctl_btn_elec, "Tweak electrolyte calculations like a pro")
         ctl_btn_elec.grid(row=1, column=0)
 
         Label(fr_extra_entry, text="ctAlb, g/dl").grid(row=2, column=0)
         self.ctl_sbx_ctAlb = Spinbox(fr_extra_entry, width=3, from_=0, to=10,
             format='%.1f', increment=0.1, command=self.set_model_ctAlb)
-        CreateToolTip(self.ctl_sbx_ctAlb, "Low albumin causes low AG in starved humans. Enter if anion gap is surprisingly low, for more precise AG calculations")
+        CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
         self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
         self.ctl_sbx_ctAlb.grid(row=2, column=1)
+
+        Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=3, column=0)
+        self.ctl_sbx_cGlu = Spinbox(fr_extra_entry, width=3, from_=0, to=40,
+            format='%.1f', increment=0.1, command=self.set_model_cGlu)
+        CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood has other osmotically active molecules, such as BUN due to kidney damage or ethanol, you shall add it manually or use lab osmometer.")
+        self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
+        self.ctl_sbx_cGlu.grid(row=3, column=1)
 
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
@@ -519,8 +525,11 @@ class CalcElectrolytes(Frame):
 
     def set_input_extra_defaults(self, event=None):
         self.ctl_sbx_ctAlb.delete(0, END)
-        self.ctl_sbx_ctAlb.insert(0, 4.4)
+        self.ctl_sbx_ctAlb.insert(0, abg.mean_ctAlb)
         self.set_model_ctAlb()
+        self.ctl_sbx_cGlu.delete(0, END)
+        self.ctl_sbx_cGlu.insert(0, abg.fasting_cGlu)
+        self.set_model_cGlu()
 
     def set_model_pH(self, event=None):
         self.human_model.blood.pH = float(self.ctl_sbx_pH.get())
@@ -544,6 +553,10 @@ class CalcElectrolytes(Frame):
 
     def set_model_ctAlb(self, event=None):
         self.human_model.blood.ctAlb = float(self.ctl_sbx_ctAlb.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_cGlu(self, event=None):
+        self.human_model.blood.cGlu = float(self.ctl_sbx_cGlu.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
@@ -688,6 +701,11 @@ class CreateToolTip(object):
         tw, self.tw = self.tw, None
         if tw:
             tw.destroy()
+
+
+def visit_website(event=None):
+    import webbrowser
+    webbrowser.open_new_tab("https://github.com/radioxoma/heval")
 
 
 def main():

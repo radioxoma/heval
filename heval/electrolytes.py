@@ -138,7 +138,7 @@ def electrolyte_K(weight, K_serum):
         * гипервентиляция
     """
     if norm_K[0] <= K_serum <= norm_K[1]:
-        return "K⁺ is ok [{:.1f}-{:.1f} mmol/L]".format(norm_K[0], norm_K[1])
+        return "K⁺ is ok ({:.1f}-{:.1f} mmol/L)".format(norm_K[0], norm_K[1])
 
     K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
@@ -238,7 +238,7 @@ def electrolyte_Na(weight, Na_serum):
                                 ***
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
-        return "Na⁺ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Na[0], norm_Na[1])
+        return "Na⁺ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Na[0], norm_Na[1])
 
     Na_high = norm_Na[1]
     Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
@@ -265,7 +265,7 @@ def electrolyte_Na(weight, Na_serum):
         info += "Na⁺ is low (<{} mmol/L), expect cerebral edema leading to seizures, coma and death. Na⁺ deficiency is {:.0f} mmol:\n".format(Na_low, Na_deficiency)
         info += "{}".format(solution_normal_saline(Na_deficiency))
     else:
-        info += "Na⁺ in range [{:.0f}-{:.0f} mmol/L]".format(Na_low, Na_high)
+        info += "Na⁺ in range ({:.0f}-{:.0f} mmol/L)".format(Na_low, Na_high)
     return info
 
 
@@ -282,4 +282,4 @@ def electrolyte_Cl(weight, Cl_serum):
         # KCL replacement?
         return "Cl⁻ is low (<{} mmol/L). Vomit?".format(Cl_low)
     else:
-        return "Cl⁻ is ok [{:.0f}-{:.0f} mmol/L]".format(norm_Cl[0], norm_Cl[1])
+        return "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])

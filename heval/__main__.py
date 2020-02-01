@@ -528,7 +528,7 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
         self.set_model_ctAlb()
         self.ctl_sbx_cGlu.delete(0, END)
-        self.ctl_sbx_cGlu.insert(0, abg.fasting_cGlu)
+        self.ctl_sbx_cGlu.insert(0, abg.norm_cGlu_fasting)
         self.set_model_cGlu()
 
     def set_model_pH(self, event=None):

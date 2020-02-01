@@ -53,7 +53,7 @@ norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
 # mOsm without BUN needed. Is it is?
 norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
 
-fasting_cGlu = 5.5  # mmol/L Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
+norm_cGlu_fasting = 5.5  # mmol/L Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
 norm_ctAlb_mean = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
 
 

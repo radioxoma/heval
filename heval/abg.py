@@ -158,6 +158,39 @@ class HumanBloodModel(object):
     def osmolarity(self):
         return calculate_osmolarity(self.cNa, self.cGlu)
 
+    def describe_osmolarity(self):
+        """Verbally describe osmolarity impact on human.
+
+        Diabetes mellitus decompensation:
+          1 type - DKA (no insulin enables ketogenesis).
+            dehydration (osmotic diuresis and vomit)
+            cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
+          2 type - HHNS (cells not sensitive to Ins)
+            dehydration (osmotic diuresis)
+            cGlu >30, mOsm >320, no acidosis and ketone bodies)
+
+        mOsm >320 renal injury
+        """
+        info = "Osmolarity {:.0f} mOsm/L ({:.0f}-{:.0f}) is ".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
+        if self.osmolarity > norm_mOsm[1]:
+            info += "high"
+        elif self.osmolarity < norm_mOsm[0]:
+            info += "low"
+        else:
+            info += "ok"
+        # if self.osmolarity >=282: # mOsm/kg
+        #     info += " vasopressin released"
+        if self.osmolarity > 290: # mOsm/kg
+            # plasma thirst point reached
+            info += ", human is thirsty (>290 mOsm/kg)"
+        info += "."
+
+        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
+        if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
+            # IV insulin drip and crystalloids
+            info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
+        return info
+
     def describe_abg_basic(self):
         """Describe pH and pCO2 - an old implementation considered stable.
         """
@@ -247,7 +280,7 @@ class HumanBloodModel(object):
                   * When pH increases, K⁺ level decreases
                 """)
         info += "\n-- Electrolyte abnormalities --------------------\n"
-        info += "{}\n\n".format(describe_osmolarity(self.osmolarity))
+        info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
         info += "{}\n\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
@@ -345,7 +378,8 @@ def calculate_anion_gap_delta(AG, HCO3act):
 
     < 1 HAGMA + NAGMA
         Sometimes it can be causes chronic respiratory alkalosis (with
-        compensating non-anion gap acidosis), or a low anion gap state
+        compensating non-anion gap acidosis), or a low anion gap
+        (hypoalbuminemia) state
 
     ~ 1 HAGMA pure
         AG and BE shifts are equal - acidosis caused by non-measured anion.
@@ -434,26 +468,6 @@ def calculate_osmolarity(Na, glucosae):
     # Sometimes `2 * (Na + K) + Glucose + Urea` all in mmol/L
     # Also etanol can cause https://en.wikipedia.org/wiki/Osmol_gap
     return 2 * Na + glucosae
-
-
-def describe_osmolarity(osmolarity):
-    """Verbally describe osmolarity impact on human.
-    """
-    info = "Osmolarity {:.1f} mOsm/L is ".format(osmolarity)
-    if osmolarity > norm_mOsm[1]:
-        info += "high"
-    elif osmolarity < norm_mOsm[0]:
-        info += "low"
-    else:
-        info += "ok"
-    info += " ({:.0f}-{:.0f})".format(norm_mOsm[0], norm_mOsm[1])
-    # if osmolarity >=282: # mOsm/kg
-    #     info += " vasopressin released"
-    if osmolarity > 290: # mOsm/kg
-        # plasma thirst point reached
-        info += ", human is thirsty (>290 mOsm/kg)"
-    info += "."
-    return info
 
 
 def simple_hco3(pH, pCO2):

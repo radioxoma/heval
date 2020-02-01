@@ -484,7 +484,7 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_ctAlb.grid(row=2, column=1)
 
         Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=3, column=0)
-        self.ctl_sbx_cGlu = Spinbox(fr_extra_entry, width=3, from_=0, to=40,
+        self.ctl_sbx_cGlu = Spinbox(fr_extra_entry, width=3, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_cGlu)
         CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood has other osmotically active molecules, such as BUN due to kidney damage or ethanol, you shall add it manually or use lab osmometer.")
         self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)

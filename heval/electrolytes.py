@@ -105,7 +105,7 @@ def electrolyte_K(weight, K_serum):
 
     * Содержание K до 5 лет значительно выше [Курек 2013 с 38]
     * Если K+ <3 mmol/L, то введение глюкозы с инсулином может усугубить гипокалиемию, поэтому K+ вводить вместе с NaCl. [Курек ИТ 557]
-    * Metabolic acidosis raises plasma K+ level by displacing it from cells [Рябов 1994, с 70]
+    * Metabolic acidosis raises plasma K+ level by displacing it from cells. E.g. in DKA [Рябов 1994, с 70]
 
     [130]:
         * Top 24h dose 4 mmol/kg/24h
@@ -220,6 +220,7 @@ def electrolyte_Na(weight, Na_serum):
     -------------
         * Устраняется постепенно за 48 часов
         * Скорость снижения Na_serum <0.5 ммоль/л/ч или 12-15 ммоль/24h
+        * If Na>150 mmol/L use D50 or NaCl 0.45 %
 
 
     Другие источники

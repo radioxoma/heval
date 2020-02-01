@@ -370,6 +370,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 63
     [2] https://en.wikipedia.org/wiki/Delta_Ratio
     [3] http://webcache.googleusercontent.com/search?q=cache:LVnXtJaMahkJ:www.emed.ie/Toxicology/ABG_Blood_Gases.php
+    [4] https://www.merckmanuals.com/medical-calculators/AnionGapDeltaGradient.htm
 
     :param float AG: Anion gap without potassium, mEq/L.
     :param float HCO3act: Actual bicarbonate, mmol/L.

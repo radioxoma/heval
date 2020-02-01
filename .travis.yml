@@ -57,7 +57,7 @@ deploy:
   draft: true
 #  prerelease: true
   overwrite: true
-  name: "Automatical dev build by Travis CI"
+#  name: "Automatical dev build by Travis CI"
 #  body: "Body text"
   on:
     repo: radioxoma/heval

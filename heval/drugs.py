@@ -7,11 +7,86 @@ Drug dosage calculator for humans.
 Author: Eugene Dvoretsky
 """
 
+press_nor = {
+    'name': "Nor-16",
+    'weight': 16,         # mg
+    'volume': 50,         # ml
+    'speed_start': 0.1,   # mcg/kg/min
+    'speed_max': 3,       # mcg/kg/min
+}
+
+press_epi = {
+    'name': "Epi-10",
+    'weight': 10,         # mg
+    'volume': 50,         # ml
+    'speed_start': 0.15,  # mcg/kg/min
+    'speed_max': 3,
+}
+
+press_dopamine = {
+    'name': "Dop200",
+    'weight': 200,        # mg
+    'volume': 50,         # ml
+    'speed_start': 1,     # mcg/kg/min
+    'speed_max': 20,      # mcg/kg/min
+}
+
+press_dobutamine = {
+    'name': "Dob250",
+    'weight': 250,        # mg
+    'volume': 50,         # ml
+    'speed_start': 2.5,   # mcg/kg/min
+    'speed_max': 25,      # mcg/kg/min
+}
+
+
+class HumanDrugsModel(object):
+    """Human drugs list."""
+    def __init__(self, parent):
+        super(HumanDrugsModel, self).__init__()
+        self.parent = parent
+        self.drug_list = [
+            Fentanyl(parent),
+            Propofol(parent),
+            Dithylin(parent),
+            Tracrium(parent),
+            Arduan(parent),
+            Esmeron(parent)]
+
+    def describe_anesthesiology(self):
+        return "\n".join(["* " + str(d) for d in self.drug_list])
+
+    def describe_pressors(self):
+        def describe_pressor(pressor, weight):
+            """Generate pressor cheatsheet.
+
+            :param float weight: Human weight, kg.
+            """
+            dilution = pressor['weight'] / pressor['volume']
+            info = "{} ({:.2f} mg/ml) rate {:.2f}-{:>5.2f} mkg/kg/h".format(
+                pressor['name'], dilution,
+                pressor['speed_start'], pressor['speed_max'])
+
+            speed_start_mgh = pressor['speed_start'] / 1000 * weight * 60
+            speed_start_mlh = speed_start_mgh / dilution
+            speed_max_mgh = pressor['speed_max'] / 1000 * weight * 60
+            speed_max_mlh = speed_max_mgh / dilution
+            info += " ({:>4.1f}-{:>5.1f} mg/h, {:.1f}-{:>4.1f} ml/h)".format(
+                speed_start_mgh, speed_max_mgh,
+                speed_start_mlh, speed_max_mlh)
+            return info
+
+        info = ""
+        for p in (press_nor, press_epi, press_dopamine, press_dobutamine):
+            info += "{}\n".format(describe_pressor(p, self.parent.weight))
+        return info
+
+
 class Dithylin(object):
     """According to RUE Belmedpreparaty instruction.
     """
     def __init__(self, parent=None):
-        self._parent = parent
+        self.parent = parent
         self.name = "Dithylin"
         self.concentration = 20  # mg/ml
         # self.volume = 5  # ml
@@ -19,19 +94,19 @@ class Dithylin(object):
 
     def __str__(self):
         # print("%s for intubation %.0f mg (5-10 mins)." % (
-        #    self.name, 1.5 * self._parent.weight))
+        #    self.name, 1.5 * self.parent.weight))
         return (
             "%s IBW intubation 5-10 mins relaxation: %.0f mg adult, %.0f mg child." % (
-                self.name, 1.5 * self._parent.weight_ideal, 1 * self._parent.weight_ideal) +
+                self.name, 1.5 * self.parent.weight_ideal, 1 * self.parent.weight_ideal) +
             " Max maintenance dose %.0f mg every 5 mins (all ages)." % (
-                self._parent.weight_ideal * 1))
+                self.parent.weight_ideal * 1))
 
 
 class Propofol(object):
     """Propofol Fresenius Kabi 1 %.
     """
     def __init__(self, parent=None):
-        self._parent = parent
+        self.parent = parent
         self.name = "Propofol"
         self.concentration = 10  # mg/ml
         self.maintenance_dosage = 10  # mg/kg/h
@@ -42,12 +117,12 @@ class Propofol(object):
     def delay(self, bolus=50):
         """Delay in minutes between boluses. Tupical bolus is 25-50 mg.
         """
-        per_hour = self.maintenance_dosage * self._parent.weight
+        per_hour = self.maintenance_dosage * self.parent.weight
         return 60 / (per_hour / bolus)
 
     def __str__(self):
         return (
-            "%s induction 20-40 mg every 10 secs, up to %.0f mg (2.5 mg/kg for adult & children)." % (self.name, 2.5 * self._parent.weight) +
+            "%s induction 20-40 mg every 10 secs, up to %.0f mg (2.5 mg/kg for adult & children)." % (self.name, 2.5 * self.parent.weight) +
             " Maintenance 50 mg every %.0f min (%.0f mg/kg/h)." % (self.delay(), self.maintenance_dosage))
 
 
@@ -55,7 +130,7 @@ class Fentanyl(object):
     """According to RUE Belmedpreparaty instruction.
     """
     def __init__(self, parent=None):
-        self._parent = parent
+        self.parent = parent
         self.name = "Fentanyl"
         self.concentration = 0.05  # mg/ml
         self.maintenance_dosage = 0.0001 * 60  # mg/kg/h
@@ -63,7 +138,7 @@ class Fentanyl(object):
         # self.volume =  # ml
 
     def __str__(self):
-        ml_h = self.maintenance_dosage * self._parent.weight / self.concentration
+        ml_h = self.maintenance_dosage * self.parent.weight / self.concentration
         delay = 2 / (ml_h / 60)  # Delay for 3 ml bolus
         return (
             "%s 2 ml (0.1 mg) every %.0f mins (%.1f ml/h). Children?" % (self.name, delay, ml_h) +
@@ -77,7 +152,7 @@ class Tracrium(object):
     No cumulation, block recovery not dependent from kidney/liver metabolism.
     """
     def __init__(self, parent=None):
-        self._parent = parent
+        self.parent = parent
         self.name = "Tracrium"
         # self.concentration =   # mg/ml
         # self.maintenance_dosage =   # mg/kg/h
@@ -88,13 +163,13 @@ class Tracrium(object):
     def __str__(self):
         return (
             "%s load %.0f-%.0f mg (%.0f-%.0f mg -30%% for isoflurane) for 15-35 mins of full block + 35 extra mins for recovery." % (
-                self.name, 0.3 * self._parent.weight, 0.6 * self._parent.weight,
-                percent_corr(0.3 * self._parent.weight, -30),
-                percent_corr(0.6 * self._parent.weight, -30)) +
+                self.name, 0.3 * self.parent.weight, 0.6 * self.parent.weight,
+                percent_corr(0.3 * self.parent.weight, -30),
+                percent_corr(0.6 * self.parent.weight, -30)) +
             " %.0f-%.0f mg (%.0f-%.0f mg -30%% for isoflurane) to prolong full block." % (
-                0.1 * self._parent.weight, 0.2 * self._parent.weight,
-                percent_corr(0.1 * self._parent.weight, -30),
-                percent_corr(0.2 * self._parent.weight, -30)) +
+                0.1 * self.parent.weight, 0.2 * self.parent.weight,
+                percent_corr(0.1 * self.parent.weight, -30),
+                percent_corr(0.2 * self.parent.weight, -30)) +
             " Same dosage for all ages.")
 
 
@@ -102,13 +177,13 @@ class Arduan(object):
     """According to GlaxoSmithKline.
     """
     def __init__(self, parent=None):
-        self._parent = parent
+        self.parent = parent
         self.name = "Arduan"
 
     def __str__(self):
         self.load_dose = 0.041  # mg/kg
         # info = 
-        info = "Arduan load dose {:.1f} mg".format(self._parent.weight * self.load_dose)
+        info = "Arduan load dose {:.1f} mg".format(self.parent.weight * self.load_dose)
         return info
 
 
@@ -116,7 +191,7 @@ class Esmeron(object):
     """According to http://www.rceth.by/NDfiles/instr/8675_08_13_i.pdf.
     """
     def __init__(self, parent=None):
-        self._parent = parent
+        self.parent = parent
         self.name = "Esmeron"
         self.concentration = 10  # mg/ml
         # self.maintenance_dosage =   # mg/kg/h
@@ -126,13 +201,13 @@ class Esmeron(object):
     def __str__(self):
         return (
             "%s intubation %.0f mg (30-40 mins before <25%% recovery). NMT maintenance:\n" % (
-                self.name, 0.6 * self._parent.weight) +
+                self.name, 0.6 * self.parent.weight) +
             " * bolus: <1h %.0f mg; >1h %.0f-%.0f mg [2-3 TOF, <25%%]\n" % (
-                self._parent.weight * 0.15,
-                self._parent.weight * 0.075, self._parent.weight * 0.1,) +
+                self.parent.weight * 0.15,
+                self.parent.weight * 0.075, self.parent.weight * 0.1,) +
             " * pump: TIVA %.0f-%.0f mg/h; GA %.0f-%.0f mg/h [1-2 TOF, <10%%]\n" % (
-                self._parent.weight * 0.3, self._parent.weight * 0.6,
-                self._parent.weight * 0.3, self._parent.weight * 0.4) +
+                self.parent.weight * 0.3, self.parent.weight * 0.6,
+                self.parent.weight * 0.3, self.parent.weight * 0.4) +
             "   Same dosage for all ages.")
 
 

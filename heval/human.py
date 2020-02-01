@@ -3,8 +3,8 @@
 
 import math
 import copy
-from heval.drugs import *
 from heval import abg
+from heval import drugs
 
 """
 Calculations based on human height and weight.
@@ -75,15 +75,9 @@ class HumanBodyModel(object):
         self.weight_ideal = None  # Changes only at sex/weight change
 
         self.blood = abg.HumanBloodModel(self)
+        self.drugs = drugs.HumanDrugsModel(self)
         self.body_temp = 36.6
         self.comment = dict()  # For warnings
-        self.drug_list = [
-            Fentanyl(self),
-            Propofol(self),
-            Dithylin(self),
-            Tracrium(self),
-            Arduan(self),
-            Esmeron(self)]
 
     def populate(self, properties):
         """Populate model from data structure.
@@ -530,10 +524,12 @@ class HumanBodyModel(object):
         return out
 
     def describe_drugs(self):
-        if not self.is_init():
-            return "Medication not initialized"
-        else:
-            return "\n".join(["* " + str(d) for d in self.drug_list])
+        info = "--- Drugs --------------------------------------"
+        info += "\nPressors:\n"
+        info += "{}\n".format(self.drugs.describe_pressors())
+        info += "Anesthesiology:\n"
+        info += "{}\n".format(self.drugs.describe_anesthesiology())
+        return info 
 
 
 def body_mass_index(height, weight):

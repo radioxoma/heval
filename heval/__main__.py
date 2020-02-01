@@ -502,14 +502,14 @@ class CalcElectrolytes(Frame):
 
             Same applies for analytical errors in lab: garbage in - grabage out. Some imagined book case studies will fail too.
             """))
-        # This one is good: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
+        # This one is quite good: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, END)
-        self.ctl_sbx_pH.insert(0, '7.40')  # cm
+        self.ctl_sbx_pH.insert(0, abg.norm_pH_mean)
         self.set_model_pH()
         self.ctl_sbx_pCO2.delete(0, END)
-        self.ctl_sbx_pCO2.insert(0, 40.0)  # kg
+        self.ctl_sbx_pCO2.insert(0, abg.norm_pCO2mmHg_mean)  # kg
         self.set_model_pCO2()
 
     def set_input_elec_defaults(self, event=None):

@@ -12,22 +12,30 @@ press_nor = {
     'weight': 16,         # mg
     'volume': 50,         # ml
     'speed_start': 0.1,   # mcg/kg/min
-    'speed_max': 3,       # mcg/kg/min
+    'speed_max': 3,       # mcg/kg/min. Or 0.1 to 1 mcg/kg/min? https://litfl.com/noradrenaline/
 }
 
 press_epi = {
     'name': "Epi-10",
     'weight': 10,         # mg
     'volume': 50,         # ml
-    'speed_start': 0.15,  # mcg/kg/min
+    'speed_start': 0.1,  # mcg/kg/min 0.15?
     'speed_max': 3,
+}
+
+press_phenylephrine = {
+    'name': "Phen50",
+    'weight': 50,         # mg
+    'volume': 50,         # ml
+    'speed_start': 0.1,   # mcg/kg/min
+    'speed_max': 3,      # mcg/kg/min
 }
 
 press_dopamine = {
     'name': "Dop200",
     'weight': 200,        # mg
     'volume': 50,         # ml
-    'speed_start': 1,     # mcg/kg/min
+    'speed_start': 5,     # mcg/kg/min
     'speed_max': 20,      # mcg/kg/min
 }
 
@@ -77,7 +85,7 @@ class HumanDrugsModel(object):
             return info
 
         info = ""
-        for p in (press_nor, press_epi, press_dopamine, press_dobutamine):
+        for p in (press_nor, press_epi, press_phenylephrine, press_dopamine, press_dobutamine):
             info += "{}\n".format(describe_pressor(p, self.parent.weight))
         return info
 

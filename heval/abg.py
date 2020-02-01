@@ -70,22 +70,22 @@ norm_ctAlb_mean = 4.4  # g/dl
 
 
 class HumanBloodModel(object):
-    """Repesents an human blood ABG status."""
+    """Represents an human blood ABG status."""
     def __init__(self, parent=None):
         self.parent = parent
         self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb')
         self._txt_prop = ()
 
         self.pH = None
-        self.pCO2 = None       # kPa
+        self.pCO2 = None        # kPa
 
         self.cK = None          # mmol/L
         self.cNa = None         # mmol/L
         self.cCl = None         # mmol/L
 
-        self.ctAlb = None  # g/dL albumin
-        self.cGlu = None    # mmol/L
-        # self.ctBun = None
+        self.ctAlb = None       # g/dL albumin
+        self.cGlu = None        # mmol/L
+        # self.ctBun = None  # May be for osmolarity in future
 
     def populate(self, properties):
         """Populate model from data structure.

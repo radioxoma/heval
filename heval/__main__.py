@@ -175,7 +175,7 @@ class MainWindow(Frame):
 
         reset = Button(fr_entry, text="Reset", command=self.set_input_defaults)
         reset.pack(side=LEFT)
-        CreateToolTip(reset, "Drop changes for sex, height, real body weight, temp")
+        CreateToolTip(reset, "Set default values for sex, height, real body weight, temp")
 
     def set_input_defaults(self, event=None):
         self.ctl_sex.current(0)

@@ -54,7 +54,7 @@ norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
 norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
 
 fasting_cGlu = 5.5  # mmol/L Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
-mean_ctAlb = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
+norm_mean_ctAlb = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
 
 
 class HumanBloodModel(object):
@@ -221,7 +221,7 @@ class HumanBloodModel(object):
         return info
 
 
-def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
+def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_mean_ctAlb):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
     May be known as AG. Don't get confused with 'osmol gap'. Usually used
@@ -267,7 +267,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     --------
     Typical usage, potassium usually not included:
     >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
-    14
+    14.0
 
     With albumin:
     >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=calculate_hco3p(pH=7.499, pCO2=4.77294), K=0, albumin=3.39)
@@ -300,8 +300,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     :rtype: float
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
-    if albumin is not None:
-        anion_gap += 2.5 * (4.4 - albumin)
+    anion_gap += 2.5 * (4.4 - albumin)
     return anion_gap
 
 

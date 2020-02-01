@@ -48,7 +48,7 @@ norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
 norm_HCO3 = (22, 26)  # mmHg
 norm_pO2 = (80, 100)  # mmHg
-norm_gap = (7, 16)  # mEq/L without potassium
+norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
 
 # mOsm without BUN needed. Is it is?
 norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
@@ -224,9 +224,10 @@ class HumanBloodModel(object):
 def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
-    May be known as SID [1], AG. Don't get confused with 'osmol gap'.
-        * Normal value without potassium 7-16 mEq/L
-        * Normal value with potassium 10-20 mEq/L
+    May be known as AG. Don't get confused with 'osmol gap'. Usually used
+    without potassium.
+        * Normal value without potassium 7-16 mEq/L [Курек 2013, с 47]
+        * Normal value with potassium 10-20 mEq/L [Курек 2013, с 47]
 
     Corresponds to phosphates, sulphates, proteins (albumin).
     Helpful in distinguishing causes of metabolic acidosis like KULT:
@@ -235,16 +236,36 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
         L — Lactic acidosis
         T — Toxins (Ethylene glycol, methanol, as well as drugs, such as aspirin, Metformin)
     
-    High gap: acute kidney injury, lactate, ketoacidosis, salicylate ->
+    High gap
+    --------
+    Acute kidney injury, lactate, ketoacidosis, salicylate ->
         secondary loss of HCO3− which is a buffer, without a concurrent
         increase in Cl− for electroneutrality equilibrium support.
-    Low gap: increase in Cl−, low albumin.
 
-    See also Delta ration - an derived calculation for more complex conditions.
+    Low gap
+    -------
+    increase in Cl−, low albumin.
+
+    Anion gap is surprisingly low in starved patients because of low albumin.
+    Multiplier 2.5 mEq/L is widely accepted, though blood pH
+         has influence on albumin charge and respectively AG
+        pH 7.0 2.3 mEq/L
+        pH 7.4 2.8 mEq/L
+        pH 7.6 3.0 mEq/L
+
+    Normal (target) albumin value varies 4-4.5 g/dl among papers and books:
+        * Radiometer states nothing
+        * 4.0 g/dl https://litfl.com/anion-gap/ https://www.mdcalc.com/anion-gap
+        * 4.4 g/dl https://en.wikipedia.org/wiki/Anion_gap
+
+
+    See also Delta Ratio - an derived calculation to asses acidosis cause and
+    mixed disturbances.
 
 
     Examples
     --------
+    Typical usage, potassium usually not included:
     >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
     14
 
@@ -257,23 +278,14 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=None):
     93.07578958435911
 
 
-    Anion gap is surprisingly low in starved patients because of low albumin.
-    Multiplier 2.5 mEq/L is widely accepted, though blood pH
-         has influence on albumin charge and respectively AG
-        pH 7.0 2.3 mEq/L
-        pH 7.4 2.8 mEq/L
-        pH 7.6 3.0 mEq/L
-
-    Normal (target) albumin value varies 4-4.5 g/dl among papers and books.
-
-
     References
     ----------
 
     [1] https://en.wikipedia.org/wiki/Anion_gap
     [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
         Acid base balance in critical care medicine
-    [3] Курек 2013, с 47
+    [4] Hypoalbuminemia correction: Anion gap and hypoalbuminemia Figge 1998 10.1097/00003246-199811000-00019 https://journals.lww.com/ccmjournal/Citation/2000/05000/Reliability_of_the_Anion_Gap.101.aspx
+
 
     :param float Na: Serum sodium, mmol/L.
     :param float Cl: Serum chloride, mmol/L.

@@ -37,11 +37,11 @@ except ImportError:
     import math
 from heval import electrolytes
 
-
+# Units conversion
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 m_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
 
-# Arterial blood reference
+# Reference ranges
 norm_pH = (7.35, 7.45)
 norm_pH_alive = (6.8, 7.8)  # Live borders
 norm_pCO2 = (4.666, 6)  # kPa
@@ -54,7 +54,7 @@ norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
 norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
 
 fasting_cGlu = 5.5  # mmol/L Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
-norm_mean_ctAlb = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
+norm_ctAlb_mean = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
 
 
 class HumanBloodModel(object):
@@ -221,7 +221,7 @@ class HumanBloodModel(object):
         return info
 
 
-def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_mean_ctAlb):
+def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
     May be known as AG. Don't get confused with 'osmol gap'. Usually used
@@ -300,7 +300,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_mean_ctAlb):
     :rtype: float
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
-    anion_gap += 2.5 * (norm_mean_ctAlb - albumin)
+    anion_gap += 2.5 * (norm_ctAlb_mean - albumin)
     return anion_gap
 
 

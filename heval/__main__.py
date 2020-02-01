@@ -525,7 +525,7 @@ class CalcElectrolytes(Frame):
 
     def set_input_extra_defaults(self, event=None):
         self.ctl_sbx_ctAlb.delete(0, END)
-        self.ctl_sbx_ctAlb.insert(0, abg.norm_mean_ctAlb)
+        self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
         self.set_model_ctAlb()
         self.ctl_sbx_cGlu.delete(0, END)
         self.ctl_sbx_cGlu.insert(0, abg.fasting_cGlu)

@@ -19,6 +19,23 @@ Main statements:
     * Heuristic can be anywhere - it complicated anyway.
         At least class can gather all parameters in one place.
 
+Main pitfalls:
+  * Multiple "slightly" different formulas for the same parameter
+    * E.g. AG must be calculated without potassium to use it's value in
+      Delta Gap calculation. Also specific reference 7-16 mEq/L shall be used.
+
+  * Authors are humans and mix formulas, coefficients and reference ranges
+    * Constants vary from one source to another
+      * Mean cAlb, K_target or Na_target changes without notice and rationale
+    * Reference range for the same parameter varies
+      * Though it's normal for different human populations
+    * Reference range for the same parameter depends on calculation formula
+      * Plenty of messed up "formula-reference range" pairs
+    * Authors cite each other, but not the initial paper
+      * Hard to trace original article with complete description
+
+    * Featured formula may not work at all. Author got PhD - job-is-done (#жобиздан).
+
 Main approach:
 0. Read this https://web.archive.org/web/20170711053144/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Stepwise_approach.html
 1. Describe ABG with `abg_approach_stable(pH, pCO2)`

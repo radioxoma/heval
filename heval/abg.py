@@ -165,13 +165,17 @@ class HumanBloodModel(object):
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
         SBE     {:2.1f} mEq/L
-        Result: {}\n\n""".format(
+        Result: {}\n""".format(
             self.pCO2,
             self.hco3p,
             self.sbe,
             abg_approach_stable(self.pH, self.pCO2)[0]))
+        return info
 
-        info += "-- Deep manual pH check -------------------------\n"
+    def describe_abg_manual(self):
+        """Some manual ABG checks.
+        """
+        info = "-- Deep manual pH check -------------------------\n"
         # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
         info += "{}".format(abg_approach_research(self.pH, self.pCO2))
         return info
@@ -243,7 +247,7 @@ class HumanBloodModel(object):
                   * When pH increases, K⁺ level decreases
                 """)
         info += "\n-- Electrolyte abnormalities --------------------\n"
-        info += "{}\n".format(describe_osmolarity(self.osmolarity))
+        info += "{}\n\n".format(describe_osmolarity(self.osmolarity))
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
         info += "{}\n\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))

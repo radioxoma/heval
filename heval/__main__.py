@@ -562,6 +562,7 @@ class CalcElectrolytes(Frame):
     def eval(self, event=None):
         info = "ABG basic\n=========\n"
         info += "{}".format(self.human_model.blood.describe_abg_basic())
+        # info += "{}".format(self.human_model.blood.describe_abg_manual())
         info += "\nElectrolytes\n============\n"
         info += "{}".format(self.human_model.blood.describe_electrolytes())
         info += "{}".format(self.human_model.blood.describe_unstable())

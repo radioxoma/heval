@@ -37,26 +37,36 @@ except ImportError:
     import math
 from heval import electrolytes
 
+
 # Units conversion
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 m_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
+
 
 # Reference blood test ranges
 norm_pH = (7.35, 7.45)
 norm_pH_mean = 7.40
 norm_pH_alive = (6.8, 7.8)  # Live borders
+
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
 norm_pCO2mmHg_mean = 40.0  # mmHg
+
 norm_HCO3 = (22, 26)  # mEq/L
 norm_pO2 = (80, 100)  # mmHg
 norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
 
-# mOsm without BUN needed. Is it is?
+# Minimal low value has been chosen (<280), as I believe it
+# corresponds to mOsm reference range without BUN
 norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
 
-norm_cGlu_fasting = 5.5  # mmol/L Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
-norm_ctAlb_mean = 4.4  # g/dl Mean albumin level for AG caoorection. See Anion Gap calculation for reference
+# Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
+# Used as initial value for mOsm calculation.
+norm_cGlu_mean = 5.5  # mmol/L
+
+# Mean albumin level. Used to normalize anion gap value in low cAlb case
+# See Anion Gap calculation for reference
+norm_ctAlb_mean = 4.4  # g/dl
 
 
 class HumanBloodModel(object):

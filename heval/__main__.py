@@ -528,7 +528,7 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
         self.set_model_ctAlb()
         self.ctl_sbx_cGlu.delete(0, END)
-        self.ctl_sbx_cGlu.insert(0, abg.norm_cGlu_fasting)
+        self.ctl_sbx_cGlu.insert(0, abg.norm_cGlu_mean)
         self.set_model_cGlu()
 
     def set_model_pH(self, event=None):
@@ -628,7 +628,7 @@ class CalcGFR(Frame):
     def eval(self, event=None):
         sex = self.human_model.sex
         cCrea = float(self.ctl_sbx_ccrea.get())
-        cCrea_mgdl = cCrea / 88.4
+        cCrea_mgdl = cCrea / abg.m_Crea
         if sex in ('male', 'female'):
             age = self.human_model.age
             dob = datetime.now().year - age  # timedelta is complicated

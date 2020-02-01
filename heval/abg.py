@@ -300,7 +300,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_mean_ctAlb):
     :rtype: float
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
-    anion_gap += 2.5 * (4.4 - albumin)
+    anion_gap += 2.5 * (norm_mean_ctAlb - albumin)
     return anion_gap
 
 

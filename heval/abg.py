@@ -41,12 +41,12 @@ from heval import electrolytes
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 m_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
 
-# Reference ranges
+# Reference blood test ranges
 norm_pH = (7.35, 7.45)
 norm_pH_alive = (6.8, 7.8)  # Live borders
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
-norm_HCO3 = (22, 26)  # mmHg
+norm_HCO3 = (22, 26)  # mEq/L
 norm_pO2 = (80, 100)  # mmHg
 norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
 

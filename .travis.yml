@@ -7,7 +7,7 @@ jobs:
     language: shell
     env: PATH=/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts:$PATH
     install:
-    # I need python3.4 for compatibility with Windows XP
+    # python3.4 last supporting Windows XP, python3.9 still supports windows 7
     # pip 19.2 drops support for python 3.4 (despite 19.3.1 been working fine)
     # Key '--user' is mandatory outside virtualenv 'language: python'
     - choco install python-x86_32 --version=3.4.3.20150501
@@ -52,13 +52,10 @@ deploy:
     secure: bg9dutWoSyTDJ8nHXwWoOlQlrFzicmxU7yn17rxzSrpfgOeKuXkT4rJS+5HFtSRwNaLwj/Fts/JZ8HQmnopK5MaCLqNkF8AdgY/yPqPtBFF26t3V7dcniDEwoCUMWpMiitleUBZexxJNGcv1V8WFLN3ylWvHDnHEfOZMwGI6RqilLnK6FdDnhZFcP8CzRB9RRgcV/SwcgkOMf7ZnaaD2D2epLQsOgjeZCV8S4NLABFMX5c0yVBcCVW1/W9coCFwmwOCrFxkrLPoYbLMnlHIMzljgW5SQc7r386zRLmSA8CUGdgcBwn0nQzz/yZ5UQjRGr6DRsTg98mDpTSDcW+y7rZaqzrPnsuQwAKciuywBYvp3Q2m+DXrcD7Ve5j2J991GqrcBCh9Mh4bpWLw6aLoTA7PVM64lFZ+epxi1EvdkbOYLV5dqjidoazYwyFFuOynsZlT8QZdbwXG8l0DTEw8apn337+A2RiuryGicl8Z74KOpRuPfpqKwr+q7gTiOx2Ru3ET2OXwu9TI+ToRQOwuGqwCAgs2uT2is/dWcMjtp52qsQx4UvlPD7fPJ6nRBzOEJqtDg5qB0/2CWnoCqpzePbXKT3btgy8rxp4RWLIlcwmXTqY6w96rJFHGbGOp5Johs5p/7T3Q3DRWyAyMzSd24BEqHLFWr+I5KmGeJXYaugNg=
   file_glob: true
   file: "dist/heval*"
-#  file: "${RELEASE_FILE}"
   skip_cleanup: true
   draft: true
 #  prerelease: true
   overwrite: true
-#  name: "Automatical dev build by Travis CI"
-#  body: "Body text"
   on:
     repo: radioxoma/heval
     tags: true

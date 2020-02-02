@@ -432,8 +432,10 @@ class HumanBodyModel(object):
         info = ""
         if self.sex in ('male', 'female'):
             info += "\nElectrolytes daily requirements:\n"
-            info += " * Na⁺\t{:.0f} mmol/24h [~1 mmol/kg/24h]\n".format(self.weight)
-            info += " * K⁺\t{:.0f} mmol/24h [~1 mmol/kg/24h]".format(self.weight)
+            info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
+            info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
+            info += " * Mg²⁺\t{:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n".format(self.weight * 0.04)
+            info += " * Ca²⁺\t{:3.1f} mmol/24h [~0.11 mmol/kg/24h]".format(self.weight * 0.11)
             return info
         else:
             return "Electrolytes calculation for children not implemented. Refer to [Курек 2013, с 130]"
@@ -489,12 +491,12 @@ class HumanBodyModel(object):
         info = ''
         if self.sex in ('male', 'female'):
             info += "Daily nutrition requirements for adults [ПосДеж]:\n"
-            info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW):\n".format(25 * self.weight_ideal, 25)
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             if self.age:
                 info += "Basal metabolic rate for adults:\n"
+                info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW) [ПосДеж]:\n".format(25 * self.weight_ideal, 25)
                 info += " * {:.0f} kcal/24h Harris-Benedict (1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(bmr_mifflin(self.height, self.weight, self.sex, self.age))
             else:

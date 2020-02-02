@@ -170,6 +170,8 @@ class HumanBloodModel(object):
             cGlu >30, mOsm >320, no acidosis and ketone bodies)
 
         mOsm >320 renal injury
+
+        https://www.aafp.org/afp/2005/0501/p1723.html
         """
         info = "Osmolarity {:.0f} mOsm/L ({:.0f}-{:.0f}) is ".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
         if self.osmolarity > norm_mOsm[1]:

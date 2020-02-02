@@ -16,17 +16,18 @@ Main features:
 > Tip: Get yourself a ruler, not all humans are able to talk.
 
 * Just enter sex and height
-* No input field for a human age, even for children, because of it poor prediction power. Incorporated [Broselow-Luten color zones](https://en.wikipedia.org/wiki/Broselow_tape) and weight-by-height formulas at your service
+* No input field for a human age, even for children, because of it poor prediction power. Incorporated [Broselow-Luten color zones](https://en.wikipedia.org/wiki/Broselow_tape) and [weight-by-height](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight) formulas at your service
 
 
 ### Arterial blood gas & Electrolytes
 
 > Tip: You can test Heval's ability to interpret ABG with [case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html). Some books provide case studies with invalid data (see below).
 
-* Enter pH and pCO2 for overall acid-base status assessment
-* Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
-* Algorithm able to detect vomiting, hypoalbuminemia
-* Sex and weight used only for dosage calculations, not for ABG diagnostics itself
+1. Enter pH and pCO2 for overall acid-base status assessment
+2. Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
+    * Algorithm able to detect vomiting, hypoalbuminemia, [HHS](https://en.wikipedia.org/wiki/Hyperosmolar_hyperglycemic_state)
+    * Sex and weight used only for dosage calculations, not for ABG diagnostics itself
+3. Adjust optional data for precise calculations in complex cases
 
 Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).
 **Some imagined case studies from books aren't designed well and will fail too.**
@@ -39,18 +40,17 @@ Heval is an experimental software. Whatever it calculates, it's *your* decisions
 An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
 
 | Function | Status | Comment |
-| --- | --- | --- |
+| -------- | ------ | ------- |
 | Human body: anthropometry | **Good** | Straightforward implementation. Broselow for children. Small issues with IBW |
 | Human body: respiration | **Good** | Use as start ventilator settings for adults and children |
-| Human body: energy & electrolytes | Limited | Generic approximation for healthy human. Real demands are unpredictably dependent on body fat/muscle, fever, sepsis, burns etc |
+| Human body: energy & electrolytes | Limited | Generic approximation for healthy human. Real demands are unpredictably dependent on body fat/muscle compound, fever, sepsis, burns etc |
 | Human body: fluid demand | Limited | Generic approximation for healthy human. Pathologic [fluid loss](https://en.wikipedia.org/wiki/Volume_contraction) must be taken into account |
 | Human body: urinary output | **Good** | Adults and children, though eGFR estimation may be necessary |
 | Human body: drug dosage | Medium | Verified, but limited drug list |
-| ABG: anion gap | **Good** | Excellent prediction, but please USE REAL DATA |
+| ABG: anion gap | **Good** | Excellent prediction, but please **USE REAL DATA** |
 | ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation is impossible. High/low warnings still usable though. |
 | ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all pH range covered. |
-| eGFR | **Good** | Straightforward implementation |
-
+| eGFR | **Good** | Straightforward implementation for adults and children |
 
 
 ## Installation [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![Build Status](https://travis-ci.org/radioxoma/heval.svg?branch=master)](https://travis-ci.org/radioxoma/heval)
@@ -59,7 +59,7 @@ An web or Android application is planned, but implementation deferred until calc
 
 Download *exe* file from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required.
 
-Builds are compatible with Windows XP SP3 32 bit and based on python 3.4.4 (see `build.bat`). Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`.
+Builds are compatible with Windows XP SP3 32 bit and based on python 3.4 (see `build.bat`). Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`.
 
 ### Mac OS X
 

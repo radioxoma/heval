@@ -576,6 +576,8 @@ class CalcElectrolytes(Frame):
         info += "{}\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_sbe())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
+        info += "Etc\n===\n"
+        info += "{}\n".format(self.human_model.blood.describe_glucose())
         self.TxtView.set_text(info)
 
 

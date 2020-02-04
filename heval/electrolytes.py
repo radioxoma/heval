@@ -23,11 +23,12 @@ norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
 
 
-def solution_glucose(glu_mass, body_weight):
+def solution_glucose(glu_mass, body_weight, add_insuline=True):
     """Glucose and insulin solution calculation.
 
     :param float glu_mass: glucose mass, grams
     :param float body_weight: patient body weight, kg
+    :param bool add_insuline: Set False if bolus intended for hypoglycemic state
 
     Probably such glucose/insulin ratio can be used for both nutrition
     and as hyperkalemia bolus.
@@ -37,17 +38,24 @@ def solution_glucose(glu_mass, body_weight):
         * 0.25 IU/g
     """
     glu_mol = glu_mass / M_C6H12O6  # mmol/L
-    ins_dosage = 0.25  # IU/g
-    insulinum = glu_mass * ins_dosage
-
     # Glucose nutrition
     # Heat of combustion, higher value is 670 kcal/mol ~ 3.74 kcal/g https://en.wikipedia.org/wiki/Glucose
     # Usually referenced as 4.1 kcal/g
+
     # It's convenient to start with 0.15-0.2 g/kg/h, increasing speed up
     # to 0.5 g/kg/h. If hyperglycemia occurs, slow down or add more insulinum
     # to avoid glycosuria:
     # Hyperglycemia -> renal threshold (8.9-10 mmol/L) -> glycosuria
-    info = "Glu {:.1f} g ({:.2f} mmol, {:.0f} kcal) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, glu_mass * 4.1, insulinum, ins_dosage)
+
+    # This rate correlates with normal liver glucose production rate
+    # 5-8 mg/kg/min in an infant and about 3-5 mg/kg/min in an older child
+    # https://emedicine.medscape.com/article/921936-treatment
+    info = "Glu {:.1f} g ({:.2f} mmol, {:.0f} kcal)".format(glu_mass, glu_mol, glu_mass * 4.1)
+    if add_insuline:
+        ins_dosage = 0.25  # IU/g
+        insulinum = glu_mass * ins_dosage
+        info += " + Ins {:.1f} IU ({:.2f} IU/g)".format(insulinum, ins_dosage)
+    info += ":\n"
 
     for dilution in (5, 10, 40):
         g_low, g_max = 0.15, 0.5  # g/kg/h

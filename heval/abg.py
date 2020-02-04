@@ -298,6 +298,22 @@ class HumanBloodModel(object):
         info += "{}\n\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
         return info
 
+    def describe_glucose(self):
+        acceptable_cGlu = (3, 10)  # mmol/L
+        norm_cGlu = (3.3, 5.5)  # mmol/L
+        info = ""
+        if self.cGlu > acceptable_cGlu[1]:
+            info += "Hyperglycemia, consider insulin"
+        elif self.cGlu < acceptable_cGlu[0]:
+            info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS glucose 10 % 2.5 mL/kg:\n"
+            # https://litfl.com/glucose/
+            # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
+            info += electrolytes.solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
+            info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
+        else:
+            info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, acceptable_cGlu[0], acceptable_cGlu[1])
+        return info
+
 
 def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.

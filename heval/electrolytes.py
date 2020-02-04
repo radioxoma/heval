@@ -47,7 +47,7 @@ def solution_glucose(glu_mass, body_weight):
     # to 0.5 g/kg/h. If hyperglycemia occurs, slow down or add more insulinum
     # to avoid glycosuria:
     # Hyperglycemia -> renal threshold (8.9-10 mmol/L) -> glycosuria
-    info = "Glu {:.3f} g ({:.2f} mmol, {:.0f} kcal) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, glu_mass * 4.1, insulinum, ins_dosage)
+    info = "Glu {:.1f} g ({:.2f} mmol, {:.0f} kcal) + Ins {:.1f} IU ({:.2f} IU/g):\n".format(glu_mass, glu_mol, glu_mass * 4.1, insulinum, ins_dosage)
 
     for dilution in (5, 10, 40):
         g_low, g_max = 0.15, 0.5  # g/kg/h

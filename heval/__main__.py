@@ -97,6 +97,7 @@ class MainWindow(Frame):
         # self.bind('<Control-s>', lambda e: self.save_text())
         # self.bind('<Control-a>', lambda e: self.select_all())
         # self.bind('<Control-c>', lambda e: self.copy_text())
+        self.debug = False  # Additional text in GUI
 
         menubar = Menu(self.parent)
         menu_file = Menu(menubar, tearoff=0)
@@ -106,6 +107,7 @@ class MainWindow(Frame):
         menubar.add_cascade(label="File", menu=menu_file)
         menu_about = Menu(menubar, tearoff=0)
         menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
+        menu_about.add_checkbutton(label="Verbose reports", command=self.set_debug)  # Not using tkinter BooleanVar here
         menu_about.add_command(label="Website and updates", command=visit_website)
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
@@ -231,6 +233,12 @@ class MainWindow(Frame):
             self.ctl_weight.insert(0, round(self.HBody.weight, 1))
             self.ctl_weight['state'] = DISABLED
             self.lbl_weight['state'] = DISABLED
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_debug(self, event=None):
+        """Be verbose if debug is True.
+        """
+        self.debug = not self.debug  # Invert boolean
         self.event_generate("<<HumanModelChanged>>")
 
 
@@ -563,7 +571,8 @@ class CalcElectrolytes(Frame):
     def eval(self, event=None):
         info = "ABG basic\n=========\n"
         info += "{}".format(self.human_model.blood.describe_abg_basic())
-        # info += "{}".format(self.human_model.blood.describe_abg_manual())
+        if self.parent.master.debug:
+            info += "{}".format(self.human_model.blood.describe_abg_manual())
         info += "\nElectrolytes\n============\n"
         info += "{}".format(self.human_model.blood.describe_electrolytes())
         info += "{}".format(self.human_model.blood.describe_unstable())

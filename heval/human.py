@@ -62,6 +62,7 @@ newborn = {
 
 class HumanBodyModel(object):
     def __init__(self):
+        self.debug = False
         self._int_prop = ('height', 'age', 'weight', 'body_temp')
         self._txt_prop = ('sex', 'comment')
         self._sex = None

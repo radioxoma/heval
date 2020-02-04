@@ -192,7 +192,6 @@ class HumanBloodModel(object):
         if self.osmolarity > 330:  # mOsm/kg
             # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
             info += ", coma (>330 mOsm/kg)"
-        info += "."
 
         # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
         if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
@@ -222,7 +221,7 @@ class HumanBloodModel(object):
         return info
 
     def describe_anion_gap(self):
-        info = "-- Anion gap ------------------------------------\n"
+        info = "-- Anion gap ---------------------------------------\n"
         desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
 
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
@@ -241,7 +240,7 @@ class HumanBloodModel(object):
                 # Can catch COPD or concurrent metabolic alcalosis here
                 info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
+                info += "Unexpected low AG {}. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
             else:
                 info += "AG is ok {}".format(desc)
         return info
@@ -281,12 +280,13 @@ class HumanBloodModel(object):
                     NaHCO3_ml = NaHCO3_g / dilution * 100
                     NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
                     info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
-                info += textwrap.dedent("""\
-                    Main concept of NaHCO3 usage:
-                      * Must hyperventilate to make use of bicarbonate buffer
-                      * Control ABG after each NaHCO3 infusion or every 4 hours
-                      * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
-                      * When pH increases, K⁺ level decreases""")
+                if self.parent.debug:
+                    info += textwrap.dedent("""\
+                        Main concepts of NaHCO3 usage:
+                          * Must hyperventilate to make use of bicarbonate buffer
+                          * Control ABG after each NaHCO3 infusion or every 4 hours
+                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
+                          * When pH increases, K⁺ level decreases""")
             else:
                 info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO3 not recommended".format(self.sbe, norm_sbe[0], norm_sbe[1])
         else:
@@ -297,11 +297,11 @@ class HumanBloodModel(object):
         """
         I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         """
-        info = "-- Electrolyte abnormalities (UNTESTED) ---------\n"
+        info = "- Electrolyte and osmolar abnormalities (UNTESTED) -\n"
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
-        info += "{}\n\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
+        info += "{}\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
         return info
 
     def describe_glucose(self):

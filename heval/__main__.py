@@ -100,7 +100,6 @@ class MainWindow(Frame):
         # self.bind('<Control-s>', lambda e: self.save_text())
         # self.bind('<Control-a>', lambda e: self.select_all())
         # self.bind('<Control-c>', lambda e: self.copy_text())
-        self.debug = False  # Additional text in GUI
 
         menubar = Menu(self.parent)
         menu_file = Menu(menubar, tearoff=0)
@@ -241,7 +240,7 @@ class MainWindow(Frame):
     def set_debug(self, event=None):
         """Be verbose if debug is True.
         """
-        self.debug = not self.debug  # Invert boolean
+        self.HBody.debug = not self.HBody.debug  # Invert boolean
         self.event_generate("<<HumanModelChanged>>")
 
 
@@ -574,12 +573,11 @@ class CalcElectrolytes(Frame):
     def eval(self, event=None):
         info = "ABG basic\n=========\n"
         info += "{}\n".format(self.human_model.blood.describe_abg_basic())
-        if self.parent.master.debug:
+        if self.human_model.debug:
             info += "{}\n".format(self.human_model.blood.describe_abg_manual())
         info += "{}\n\n".format(self.human_model.blood.describe_sbe())
         info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
-        info += "Etc\n===\n"
         info += "{}\n".format(self.human_model.blood.describe_glucose())
         self.TxtView.set_text(info)
 

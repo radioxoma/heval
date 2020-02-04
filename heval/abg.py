@@ -169,17 +169,18 @@ class HumanBloodModel(object):
             dehydration (osmotic diuresis)
             cGlu >30, mOsm >320, no acidosis and ketone bodies)
 
-        mOsm >320 renal injury
+        >320 mOsm/kg renal injury  # https://www.ncbi.nlm.nih.gov/pubmed/9387687
 
         https://www.aafp.org/afp/2005/0501/p1723.html
         """
-        info = "Osmolarity {:.0f} mOsm/L ({:.0f}-{:.0f}) is ".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
+        info = "Osmolarity is "
         if self.osmolarity > norm_mOsm[1]:
             info += "high"
         elif self.osmolarity < norm_mOsm[0]:
             info += "low"
         else:
             info += "ok"
+        info += " {:.0f} ({:.0f}-{:.0f} mOsm/L)".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
         # if self.osmolarity >=282: # mOsm/kg
         #     info += " vasopressin released"
         if self.osmolarity > 290: # mOsm/kg
@@ -217,7 +218,7 @@ class HumanBloodModel(object):
 
     def describe_anion_gap(self):
         info = "-- Anion gap assessment -------------------------\n"
-        desc = "{:.1f} mEq/L (normal {:.0f}-{:.0f})".format(self.anion_gap, *norm_gap)
+        desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
 
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
             if norm_gap[1] < self.anion_gap:
@@ -237,7 +238,7 @@ class HumanBloodModel(object):
             elif self.anion_gap < norm_gap[0]:
                 info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
             else:
-                info += "Normal AG {}".format(desc)
+                info += "AG is ok {}".format(desc)
         return info
 
     def describe_sbe(self):

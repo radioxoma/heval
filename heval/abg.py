@@ -64,6 +64,7 @@ m_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
 norm_pH = (7.35, 7.45)
 norm_pH_mean = 7.40
 norm_pH_alive = (6.8, 7.8)  # Live borders
+norm_sbe = (-2, 2)  # mEq/L
 
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
@@ -206,11 +207,9 @@ class HumanBloodModel(object):
         info = textwrap.dedent("""\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
-        SBE     {:2.1f} mEq/L
         Result: {}\n""".format(
             self.pCO2,
             self.hco3p,
-            self.sbe,
             abg_approach_stable(self.pH, self.pCO2)[0]))
         return info
 
@@ -223,14 +222,14 @@ class HumanBloodModel(object):
         return info
 
     def describe_anion_gap(self):
-        info = "-- Anion gap assessment -------------------------\n"
+        info = "-- Anion gap ------------------------------------\n"
         desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
 
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
             if norm_gap[1] < self.anion_gap:
                 # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alcalosis
                 info += "HAGMA {} (KULT?), ".format(desc)
-                info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+                info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
                 info += "Low AG {} - hypoalbuminemia or low Na?".format(desc)
             else:
@@ -264,28 +263,34 @@ class HumanBloodModel(object):
         Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
         """
         info = ""
-        if self.sbe < -9:
-            info += "-- Metabolic acidosis correction (UNTESTED) -----\n"
-            info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
-            info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
-
-            # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
-            NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
-            NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
-            NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
-            NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
-            info += "  * NaHCO3 {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
-            for dilution in (4, 8.4):
-                NaHCO3_ml = NaHCO3_g / dilution * 100
-                NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
-                info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
-            info += textwrap.dedent("""\
-                Main concept of NaHCO3 usage:
-                  * Must hyperventilate to make use of bicarbonate buffer
-                  * Control ABG after each NaHCO3 infusion or every 4 hours
-                  * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
-                  * When pH increases, K⁺ level decreases
-                """)
+        if self.sbe > norm_sbe[1]:
+            info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L) hypoalbuminemia? NaHCO3 overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
+        elif self.sbe < norm_sbe[0]:
+            if self.sbe < -9:
+                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), could use NaHCO3 for severe metabolic acidosis:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
+                info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
+                # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
+                NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
+                NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
+                NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
+                NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
+                info += "  * NaHCO3 {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
+                # info += "  * NaHCO3 {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
+                #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
+                for dilution in (4, 8.4):
+                    NaHCO3_ml = NaHCO3_g / dilution * 100
+                    NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
+                    info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
+                info += textwrap.dedent("""\
+                    Main concept of NaHCO3 usage:
+                      * Must hyperventilate to make use of bicarbonate buffer
+                      * Control ABG after each NaHCO3 infusion or every 4 hours
+                      * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
+                      * When pH increases, K⁺ level decreases""")
+            else:
+                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO3 not recommended".format(self.sbe, norm_sbe[0], norm_sbe[1])
+        else:
+            info += "SBE is ok {:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sbe, norm_sbe[0], norm_sbe[1])
         return info
 
     def describe_electrolytes(self):

@@ -55,6 +55,7 @@ AG - anion gap
   HAGMA - high anion gap metabolic acidosis
   KULT - Ketones, Uremia, Lactate, Toxins
 gg - gap-gap, delta gap
+SBE - standard base excess
 
 MV - minute volume
 VDaw - dead space airway volume
@@ -575,8 +576,8 @@ class CalcElectrolytes(Frame):
         info += "{}\n".format(self.human_model.blood.describe_abg_basic())
         if self.parent.master.debug:
             info += "{}\n".format(self.human_model.blood.describe_abg_manual())
-        info += "{}\n".format(self.human_model.blood.describe_anion_gap())
-        info += "{}\n".format(self.human_model.blood.describe_sbe())
+        info += "{}\n\n".format(self.human_model.blood.describe_sbe())
+        info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
         info += "Etc\n===\n"
         info += "{}\n".format(self.human_model.blood.describe_glucose())

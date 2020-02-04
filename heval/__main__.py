@@ -570,12 +570,12 @@ class CalcElectrolytes(Frame):
 
     def eval(self, event=None):
         info = "ABG basic\n=========\n"
-        info += "{}".format(self.human_model.blood.describe_abg_basic())
+        info += "{}\n".format(self.human_model.blood.describe_abg_basic())
         if self.parent.master.debug:
-            info += "{}".format(self.human_model.blood.describe_abg_manual())
-        info += "\nElectrolytes\n============\n"
-        info += "{}".format(self.human_model.blood.describe_electrolytes())
-        info += "{}".format(self.human_model.blood.describe_unstable())
+            info += "{}\n".format(self.human_model.blood.describe_abg_manual())
+        info += "{}\n".format(self.human_model.blood.describe_anion_gap())
+        info += "{}\n".format(self.human_model.blood.describe_sbe())
+        info += "{}\n".format(self.human_model.blood.describe_electrolytes())
         self.TxtView.set_text(info)
 
 

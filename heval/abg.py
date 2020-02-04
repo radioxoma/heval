@@ -215,9 +215,8 @@ class HumanBloodModel(object):
         info += "{}".format(abg_approach_research(self.pH, self.pCO2))
         return info
 
-    def describe_electrolytes(self):
-        info = ""
-        info += "-- Anion gap assessment -------------------------\n"
+    def describe_anion_gap(self):
+        info = "-- Anion gap assessment -------------------------\n"
         desc = "{:.1f} mEq/L (normal {:.0f}-{:.0f})".format(self.anion_gap, *norm_gap)
 
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
@@ -226,24 +225,23 @@ class HumanBloodModel(object):
                 info += "HAGMA {} (KULT?), ".format(desc)
                 info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
-                info += "Low AG {} - hypoalbuminemia or low Na?\n".format(desc)
+                info += "Low AG {} - hypoalbuminemia or low Na?".format(desc)
             else:
                 # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
-                info += "NAGMA {}. Diarrhea or renal tubular acidosis?\n".format(desc)
+                info += "NAGMA {}. Diarrhea or renal tubular acidosis?".format(desc)
         else:
             if norm_gap[1] < self.anion_gap:
                 info += "Unexpected high AG {} without main metabolic acidosis; ".format(desc)
                 # Can catch COPD or concurrent metabolic alcalosis here
-                info += "{}\n".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+                info += "{}".format(calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input and enter ctAlb if known.\n".format(desc)
+                info += "Unexpected low AG {} without main metabolic acidosis. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
             else:
-                info += "Normal AG {}\n".format(desc)
+                info += "Normal AG {}".format(desc)
         return info
 
-    def describe_unstable(self):
+    def describe_sbe(self):
         """
-        # I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
         # TCA poisoning calculation? Titrate to effect?
@@ -258,9 +256,9 @@ class HumanBloodModel(object):
 
         Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
         """
-        info = "\nTHE BELOW INFORMATION UNTESTED AND NOT INTENDED FOR CLINICAL USE\n"
+        info = ""
         if self.sbe < -9:
-            info += "\n-- Metabolic acidosis correction ----------------\n"
+            info += "-- Metabolic acidosis correction (UNTESTED) -----\n"
             info += "Found metabolic acidosis (low SBE), could use NaHCO3:\n".format(self.pH)
             info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
 
@@ -281,7 +279,13 @@ class HumanBloodModel(object):
                   * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
                   * When pH increases, K⁺ level decreases
                 """)
-        info += "\n-- Electrolyte abnormalities --------------------\n"
+        return info
+
+    def describe_electrolytes(self):
+        """
+        I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
+        """
+        info = "-- Electrolyte abnormalities (UNTESTED) ---------\n"
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))

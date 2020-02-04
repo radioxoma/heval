@@ -168,10 +168,6 @@ class HumanBloodModel(object):
           2 type - HHNS (cells not sensitive to Ins)
             dehydration (osmotic diuresis)
             cGlu >30, mOsm >320, no acidosis and ketone bodies)
-
-        >320 mOsm/kg renal injury  # https://www.ncbi.nlm.nih.gov/pubmed/9387687
-
-        https://www.aafp.org/afp/2005/0501/p1723.html
         """
         info = "Osmolarity is "
         if self.osmolarity > norm_mOsm[1]:
@@ -181,15 +177,24 @@ class HumanBloodModel(object):
         else:
             info += "ok"
         info += " {:.0f} ({:.0f}-{:.0f} mOsm/L)".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
+
+        # Hyperosmolarity flags
         # if self.osmolarity >=282: # mOsm/kg
         #     info += " vasopressin released"
         if self.osmolarity > 290: # mOsm/kg
             # plasma thirst point reached
             info += ", human is thirsty (>290 mOsm/kg)"
+        if self.osmolarity > 320: # mOsm/kg
+            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", acute kidney injury risk (>320 mOsm/kg)"
+        if self.osmolarity > 330:  # mOsm/kg
+            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", coma (>330 mOsm/kg)"
         info += "."
 
         # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
         if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
+            # https://www.aafp.org/afp/2005/0501/p1723.html
             # IV insulin drip and crystalloids
             info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
         return info

@@ -66,7 +66,6 @@ def solution_glucose(glu_mass, body_weight, add_insuline=True):
         if dilution == 5:
             info += " isotonic"
         info += "\n"
-
     return info
 
 
@@ -217,7 +216,7 @@ def electrolyte_Na(weight, Na_serum):
     Hyponatremia
     ------------
     Корректировать Na медленно, иначе:
-        * Было много Na (>145 mmol/L) {и вводится D50} -> отёк мозга
+        * Было много Na (>145 mmol/L) {и вводится D5} -> отёк мозга
         * Было мало Na {вводится NaCl гипертонический} -> быстрое увличение осмолярности -> центральный понтинный миелинолиз
     Скорость:
         * Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0,25-0,5 мл/кг/час [ПосДеж 90]
@@ -228,7 +227,7 @@ def electrolyte_Na(weight, Na_serum):
     -------------
         * Устраняется постепенно за 48 часов
         * Скорость снижения Na_serum <0.5 ммоль/л/ч или 12-15 ммоль/24h
-        * If Na>150 mmol/L use D50 or NaCl 0.45 %
+        * If Na>150 mmol/L use D5 or NaCl 0.45 %
 
 
     Другие источники
@@ -243,8 +242,6 @@ def electrolyte_Na(weight, Na_serum):
             Формула отличается от Курека только другим коэффицинтом и Na_target.
             Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
             Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
-
-                                ***
     """
     if norm_Na[0] <= Na_serum <= norm_Na[1]:
         return "Na⁺ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Na[0], norm_Na[1])
@@ -260,7 +257,7 @@ def electrolyte_Na(weight, Na_serum):
     total_body_water = weight * coef
     info = ''
     if Na_serum > Na_high:
-        info += "Na⁺ is high (>{} mmol/L), expect coma, use D50, consider furesemide. ".format(Na_high)
+        info += "Na⁺ is high (>{} mmol/L), expect coma, use D5, consider furesemide. ".format(Na_high)
         free_water_def = (1 - Na_target / Na_serum) * total_body_water * 1000  # ml just a proportion
         info += "Free water deficit is {:.0f} ml. Check osmolarity in ABG.".format(free_water_def)
         # Every 3 mmol above 145 mmol/L corresponds of 1 L volume deficiency [Рябов 1994, с 37, 43]

@@ -61,6 +61,8 @@ VDaw - dead space airway volume
 TV - tidal volume
 RR - respiratory rate
 
+D5 - dextrose 5%
+
 ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
 """
 

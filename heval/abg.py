@@ -80,6 +80,7 @@ norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_range
 # Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
 # Used as initial value for mOsm calculation.
 norm_cGlu_mean = 5.5  # mmol/L
+norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
@@ -299,19 +300,26 @@ class HumanBloodModel(object):
         return info
 
     def describe_glucose(self):
-        acceptable_cGlu = (3, 10)  # mmol/L
-        norm_cGlu = (3.3, 5.5)  # mmol/L
+        """Assess glucose level.
+        """
+        safe_cGlu = (3, 10)  # mmol/L
         info = ""
-        if self.cGlu > acceptable_cGlu[1]:
-            info += "Hyperglycemia, consider insulin"
-        elif self.cGlu < acceptable_cGlu[0]:
-            info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS glucose 10 % 2.5 mL/kg:\n"
-            # https://litfl.com/glucose/
-            # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
-            info += electrolytes.solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
-            info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
+        if self.cGlu > norm_cGlu[1]:
+            if self.cGlu > safe_cGlu[1]:
+                info += "Hyperglycemia {:.1f} ({:.1f}-{:.1f} mmol/L), consider insulin".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
+            else:
+                info += "cGlu is above ideal {:.1f} ({:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
+        elif self.cGlu < norm_cGlu[0]:
+            if self.cGlu < safe_cGlu[0]:
+                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS glucose 10 % 2.5 mL/kg:\n"
+                # https://litfl.com/glucose/
+                # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
+                info += electrolytes.solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
+                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
+            else:
+                info += "cGlu is below ideal {:.1f} ({:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
         else:
-            info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, acceptable_cGlu[0], acceptable_cGlu[1])
+            info += "cGlu is perfect {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
         return info
 
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import unittest
 import doctest
 from heval import abg, drugs, electrolytes, human
 

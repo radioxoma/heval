@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
 Arterial blood gas interpreter. May be considered as reference realization
 of multiple interconnected compatible algorithms.
@@ -48,6 +46,7 @@ Main approach:
     * If AG is high, calculate Delta gap
 """
 
+from itertools import chain
 import textwrap
 try:
     from uncertainties import umath as math
@@ -113,7 +112,7 @@ class HumanBloodModel(object):
 
     def __str__(self):
         int_prop = {}
-        for attr in self._int_prop:
+        for attr in chain(self._int_prop, self._txt_prop):
             int_prop[attr] = getattr(self, attr)
         return "HumanBlood: {}".format(str(int_prop))
 
@@ -227,10 +226,10 @@ class HumanBloodModel(object):
         # Hyperosmolarity flags
         # if self.osmolarity >=282: # mOsm/kg
         #     info += " vasopressin released"
-        if self.osmolarity > 290: # mOsm/kg
+        if self.osmolarity > 290:  # mOsm/kg
             # plasma thirst point reached
             info += ", human is thirsty (>290 mOsm/kg)"
-        if self.osmolarity > 320: # mOsm/kg
+        if self.osmolarity > 320:  # mOsm/kg
             # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
             info += ", acute kidney injury risk (>320 mOsm/kg)"
         if self.osmolarity > 330:  # mOsm/kg
@@ -427,7 +426,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
         U — Uremia
         L — Lactic acidosis
         T — Toxins (Ethylene glycol, methanol, as well as drugs, such as aspirin, Metformin)
-    
+
     High gap
     --------
     Acute kidney injury, lactate, ketoacidosis, salicylate ->
@@ -876,8 +875,7 @@ def calculate_pO2_FO2_fraction(pO2, FiO2):
     :rtype: float
     """
     # Example: mmHg/oxygen fraction, i.e. 105 / 0.21 = 500
-    pf = pO2 / kPa / FiO2
-    return pO2 / FiO2
+    return pO2 / kPa / FiO2
 
 
 def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
@@ -890,7 +888,7 @@ def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
     Normal A-a gradient is:
         * Normal   PAO2, kPa  < 2.6 [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
         * Expected PAO2, kPa = (age + 10) / 4 * kPa [https://www.ncbi.nlm.nih.gov/books/NBK545153/]
-            ((40 / 4) + 4) * kPa == 1.866513152 
+            ((40 / 4) + 4) * kPa == 1.866513152
 
     :param float pCO2: CO2 partial pressure, kPa
     :param float pO2: O2 partial pressure, kPa
@@ -1082,7 +1080,7 @@ def resp_acidosis_pH(pCO2, status='acute'):
         40 - (24 - 9) * 1.2 = 22 mmHg
 
     pCO2 can be predicted more accurately by Winters' formula:
-        
+
         pCO2_acid = 1.5 * HCO3act + 8  # mmHg
 
 
@@ -1093,7 +1091,7 @@ def resp_acidosis_pH(pCO2, status='acute'):
         pCO2 = (HCO3act - 24) * 0.7 + 40
 
     pCO2 can be predicted more accurately by Winters' formula:
-        
+
         pCO2_alc = 0.7 * HCO3act + 20  # mmHg
 
 
@@ -1176,8 +1174,6 @@ def abg_approach_stable(pH, pCO2):
                 guess += "background metabolic acidosis: "
         return "{}expected pH {:.2f}".format(guess, ex_pH)
 
-    main_disturbance = None
-
     if norm_pH[0] <= pH <= norm_pH[1]:  # pH is normal or compensated
         # Don't calculating expected CO2/pH values because both values are
         # normal or represent two opposed processes (no need for searching
@@ -1187,19 +1183,19 @@ def abg_approach_stable(pH, pCO2):
             # Low (respiratory alcalosis)
             if pH >= 7.41:
                 return ("Respiratory alcalosis, full comp. by metabolic acidosis",
-                    "respiratory_alcalosis")
+                        "respiratory_alcalosis")
             else:
                 return ("Metabolic acidosis, full comp. by CO₂ alcalosis",
-                    "metabolic_acidosis")
+                        "metabolic_acidosis")
         elif pCO2 > norm_pCO2[1]:
             # High (respiratory acidosis)
             if pH <= 7.39:  # pH almost acidic
                 # Classic "chronic" COPD gas
                 return ("Respiratory acidosis, full comp. by metabolic alcalosis. COPD?",
-                    "respiratory_acidosis")
+                        "respiratory_acidosis")
             else:
                 return ("Metabolic alcalosis, full comp. by CO₂ acidosis",
-                    "metabolic_alcalosis")
+                        "metabolic_alcalosis")
         else:
             return ("Normal ABG", None)
     else:
@@ -1209,27 +1205,27 @@ def abg_approach_stable(pH, pCO2):
             if pH < norm_pH[0]:
                 # Always check anion gap here
                 return ("Metabolic acidosis, partial comp. by CO₂ alcalosis (check AG)",
-                    "metabolic_acidosis")
+                        "metabolic_acidosis")
             elif pH > norm_pH[1]:
                 return ("Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2)),
-                    "respiratory_alcalosis")
+                        "respiratory_alcalosis")
         elif pCO2 > norm_pCO2[1]:
             if pH < norm_pH[0]:
                 return ("Respiratory acidosis ({})".format(check_metabolic(pH, pCO2)),
-                    "respiratory_acidosis")
+                        "respiratory_acidosis")
             elif pH > norm_pH[1]:
                 # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
                 return ("Metabolic alcalosis, partial comp. by CO₂ acidosis (check Na, Cl, albumin)",
-                    "metabolic_alcalosis")
+                        "metabolic_alcalosis")
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)
             if pH < norm_pH[0]:
                 # Always check anion gap here
                 return ("Metabolic acidosis, no respiratory comp.",
-                    "metabolic_acidosis")
+                        "metabolic_acidosis")
             elif pH > norm_pH[1]:
                 return ("Metabolic alcalosis, no respiratory comp.",
-                    "metabolic_alcalosis")
+                        "metabolic_alcalosis")
 
 
 def abg_approach_ryabov(pH, pCO2):
@@ -1286,7 +1282,7 @@ def abg_approach_research(pH, pCO2):
     """
     info = ""
     HCO3act = calculate_hco3p(pH, pCO2)
-    pCO2mmHg = pCO2 / kPa
+    # pCO2mmHg = pCO2 / kPa
 
     info += "pH by pCO2: acute {:.2f}, chronic {:.2f} for primary respiratory condition [AHA?]\n".format(
         resp_acidosis_pH(pCO2, 'acute'),

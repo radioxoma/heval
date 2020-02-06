@@ -1,11 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import math
-import copy
-from heval import abg
-from heval import drugs
-
 """
 Calculations based on human height and weight.
 
@@ -14,6 +7,13 @@ Author: Eugene Dvoretsky
 Function parameters tends to be in International System of Units.
 """
 
+import math
+import copy
+from itertools import chain
+from heval import abg
+from heval import drugs
+
+
 # https://news.tut.by/society/311809.html
 # Average Belorussian male in 2008 >=18 years old
 male_generic_by = {
@@ -21,7 +21,7 @@ male_generic_by = {
     'weight': 69.,
     'sex': 'male',
     'body_temp': 36.6
-    }
+}
 
 # Average Belorussian female in 2008 >=18 years old
 female_generic_by = {
@@ -29,28 +29,28 @@ female_generic_by = {
     'weight': 56.,
     'sex': 'female',
     'body_temp': 36.6
-    }
+}
 
 female_owerweight_by = {
     'height': 1.62,
     'weight': 72.,
     'sex': 'female',
     'body_temp': 36.6
-    }
+}
 
 male_thin = {  # Me
     'height': 1.86,
     'weight': 55.,
     'sex': 'male',
     'body_temp': 36.6
-    }
+}
 
 child = {  # 3 year old kid
     'height': 0.95,
     'weight': 16.5,
     'sex': 'child',
     'body_temp': 36.6
-    }
+}
 
 newborn = {
     'height': 0.5,
@@ -79,6 +79,12 @@ class HumanBodyModel(object):
         self.drugs = drugs.HumanDrugsModel(self)
         self.body_temp = 36.6
         self.comment = dict()  # For warnings
+
+    def __str__(self):
+        int_prop = {}
+        for attr in chain(self._int_prop, self._txt_prop):
+            int_prop[attr] = getattr(self, attr)
+        return "HumanBody: {}".format(str(int_prop))
 
     def populate(self, properties):
         """Populate model from data structure.
@@ -195,7 +201,7 @@ class HumanBodyModel(object):
     @weight.setter
     def weight(self, value):
         """Human weight in kilograms.
-        
+
         You always can set real body weight, but not get it.
         Never use 'self._weight' directly beyond setter/getter code.
         """
@@ -280,7 +286,7 @@ class HumanBodyModel(object):
 
         Considered as more accurate, than Nadler 1962 method.
 
-        [1] Lemmens HJ, Bernstein DP, Brodsky JB. Estimating blood volume in obese and morbidly obese patients. Obes Surg. 2006 Jun;16(6):773-6. 
+        [1] Lemmens HJ, Bernstein DP, Brodsky JB. Estimating blood volume in obese and morbidly obese patients. Obes Surg. 2006 Jun;16(6):773-6.
             https://www.ncbi.nlm.nih.gov/pubmed/16756741
         [2] https://www.ncbi.nlm.nih.gov/books/NBK526077/
 
@@ -301,7 +307,7 @@ class HumanBodyModel(object):
     def age(self):
         return self._age
 
-    @age.setter        
+    @age.setter
     def age(self, value):
         """Human age in years."""
         self._age = value
@@ -329,7 +335,7 @@ class HumanBodyModel(object):
                 Настройка подходящего для данного пациента MV (за счёт F или TV) в соответствии с ETCO2 монитора или pCO2 по КЩС.
                 Удерживать на нижней границе нормы, чтобы не поддыхивал
 
-        
+
         Dead space is 2.2 ml/kg IBW for both adults and children, so TV _must_ be
         double of 2.2 ml/kg [Hamilton p.455; Курек 2013 стр. 63]
 
@@ -536,7 +542,7 @@ class HumanBodyModel(object):
         info += "{}\n".format(self.drugs.describe_pressors())
         info += "Anesthesiology:\n"
         info += "{}\n".format(self.drugs.describe_anesthesiology())
-        return info 
+        return info
 
 
 def body_mass_index(height, weight):
@@ -620,7 +626,7 @@ def bmr_harris_benedict(height, weight, sex, age):
     :param float weight: Weight, kg
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
-    :return: 
+    :return:
         BMR, kcal/24h
     :rtype:
         float
@@ -650,14 +656,14 @@ def bmr_mifflin(height, weight, sex, age):
     [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
     [2] Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO (1990).
         "A new predictive equation for resting energy expenditure in healthy
-        individuals". 
-        The American Journal of Clinical Nutrition. 51 (2): 241–247. 
+        individuals".
+        The American Journal of Clinical Nutrition. 51 (2): 241–247.
 
     :param float height: Height, meters
     :param float weight: Weight, kg
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
-    :return: 
+    :return:
         BMR, kcal/24h
     :rtype:
         float
@@ -794,7 +800,7 @@ def wetflag(age=None, weight=None):
     T = age / 4 + 4  # Tube (endotracheal), ID mm (uncuffed)
     Fl = 20 * W  # Fluids (bolus), ml of isotonic fluid (caution in some cases)
     A = 10 * W  # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
-    G = 2 * W # 2 mL/kg Glucose 10 %
+    G = 2 * W  # 2 mL/kg Glucose 10 %
     info = """\
 WETFlAG report for {} yo, weight {} kg child:
     Energy for defib {:.0f} J
@@ -848,34 +854,35 @@ def get_broselow_code(height):
         * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
         * Age-based estimates achieved a very low accuracy - use length-based
 
-
+    Parameters
+    ----------
     :param float height: Child height in meters.
     :return: Color code, approx age, approx weight (kg).
     :rtype: typle
     """
     height *= 100
     if 46.8 <= height < 51.9:
-         return "Grey", "Newborn", 3
+        return "Grey", "Newborn", 3
     elif 51.9 <= height < 55.0:
-         return "Grey", "Newborn", 4
+        return "Grey", "Newborn", 4
     elif 55.0 <= height < 59.2:
-         return "Grey", "2 months", 5
+        return "Grey", "2 months", 5
     elif 59.2 <= height < 66.9:
-         return "Pink", "4 months", 6.5  # 6-7
+        return "Pink", "4 months", 6.5  # 6-7
     elif 66.9 <= height < 74.2:
-         return "Red", "8 months", 8.5  # 8-9
+        return "Red", "8 months", 8.5  # 8-9
     elif 74.2 <= height < 83.8:
-         return "Purple", "1 year", 10.5  # 10-11
+        return "Purple", "1 year", 10.5  # 10-11
     elif 83.8 <= height < 95.4:
-         return "Yellow", "2 years", 13  # 12-14
+        return "Yellow", "2 years", 13  # 12-14
     elif 95.4 <= height < 108.3:
-         return "White", "4 years", 16.5  # 15-18
+        return "White", "4 years", 16.5  # 15-18
     elif 108.3 <= height < 121.5:
-         return "Blue", "6 years", 21  # 19-23
+        return "Blue", "6 years", 21  # 19-23
     elif 121.5 <= height < 130.7:
-         return "Orange",  "8 years", 26.5  # 24-29
+        return "Orange", "8 years", 26.5  # 24-29
     elif 130.7 <= height <= 143.3:
-         return "Green", "10 years", 33  # 30-36
+        return "Green", "10 years", 33  # 30-36
     else:
         raise ValueError("Out of Broselow height range")
 

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
 Drug dosage calculator for humans.
 
@@ -190,7 +188,6 @@ class Arduan(object):
 
     def __str__(self):
         self.load_dose = 0.041  # mg/kg
-        # info = 
         info = "Arduan load dose {:.1f} mg".format(self.parent.weight * self.load_dose)
         return info
 

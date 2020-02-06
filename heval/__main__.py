@@ -8,7 +8,7 @@ try:
     from tkinter import *
     from tkinter import scrolledtext
     from tkinter.ttk import *
-except ImportError as e:  # python2
+except ImportError:  # python2
     from Tkinter import *
     import ScrolledText as scrolledtext
     from ttk import *
@@ -158,20 +158,24 @@ class MainWindow(Frame):
 
         self.var_use_ibw = IntVar()  # No real body weight
         self.var_use_ibw.set(1)
-        self.ctl_use_ibw_cb = Checkbutton(fr_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0, text="Use IBW", command=self.set_model_use_ibw)
+        self.ctl_use_ibw_cb = Checkbutton(
+            fr_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0,
+            text="Use IBW", command=self.set_model_use_ibw)
         self.ctl_use_ibw_cb.pack(side=LEFT)
         CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
 
         self.lbl_weight = Label(fr_entry, text='Weight, kg')
         self.lbl_weight.pack(side=LEFT)
-        self.ctl_weight = Spinbox(fr_entry, width=4, from_=1, to=500,
+        self.ctl_weight = Spinbox(
+            fr_entry, width=4, from_=1, to=500,
             format='%.1f', increment=1, command=self.set_model_weight)
         self.ctl_weight.bind("<Return>", self.set_model_weight)
         self.ctl_weight.pack(side=LEFT)
         CreateToolTip(self.ctl_weight, "Real body weight")
 
         Label(fr_entry, text='Body temp, °C').pack(side=LEFT)
-        self.ctl_sbx_temp = Spinbox(fr_entry, width=4, from_=0.0, to=50.0,
+        self.ctl_sbx_temp = Spinbox(
+            fr_entry, width=4, from_=0.0, to=50.0,
             format='%.1f', increment=0.1, command=self.set_model_body_temp)
         self.ctl_sbx_temp.bind("<Return>", self.set_model_body_temp)
         self.ctl_sbx_temp.pack(side=LEFT)
@@ -323,7 +327,7 @@ class TextView(Frame):
         frm_txt.pack(expand=True, fill=BOTH)
         frm_txt.grid_propagate(False)  # ensure a consistent GUI size
         frm_txt.grid_rowconfigure(0, weight=1)
-        frm_txt.grid_columnconfigure(0, weight=1) # implement stretchability
+        frm_txt.grid_columnconfigure(0, weight=1)  # implement stretchability
 
         self.txt = Text(frm_txt, borderwidth=1, relief="sunken")
         self.txt.config(font=("consolas", 10), undo=True, wrap='word')
@@ -437,65 +441,72 @@ class CalcElectrolytes(Frame):
         ctl_btn_abg.grid(row=1, column=0)
 
         Label(fr_abg_entry, text="pH").grid(row=2, column=0)
-        self.ctl_sbx_pH = Spinbox(fr_abg_entry, width=4, from_=0, to=14,
+        self.ctl_sbx_pH = Spinbox(
+            fr_abg_entry, width=4, from_=0, to=14,
             format='%.2f', increment=0.01, command=self.set_model_pH)
         self.ctl_sbx_pH.bind("<Return>", self.set_model_pH)
         self.ctl_sbx_pH.grid(row=2, column=1)
 
         Label(fr_abg_entry, text="pCO₂, mmHg").grid(row=3, column=0)
-        self.ctl_sbx_pCO2 = Spinbox(fr_abg_entry, width=4, from_=0.0, to=150.0,
+        self.ctl_sbx_pCO2 = Spinbox(
+            fr_abg_entry, width=4, from_=0.0, to=150.0,
             format='%.1f', increment=1, command=self.set_model_pCO2)
         self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)
         self.ctl_sbx_pCO2.grid(row=3, column=1)  # Default pCO2 40.0 mmHg
-
 
         # ELECTROLYTE INPUT
         fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
         fr_elec_entry.pack(side=LEFT, anchor=N)
 
-        ctl_btn_elec = Button(fr_elec_entry, text="Reset",
+        ctl_btn_elec = Button(
+            fr_elec_entry, text="Reset",
             command=self.set_input_elec_defaults)
         CreateToolTip(ctl_btn_elec, "Find electrolyte imbalance and unmeasurable anion disturbances")
         ctl_btn_elec.grid(row=1, column=0)
 
         Label(fr_elec_entry, text='K⁺, mmol/L').grid(row=2, column=0)
-        self.ctl_sbx_K = Spinbox(fr_elec_entry, width=3, from_=0, to=15,
+        self.ctl_sbx_K = Spinbox(
+            fr_elec_entry, width=3, from_=0, to=15,
             format='%2.1f', increment=0.1, command=self.set_model_K)
         self.ctl_sbx_K.bind("<Return>", self.set_model_K)
         self.ctl_sbx_K.grid(row=2, column=1)
 
         Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=3, column=0)
-        self.ctl_sbx_Na = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
+        self.ctl_sbx_Na = Spinbox(
+            fr_elec_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f', increment=1, command=self.set_model_Na)
         CreateToolTip(self.ctl_sbx_Na, "Na⁺ and cGlu are used for serum osmolarity calculations")
         self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
         self.ctl_sbx_Na.grid(row=3, column=1)
 
         Label(fr_elec_entry, text='Cl⁻, mmol/L').grid(row=4, column=0)
-        self.ctl_sbx_Cl = Spinbox(fr_elec_entry, width=3, from_=0.0, to=200.0,
+        self.ctl_sbx_Cl = Spinbox(
+            fr_elec_entry, width=3, from_=0.0, to=200.0,
             format='%3.0f', increment=1, command=self.set_model_Cl)
         self.ctl_sbx_Cl.bind("<Return>", self.set_model_Cl)
         self.ctl_sbx_Cl.grid(row=4, column=1)
-
 
         # EXTRA INPUT
         fr_extra_entry = LabelFrame(fr_entry, text="Optional data")
         fr_extra_entry.pack(side=LEFT, anchor=N)
 
-        ctl_btn_elec = Button(fr_extra_entry, text="Reset",
+        ctl_btn_elec = Button(
+            fr_extra_entry, text="Reset",
             command=self.set_input_extra_defaults)
         CreateToolTip(ctl_btn_elec, "Tweak electrolyte calculations like a pro")
         ctl_btn_elec.grid(row=1, column=0)
 
         Label(fr_extra_entry, text="ctAlb, g/dl").grid(row=2, column=0)
-        self.ctl_sbx_ctAlb = Spinbox(fr_extra_entry, width=3, from_=0, to=10,
+        self.ctl_sbx_ctAlb = Spinbox(
+            fr_extra_entry, width=3, from_=0, to=10,
             format='%.1f', increment=0.1, command=self.set_model_ctAlb)
         CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
         self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
         self.ctl_sbx_ctAlb.grid(row=2, column=1)
 
         Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=3, column=0)
-        self.ctl_sbx_cGlu = Spinbox(fr_extra_entry, width=3, from_=0, to=50,
+        self.ctl_sbx_cGlu = Spinbox(
+            fr_extra_entry, width=3, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_cGlu)
         CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood contains other osmotically active molecules, such as ethanol or BUN (due to kidney damage), you shall add it manually or use lab osmometer.")
         self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
@@ -594,14 +605,16 @@ class CalcGFR(Frame):
         fr_entry.pack(anchor=W)
 
         Label(fr_entry, text="cCrea, μmol/L").pack(side=LEFT)
-        self.ctl_sbx_ccrea = Spinbox(fr_entry, width=4, from_=0.0, to=1000.0,
+        self.ctl_sbx_ccrea = Spinbox(
+            fr_entry, width=4, from_=0.0, to=1000.0,
             format='%.1f', increment=1, command=self.eval)
         self.ctl_sbx_ccrea.bind("<Return>", self.eval)
         self.ctl_sbx_ccrea.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
         Label(fr_entry, text="Age, years").pack(side=LEFT)
-        self.ctl_sbx_age = Spinbox(fr_entry, width=3, from_=0.0, to=200.0,
+        self.ctl_sbx_age = Spinbox(
+            fr_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_age)
         self.ctl_sbx_age.bind("<Return>", self.set_model_age)
         self.ctl_sbx_age.pack(side=LEFT)
@@ -609,7 +622,8 @@ class CalcGFR(Frame):
 
         self.var_isblack = IntVar()  # No real body weight
         self.var_isblack.set(0)
-        self.ctl_ckb_isblack = Checkbutton(fr_entry, variable=self.var_isblack,
+        self.ctl_ckb_isblack = Checkbutton(
+            fr_entry, variable=self.var_isblack,
             onvalue=1, offvalue=0, text="Black human", command=self.eval)
         self.ctl_ckb_isblack.pack(side=LEFT)
         CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
@@ -621,7 +635,8 @@ class CalcGFR(Frame):
         self.TxtView = TextView2(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
-        self.TxtView.set_text("Estimate glomerular filtration rate (eGFR).\n"
+        self.TxtView.set_text(
+            "Estimate glomerular filtration rate (eGFR).\n"
             "Make sure you set sex, cCrea (IDMS-calibrated), age, skin color.")
 
     def set_input_defaults(self, event=None):
@@ -706,7 +721,8 @@ class CreateToolTip(object):
         # Leaves only the label and removes the app window
         self.tw.wm_overrideredirect(True)
         self.tw.wm_geometry("+%d+%d" % (x, y))
-        label = Label(self.tw, text=self.text, justify=LEFT,
+        label = Label(
+            self.tw, text=self.text, justify=LEFT,
             background="#ffffff", relief='solid', borderwidth=1,
             wraplength=self.wraplength)
         label.pack(ipadx=1)

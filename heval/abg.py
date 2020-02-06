@@ -189,8 +189,8 @@ class HumanBloodModel(object):
         [1] https://litfl.com/strong-ion-difference/
         [2] https://wikem.org/wiki/Acid-base_disorders
         """
-        # return self.cNa - self.cCl - 38
-        return self.cNa - self.cCl
+        # return self.cNa - self.cCl
+        return self.cNa - self.cCl - 38
 
     @property
     def osmolarity(self):
@@ -278,6 +278,22 @@ class HumanBloodModel(object):
                 info += "Unexpected low AG {}. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
             else:
                 info += "AG is ok {}".format(desc)
+
+        """Strong ion difference.
+
+        Sometimes Na and Cl don't changes simultaneously.
+        Try distinguish Na-Cl balance in case high/low osmolarity.
+        Should help to choose better fluid for correction.
+        """
+        SIDabbr_norm = (-5, 5)  # Arbitrary threshold
+        ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
+        info += "\nSIDabbr [Na⁺-Cl⁻-38] "
+        if self.sid_abbr > SIDabbr_norm[1]:
+            info += "is alcalotic {}, relative Na⁺ excess".format(ref_str)
+        elif self.sid_abbr < SIDabbr_norm[0]:
+            info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
+        else:
+            info += "is ok {}".format(ref_str)
         return info
 
     def describe_sbe(self):
@@ -358,7 +374,6 @@ class HumanBloodModel(object):
             info += "Cl⁻ is low (<{} mmol/L). Vomit? Diuretics abuse?".format(Cl_low)
         else:
             info += "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])
-        info += " SIDabbr {:.1f}-38 = {:.1f} mEq/L".format(self.sid_abbr, self.sid_abbr - 38)
         return info
 
     def describe_glucose(self):

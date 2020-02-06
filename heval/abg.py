@@ -167,6 +167,13 @@ class HumanBloodModel(object):
 
         Strong ion gap (SIG).
 
+        * increased SID (>0) leads to alkalosis
+            dehydration: concentrates the alkalinity
+            increased unmeasured anions
+        * decreased SID (<0) acidosis
+            overhydration dilutes the alkaline state (dilutional acidosis) and decreases SID
+            increased unmeasured cations
+
         apparent SID = SIDa = (Na+ + K+ + Ca2+ + Mg2+) – (Cl– – L-lactate – urate)
         Abbreviated SID = (Na+) – (Cl–)
 

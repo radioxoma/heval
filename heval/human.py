@@ -488,6 +488,11 @@ class HumanBodyModel(object):
             Белки        1.0-1.5 г/кг, Аминокислоты 1.2-1.5 г/кг
             Жиры         1.0-1.5 г/кг (30-40% от общей энергии)
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
+
+        Administration of more than 1.5 g/kg/24h exceeds the body's ability to
+        incorporate protein and does little to restore nitrogen balance.
+        Healthy person requires approximately 0.8 grams of protein/kg/day)
+        https://www.surgicalcriticalcare.net/Resources/nitrogen.php
         """
         info = ''
         if self.sex in ('male', 'female'):
@@ -496,7 +501,7 @@ class HumanBodyModel(object):
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             if self.age:
-                info += "Basal metabolic rate for adults:\n"
+                info += "Basal metabolic rate for healthy adults:\n"
                 info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW) [ПосДеж]:\n".format(25 * self.weight_ideal, 25)
                 info += " * {:.0f} kcal/24h Harris-Benedict (1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(bmr_mifflin(self.height, self.weight, self.sex, self.age))
@@ -507,7 +512,6 @@ class HumanBodyModel(object):
             # стартовые дозы глюкозы [Курек с 143]
             info += "Energy calculations for children not implemented. Reref to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
         return info
-
 
     def _info_out_fluids(self):
         """Minimal required urinary output 0.5-1 ml/kg/h.

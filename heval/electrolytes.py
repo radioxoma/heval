@@ -20,7 +20,6 @@ M_KCl = 74.5
 norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
 norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
-norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
 
 
 def solution_glucose(glu_mass, body_weight, add_insuline=True):
@@ -273,19 +272,3 @@ def electrolyte_Na(weight, Na_serum):
     else:
         info += "Na⁺ in range ({:.0f}-{:.0f} mmol/L)".format(Na_low, Na_high)
     return info
-
-
-def electrolyte_Cl(weight, Cl_serum):
-    """Assess blood serum chloride level.
-
-    :param float weight: Real body weight, kg
-    :param float Cl_serum: mmol/L
-    """
-    Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
-    if Cl_serum > Cl_high:
-        return "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion?".format(Cl_high)
-    elif Cl_serum < Cl_low:
-        # KCL replacement?
-        return "Cl⁻ is low (<{} mmol/L). Vomit?".format(Cl_low)
-    else:
-        return "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])

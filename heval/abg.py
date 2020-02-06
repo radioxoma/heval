@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Arterial blood gas interpreter.
+Arterial blood gas interpreter. May be considered as reference realization
+of multiple interconnected compatible algorithms.
 
 Eugene Dvoretsky, 2015-05-20
 
@@ -72,7 +73,11 @@ norm_pCO2mmHg_mean = 40.0  # mmHg
 
 norm_HCO3 = (22, 26)  # mEq/L
 norm_pO2 = (80, 100)  # mmHg
-norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47]
+
+norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
+
+# NB! Changing 'norm_gap' will affect Gap-Gap calculation
+norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
 
 # Minimal low value has been chosen (<280), as I believe it
 # corresponds to mOsm reference range without BUN
@@ -157,6 +162,30 @@ class HumanBloodModel(object):
             albumin=self.ctAlb)
 
     @property
+    def sid_abbr(self):
+        """Strong ion difference.
+
+        Strong ion gap (SIG).
+
+        apparent SID = SIDa = (Na+ + K+ + Ca2+ + Mg2+) – (Cl– – L-lactate – urate)
+        Abbreviated SID = (Na+) – (Cl–)
+
+        Normal difference:
+            38 = 140     - 102
+            42 = 140 + 4 - 102  # Potassium
+
+        If SBE is normal but patient is acidotic must all be from CO2
+        If SBE is abnormal must explain by SID, weak acids, or unmeasured strong ions
+
+        References
+        ----------
+        [1] https://litfl.com/strong-ion-difference/
+        [2] https://wikem.org/wiki/Acid-base_disorders
+        """
+        # return self.cNa - self.cCl - 38
+        return self.cNa - self.cCl
+
+    @property
     def osmolarity(self):
         return calculate_osmolarity(self.cNa, self.cGlu)
 
@@ -223,7 +252,6 @@ class HumanBloodModel(object):
     def describe_anion_gap(self):
         info = "-- Anion gap ---------------------------------------\n"
         desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
-
         if abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
             if norm_gap[1] < self.anion_gap:
                 # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alcalosis
@@ -249,7 +277,7 @@ class HumanBloodModel(object):
         """
         # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
         # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
-        # TCA poisoning calculation? Titrate to effect?
+        # TCA poisoning target pH 7.45-7.55 [Костюченко 204]
 
         Calculate needed NaHCO3 for metabolic acidosis correction
         Using SBE (not pH) as threshold point guaranties that bicarbonate
@@ -263,7 +291,11 @@ class HumanBloodModel(object):
         """
         info = ""
         if self.sbe > norm_sbe[1]:
-            info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L) hypoalbuminemia? NaHCO3 overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
+            # FIXME: can be high if cloride is low. Calculate SID?
+            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
+            # https://en.wikipedia.org/wiki/Contraction_alkalosis
+            # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
+            info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO3 overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
         elif self.sbe < norm_sbe[0]:
             if self.sbe < -9:
                 info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), could use NaHCO3 for severe metabolic acidosis:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
@@ -301,11 +333,32 @@ class HumanBloodModel(object):
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
-        info += "{}\n".format(electrolytes.electrolyte_Cl(self.parent.weight, self.cCl))
+        info += "{}\n".format(self.electrolyte_Cl(self.parent.weight, self.cCl))
+        return info
+
+    def electrolyte_Cl(self, weight, Cl_serum):
+        """Assess blood serum chloride level.
+
+        :param float weight: Real body weight, kg
+        :param float Cl_serum: mmol/L
+        """
+        info = ""
+        Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
+        if Cl_serum > Cl_high:
+            info += "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion?".format(Cl_high)
+        elif Cl_serum < Cl_low:
+            # KCL replacement?
+            info += "Cl⁻ is low (<{} mmol/L). Vomit? Diuretics abuse?".format(Cl_low)
+        else:
+            info += "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])
+        info += " SIDabbr {:.1f}-38 = {:.1f} mEq/L".format(self.sid_abbr, self.sid_abbr - 38)
         return info
 
     def describe_glucose(self):
         """Assess glucose level.
+
+        Hyperglycemia <3.3 mmol/L for pregnant?
+        Target in ICU 4.5-10 mmol/L
         """
         safe_cGlu = (3, 10)  # mmol/L
         info = ""

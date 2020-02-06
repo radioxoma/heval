@@ -106,6 +106,12 @@ class HumanBloodModel(object):
         self.cGlu = None        # mmol/L
         # self.ctBun = None  # May be for osmolarity in future
 
+    def __str__(self):
+        int_prop = {}
+        for attr in self._int_prop:
+            int_prop[attr] = getattr(self, attr)
+        return "HumanBlood: {}".format(str(int_prop))
+
     def populate(self, properties):
         """Populate model from data structure.
 

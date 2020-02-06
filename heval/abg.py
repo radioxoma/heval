@@ -189,8 +189,10 @@ class HumanBloodModel(object):
         [1] https://litfl.com/strong-ion-difference/
         [2] https://wikem.org/wiki/Acid-base_disorders
         """
-        # return self.cNa - self.cCl
-        return self.cNa - self.cCl - 38
+        sid = self.cNa - self.cCl - 38
+        if self.ctAlb:
+            sid += 2.5 * (norm_ctAlb_mean - self.ctAlb)
+        return sid
 
     @property
     def osmolarity(self):
@@ -279,21 +281,23 @@ class HumanBloodModel(object):
             else:
                 info += "AG is ok {}".format(desc)
 
-        """Strong ion difference.
+        if self.parent.debug:
+            """Strong ion difference.
 
-        Sometimes Na and Cl don't changes simultaneously.
-        Try distinguish Na-Cl balance in case high/low osmolarity.
-        Should help to choose better fluid for correction.
-        """
-        SIDabbr_norm = (-5, 5)  # Arbitrary threshold
-        ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
-        info += "\nSIDabbr [Na⁺-Cl⁻-38] "
-        if self.sid_abbr > SIDabbr_norm[1]:
-            info += "is alcalotic {}, relative Na⁺ excess".format(ref_str)
-        elif self.sid_abbr < SIDabbr_norm[0]:
-            info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
-        else:
-            info += "is ok {}".format(ref_str)
+            Sometimes Na and Cl don't changes simultaneously.
+            Try distinguish Na-Cl balance in case high/low osmolarity.
+            Should help to choose better fluid for correction.
+            """
+            SIDabbr_norm = (-5, 5)  # Arbitrary threshold
+            ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
+            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
+            if self.sid_abbr > SIDabbr_norm[1]:
+                info += "is alcalotic {}, relative Na⁺ excess".format(ref_str)
+            elif self.sid_abbr < SIDabbr_norm[0]:
+                info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
+            else:
+                info += "is ok {}".format(ref_str)
+            info += ", BDE gap {:.01f} mEq/L".format(self.sbe - self.sid_abbr)  # Lactate?
         return info
 
     def describe_sbe(self):

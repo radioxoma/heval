@@ -509,7 +509,7 @@ class HumanBodyModel(object):
             if self.age:
                 info += "Basal metabolic rate for healthy adults:\n"
                 info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW) [ПосДеж]:\n".format(25 * self.weight_ideal, 25)
-                info += " * {:.0f} kcal/24h Harris-Benedict (1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(bmr_mifflin(self.height, self.weight, self.sex, self.age))
             else:
                 info += "Enter age to calculate BMR"
@@ -607,11 +607,13 @@ def body_surface_area(height, weight):
 
 
 def bmr_harris_benedict(height, weight, sex, age):
-    """Basal metabolic rate, revised Harris-Benedict equation (1984).
+    """Basal metabolic rate, revised Harris-Benedict equation (revised 1984).
 
     Examples
     --------
 
+    >>> bmr_harris_benedict(1.68, 59, 'male', 55)
+    1372.7820000000002
     >>> bmr_harris_benedict(1.68, 59, 'female', 55)
     1275.4799999999998
 
@@ -641,15 +643,18 @@ def bmr_harris_benedict(height, weight, sex, age):
 
 
 def bmr_mifflin(height, weight, sex, age):
-    """Basal metabolic rate, Mifflin St Jeor Equation (1990).
+    """Resting energy expenditure in healthy individuals, Mifflin
+    St Jeor Equation (1990).
 
     Considered as more accurate than revised Harris-Benedict equation.
 
     Examples
     --------
 
+    >>> bmr_mifflin(1.68, 59, 'male', 55)
+    1373.81
     >>> bmr_mifflin(1.68, 59, 'female', 55)
-    1204.0
+    1207.81
 
     References
     ----------
@@ -668,14 +673,15 @@ def bmr_mifflin(height, weight, sex, age):
     :rtype:
         float
     """
-    bmr = 10 * weight + 6.25 * height * 100 - 5 * age
+    # ree = 10 * weight + 6.25 * height * 100 - 5 * age  # Simplifyed
+    ree = 9.99 * weight + 6.25 * height * 100 - 4.92 * age  # From paper
     if sex == 'male':
-        bmr += 5
+        ree += 5
     elif sex == 'female':
-        bmr -= 161
+        ree -= 161
     elif sex == 'child':
-        raise ValueError("Mufflin BMR calculation for children not supported")
-    return bmr
+        raise ValueError("Mufflin ree calculation for children not supported")
+    return ree
 
 
 def mean_arterial_pressure(SysP, DiasP):

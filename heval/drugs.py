@@ -99,13 +99,12 @@ class Dithylin(object):
         # For IBW
 
     def __str__(self):
-        # print("%s for intubation %.0f mg (5-10 mins)." % (
+        # print("%s for intubation %.0f mg (5-10 mins).".format(
         #    self.name, 1.5 * self.parent.weight))
-        return (
-            "%s IBW intubation 5-10 mins relaxation: %.0f mg adult, %.0f mg child." % (
-                self.name, 1.5 * self.parent.weight_ideal, 1 * self.parent.weight_ideal) +
-            " Max maintenance dose %.0f mg every 5 mins (all ages)." % (
-                self.parent.weight_ideal * 1))
+        info = "{} IBW intubation 5-10 mins relaxation: {:.0f} mg adult, {:.0f} mg child.".format(
+            self.name, 1.5 * self.parent.weight_ideal, 1 * self.parent.weight_ideal)
+        info += " Max maintenance dose {:.0f} mg every 5 mins (all ages).".format(self.parent.weight_ideal)
+        return info
 
 
 class Propofol(object):
@@ -127,9 +126,9 @@ class Propofol(object):
         return 60 / (per_hour / bolus)
 
     def __str__(self):
-        return (
-            "%s induction 20-40 mg every 10 secs, up to %.0f mg (2.5 mg/kg for adult & children)." % (self.name, 2.5 * self.parent.weight) +
-            " Maintenance 50 mg every %.0f min (%.0f mg/kg/h)." % (self.delay(), self.maintenance_dosage))
+        info = "{} induction 20-40 mg every 10 secs, up to {:.0f} mg (2.5 mg/kg for adult & children).".format(self.name, 2.5 * self.parent.weight)
+        info += " Maintenance 50 mg every {:.0f} min ({:.0f} mg/kg/h).".format(self.delay(), self.maintenance_dosage)
+        return info
 
 
 class Fentanyl(object):
@@ -146,9 +145,9 @@ class Fentanyl(object):
     def __str__(self):
         ml_h = self.maintenance_dosage * self.parent.weight / self.concentration
         delay = 2 / (ml_h / 60)  # Delay for 3 ml bolus
-        return (
-            "%s 2 ml (0.1 mg) every %.0f mins (%.1f ml/h). Children?" % (self.name, delay, ml_h) +
-            " Typically in adults 2 ml every 20 mins or 6 ml/h.")
+        info = "{} 2 ml (0.1 mg) every {:.0f} mins ({:.1f} ml/h). Children?".format(self.name, delay, ml_h)
+        info += " Typically in adults 2 ml every 20 mins or 6 ml/h."
+        return info
 
 
 class Tracrium(object):
@@ -167,16 +166,16 @@ class Tracrium(object):
         # -30 % for isoflurane
 
     def __str__(self):
-        return (
-            "%s load %.0f-%.0f mg (%.0f-%.0f mg -30%% for isoflurane) for 15-35 mins of full block + 35 extra mins for recovery." % (
-                self.name, 0.3 * self.parent.weight, 0.6 * self.parent.weight,
-                percent_corr(0.3 * self.parent.weight, -30),
-                percent_corr(0.6 * self.parent.weight, -30)) +
-            " %.0f-%.0f mg (%.0f-%.0f mg -30%% for isoflurane) to prolong full block." % (
-                0.1 * self.parent.weight, 0.2 * self.parent.weight,
-                percent_corr(0.1 * self.parent.weight, -30),
-                percent_corr(0.2 * self.parent.weight, -30)) +
-            " Same dosage for all ages.")
+        info = "{} load {:.0f}-{:.0f} mg ({:.0f}-{:.0f} mg -30% for isoflurane) for 15-35 mins of full block + 35 extra mins for recovery.".format(
+            self.name, 0.3 * self.parent.weight, 0.6 * self.parent.weight,
+            percent_corr(0.3 * self.parent.weight, -30),
+            percent_corr(0.6 * self.parent.weight, -30))
+        info += " {:.0f}-{:.0f} mg ({:.0f}-{:.0f} mg -30% for isoflurane) to prolong full block.".format(
+            0.1 * self.parent.weight, 0.2 * self.parent.weight,
+            percent_corr(0.1 * self.parent.weight, -30),
+            percent_corr(0.2 * self.parent.weight, -30))
+        info += " Same dosage for all ages."
+        return info
 
 
 class Arduan(object):
@@ -188,8 +187,7 @@ class Arduan(object):
 
     def __str__(self):
         self.load_dose = 0.041  # mg/kg
-        info = "Arduan load dose {:.1f} mg".format(self.parent.weight * self.load_dose)
-        return info
+        return "Arduan load dose {:.1f} mg".format(self.parent.weight * self.load_dose)
 
 
 class Esmeron(object):
@@ -204,16 +202,16 @@ class Esmeron(object):
         # 60 seconds before intubation
 
     def __str__(self):
-        return (
-            "%s intubation %.0f mg (30-40 mins before <25%% recovery). NMT maintenance:\n" % (
-                self.name, 0.6 * self.parent.weight) +
-            " * bolus: <1h %.0f mg; >1h %.0f-%.0f mg [2-3 TOF, <25%%]\n" % (
-                self.parent.weight * 0.15,
-                self.parent.weight * 0.075, self.parent.weight * 0.1,) +
-            " * pump: TIVA %.0f-%.0f mg/h; GA %.0f-%.0f mg/h [1-2 TOF, <10%%]\n" % (
-                self.parent.weight * 0.3, self.parent.weight * 0.6,
-                self.parent.weight * 0.3, self.parent.weight * 0.4) +
-            "   Same dosage for all ages.")
+        info = "{} intubation {:.0f} mg (30-40 mins before <25% recovery). NMT maintenance:\n".format(
+            self.name, 0.6 * self.parent.weight)
+        info += " * bolus: <1h {:.0f} mg; >1h {:.0f}-{:.0f} mg [2-3 TOF, <25%]\n".format(
+            self.parent.weight * 0.15,
+            self.parent.weight * 0.075, self.parent.weight * 0.1)
+        info += " * pump: TIVA {:.0f}-{:.0f} mg/h; GA {:.0f}-{:.0f} mg/h [1-2 TOF, <10%]\n".format(
+            self.parent.weight * 0.3, self.parent.weight * 0.6,
+            self.parent.weight * 0.3, self.parent.weight * 0.4)
+        info += "   Same dosage for all ages."
+        return info
 
 
 def percent_corr(i, corr):

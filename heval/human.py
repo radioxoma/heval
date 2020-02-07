@@ -481,7 +481,7 @@ class HumanBodyModel(object):
         -----------------------------------------
           * Использование формулы Харриса-Бенедикта не несет преимуществ по
             сравнению с использованием упрощенного предиктивного уравнения
-          * 25-30 kcal/kg/24h
+          * 25-30 kcal/kg/24h [ESPEN 2009]
 
         Пособие дежуранта 2014
         ----------------------
@@ -508,9 +508,10 @@ class HumanBodyModel(object):
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             if self.age:
                 info += "Basal metabolic rate for healthy adults:\n"
-                info += " * {:.0f} kcal/24h ({} kcal/kg/24h IBW) [ПосДеж]:\n".format(25 * self.weight_ideal, 25)
                 info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(bmr_mifflin(self.height, self.weight, self.sex, self.age))
+                # 25-30 kcal/kg/24h RBW ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
+                info += " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h RBW) [ESPEN 2019]\n".format(25 * self.weight, 30 * self.weight)
             else:
                 info += "Enter age to calculate BMR"
         else:

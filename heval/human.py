@@ -507,13 +507,13 @@ class HumanBodyModel(object):
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             if self.age:
-                info += "Basal metabolic rate for healthy adults:\n"
-                info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(bmr_harris_benedict(self.height, self.weight, self.sex, self.age))
-                info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(bmr_mifflin(self.height, self.weight, self.sex, self.age))
+                info += "Resting energy expenditure for healthy adults:\n"
+                info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(ree_harris_benedict(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
                 # 25-30 kcal/kg/24h RBW ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
                 info += " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h RBW) [ESPEN 2019]\n".format(25 * self.weight, 30 * self.weight)
             else:
-                info += "Enter age to calculate BMR"
+                info += "Enter age to calculate REE"
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
@@ -607,15 +607,15 @@ def body_surface_area(height, weight):
     return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
 
 
-def bmr_harris_benedict(height, weight, sex, age):
-    """Basal metabolic rate, revised Harris-Benedict equation (revised 1984).
+def ree_harris_benedict(height, weight, sex, age):
+    """Resting energy expenditure, revised Harris-Benedict equation (revised 1984).
 
     Examples
     --------
 
-    >>> bmr_harris_benedict(1.68, 59, 'male', 55)
+    >>> ree_harris_benedict(1.68, 59, 'male', 55)
     1372.7820000000002
-    >>> bmr_harris_benedict(1.68, 59, 'female', 55)
+    >>> ree_harris_benedict(1.68, 59, 'female', 55)
     1275.4799999999998
 
     References
@@ -630,20 +630,20 @@ def bmr_harris_benedict(height, weight, sex, age):
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
     :return:
-        BMR, kcal/24h
+        REE, kcal/24h
     :rtype:
         float
     """
     if sex == 'male':
-        bmr = 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
+        ree = 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
     elif sex == 'female':
-        bmr = 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
+        ree = 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
     elif sex == 'child':
-        raise ValueError("Harris-Benedict equation BMR calculation for children not supported")
-    return bmr
+        raise ValueError("Harris-Benedict equation REE calculation for children not supported")
+    return ree
 
 
-def bmr_mifflin(height, weight, sex, age):
+def ree_mifflin(height, weight, sex, age):
     """Resting energy expenditure in healthy individuals, Mifflin
     St Jeor Equation (1990).
 
@@ -652,9 +652,9 @@ def bmr_mifflin(height, weight, sex, age):
     Examples
     --------
 
-    >>> bmr_mifflin(1.68, 59, 'male', 55)
+    >>> ree_mifflin(1.68, 59, 'male', 55)
     1373.81
-    >>> bmr_mifflin(1.68, 59, 'female', 55)
+    >>> ree_mifflin(1.68, 59, 'female', 55)
     1207.81
 
     References
@@ -670,7 +670,7 @@ def bmr_mifflin(height, weight, sex, age):
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
     :return:
-        BMR, kcal/24h
+        REE, kcal/24h
     :rtype:
         float
     """

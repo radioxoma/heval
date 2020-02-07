@@ -450,22 +450,32 @@ class HumanBodyModel(object):
     def _info_in_energy(self):
         """Attempt to calculate energy requirements for an human.
 
+        There are ESPEN and ASPEN recommendations. See:
+            * ESPEN guideline: Clinical nutrition in surgery
+                https://www.espen.org/files/ESPEN-guideline_Clinical-nutrition-in-surgery.pdf
+            * ESPEN guideline on clinical nutrition in the intensive care unit
+                https://www.espen.org/files/ESPEN-Guidelines/ESPEN_guideline-on-clinical-nutrition-in-the-intensive-care-unit.pdf
+
         Взрослый мужчина
-        3. Суточная потребность в энергии составляет 24-30 ккал/кг [тесты БелМАПО]
-        1. _Минимальная_ дневная потребность в глюкозе 2 г/кг в сутки
+        1. Минимальная_ дневная потребность в глюкозе 2 г/кг в сутки
         2. Дневная потребность в аминокислотах 0,7 г/кг в сутки
+        3. Суточная потребность в энергии составляет 24-30 ккал/кг [тесты БелМАПО]
         4. Суточная потребность в жирах 2 г/кг в сутки
 
         Толстым рассчитывать на идеальный, истощённым на реальный [РМАНПО]
-        Углеводы <=5-6 г/кг/24h если выше, то риск жирового гепатоза [РМАНПО]
-        Липиды <=0.2 г/кг/час независимо от возраста [Курек 2013], 0.15 г/кг/час [РМАНПО]
+
+        Top administraion limit
+        -----------------------
+        * Administration of more than 1.5 g/kg/24h exceeds the body's ability to
+        incorporate protein and does little to restore nitrogen balance.
+        Healthy person requires approximately 0.8 grams of protein/kg/day)
+        https://www.surgicalcriticalcare.net/Resources/nitrogen.php
+        * Липиды <=0.2 г/кг/час независимо от возраста [Курек 2013], 0.15 г/кг/час [РМАНПО]
+        * Углеводы <=5-6 г/кг/24h если выше, то риск жирового гепатоза [РМАНПО]
+            Glycosuria
 
         Нейрореаниматология: практическое руководство 2017
         --------------------------------------------------
-        20-25, 30-35 ккал/сут
-
-        Баланс азота? Азот в моче говорит о катаболизме.
-
         Белок 1-2 г/кг/сут (на 1 г белка должно быть >=150 ккал небелковых)
         Жир 1-1.5 г/кг/сут (30-35 % энергетических потребностей)
         Угеводы 5-6 г/кг/сут (50-70 % небелковых карорий). Скорость окисления глюкозы у человека не быстрее 7 мг/кг/мин ~ 0,5 г/кг/ч,
@@ -495,10 +505,6 @@ class HumanBodyModel(object):
             Жиры         1.0-1.5 г/кг (30-40% от общей энергии)
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
 
-        Administration of more than 1.5 g/kg/24h exceeds the body's ability to
-        incorporate protein and does little to restore nitrogen balance.
-        Healthy person requires approximately 0.8 grams of protein/kg/day)
-        https://www.surgicalcriticalcare.net/Resources/nitrogen.php
         """
         info = ''
         if self.sex in ('male', 'female'):
@@ -506,12 +512,12 @@ class HumanBodyModel(object):
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
+            # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
+            info += "Daily energy requirement {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]\n".format(25 * self.weight_ideal, 30 * self.weight_ideal)
             if self.age:
-                info += "Resting energy expenditure for healthy adults:\n"
+                info += "\nResting energy expenditure for healthy adults:\n"
                 info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(ree_harris_benedict(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
-                # 25-30 kcal/kg/24h RBW ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
-                info += " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h RBW) [ESPEN 2019]\n".format(25 * self.weight, 30 * self.weight)
             else:
                 info += "Enter age to calculate REE"
         else:

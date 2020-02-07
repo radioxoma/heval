@@ -390,12 +390,15 @@ class HumanBloodModel(object):
 
         Hyperglycemia <3.3 mmol/L for pregnant?
         Target in ICU 4.5-10 mmol/L
+
+        https://en.wikipedia.org/wiki/Renal_threshold
+        https://en.wikipedia.org/wiki/Glycosuria
         """
-        safe_cGlu = (3, 10)  # mmol/L
+        safe_cGlu = (3, 10)  # 10 mmol/L stands for glucose renal threshold
         info = ""
         if self.cGlu > norm_cGlu[1]:
             if self.cGlu > safe_cGlu[1]:
-                info += "Hyperglycemia {:.1f} ({:.1f}-{:.1f} mmol/L), consider insulin".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
+                info += "Hyperglycemia {:.1f} ({:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis, consider insulin".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
             else:
                 info += "cGlu is above ideal {:.1f} ({:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
         elif self.cGlu < norm_cGlu[0]:

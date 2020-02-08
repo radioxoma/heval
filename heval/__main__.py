@@ -261,9 +261,11 @@ class HelpWindow(Toplevel):
         self.text = scrolledtext.ScrolledText(self, wrap=WORD)
         self.text.insert(1.0, __helptext__)
 
-        # Mimic like Label
+        # Mimic Label colors
         lbl_bg = Style().lookup('TLabel', 'background')
         lbl_font = Style().lookup('TLabel', 'font')  # TkDefaultFont
+        self.configure(bg=lbl_bg)
+        # relief=FLAT for Linux
         self.text.configure(relief=FLAT, state=DISABLED, bg=lbl_bg, font=lbl_font)
         self.text.pack(expand=True, fill=BOTH)
 

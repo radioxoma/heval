@@ -109,7 +109,7 @@ class MainWindow(Frame):
         menubar.add_cascade(label="File", menu=menu_file)
         menu_about = Menu(menubar, tearoff=0)
         menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
-        menu_about.add_checkbutton(label="Verbose reports", command=self.set_debug)  # Not using tkinter BooleanVar here
+        menu_about.add_checkbutton(label="Verbose report", command=self.set_debug)  # Not using tkinter BooleanVar here
         menu_about.add_command(label="Website and updates", command=visit_website)
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)

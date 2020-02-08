@@ -327,18 +327,18 @@ class HumanBloodModel(object):
             # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
             # https://en.wikipedia.org/wiki/Contraction_alkalosis
             # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO3 overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
+            info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
         elif self.sbe < norm_sbe[0]:
             if self.sbe < -9:
-                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), could use NaHCO3 for severe metabolic acidosis:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
+                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), could use NaHCO₃ for severe metabolic acidosis:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
                 info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
                 NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
                 NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
                 NaHCO3_g = NaHCO3_mmol / 1000 * electrolytes.M_NaHCO3  # gram
                 NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * electrolytes.M_NaHCO3
-                info += "  * NaHCO3 {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
-                # info += "  * NaHCO3 {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
+                info += "  * NaHCO₃ {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
+                # info += "  * NaHCO₃ {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
                 #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
                 for dilution in (4, 8.4):
                     NaHCO3_ml = NaHCO3_g / dilution * 100
@@ -346,13 +346,13 @@ class HumanBloodModel(object):
                     info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
                 if self.parent.debug:
                     info += textwrap.dedent("""\
-                        Main concepts of NaHCO3 usage:
+                        Main concepts of NaHCO₃ usage:
                           * Must hyperventilate to make use of bicarbonate buffer
-                          * Control ABG after each NaHCO3 infusion or every 4 hours
+                          * Control ABG after each NaHCO₃ infusion or every 4 hours
                           * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
                           * When pH increases, K⁺ level decreases""")
             else:
-                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO3 not recommended".format(self.sbe, norm_sbe[0], norm_sbe[1])
+                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO₃ not recommended above -9 mEq/L".format(self.sbe, norm_sbe[0], norm_sbe[1])
         else:
             info += "SBE is ok {:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sbe, norm_sbe[0], norm_sbe[1])
         return info

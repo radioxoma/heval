@@ -173,14 +173,14 @@ def electrolyte_K(weight, K_serum):
         info += solution_glucose(glu_mass, weight)
 
     elif K_serum >= K_high:
-        glu_mass = 0.5 * weight
+        glu_mass = 0.5 * weight  # Child and adults
         info += "K⁺ is dangerously high (>{} mmol/L)\n".format(K_high)
-        info += "Inject bolus for child "
+        info += "Inject bolus 0.5 g/kg "
         info += solution_glucose(glu_mass, weight)
-        info += "Or standard adult Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
+        info += "Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
         # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-        info += "RBW NaHCO3 4% {:.0f} ml (x2={:.0f} mmol) [Курек 2013]\n".format(
-            2 * weight * M_NaHCO3 / 40, 2 * weight)
+        info += "NaHCO₃ 8.4% {:.0f} ml (RBWx2={:.0f} mmol) [Курек 2013]\n".format(
+            2 * weight, 2 * weight)
         info += "Don't forget furesemide, hyperventilation\n"
         info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
     else:

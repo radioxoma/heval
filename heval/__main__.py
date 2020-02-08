@@ -78,7 +78,7 @@ specialists. Software is provided ​"as is". Developer makes no warranties, \
 express or implied.
 
 Written by Eugene Dvoretsky 2016-2020. Check source code for references and \
-formulas.
+formulas. Contact E-mail: radioxoma@gmail.com
 
 Heval is a free software and licensed under the terms of \
 GNU General Public License version 3. """
@@ -433,7 +433,7 @@ class CalcElectrolytes(Frame):
         fr_entry.pack(anchor=W)
 
         # ABG INPUT
-        fr_abg_entry = LabelFrame(fr_entry, text="ABG basic")
+        fr_abg_entry = LabelFrame(fr_entry, text="Basic ABG")
         fr_abg_entry.pack(side=LEFT, anchor=N)
 
         ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
@@ -582,11 +582,10 @@ class CalcElectrolytes(Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
-        info = "ABG basic\n=========\n"
-        info += "{}\n".format(self.human_model.blood.describe_abg_basic())
-        if self.human_model.debug:
-            info += "{}\n".format(self.human_model.blood.describe_abg_manual())
+        info = "Basic ABG assessment\n====================\n"
+        info += "{}\n".format(self.human_model.blood.describe_abg())
         info += "{}\n\n".format(self.human_model.blood.describe_sbe())
+        info += "\nComplex electrolyte assessment\n==============================\n"
         info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
         info += "{}\n".format(self.human_model.blood.describe_glucose())
@@ -669,7 +668,8 @@ class CalcGFR(Frame):
             Year of birth: {:.0f}
             MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
             CKD-EPI\t{:3.0f} mL/min/1.73 m2
-            {}
+
+            Conclusion: {}
             """.format(cCrea_mgdl, dob, mdrd, epi, abg.gfr_describe(epi))
         elif sex == 'child':
             schwartz = abg.egfr_schwartz(cCrea, self.human_model.height)

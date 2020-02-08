@@ -137,7 +137,7 @@ class HumanBodyModel(object):
 
         # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
         # older than 3 month. ml/kg ratio more in neonates and underweight
-        info += "Total blood volume {:.0f} ml (70 ml/kg) or weight indexed {:.0f} ml [Lemmens].\n".format(
+        info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens).\n".format(
             self.weight * 70, self.total_blood_volume)
 
         # if self.sex == 'child':

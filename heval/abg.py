@@ -243,24 +243,20 @@ class HumanBloodModel(object):
             info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
         return info
 
-    def describe_abg_basic(self):
+    def describe_abg(self):
         """Describe pH and pCO2 - an old implementation considered stable.
         """
         info = textwrap.dedent("""\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
-        Result: {}\n""".format(
+        Conclusion: {}\n""".format(
             self.pCO2,
             self.hco3p,
             abg_approach_stable(self.pH, self.pCO2)[0]))
-        return info
-
-    def describe_abg_manual(self):
-        """Some manual ABG checks.
-        """
-        info = "-- Deep manual pH check -------------------------\n"
-        # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-        info += "{}".format(abg_approach_research(self.pH, self.pCO2))
+        if self.parent.debug:
+            info += "\n-- Manual compensatory response check --------------\n"
+            # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+            info += "{}".format(abg_approach_research(self.pH, self.pCO2))
         return info
 
     def describe_anion_gap(self):
@@ -361,7 +357,7 @@ class HumanBloodModel(object):
         """
         I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
         """
-        info = "- Electrolyte and osmolar abnormalities (UNTESTED) -\n"
+        info = "- Electrolyte and osmolar abnormalities ------------\n"
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))

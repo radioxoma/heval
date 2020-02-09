@@ -63,6 +63,9 @@ TV - tidal volume
 RR - respiratory rate
 
 D5 - dextrose 5%
+DKE - diabetic ketoacidosis
+HHS - hyperosmolar hyperglycemic state
+IV, I/V - intravenous
 
 ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
 """

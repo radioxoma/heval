@@ -391,20 +391,24 @@ class HumanBloodModel(object):
         """
         info = ""
         if self.cGlu > norm_cGlu[1]:
-            if self.cGlu > norm_cGlu_target[1]:
-                info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis, consider insulin".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
-            else:
+            if self.cGlu <= norm_cGlu_target[1]:
                 info += "cGlu is above ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+            else:
+                info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+                if self.cGlu <= 20:  # Arbitrary threshold
+                    info += ", consider insulin {:.0f} IU subcut".format(insulin_by_glucose(self.cGlu))
+                else:
+                    info += ", refer to DKE/HHS protocol (HAGMA and urine ketone) and start I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
 
         elif self.cGlu < norm_cGlu[0]:
-            if self.cGlu < 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
+            if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
+                info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+            else:
                 info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS glucose 10 % 2.5 mL/kg:\n"
                 # https://litfl.com/glucose/
                 # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
                 info += electrolytes.solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
                 info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
-            else:
-                info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
 
         else:
             info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
@@ -1306,3 +1310,27 @@ def abg_approach_research(pH, pCO2):
     # except ZeroDivisionError:
     #     pass
     return info
+
+
+def insulin_by_glucose(cGlu):
+    """Monoinsulin subcutaneous dose for a given serum glycemia level.
+
+    Insulin sesnitivity at morning lower, then at evening.
+
+    References
+    ----------
+    [1] Oleskevitch uses target 5 mmol/L: `(cGlu - 5) * 2`
+    [2] Lipman, T. Let's abandon urine fractionals in TPN. Nutrition Support Services. 4:38-40, 1984.
+
+    :param float cGlu: Serum glucose mmol/L
+    :return:
+        Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
+    :rtype: float
+    """
+    # cGlu mg/dl * 0.0555 = mmol/L
+    # 0.55 = (100 / daily_iu) may be considered as sensetivity to ins
+    target = 7  # Tagget glycemia, mmol/L
+    if cGlu < 10 or 25 < cGlu:
+        return 0
+    else:
+        return (cGlu - target) / 0.55

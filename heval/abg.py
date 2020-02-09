@@ -86,6 +86,8 @@ norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_range
 # Used as initial value for mOsm calculation.
 norm_cGlu_mean = 5.5  # mmol/L
 norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
+norm_cGlu_target = (4.5, 10)  # ICU target range. 10 mmol/L stands for glucose renal threshold
+# Note: gap between lower norm_cGlu and norm_cGlu_target
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
@@ -384,30 +386,28 @@ class HumanBloodModel(object):
     def describe_glucose(self):
         """Assess glucose level.
 
-        Hyperglycemia <3.3 mmol/L for pregnant?
-        Target in ICU 4.5-10 mmol/L
-
         https://en.wikipedia.org/wiki/Renal_threshold
         https://en.wikipedia.org/wiki/Glycosuria
         """
-        safe_cGlu = (3, 10)  # 10 mmol/L stands for glucose renal threshold
         info = ""
         if self.cGlu > norm_cGlu[1]:
-            if self.cGlu > safe_cGlu[1]:
-                info += "Hyperglycemia {:.1f} ({:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis, consider insulin".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
+            if self.cGlu > norm_cGlu_target[1]:
+                info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis, consider insulin".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
             else:
-                info += "cGlu is above ideal {:.1f} ({:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
+                info += "cGlu is above ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+
         elif self.cGlu < norm_cGlu[0]:
-            if self.cGlu < safe_cGlu[0]:
+            if self.cGlu < 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
                 info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS glucose 10 % 2.5 mL/kg:\n"
                 # https://litfl.com/glucose/
                 # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
                 info += electrolytes.solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
                 info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
             else:
-                info += "cGlu is below ideal {:.1f} ({:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, safe_cGlu[0], safe_cGlu[1])
+                info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+
         else:
-            info += "cGlu is perfect {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
+            info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
         return info
 
 

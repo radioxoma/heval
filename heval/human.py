@@ -513,13 +513,13 @@ class HumanBodyModel(object):
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
-            info += "Daily energy requirement {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]\n".format(25 * self.weight_ideal, 30 * self.weight_ideal)
             if self.age:
                 info += "\nResting energy expenditure for healthy adults:\n"
                 info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(ree_harris_benedict(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
             else:
-                info += "Enter age to calculate REE"
+                info += "Enter age to calculate REE\n"
+            info += " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]".format(25 * self.weight_ideal, 30 * self.weight_ideal)
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]

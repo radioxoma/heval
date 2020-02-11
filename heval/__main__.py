@@ -38,34 +38,30 @@ __helptext__ = """\
 
   ABBREVIATIONS
 ABG - arterial blood gas test
+AG - anion gap
 BMI - body mass index
 BMR - basal metabolic rate
 BSA - body surface area, m²
-IBW - ideal body weight, kg
-RBW - real body weight, kg
-NMT - neuromuscular monitoring
-TIVA - total intravenous anesthesia
-TOF - train of four
-
 CKD - chronic kidney disease
-eGFR - estimated glomerular filtration rate
-
-AG - anion gap
-  NAGMA - normal anion gap metabolic acidosis
-  HAGMA - high anion gap metabolic acidosis
-  KULT - Ketones, Uremia, Lactate, Toxins
-gg - gap-gap, delta gap
-SBE - standard base excess
-
-MV - minute volume
-VDaw - dead space airway volume
-TV - tidal volume
-RR - respiratory rate
-
 D5 - dextrose 5%
 DKE - diabetic ketoacidosis
+eGFR - estimated glomerular filtration rate
+gg - gap-gap, delta gap
+HAGMA - high anion gap metabolic acidosis
 HHS - hyperosmolar hyperglycemic state
+IBW - ideal body weight, kg
 IV, I/V - intravenous
+KULT - Ketones, Uremia, Lactate, Toxins
+MV - minute volume
+NAGMA - normal anion gap metabolic acidosis
+NMT - neuromuscular monitoring
+RBW - real body weight, kg
+RR - respiratory rate
+SBE - standard base excess
+TIVA - total intravenous anesthesia
+TOF - train of four
+TV - tidal volume
+VDaw - dead space airway volume
 
 ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
 """

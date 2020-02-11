@@ -144,13 +144,16 @@ class HumanBodyModel(object):
         #     info += "{}\n".format(wetflag(weight=self.weight))
         info += "\n--- IN -----------------------------------------\n"
         info += "{}\n".format(self._info_in_respiration())
-        info += "\n{}".format(self._info_in_fluids())
-        info += "\n{}\n".format(self._info_in_electrolytes())
-        info += "\n{}\n".format(self._info_in_energy())
+        info += "\n{}\n".format(self._info_in_fluids())
+        info += "{}\n".format(self._info_in_electrolytes())
         info += "\n--- OUT ----------------------------------------\n"  # Also CO2, feces
         info += "{}\n".format(self._info_out_fluids())
         if self.comment:
             info += "\nComments:\n{}\n".format(self.comment)
+        return info
+
+    def describe_nutrition(self):
+        info = "{}\n".format(self._info_in_energy())
         return info
 
     def is_init(self):
@@ -396,13 +399,14 @@ class HumanBodyModel(object):
     def _info_in_fluids(self):
         # Панкреатит жидкость 50-70 мл/кг/сут, [Пособие дежуранта 2014, стр. 259]
         info = ""
-        info = "BSA all ages fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)
+        info = "BSA fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
         if self.sex in ('male', 'female'):
-            h2o_min = 30 * self.weight
-            h2o_max = 35 * self.weight
-            info += "RBW adult fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(h2o_min, h2o_max)
-            # [2.0 ml/kg/min Курек 2013 с 127]
-            info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (120 ml/kg/h) [Курек]".format(self.weight * 25, 2 * 60 * self.weight)
+            info += "RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
+                30 * self.weight, 35 * self.weight)
+
+            # Something weird [2.0 ml/kg/min Курек 2013 с 127]
+            # info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (120 ml/kg/h) [Курек]".format(self.weight * 25, 2 * 60 * self.weight)
+
             # Видимо к жидкости потребления нужно добавлять перспирационные потери
             # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
             # info += "\nRBW Perspiration: {:.0f} ml/24h [Расенок]".format(persp_ros)
@@ -438,7 +442,7 @@ class HumanBodyModel(object):
         """
         info = ""
         if self.sex in ('male', 'female'):
-            info += "\nElectrolytes daily requirements:\n"
+            info += "Electrolytes daily requirements:\n"
             info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
             info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
             info += " * Mg²⁺\t{:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n".format(self.weight * 0.04)

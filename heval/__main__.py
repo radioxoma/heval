@@ -83,6 +83,9 @@ Heval is a free software and licensed under the terms of \
 GNU General Public License version 3. """
 
 
+__EASTER_TEXT__ = ("It's got what plants crave!", "It's got electrolytes!")
+
+
 class MainWindow(Frame):
     def __init__(self, parent=None, *args, **kwargs):
         # super(MainWindow, self).__init__(parent, *args, **kwargs)
@@ -120,9 +123,11 @@ class MainWindow(Frame):
         self.create_input()
         self.set_input_defaults()
         self.MText = MainText(nb, self.HBody)
+        self.CNutrition = CalcNutrition(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
         self.CGFR = CalcGFR(nb, self.HBody)
         nb.add(self.MText, text="Human body")
+        nb.add(self.CNutrition, text="Nutrition")
         nb.add(self.CElectrolytes, text="ABG & Electrolytes")
         nb.add(self.CGFR, text='eGFR')
         nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
@@ -130,7 +135,9 @@ class MainWindow(Frame):
         self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
+        self.parent.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
         self.bind_all('<<HumanModelChanged>>', self.MText.eval)
+        self.bind_all('<<HumanModelChanged>>', self.CNutrition.eval, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.eval, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CGFR.eval, add='+')
 
@@ -305,7 +312,7 @@ class AboutWindow(Toplevel):
         self.title('About v{}'.format(__version__))
 
         abouttext = __about__ + "And remember: {}".format(
-            random.choice(electrolytes.__EASTER_TEXT__))
+            random.choice(__EASTER_TEXT__))
         self.lbl = Label(self, text=abouttext, wraplength=500, padding=8)
         self.lbl.pack(expand=True, fill=BOTH)
 
@@ -420,6 +427,23 @@ class MainText(Frame):
         """Calculate and print some evaluated data."""
         info = "{}\n".format(self.human_model.describe_body())
         info += "{}\n".format(self.human_model.describe_drugs())
+        self.TxtView.set_text(info)
+
+
+class CalcNutrition(Frame):
+    def __init__(self, parent, human_model):
+        # super(CalcNutrition, self).__init__(parent)
+        Frame.__init__(self, parent)
+        self.parent = parent
+        self.human_model = human_model
+
+        self.TxtView = TextView2(self)
+        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.set_text("Nutrition for adults")
+
+    def eval(self, event=None):
+        """Calculate and print some evaluated data."""
+        info = "{}\n".format(self.human_model.describe_nutrition())
         self.TxtView.set_text(info)
 
 

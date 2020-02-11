@@ -12,6 +12,7 @@ import copy
 from itertools import chain
 from heval import abg
 from heval import drugs
+from heval import nutrition
 
 
 # https://news.tut.by/society/311809.html
@@ -145,15 +146,12 @@ class HumanBodyModel(object):
         info += "\n--- IN -----------------------------------------\n"
         info += "{}\n".format(self._info_in_respiration())
         info += "\n{}\n".format(self._info_in_fluids())
-        info += "{}\n".format(self._info_in_electrolytes())
+        info += "{}\n\n".format(self._info_in_electrolytes())
+        info += "{}\n".format(self.describe_energy())
         info += "\n--- OUT ----------------------------------------\n"  # Also CO2, feces
         info += "{}\n".format(self._info_out_fluids())
         if self.comment:
             info += "\nComments:\n{}\n".format(self.comment)
-        return info
-
-    def describe_nutrition(self):
-        info = "{}\n".format(self._info_in_energy())
         return info
 
     def is_init(self):
@@ -451,7 +449,7 @@ class HumanBodyModel(object):
         else:
             return "Electrolytes calculation for children not implemented. Refer to [Курек 2013, с 130]"
 
-    def _info_in_energy(self):
+    def describe_energy(self):
         """Attempt to calculate energy requirements for an human.
 
         There are ESPEN and ASPEN recommendations. See:
@@ -527,7 +525,54 @@ class HumanBodyModel(object):
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
-            info += "Energy calculations for children not implemented. Reref to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
+            info += "Energy calculations for children not implemented. Refer to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
+        return info
+
+    def describe_nutrition(self):
+        """Trying to find a compromise between fluids, electrolytes and energy.
+        """
+        kcal_24h = 25 * self.weight
+        fluid_24h = 35 * self.weight
+        protein_24h = 1.5 * self.weight
+        fluid_1h = fluid_24h / 24
+        info = "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(fluid_24h, kcal_24h)
+        info += "Enteral nutrition\n-----------------\n"
+        if self.debug:
+            info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
+        PN = nutrition.NutritionFormula(nutrition.enteral_nutricomp_standard, self)
+        info += "{}\n".format(str(PN))
+        full_enteral_nutrition = PN.dose_by_kcal(kcal_24h)
+        full_enteral_fluid = fluid_24h - full_enteral_nutrition
+        info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
+        # full_enteral_nutrition and fluid_24h in ml, so they reduce each other
+        info += "Resulting osmolality is {:.1f} mOsm/kg".format(
+            (full_enteral_nutrition * PN.osmolality) / fluid_24h)
+        info += "\n\n"
+
+        info += "Total parenteral nutrition\n--------------------------\n"
+        if self.debug:
+            info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirement (total parenteral nutrition criteria).\n"
+        PN = nutrition.NutritionFormula(nutrition.parenteral_nutriflex_48_150, self)
+        info += "{}\n".format(str(PN))
+        full_parenteral_nutrition = PN.dose_by_kcal(kcal_24h)
+        full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
+        info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
+        info += "{}\n".format(PN.describe_dose(full_parenteral_nutrition))
+        info += "Maximal {}".format(PN.describe_dose(PN.dose_max_kcal()))
+        info += "\n"
+
+        info += "Partial periferal + enteral nutrition\n-------------------------------------\n"
+        if self.debug:
+            info += "Using periferal vein is possible for <900 mOsm/kg mixtures, but needs simultanious enteral feeding to meet daily requirement.\n"
+        PN = nutrition.NutritionFormula(nutrition.parenteral_kabiven_perif, self)
+        info += "{}\n".format(str(PN))
+        full_parenteral_nutrition = PN.dose_by_kcal(kcal_24h)
+        full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
+        info += "Give {:.0f} ml + isotonic fluid {:.0f} ml. No need to give a water?\n".format(full_parenteral_nutrition, full_parenteral_fluid)
+        info += "{}\n".format(PN.describe_dose(full_parenteral_nutrition))
+        info += "Maximal {}\n".format(PN.describe_dose(PN.dose_max_kcal()))
+        if kcal_24h > PN.dose_max_kcal():
+            info += "Add enteral"
         return info
 
     def _info_out_fluids(self):

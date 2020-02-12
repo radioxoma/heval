@@ -245,3 +245,42 @@ class NutritionFormula(object):
             info += "  * Lipids   {:>5.1f} g/24h\n".format(self.c_lip * vol_24h)
             info += "  * Glusose  {:>5.1f} g/24h\n".format(self.c_glu * vol_24h)
         return info
+
+
+def gdl2mmoll(gdl):
+    """Bun conversion."""
+    return gdl * 0.3571
+
+
+def protein_requirement_uun(c_urea, diuresis):
+    """Calculate daily protein recquirement by daily Urine Urea Nitrogen (BUN) excretion.
+
+    1. Collect urine for 24 hours and measure it's BUN concentration
+    2. Calculate total BUN lost with urine (mol/24h), recalculate it to nitrogen (g/24h)
+    3. Add insensituve loss (stool) with empiric constant
+    4. Convert to protein requirement g/24h by multiplying by a 6.25 factor
+
+    Urine Urea Nitrogen, higher than intake nitrogen means catabolism.
+    Goal is positive balance 3-4 g for growth and repair.
+    Must give non-protein caloric substrate along with protein, or protein will be wasted for energy.
+
+    [1] Original paper? https://www.ncbi.nlm.nih.gov/pubmed/98649
+    [2] Dickerson R.N. Using nitrogen balance in clinical practice. Hosp. Pharm. 2005;40:1081–1087. doi: 10.1177/001857870504001210.
+        https://www.researchgate.net/profile/Roland_Dickerson/publication/237837800_Using_Nitrogen_Balance_in_Clinical_Practice/links/540daa0b0cf2d8daaacc6c84/Using-Nitrogen-Balance-in-Clinical-Practice.pdf
+
+    Examples
+    --------
+    >>> protein_requirenent(500, 1000)
+    Protein reqirement 112.5 g/24h
+    Enegry requirement 2700 kcal/24h (as 150 kcal/g of nitrogen)
+
+    :param float c_urea: Urea concentration in 24 hours urine, mmol/L
+    :param float diuresis: Total diuresis for 24 hours, ml
+    :return float: Protein reqirement per 24 hours, grams
+    """
+    # M_BUN_urine = (14 + 1 * 2) * 2 + 12  + 16  # 60 g/mol (NH_2)_2 CO
+    # M_N_BUN = 14 * 2  # 1 mol of BUN contains 28 grams of nitrogen
+    UUN = c_urea / 1000 * diuresis / 1000 * 28  # Urine Urea Nitrogen g/24h
+    UUN += 4  # Add skin and gastrointestinal tract losses
+    # 6.25  # 1 g nitrogen = 6.25 g protein (Jones' factor)
+    return UUN * 6.25

@@ -15,6 +15,7 @@ except ImportError:  # python2
 from heval import abg
 from heval import electrolytes
 from heval import human
+from heval import nutrition
 from heval import __version__
 
 
@@ -438,13 +439,48 @@ class CalcNutrition(Frame):
         self.parent = parent
         self.human_model = human_model
 
+        fr_entry = Frame(self)
+        fr_entry.pack(anchor=W)
+
+        Label(fr_entry, text="cUU, mmol/L").pack(side=LEFT)
+        self.ctl_sbx_cuu = Spinbox(
+            fr_entry, width=4, from_=0.0, to=3000.0,
+            format='%.1f', increment=1, command=self.eval)
+        self.ctl_sbx_cuu.bind("<Return>", self.eval)
+        self.ctl_sbx_cuu.pack(side=LEFT)
+        CreateToolTip(self.ctl_sbx_cuu, "24 hours urine urea concentration")
+
+        Label(fr_entry, text="Diuresis, ml").pack(side=LEFT)
+        self.ctl_sbx_diuresis = Spinbox(
+            fr_entry, width=4, from_=0.0, to=20000.0,
+            format='%1.0f', increment=100, command=self.eval)
+        self.ctl_sbx_diuresis.bind("<Return>", self.eval)
+        self.ctl_sbx_diuresis.pack(side=LEFT)
+        CreateToolTip(self.ctl_sbx_diuresis, "24 hours diuresis")
+
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.TxtView.set_text("Nutrition for adults")
+        self.set_input_defaults()
+
+    def set_input_defaults(self, event=None):
+        diuresis = self.human_model.weight * 24
+        self.ctl_sbx_cuu.delete(0, END)
+        self.ctl_sbx_cuu.insert(0, round(575 / (diuresis / 1000)))  # g/24h
+
+        self.ctl_sbx_diuresis.delete(0, END)  # 1 ml/kg/h
+        # self.ctl_sbx_diuresis.insert(0, round(diuresis))
+        self.ctl_sbx_diuresis.insert(0, 1000)
+        # self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        info = "{}\n".format(self.human_model.describe_nutrition())
+        protein_req = nutrition.protein_requirement_uun(
+            float(self.ctl_sbx_cuu.get()),
+            float(self.ctl_sbx_diuresis.get()))
+        info = "{}\n".format("Protein reqirement {:.1f} g/24h".format(protein_req))
+        info += "{}\n\n".format("Nonprotein energy requirement {:.0f} kcal/24h (as 150 kcal/g of nitrogen)".format(protein_req / 6.25 * 150))
+        info += "{}\n".format(self.human_model.describe_nutrition())
         self.TxtView.set_text(info)
 
 

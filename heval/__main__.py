@@ -326,9 +326,10 @@ class AboutWindow(Toplevel):
         self.focus_set()
 
 
-class TextView(Frame):
-    def __init__(self, parent=None):
-        super(TextView, self).__init__(parent)
+class TextViewCustom(Frame):
+    def __init__(self, *args, **kwargs):
+        # super(TextViewCustom, self).__init__(parent, *args, **kwargs)
+        Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
 
         frm_txt = Frame(self, width=450, height=300)
@@ -376,9 +377,9 @@ class TextView(Frame):
         return 'break'
 
 
-class TextView2(scrolledtext.ScrolledText):
+class TextView(scrolledtext.ScrolledText):
     def __init__(self, *args, **kwargs):
-        # super(TextView2, self).__init__(*args, **kwargs)
+        # super(TextView, self).__init__(*args, **kwargs)
         scrolledtext.ScrolledText.__init__(self, *args, **kwargs)
         self.config(font=('consolas', 10), wrap='word')
 
@@ -415,7 +416,7 @@ class MainText(Frame):
         self.parent = parent
         self.human_model = human_model
 
-        self.TxtView = TextView2(self)
+        self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.TxtView.set_text(
             "Got lost? Select \"Help\" in menu, or just press F1 key.\n\n"
@@ -437,7 +438,7 @@ class CalcNutrition(Frame):
         self.parent = parent
         self.human_model = human_model
 
-        self.TxtView = TextView2(self)
+        self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.TxtView.set_text("Nutrition for adults")
 
@@ -537,7 +538,7 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
         self.ctl_sbx_cGlu.grid(row=3, column=1)
 
-        self.TxtView = TextView2(self)
+        self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
@@ -656,7 +657,7 @@ class CalcGFR(Frame):
         self.reset.pack(side=LEFT)
         CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
 
-        self.TxtView = TextView2(self)
+        self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.set_input_defaults()
         self.TxtView.set_text(

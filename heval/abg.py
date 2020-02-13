@@ -91,7 +91,8 @@ norm_cGlu_target = (4.5, 10)  # ICU target range. 10 mmol/L stands for glucose r
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
-norm_ctAlb_mean = 4.4  # g/dl
+norm_ctAlb_mean = 4.4  # g/dL
+norm_ctAlb = (3.5, 5)  # g/dL
 
 
 class HumanBloodModel(object):
@@ -412,6 +413,22 @@ class HumanBloodModel(object):
 
         else:
             info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
+        return info
+
+    def describe_albumin(self):
+        """Albumin as nutrition marker in adults.
+        """
+        ctalb_range = "{} ({}-{} g/dL)".format(self.ctAlb, norm_ctAlb[0], norm_ctAlb[1])
+        if norm_ctAlb[1] < self.ctAlb:
+            info = "ctAlb is high {}. Dehydration?".format(ctalb_range)
+        elif norm_ctAlb[0] <= self.ctAlb <= norm_ctAlb[1]:
+            info = "ctAlb is ok {}".format(ctalb_range)
+        elif 3 <= self.ctAlb < norm_ctAlb[0]:
+            info = "ctAlb is low: light hypoalbuminemia {}".format(ctalb_range)
+        elif 2.5 <= self.ctAlb < 3:
+            info = "ctAlb is low: meduim hypoalbuminemia {}".format(ctalb_range)
+        elif self.ctAlb < 2.5:
+            info = "ctAlb is low: severe hypoalbuminemia {}. Expect oncotic edema".format(ctalb_range)
         return info
 
 

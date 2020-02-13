@@ -446,7 +446,7 @@ class CalcNutrition(Frame):
         Label(fr_entry, text="cUUrea, mmol/L").pack(side=LEFT)
         self.ctl_sbx_cUU = Spinbox(
             fr_entry, width=4, from_=0.0, to=3000.0,
-            format='%.0f', increment=1, command=self.eval)
+            format='%.0f', increment=10, command=self.eval)
         self.ctl_sbx_cUU.bind("<Return>", self.eval)
         self.ctl_sbx_cUU.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_cUU, "Urine urea concentration in 24h sample")
@@ -560,21 +560,21 @@ class CalcElectrolytes(Frame):
         CreateToolTip(ctl_btn_elec, "Tweak electrolyte calculations like a pro")
         ctl_btn_elec.grid(row=1, column=0)
 
-        Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=2, column=0)
-        self.ctl_sbx_ctAlb = Spinbox(
-            fr_extra_entry, width=3, from_=0, to=10,
-            format='%.1f', increment=0.1, command=self.set_model_ctAlb)
-        CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
-        self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
-        self.ctl_sbx_ctAlb.grid(row=2, column=1)
-
-        Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=3, column=0)
+        Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=2, column=0)
         self.ctl_sbx_cGlu = Spinbox(
             fr_extra_entry, width=3, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_cGlu)
         CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood contains other osmotically active molecules, such as ethanol or BUN (due to kidney damage), you shall add it manually or use lab osmometer.")
         self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
-        self.ctl_sbx_cGlu.grid(row=3, column=1)
+        self.ctl_sbx_cGlu.grid(row=2, column=1)
+
+        Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
+        self.ctl_sbx_ctAlb = Spinbox(
+            fr_extra_entry, width=3, from_=0, to=15,
+            format='%.1f', increment=0.1, command=self.set_model_ctAlb)
+        CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
+        self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
+        self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
@@ -610,12 +610,12 @@ class CalcElectrolytes(Frame):
         self.set_model_Cl()
 
     def set_input_extra_defaults(self, event=None):
-        self.ctl_sbx_ctAlb.delete(0, END)
-        self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
-        self.set_model_ctAlb()
         self.ctl_sbx_cGlu.delete(0, END)
         self.ctl_sbx_cGlu.insert(0, abg.norm_cGlu_mean)
         self.set_model_cGlu()
+        self.ctl_sbx_ctAlb.delete(0, END)
+        self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
+        self.set_model_ctAlb()
 
     def set_model_pH(self, event=None):
         self.human_model.blood.pH = float(self.ctl_sbx_pH.get())
@@ -652,7 +652,8 @@ class CalcElectrolytes(Frame):
         info += "\nComplex electrolyte assessment\n==============================\n"
         info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
-        info += "{}\n".format(self.human_model.blood.describe_glucose())
+        info += "{}\n\n".format(self.human_model.blood.describe_glucose())
+        info += "{}\n".format(self.human_model.blood.describe_albumin())
         self.TxtView.set_text(info)
 
 
@@ -670,7 +671,7 @@ class CalcGFR(Frame):
         Label(fr_entry, text="cCrea, μmol/L").pack(side=LEFT)
         self.ctl_sbx_ccrea = Spinbox(
             fr_entry, width=4, from_=0.0, to=1000.0,
-            format='%.1f', increment=1, command=self.eval)
+            format='%.1f', increment=10, command=self.eval)
         self.ctl_sbx_ccrea.bind("<Return>", self.eval)
         self.ctl_sbx_ccrea.pack(side=LEFT)
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")

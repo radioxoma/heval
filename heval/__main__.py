@@ -63,6 +63,7 @@ TIVA - total intravenous anesthesia
 TOF - train of four
 TV - tidal volume
 VDaw - dead space airway volume
+UUN - Urine Urea Nitrogen
 
 ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
 """
@@ -442,44 +443,45 @@ class CalcNutrition(Frame):
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
 
-        Label(fr_entry, text="cUU, mmol/L").pack(side=LEFT)
-        self.ctl_sbx_cuu = Spinbox(
+        Label(fr_entry, text="cUUrea, mmol/L").pack(side=LEFT)
+        self.ctl_sbx_cUU = Spinbox(
             fr_entry, width=4, from_=0.0, to=3000.0,
-            format='%.1f', increment=1, command=self.eval)
-        self.ctl_sbx_cuu.bind("<Return>", self.eval)
-        self.ctl_sbx_cuu.pack(side=LEFT)
-        CreateToolTip(self.ctl_sbx_cuu, "24 hours urine urea concentration")
+            format='%.0f', increment=1, command=self.eval)
+        self.ctl_sbx_cUU.bind("<Return>", self.eval)
+        self.ctl_sbx_cUU.pack(side=LEFT)
+        CreateToolTip(self.ctl_sbx_cUU, "Urine urea concentration in 24h sample")
 
-        Label(fr_entry, text="Diuresis, ml").pack(side=LEFT)
-        self.ctl_sbx_diuresis = Spinbox(
-            fr_entry, width=4, from_=0.0, to=20000.0,
-            format='%1.0f', increment=100, command=self.eval)
-        self.ctl_sbx_diuresis.bind("<Return>", self.eval)
-        self.ctl_sbx_diuresis.pack(side=LEFT)
-        CreateToolTip(self.ctl_sbx_diuresis, "24 hours diuresis")
+        # Label(fr_entry, text="Diuresis, ml").pack(side=LEFT)
+        # self.ctl_sbx_diuresis = Spinbox(
+        #     fr_entry, width=4, from_=0.0, to=20000.0,
+        #     format='%1.0f', increment=100, command=self.eval)
+        # self.ctl_sbx_diuresis.bind("<Return>", self.eval)
+        # self.ctl_sbx_diuresis.pack(side=LEFT)
+        # CreateToolTip(self.ctl_sbx_diuresis, "24 hours diuresis")
+
+        reset = Button(fr_entry, text="Reset", command=self.set_input_defaults)
+        reset.pack(side=LEFT)
+        CreateToolTip(reset, "Set default values")
 
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.TxtView.set_text("Nutrition for adults")
         self.set_input_defaults()
+        self.TxtView.set_text("Nutrition for adults")
 
     def set_input_defaults(self, event=None):
-        diuresis = self.human_model.weight * 24
-        self.ctl_sbx_cuu.delete(0, END)
-        self.ctl_sbx_cuu.insert(0, round(575 / (diuresis / 1000)))  # g/24h
+        # diuresis = self.human_model.weight * 24
+        self.ctl_sbx_cUU.delete(0, END)
+        self.ctl_sbx_cUU.insert(0, 575)  # g/24h
 
-        self.ctl_sbx_diuresis.delete(0, END)  # 1 ml/kg/h
+        # self.ctl_sbx_diuresis.delete(0, END)  # 1 ml/kg/h
         # self.ctl_sbx_diuresis.insert(0, round(diuresis))
-        self.ctl_sbx_diuresis.insert(0, 1000)
         # self.event_generate("<<HumanModelChanged>>")
+        self.eval()
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        protein_req = nutrition.protein_requirement_uun(
-            float(self.ctl_sbx_cuu.get()),
-            float(self.ctl_sbx_diuresis.get()))
-        info = "{}\n".format("Protein reqirement {:.1f} g/24h".format(protein_req))
-        info += "{}\n\n".format("Nonprotein energy requirement {:.0f} kcal/24h (as 150 kcal/g of nitrogen)".format(protein_req / 6.25 * 150))
+        info = "{}\n\n".format(nutrition.nitrogen_balance(
+            float(self.ctl_sbx_cUU.get()), 1000))
         info += "{}\n".format(self.human_model.describe_nutrition())
         self.TxtView.set_text(info)
 
@@ -558,7 +560,7 @@ class CalcElectrolytes(Frame):
         CreateToolTip(ctl_btn_elec, "Tweak electrolyte calculations like a pro")
         ctl_btn_elec.grid(row=1, column=0)
 
-        Label(fr_extra_entry, text="ctAlb, g/dl").grid(row=2, column=0)
+        Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=2, column=0)
         self.ctl_sbx_ctAlb = Spinbox(
             fr_extra_entry, width=3, from_=0, to=10,
             format='%.1f', increment=0.1, command=self.set_model_ctAlb)
@@ -726,7 +728,7 @@ class CalcGFR(Frame):
             mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
             epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)
             info = """\
-            cCrea\t{:.2f} mg/dl
+            cCrea\t{:.2f} mg/dL
             Year of birth: {:.0f}
             MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
             CKD-EPI\t{:3.0f} mL/min/1.73 m2
@@ -736,7 +738,7 @@ class CalcGFR(Frame):
         elif sex == 'child':
             schwartz = abg.egfr_schwartz(cCrea, self.human_model.height)
             info = """\
-            cCrea\t{:.2f} mg/dl
+            cCrea\t{:.2f} mg/dL
             {:.0f} mL/min/1.73 m2 [Schwartz revised 2009]
             {}
             """.format(cCrea_mgdl, schwartz, abg.gfr_describe(schwartz))

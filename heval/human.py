@@ -535,7 +535,9 @@ class HumanBodyModel(object):
         fluid_24h = 35 * self.weight
         protein_24h = 1.5 * self.weight
         fluid_1h = fluid_24h / 24
-        info = "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(fluid_24h, kcal_24h)
+
+        info = "Generic approximation by real body mass\n=======================================\n"
+        info += "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(fluid_24h, kcal_24h)
         info += "Enteral nutrition\n-----------------\n"
         if self.debug:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"

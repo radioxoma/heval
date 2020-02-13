@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+import textwrap
+
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
     рН 5,0-6,0
@@ -247,18 +250,61 @@ class NutritionFormula(object):
         return info
 
 
-def gdl2mmoll(gdl):
-    """Bun conversion."""
-    return gdl * 0.3571
+def uun_mgdl2mmoll(gdl):
+    """Urine urea nitrogen mg/dL to mmol/L conversion.
+
+    Note that it uses different bolam mass, so it's not an urea converter.
+
+    https://en.wikipedia.org/wiki/Urine_urea_nitrogen
+    http://www.scymed.com/en/smnxps/psxfg163_c.htm
+
+    Examples
+    --------
+    >>> uun_mgdl2mmoll(500)
+    178.57142857142858
+    """
+    return gdl / 2.8  # Urea nitrogen molar mass
 
 
-def protein_requirement_uun(c_urea, diuresis):
+def uun_mmoll2mgdl(mmol):
+    """Urine urea nitrogen mmol/L to mg/dL conversion.
+
+    Note that it uses different molar mass, so it's not an urea converter.
+
+    https://en.wikipedia.org/wiki/Urine_urea_nitrogen
+
+    Exaxmples
+    ---------
+    >>> uun_mmoll2mgdl(200)
+    560.0
+    """
+    return mmol * 2.8  # Urea nitrogen molar mass
+
+
+def urea_mmoll2mgdl(mmol):
+    """Urea mmol/L to mg/dL conversion.
+
+    Note that it uses different molar mass, so it's not an urea converter.
+
+    https://en.wikipedia.org/wiki/Urine_urea_nitrogen
+
+    Exaxmples
+    ---------
+    >>> urea_mmoll2mgdl(500)
+    3003.0
+    """
+    return mmol * 6.006  # Urea molar mass
+
+
+def nitrogen_balance(c_uurea, diuresis):
     """Calculate daily protein recquirement by daily Urine Urea Nitrogen (BUN) excretion.
 
     1. Collect urine for 24 hours and measure it's BUN concentration
     2. Calculate total BUN lost with urine (mol/24h), recalculate it to nitrogen (g/24h)
     3. Add insensituve loss (stool) with empiric constant
     4. Convert to protein requirement g/24h by multiplying by a 6.25 factor
+
+    Not applicable if diuresis <1000 ml/24h.
 
     Urine Urea Nitrogen, higher than intake nitrogen means catabolism.
     Goal is positive balance 3-4 g for growth and repair.
@@ -270,17 +316,31 @@ def protein_requirement_uun(c_urea, diuresis):
 
     Examples
     --------
-    >>> protein_requirenent(500, 1000)
+    protein_requirement_uun(500, 1000)
     Protein reqirement 112.5 g/24h
     Enegry requirement 2700 kcal/24h (as 150 kcal/g of nitrogen)
 
     :param float c_urea: Urea concentration in 24 hours urine, mmol/L
-    :param float diuresis: Total diuresis for 24 hours, ml
-    :return float: Protein reqirement per 24 hours, grams
+    :param float diuresis: Total diuresis, ml/24h
+    :return float: Protein reqirement per g/24h
     """
-    # M_BUN_urine = (14 + 1 * 2) * 2 + 12  + 16  # 60 g/mol (NH_2)_2 CO
-    # M_N_BUN = 14 * 2  # 1 mol of BUN contains 28 grams of nitrogen
-    UUN = c_urea / 1000 * diuresis / 1000 * 28  # Urine Urea Nitrogen g/24h
-    UUN += 4  # Add skin and gastrointestinal tract losses
-    # 6.25  # 1 g nitrogen = 6.25 g protein (Jones' factor)
-    return UUN * 6.25
+    # UUN - Urine Urea Nitrogen
+    # M_UUN = (14 + 1 * 2) * 2 + 12  + 16  # 60 g/mol (NH_2)_2 CO
+    # M_N_UUN = 14 * 2  # 1 mol of BUN contains 28 grams of nitrogen
+    uun = c_uurea / 1000 * diuresis / 1000 * 28  # g/24h
+
+    # Concentrations for urea and urea nitroagen are the same,
+    # but they have differemt molar mass
+    info = "Protein requirement by urine urea nitrogen 24h test\n===================================================\n"
+    info += "cUUrea {:.0f} mg/dL, cUUN {:.0f} mg/dL\n".format(
+        urea_mmoll2mgdl(c_uurea),
+        uun_mmoll2mgdl(c_uurea))
+
+    info += "UUN {:.1f} g/24h, ".format(uun)
+
+    uun += 4  # Add skin and gastrointestinal tract losses
+    protein_req = uun * 6.25  # 1 g nitrogen = 6.25 g protein
+
+    info += "{}\n".format("protein reqirement {:.1f} g/24h".format(protein_req))
+    info += "{}\n".format("Nonprotein energy requirement {:.0f} kcal/24h (as 150 kcal/g of nitrogen)".format(uun * 150))
+    return info

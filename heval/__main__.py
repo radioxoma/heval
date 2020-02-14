@@ -471,7 +471,7 @@ class CalcNutrition(Frame):
     def set_input_defaults(self, event=None):
         # diuresis = self.human_model.weight * 24
         self.ctl_sbx_cUU.delete(0, END)
-        self.ctl_sbx_cUU.insert(0, 575)  # g/24h
+        self.ctl_sbx_cUU.insert(0, 177)  # g/24h
 
         # self.ctl_sbx_diuresis.delete(0, END)  # 1 ml/kg/h
         # self.ctl_sbx_diuresis.insert(0, round(diuresis))

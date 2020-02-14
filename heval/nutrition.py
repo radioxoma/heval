@@ -179,10 +179,10 @@ class NutritionFormula(object):
     def estimete_calories(self):
         """Test caloric content.
         """
-        prt = 4
+        prt = 4  # 4.1
         lip = 9
-        glu = 4.1  # or 3.4 kcal/g
-        # glu = 3.4  # or 3.4 kcal/g
+        glu = 4.1  # pure glucose
+        # glu = 3.4  # glucose monohydrate
         info = "Estimation of total calories {:.2f} kcal/ml, ".format(self.c_lip * lip + self.c_glu * glu + self.c_prt * prt)
         info += "nonprotein calories {:.2f} kcal/ml. ".format(self.c_lip * lip + self.c_glu * glu)
         if hasattr(self, 'c_kcal_noprot'):
@@ -331,16 +331,18 @@ def nitrogen_balance(c_uurea, diuresis):
 
     # Concentrations for urea and urea nitroagen are the same,
     # but they have differemt molar mass
-    info = "Protein requirement by urine urea nitrogen 24h test\n===================================================\n"
-    info += "cUUrea {:.0f} mg/dL, cUUN {:.0f} mg/dL\n".format(
+    info = "Protein requirement by 24h urine urea nitrogen\n==============================================\n"
+    info += "cUUrea {:.1f} g/L ({:.0f} mg/dL), cUUN {:.0f} mg/dL\n".format(
+        urea_mmoll2mgdl(c_uurea) * 0.01,  # g/L
         urea_mmoll2mgdl(c_uurea),
         uun_mmoll2mgdl(c_uurea))
 
-    info += "UUN {:.1f} g/24h, ".format(uun)
-
+    info += "UUN {:.1f} g/24h".format(uun)
+    # if uun > 30:  # Kostuchenko, p 45
+    #     uun += 2
     uun += 4  # Add skin and gastrointestinal tract losses
     protein_req = uun * 6.25  # 1 g nitrogen = 6.25 g protein
 
-    info += "{}\n".format("protein reqirement {:.1f} g/24h".format(protein_req))
+    info += "{}\n".format(" - protein requirement to maintain zero nitrogen balance {:.1f} g/24h".format(protein_req))
     info += "{}\n".format("Nonprotein energy requirement {:.0f} kcal/24h (as 150 kcal/g of nitrogen)".format(uun * 150))
     return info

@@ -443,7 +443,11 @@ class HumanBodyModel(object):
             info += "Electrolytes daily requirements:\n"
             info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
             info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
+
+            # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
             info += " * Mg²⁺\t{:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n".format(self.weight * 0.04)
+
+            # Parenteral (25% of enteral) 200 mg/24h, 5 mmol/24h [Kostuch, p 49]
             info += " * Ca²⁺\t{:3.1f} mmol/24h [~0.11 mmol/kg/24h]".format(self.weight * 0.11)
             return info
         else:
@@ -549,7 +553,7 @@ class HumanBodyModel(object):
         # full_enteral_nutrition and fluid_24h in ml, so they reduce each other
         info += "Resulting osmolality is {:.1f} mOsm/kg".format(
             (full_enteral_nutrition * PN.osmolality) / fluid_24h)
-        info += "\n\n"
+        info += "{}\n".format(PN.describe_dose(full_enteral_nutrition))
 
         info += "Total parenteral nutrition\n--------------------------\n"
         if self.debug:
@@ -560,8 +564,7 @@ class HumanBodyModel(object):
         full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
         info += "{}\n".format(PN.describe_dose(full_parenteral_nutrition))
-        info += "Maximal {}".format(PN.describe_dose(PN.dose_max_kcal()))
-        info += "\n"
+        info += "Maximal {}\n".format(PN.describe_dose(PN.dose_max_kcal()))
 
         info += "Partial periferal + enteral nutrition\n-------------------------------------\n"
         if self.debug:

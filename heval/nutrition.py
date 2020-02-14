@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import textwrap
-
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
     рН 5,0-6,0
@@ -163,6 +160,73 @@ enteral_enterolin_caloric = {
 }
 
 
+class HumanNutritionModel(object):
+    def __init__(self, human_model):
+        super(HumanNutritionModel, self).__init__()
+        self.human_model = human_model
+
+    def describe_nutrition(self, by_protein=False):
+        """Trying to find a compromise between fluids, electrolytes and energy.
+        """
+        kcal_24h = 25 * self.human_model.weight
+        fluid_24h = 35 * self.human_model.weight
+        protein_24h = 1.5 * self.human_model.weight
+        fluid_1h = fluid_24h / 24
+
+        info = "Generic approximation by real body mass\n=======================================\n"
+        info += "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(fluid_24h, kcal_24h)
+
+        # Total enteral nutrition
+        info += "Enteral nutrition\n-----------------\n"
+        if self.human_model.debug:
+            info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
+        NForm = NutritionFormula(enteral_nutricomp_standard, self)
+        info += "{}\n".format(str(NForm))
+        if by_protein:
+            full_enteral_nutrition = NForm.dose_by_protein(kcal_24h)
+        else:
+            full_enteral_nutrition = NForm.dose_by_kcal(kcal_24h)
+        full_enteral_fluid = fluid_24h - full_enteral_nutrition
+        info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
+        # full_enteral_nutrition and fluid_24h in ml, so they reduce each other
+        info += "Resulting osmolality is {:.1f} mOsm/kg".format(
+            (full_enteral_nutrition * NForm.osmolality) / fluid_24h)
+        info += "{}\n".format(NForm.describe_dose(full_enteral_nutrition))
+
+        # Total parenteral nutrition
+        info += "Total parenteral nutrition\n--------------------------\n"
+        if self.human_model.debug:
+            info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirement (total parenteral nutrition criteria).\n"
+        NForm = NutritionFormula(parenteral_nutriflex_48_150, self)
+        info += "{}\n".format(str(NForm))
+        if by_protein:
+            full_parenteral_nutrition = NForm.dose_by_protein(kcal_24h)
+        else:
+            full_parenteral_nutrition = NForm.dose_by_kcal(kcal_24h)
+        full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
+        info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
+        info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
+        info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_kcal()))
+
+        # Mixed parenteral with enteral
+        info += "Partial periferal + enteral nutrition\n-------------------------------------\n"
+        if self.human_model.debug:
+            info += "Using periferal vein is possible for <900 mOsm/kg mixtures, but needs simultanious enteral feeding to meet daily requirement.\n"
+        NForm = NutritionFormula(parenteral_kabiven_perif, self)
+        info += "{}\n".format(str(NForm))
+        if by_protein:
+            full_parenteral_nutrition = NForm.dose_by_protein(kcal_24h)
+        else:
+            full_parenteral_nutrition = NForm.dose_by_kcal(kcal_24h)
+        full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
+        info += "Give {:.0f} ml + isotonic fluid {:.0f} ml. No need to give a water?\n".format(full_parenteral_nutrition, full_parenteral_fluid)
+        info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
+        info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_kcal()))
+        if kcal_24h > NForm.dose_max_kcal():
+            info += "Add enteral"
+        return info
+
+
 class NutritionFormula(object):
     def __init__(self, preparation, parent):
         """
@@ -217,11 +281,11 @@ class NutritionFormula(object):
 
         Nutriflex 48/150.
         """
-        if self.parent.sex in ('male', 'female'):  # 2-5 years and adults,
+        if self.parent.human_model.sex in ('male', 'female'):  # 2-5 years and adults,
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.parent.sex == 'child':  # 5-14 years
+        elif self.parent.human_model.sex == 'child':  # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
-        return self.parent.weight * daily_volume
+        return self.parent.human_model.weight * daily_volume
 
     def dose_max_kcal(self):
         """How many kcal provides maximal daily dose.
@@ -233,15 +297,16 @@ class NutritionFormula(object):
 
         :param float vol_24h: Dose, ml
         """
+        weight = self.parent.human_model.weight
         kcal_24h = vol_24h * self.c_kcal
         info = ""
         if self.type == 'parenteral':
             rate_1h = vol_24h / 24
-            top_rate_1h = self.max_1h_rate * self.parent.weight
+            top_rate_1h = self.max_1h_rate * weight
             info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h) at rate {:.0f}-{:.0f} ml/h:\n".format(vol_24h, kcal_24h, rate_1h, top_rate_1h)
-            info += "  * Proteins {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * rate_1h / self.parent.weight, self.c_prt * top_rate_1h / self.parent.weight)
-            info += "  * Lipids   {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * rate_1h / self.parent.weight, self.c_lip * top_rate_1h / self.parent.weight)
-            info += "  * Glusose  {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * rate_1h / self.parent.weight, self.c_glu * top_rate_1h / self.parent.weight)
+            info += "  * Proteins {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * rate_1h / weight, self.c_prt * top_rate_1h / weight)
+            info += "  * Lipids   {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * rate_1h / weight, self.c_lip * top_rate_1h / weight)
+            info += "  * Glusose  {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * rate_1h / weight, self.c_glu * top_rate_1h / weight)
         else:
             info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h)\n".format(vol_24h, kcal_24h)
             info += "  * Proteins {:>5.1f} g/24h\n".format(self.c_prt * vol_24h)

@@ -482,7 +482,7 @@ class CalcNutrition(Frame):
         """Calculate and print some evaluated data."""
         info = "{}\n\n".format(nutrition.nitrogen_balance(
             float(self.ctl_sbx_cUU.get()), 1000))
-        info += "{}\n".format(self.human_model.describe_nutrition())
+        info += "{}\n".format(self.human_model.nutrition.describe_nutrition())
         self.TxtView.set_text(info)
 
 

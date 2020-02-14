@@ -14,7 +14,11 @@ Main statements:
         ABG is hard and functions' docs couldn't be self-explaining
     * Use International System of Units (m, kPa, mmol/L)
     * No algebraic optimizations reducing readability
-    * All voodoo calculations must be outside class and documented
+    * Entities should not be multiplied without necessity
+        * Use simple and validated formula. REPRODUCIBILITY IS CRUCIAL
+        * Don't use formula improvements and sophistications from single
+            authors: it may be a solution for their systematic error
+    * All voodoo calculations shell be outside class and documented
     * Heuristic can be anywhere - it complicated anyway.
         At least class can gather all parameters in one place.
 
@@ -46,8 +50,8 @@ Main approach:
     * If AG is high, calculate Delta gap
 """
 
-from itertools import chain
 import textwrap
+from itertools import chain
 try:
     from uncertainties import umath as math
 except ImportError:

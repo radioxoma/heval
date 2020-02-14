@@ -532,7 +532,7 @@ class HumanBodyModel(object):
             info += "Energy calculations for children not implemented. Refer to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
         return info
 
-    def describe_nutrition(self):
+    def describe_nutrition(self, by_protein=False):
         """Trying to find a compromise between fluids, electrolytes and energy.
         """
         kcal_24h = 25 * self.weight
@@ -542,36 +542,49 @@ class HumanBodyModel(object):
 
         info = "Generic approximation by real body mass\n=======================================\n"
         info += "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(fluid_24h, kcal_24h)
+
+        # Total enteral nutrition
         info += "Enteral nutrition\n-----------------\n"
         if self.debug:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
-        PN = nutrition.NutritionFormula(nutrition.enteral_nutricomp_standard, self)
-        info += "{}\n".format(str(PN))
-        full_enteral_nutrition = PN.dose_by_kcal(kcal_24h)
+        NForm = nutrition.NutritionFormula(nutrition.enteral_nutricomp_standard, self)
+        info += "{}\n".format(str(NForm))
+        if by_protein:
+            full_enteral_nutrition = NForm.dose_by_protein(kcal_24h)
+        else:
+            full_enteral_nutrition = NForm.dose_by_kcal(kcal_24h)
         full_enteral_fluid = fluid_24h - full_enteral_nutrition
         info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
         # full_enteral_nutrition and fluid_24h in ml, so they reduce each other
         info += "Resulting osmolality is {:.1f} mOsm/kg".format(
-            (full_enteral_nutrition * PN.osmolality) / fluid_24h)
-        info += "{}\n".format(PN.describe_dose(full_enteral_nutrition))
+            (full_enteral_nutrition * NForm.osmolality) / fluid_24h)
+        info += "{}\n".format(NForm.describe_dose(full_enteral_nutrition))
 
+        # Total parenteral nutrition
         info += "Total parenteral nutrition\n--------------------------\n"
         if self.debug:
             info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirement (total parenteral nutrition criteria).\n"
-        PN = nutrition.NutritionFormula(nutrition.parenteral_nutriflex_48_150, self)
-        info += "{}\n".format(str(PN))
-        full_parenteral_nutrition = PN.dose_by_kcal(kcal_24h)
+        NForm = nutrition.NutritionFormula(nutrition.parenteral_nutriflex_48_150, self)
+        info += "{}\n".format(str(NForm))
+        if by_protein:
+            full_parenteral_nutrition = NForm.dose_by_protein(kcal_24h)
+        else:
+            full_parenteral_nutrition = NForm.dose_by_kcal(kcal_24h)
         full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
-        info += "{}\n".format(PN.describe_dose(full_parenteral_nutrition))
-        info += "Maximal {}\n".format(PN.describe_dose(PN.dose_max_kcal()))
+        info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
+        info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_kcal()))
 
+        # Mixed parenteral with enteral
         info += "Partial periferal + enteral nutrition\n-------------------------------------\n"
         if self.debug:
             info += "Using periferal vein is possible for <900 mOsm/kg mixtures, but needs simultanious enteral feeding to meet daily requirement.\n"
         PN = nutrition.NutritionFormula(nutrition.parenteral_kabiven_perif, self)
         info += "{}\n".format(str(PN))
-        full_parenteral_nutrition = PN.dose_by_kcal(kcal_24h)
+        if by_protein:
+            full_parenteral_nutrition = PN.dose_by_protein(kcal_24h)
+        else:
+            full_parenteral_nutrition = PN.dose_by_kcal(kcal_24h)
         full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml. No need to give a water?\n".format(full_parenteral_nutrition, full_parenteral_fluid)
         info += "{}\n".format(PN.describe_dose(full_parenteral_nutrition))

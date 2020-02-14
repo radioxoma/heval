@@ -204,7 +204,7 @@ class NutritionFormula(object):
     #     return kcal_24h / self.c_kcal
 
     def dose_by_protein(self, protein_24h):
-        """Dose by proteins in 24 h.
+        """Dose by required protein in 24 h.
 
         Mathod can returm volume exceeding maximal recommended daily dose.
 

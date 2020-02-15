@@ -164,17 +164,37 @@ class HumanNutritionModel(object):
     def __init__(self, human_model):
         super(HumanNutritionModel, self).__init__()
         self.human_model = human_model
+        self.fluid_multipler = 30  # ml/kg RBW
+        self.kcal_multipler = 25  # ml/kg RBW
+        self.uurea = None  # Total urine urea, mmol
+        # self.protein_24h = 1.5 * self.human_model.weight
+
+    @property
+    def fluid_24h(self):
+        return self.fluid_multipler * self.human_model.weight
+
+    @property
+    def fluid_1h(self):
+        return self.fluid_24h / 24
+
+    @property
+    def kcal_24h(self):
+        return self.kcal_multipler * self.human_model.weight
+
+    @property
+    def uurea_prot_24h(self):
+        return nitrogen_balance(self.uurea)
+
+    @property
+    def uures_prot_g_kg_24h(self):
+        return self.uurea_prot_24h / self.human_model.weight
 
     def describe_nutrition(self, by_protein=False):
         """Trying to find a compromise between fluids, electrolytes and energy.
         """
-        kcal_24h = 25 * self.human_model.weight
-        fluid_24h = 35 * self.human_model.weight
-        protein_24h = 1.5 * self.human_model.weight
-        fluid_1h = fluid_24h / 24
 
-        info = "Generic approximation by real body mass\n=======================================\n"
-        info += "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(fluid_24h, kcal_24h)
+        info = "Generic approximation by body mass\n==================================\n"
+        info += "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(self.fluid_24h, self.kcal_24h)
 
         # Total enteral nutrition
         info += "Enteral nutrition\n-----------------\n"
@@ -183,14 +203,14 @@ class HumanNutritionModel(object):
         NForm = NutritionFormula(enteral_nutricomp_standard, self)
         info += "{}\n".format(str(NForm))
         if by_protein:
-            full_enteral_nutrition = NForm.dose_by_protein(kcal_24h)
+            full_enteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
         else:
-            full_enteral_nutrition = NForm.dose_by_kcal(kcal_24h)
-        full_enteral_fluid = fluid_24h - full_enteral_nutrition
+            full_enteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
+        full_enteral_fluid = self.fluid_24h - full_enteral_nutrition
         info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
-        # full_enteral_nutrition and fluid_24h in ml, so they reduce each other
+        # full_enteral_nutrition and self.fluid_24h in ml, so they reduce each other
         info += "Resulting osmolality is {:.1f} mOsm/kg".format(
-            (full_enteral_nutrition * NForm.osmolality) / fluid_24h)
+            (full_enteral_nutrition * NForm.osmolality) / self.fluid_24h)
         info += "{}\n".format(NForm.describe_dose(full_enteral_nutrition))
 
         # Total parenteral nutrition
@@ -200,10 +220,10 @@ class HumanNutritionModel(object):
         NForm = NutritionFormula(parenteral_nutriflex_48_150, self)
         info += "{}\n".format(str(NForm))
         if by_protein:
-            full_parenteral_nutrition = NForm.dose_by_protein(kcal_24h)
+            full_parenteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
         else:
-            full_parenteral_nutrition = NForm.dose_by_kcal(kcal_24h)
-        full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
+            full_parenteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
+        full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
         info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
         info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_kcal()))
@@ -215,16 +235,19 @@ class HumanNutritionModel(object):
         NForm = NutritionFormula(parenteral_kabiven_perif, self)
         info += "{}\n".format(str(NForm))
         if by_protein:
-            full_parenteral_nutrition = NForm.dose_by_protein(kcal_24h)
+            full_parenteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
         else:
-            full_parenteral_nutrition = NForm.dose_by_kcal(kcal_24h)
-        full_parenteral_fluid = fluid_24h - full_parenteral_nutrition
+            full_parenteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
+        full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml. No need to give a water?\n".format(full_parenteral_nutrition, full_parenteral_fluid)
         info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
         info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_kcal()))
-        if kcal_24h > NForm.dose_max_kcal():
+        if self.kcal_24h > NForm.dose_max_kcal():
             info += "Add enteral"
         return info
+
+    def describe_nitrogen_balance(self):
+        return nitrogen_balance(self.uurea, text=True)
 
 
 class NutritionFormula(object):
@@ -361,7 +384,7 @@ def urea_mmoll2mgdl(mmol):
     return mmol * 6.006  # Urea molar mass
 
 
-def nitrogen_balance(c_uurea, diuresis):
+def nitrogen_balance(c_uurea, diuresis=1000, text=False):
     """Calculate daily protein recquirement by daily Urine Urea Nitrogen (BUN) excretion.
 
     1. Wait 1-2 days before urine urea collection to acieve steady metabolic state
@@ -395,7 +418,8 @@ def nitrogen_balance(c_uurea, diuresis):
 
     Parameters
     ----------
-    :param float c_urea: Urea concentration in 24 hours urine, mmol/L
+    :param float c_urea: Urea concentration in 24 hours urine, mmol/L.
+        If diuresis not given, total Urea mmol/24h
     :param float diuresis: Total diuresis, ml/24h
     :return float: Protein reqirement per g/24h
     """
@@ -420,4 +444,7 @@ def nitrogen_balance(c_uurea, diuresis):
 
     info += "{}\n".format(" - protein requirement to maintain zero nitrogen balance {:.1f} g/24h".format(protein_req))
     # info += "{}\n".format("Nonprotein energy requirement {:.0f} kcal/24h (as 150 kcal/g of nitrogen)".format(uun * 150))
-    return info
+    if text:
+        return info
+    else:
+        return protein_req

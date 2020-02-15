@@ -202,7 +202,7 @@ class HumanNutritionModel(object):
         """
 
         info = "Generic approximation by body mass\n==================================\n"
-        info += "Start point:\n * Fluid demand {:.0f} ml/24h (35 ml/kg/24h)\n * Energy demand {:.0f} kcal/24h (25 kcal/kg/24h)\n\n".format(self.fluid_24h, self.kcal_24h)
+        info += "Start point:\n * Fluid demand {:.0f} ml/24h ({:.0f} ml/kg/24h)\n * Energy demand {:.0f} kcal/24h ({:.0f} kcal/kg/24h)\n\n".format(self.fluid_24h, self.fluid_multipler, self.kcal_24h, self.kcal_multipler)
 
         # Total enteral nutrition
         info += "Enteral nutrition\n-----------------\n"
@@ -217,7 +217,7 @@ class HumanNutritionModel(object):
         full_enteral_fluid = self.fluid_24h - full_enteral_nutrition
         info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
         # full_enteral_nutrition and self.fluid_24h in ml, so they reduce each other
-        info += "Resulting osmolality is {:.1f} mOsm/kg".format(
+        info += "Resulting osmolality is {:.1f} mOsm/kg\n".format(
             (full_enteral_nutrition * NForm.osmolality) / self.fluid_24h)
         info += "{}\n".format(NForm.describe_dose(full_enteral_nutrition))
 

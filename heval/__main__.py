@@ -170,7 +170,7 @@ class MainWindow(Frame):
             fr_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0,
             text="Use IBW", command=self.set_model_use_ibw)
         self.ctl_use_ibw_cb.pack(side=LEFT)
-        CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height")
+        CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height\nand use IBW instead RBW in all calculations")
 
         self.lbl_weight = Label(fr_entry, text='Weight, kg')
         self.lbl_weight.pack(side=LEFT)
@@ -443,40 +443,130 @@ class CalcNutrition(Frame):
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
 
-        Label(fr_entry, text="cUUrea, mmol/L").pack(side=LEFT)
+        self.var_rbtm_calc_method = IntVar()
+        self.var_rbtm_calc_method.set(0)
+
+        # Fluid input
+        fr_fluid_entry = LabelFrame(fr_entry, text="Daily fluid")
+        fr_fluid_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+
+        ctl_btn_fluid = Button(fr_fluid_entry, text="Reset", command=self.set_input_fluid_defaults)
+        CreateToolTip(ctl_btn_fluid, "Reset fluid")
+        ctl_btn_fluid.grid(row=0, column=0)
+
+        Label(fr_fluid_entry, text="Fluid ml/kg RBW").grid(row=1, column=0)
+        self.ctl_sbx_fluid = Spinbox(
+            fr_fluid_entry, width=3, from_=0.0, to=200.0,
+            format='%1.0f', increment=1, command=self.eval)
+        self.ctl_sbx_fluid.bind("<Return>", self.eval)
+        self.ctl_sbx_fluid.grid(row=1, column=1)
+        CreateToolTip(self.ctl_sbx_fluid, "24 hours fluid intake requirement")
+
+        Label(fr_fluid_entry).grid(row=2, column=0)  # Placeholder
+        Label(fr_fluid_entry).grid(row=2, column=1)  # Placeholder
+
+        Label(fr_fluid_entry, text="Fluid ml/24h").grid(row=3, column=0)
+        Label(fr_fluid_entry, text="0").grid(row=3, column=1)
+
+        # Kcal input
+        fr_kcal_entry = LabelFrame(fr_entry, text="Daily kcal")
+        self.fr_kcal_entry = fr_kcal_entry
+        fr_kcal_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+
+        ctl_btn_kcal = Button(fr_kcal_entry, text="Reset", command=self.set_input_kcal_defaults)
+        CreateToolTip(ctl_btn_kcal, "Reset kcal")
+        ctl_btn_kcal.grid(row=0, column=0)
+
+        ctl_rbtn0_method = Radiobutton(fr_kcal_entry, text=None, variable=self.var_rbtm_calc_method, value=0, command=self.set_calc_method)
+        ctl_rbtn0_method.grid(row=0, column=1)
+
+        Label(fr_kcal_entry, text="kcal/kg RBW").grid(row=1, column=0)
+        self.ctl_sbx_kcal = Spinbox(
+            fr_kcal_entry, width=3, from_=0.0, to=200.0,
+            format='%1.0f', increment=1, command=self.eval)
+        self.ctl_sbx_kcal.bind("<Return>", self.eval)
+        self.ctl_sbx_kcal.grid(row=1, column=1)
+        CreateToolTip(self.ctl_sbx_kcal, "24 hours fluid intake requirement")
+
+        Label(fr_kcal_entry).grid(row=2, column=0)  # Placeholder
+        Label(fr_kcal_entry).grid(row=2, column=1)  # Placeholder
+
+        Label(fr_kcal_entry, text="kcal/24h").grid(row=3, column=0)
+        Label(fr_kcal_entry, text="0").grid(row=3, column=1)
+
+        # Protein & Nitrogen balance input
+        fr_nitrogen_entry = LabelFrame(fr_entry, text="Nitrogen balance")
+        self.fr_nitrogen_entry = fr_nitrogen_entry
+        fr_nitrogen_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+
+        ctl_btn_prot = Button(fr_nitrogen_entry, text="Reset", command=self.set_input_protein_defaults)
+        CreateToolTip(ctl_btn_prot, "Reset protein")
+        ctl_btn_prot.grid(row=0, column=0)
+
+        ctl_rbtn1_method = Radiobutton(fr_nitrogen_entry, text=None, variable=self.var_rbtm_calc_method, value=1, command=self.set_calc_method)
+        ctl_rbtn1_method.grid(row=0, column=1)
+
+        Label(fr_nitrogen_entry, text="cUUrea, mmol/L").grid(row=1, column=0)
         self.ctl_sbx_cUU = Spinbox(
-            fr_entry, width=4, from_=0.0, to=3000.0,
+            fr_nitrogen_entry, width=4, from_=0.0, to=3000.0,
             format='%.0f', increment=10, command=self.eval)
         self.ctl_sbx_cUU.bind("<Return>", self.eval)
-        self.ctl_sbx_cUU.pack(side=LEFT)
+        self.ctl_sbx_cUU.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_cUU, "Urine urea concentration in 24h sample")
 
-        # Label(fr_entry, text="Diuresis, ml").pack(side=LEFT)
-        # self.ctl_sbx_diuresis = Spinbox(
-        #     fr_entry, width=4, from_=0.0, to=20000.0,
-        #     format='%1.0f', increment=100, command=self.eval)
-        # self.ctl_sbx_diuresis.bind("<Return>", self.eval)
-        # self.ctl_sbx_diuresis.pack(side=LEFT)
-        # CreateToolTip(self.ctl_sbx_diuresis, "24 hours diuresis")
+        Label(fr_nitrogen_entry, text="Protein, g/kg/24h").grid(row=2, column=0)
+        self.ctl_sbx_prot24h = Spinbox(
+            fr_nitrogen_entry, width=4, from_=0.0, to=3000.0,
+            format='%.0f', increment=10, command=self.eval)
+        self.ctl_sbx_prot24h.bind("<Return>", self.eval)
+        self.ctl_sbx_prot24h.grid(row=2, column=1)
+        CreateToolTip(self.ctl_sbx_prot24h, "Urine urea concentration in 24h sample")
 
-        reset = Button(fr_entry, text="Reset", command=self.set_input_defaults)
-        reset.pack(side=LEFT)
-        CreateToolTip(reset, "Set default values")
+        Label(fr_nitrogen_entry, text="Protein g/24h").grid(row=3, column=0)
+        Label(fr_nitrogen_entry, text="0").grid(row=3, column=1)
 
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.set_input_defaults()
+        self.set_input_fluid_defaults()
+        self.set_input_kcal_defaults()
+        self.set_input_protein_defaults()
+        self.set_calc_method()
         self.TxtView.set_text("Nutrition for adults")
 
-    def set_input_defaults(self, event=None):
-        # diuresis = self.human_model.weight * 24
-        self.ctl_sbx_cUU.delete(0, END)
-        self.ctl_sbx_cUU.insert(0, 177)  # g/24h
+    def set_input_fluid_defaults(self, event=None):
+        self.ctl_sbx_fluid.delete(0, END)
+        self.ctl_sbx_fluid.insert(0, 30)  # ml/kg/24h
+        # self.eval()  # Move to set_model_* and generate event from setter
 
-        # self.ctl_sbx_diuresis.delete(0, END)  # 1 ml/kg/h
-        # self.ctl_sbx_diuresis.insert(0, round(diuresis))
-        # self.event_generate("<<HumanModelChanged>>")
+    def set_input_kcal_defaults(self, event=None):
+        self.ctl_sbx_kcal.delete(0, END)
+        self.ctl_sbx_kcal.insert(0, 25)  # kcal/kg/24h
+        # self.eval()
+
+    def set_input_protein_defaults(self, event=None):
+        self.ctl_sbx_cUU.delete(0, END)
+        self.ctl_sbx_cUU.insert(0, 177)
         self.eval()
+
+    def set_calc_method(self, event=None):
+        def set_state(widget, state):
+            # Set widget state NORMAL, DISABLED
+            for child in widget.winfo_children():
+                if not isinstance(child, Radiobutton):
+                    child.configure(state=state)
+
+        if self.var_rbtm_calc_method.get() == 0:  # By kcal
+            set_state(self.fr_kcal_entry, NORMAL)
+            set_state(self.fr_nitrogen_entry, DISABLED)
+            # self.ctl_sbx_kcal['state'] = NORMAL
+            # self.ctl_sbx_prot24h['state'] = DISABLED
+            # self.ctl_sbx_cUU['state'] = DISABLED
+        elif self.var_rbtm_calc_method.get() == 1:  # By UUN
+            set_state(self.fr_kcal_entry, DISABLED)
+            set_state(self.fr_nitrogen_entry, NORMAL)
+            # self.ctl_sbx_kcal['state'] = DISABLED
+            # self.ctl_sbx_prot24h['state'] = NORMAL
+            # self.ctl_sbx_cUU['state'] = NORMAL
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
@@ -498,7 +588,7 @@ class CalcElectrolytes(Frame):
 
         # ABG INPUT
         fr_abg_entry = LabelFrame(fr_entry, text="Basic ABG")
-        fr_abg_entry.pack(side=LEFT, anchor=N)
+        fr_abg_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
 
         ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
         CreateToolTip(ctl_btn_abg, "Compare respiratory and metabolic impact on blood pH")
@@ -520,7 +610,7 @@ class CalcElectrolytes(Frame):
 
         # ELECTROLYTE INPUT
         fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
-        fr_elec_entry.pack(side=LEFT, anchor=N)
+        fr_elec_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
 
         ctl_btn_elec = Button(
             fr_elec_entry, text="Reset",
@@ -552,7 +642,7 @@ class CalcElectrolytes(Frame):
 
         # EXTRA INPUT
         fr_extra_entry = LabelFrame(fr_entry, text="Optional data")
-        fr_extra_entry.pack(side=LEFT, anchor=N)
+        fr_extra_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
 
         ctl_btn_elec = Button(
             fr_extra_entry, text="Reset",

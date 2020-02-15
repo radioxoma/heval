@@ -450,7 +450,7 @@ class CalcNutrition(Frame):
         fr_fluid_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
 
         ctl_btn_fluid = Button(fr_fluid_entry, text="Reset", command=self.set_input_fluid_defaults)
-        CreateToolTip(ctl_btn_fluid, "Reset fluid")
+        # CreateToolTip(ctl_btn_fluid, "Reset fluid")
         ctl_btn_fluid.grid(row=0, column=0)
 
         Label(fr_fluid_entry, text="ml/kg/24h").grid(row=1, column=0)
@@ -461,19 +461,19 @@ class CalcNutrition(Frame):
         self.ctl_sbx_fluid_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid intake requirement.\nTypical 30-35 ml/kg")
 
-        Label(fr_fluid_entry).grid(row=2, column=0)  # Placeholder
-        Label(fr_fluid_entry).grid(row=2, column=1)  # Placeholder
-
-        Label(fr_fluid_entry, text="ml/24h").grid(row=3, column=0)
+        Label(fr_fluid_entry, text="ml/24h").grid(row=2, column=0)
         self.lbl_fluid_24h = Label(fr_fluid_entry)
-        self.lbl_fluid_24h.grid(row=3, column=1)
+        self.lbl_fluid_24h.grid(row=2, column=1)
+
+        # Label(fr_fluid_entry).grid(row=3, column=0)  # Placeholder
+        # Label(fr_fluid_entry).grid(row=3, column=1)  # Placeholder
 
         # Kcal input
         self.fr_kcal_entry = LabelFrame(fr_entry, text="By caloric demand")
         self.fr_kcal_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
 
         ctl_btn_kcal = Button(self.fr_kcal_entry, text="Reset", command=self.set_input_kcal_defaults)
-        CreateToolTip(ctl_btn_kcal, "Reset kcal")
+        # CreateToolTip(ctl_btn_kcal, "Reset kcal")
         ctl_btn_kcal.grid(row=0, column=0)
 
         ctl_rbtn0_method = Radiobutton(
@@ -487,14 +487,14 @@ class CalcNutrition(Frame):
             format='%1.0f', increment=1, command=self.set_model_kcal_multipler)
         self.ctl_sbx_kcal_mul.bind("<Return>", self.set_model_kcal_multipler)
         self.ctl_sbx_kcal_mul.grid(row=1, column=1)
-        CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours fluid intake requirement.\nTypical 25-30 kcal/kg")
+        CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours energy intake requirement.\nTypical 25-30 kcal/kg")
 
-        Label(self.fr_kcal_entry).grid(row=2, column=0)  # Placeholder
-        Label(self.fr_kcal_entry).grid(row=2, column=1)  # Placeholder
-
-        Label(self.fr_kcal_entry, text="kcal/24h").grid(row=3, column=0)
+        Label(self.fr_kcal_entry, text="kcal/24h").grid(row=2, column=0)
         self.lbl_kcal_24h = Label(self.fr_kcal_entry)
-        self.lbl_kcal_24h.grid(row=3, column=1)
+        self.lbl_kcal_24h.grid(row=2, column=1)
+
+        # Label(self.fr_kcal_entry).grid(row=3, column=0)  # Placeholder
+        # Label(self.fr_kcal_entry).grid(row=3, column=1)  # Placeholder
 
         # Protein & Nitrogen balance input
         self.fr_nitrogen_entry = LabelFrame(fr_entry, text="By nitrogen balance")
@@ -503,7 +503,7 @@ class CalcNutrition(Frame):
         ctl_btn_prot = Button(
             self.fr_nitrogen_entry, text="Reset",
             command=self.set_input_protein_defaults)
-        CreateToolTip(ctl_btn_prot, "Reset protein")
+        # CreateToolTip(ctl_btn_prot, "Reset protein")
         ctl_btn_prot.grid(row=0, column=0)
 
         ctl_rbtn1_method = Radiobutton(
@@ -519,17 +519,20 @@ class CalcNutrition(Frame):
         self.ctl_sbx_uurea.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_uurea, "Total urea in whole 24h urine")
 
-        Label(self.fr_nitrogen_entry, text="Protein, g/kg/24h").grid(row=2, column=0)
-        self.ctl_sbx_prot_g_kg_24h = Spinbox(
-            self.fr_nitrogen_entry, width=4, from_=0.0, to=10.0,
-            format='%.2f', increment=0.1, command=None)
-        self.ctl_sbx_prot_g_kg_24h.bind("<Return>", self.eval)
-        self.ctl_sbx_prot_g_kg_24h.grid(row=2, column=1)
-        CreateToolTip(self.ctl_sbx_prot_g_kg_24h, "Urine urea concentration in 24h sample")
-
-        Label(self.fr_nitrogen_entry, text="Protein g/24h").grid(row=3, column=0)
+        Label(self.fr_nitrogen_entry, text="Protein g/24h").grid(row=2, column=0)
         self.lbl_prot_24h = Label(self.fr_nitrogen_entry)
-        self.lbl_prot_24h.grid(row=3, column=1)
+        self.lbl_prot_24h.grid(row=2, column=1)
+        CreateToolTip(self.lbl_prot_24h, "24h protein intake needed to maintain zero nitrogen balance")
+
+        Label(self.fr_nitrogen_entry, text="Protein, g/kg/24h").grid(row=3, column=0)
+        # self.ctl_sbx_prot_g_kg_24h = Spinbox(
+        #     self.fr_nitrogen_entry, width=4, from_=0.0, to=10.0,
+        #     format='%.2f', increment=0.1, command=self.increment_uurea_widget)
+        # self.ctl_sbx_prot_g_kg_24h.bind("<Return>", self.eval)
+        # self.ctl_sbx_prot_g_kg_24h.grid(row=2, column=1)
+        # CreateToolTip(self.ctl_sbx_prot_g_kg_24h, "Urine urea concentration in 24h sample")
+        self.lbl_sbx_prot_g_kg_24h = Label(self.fr_nitrogen_entry)
+        self.lbl_sbx_prot_g_kg_24h.grid(row=3, column=1)
 
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
@@ -551,7 +554,7 @@ class CalcNutrition(Frame):
 
     def set_input_protein_defaults(self, event=None):
         self.ctl_sbx_uurea.delete(0, END)
-        self.ctl_sbx_uurea.insert(0, 177)
+        self.ctl_sbx_uurea.insert(0, 190)
         self.set_model_uurea()
 
     def set_nutr_gui_state(self, event=None):
@@ -587,10 +590,10 @@ class CalcNutrition(Frame):
         """Calculate and print some evaluated data."""
         self.lbl_fluid_24h['text'] = round(self.human_model.nutrition.fluid_24h)
         self.lbl_kcal_24h['text'] = round(self.human_model.nutrition.kcal_24h)
-        self.lbl_prot_24h['text'] = round(self.human_model.nutrition.uurea_prot_24h, 1)
-        self.ctl_sbx_prot_g_kg_24h.delete(0, END)
-        self.ctl_sbx_prot_g_kg_24h.insert(0, round(self.human_model.nutrition.uures_prot_g_kg_24h, 2))  # g/kg/24h
-
+        self.lbl_prot_24h['text'] = "{:.1f}".format(self.human_model.nutrition.uurea_prot_24h)
+        self.lbl_sbx_prot_g_kg_24h['text'] = "{:.2f}".format(self.human_model.nutrition.uures_prot_g_kg_24h)
+        # self.ctl_sbx_prot_g_kg_24h.delete(0, END)
+        # self.ctl_sbx_prot_g_kg_24h.insert(0, round(self.human_model.nutrition.uures_prot_g_kg_24h, 2))  # g/kg/24h
         info = ""
         if self.var_rbtm_calc_method.get() == 0:  # By kcal
             info += "{}\n".format(self.human_model.nutrition.describe_nutrition())

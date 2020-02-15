@@ -189,6 +189,14 @@ class HumanNutritionModel(object):
     def uures_prot_g_kg_24h(self):
         return self.uurea_prot_24h / self.human_model.weight
 
+    def uurea_prot_24h_reverse(self, protein_req):
+        """Get Urea by protein_req.
+
+        :param float protein_req: g/kg/24h
+        :return: Urea, mmol
+        """
+        return ((protein_req * self.human_model.weight / 6.25) - 4) / 28 * 1000
+
     def describe_nutrition(self, by_protein=False):
         """Trying to find a compromise between fluids, electrolytes and energy.
         """

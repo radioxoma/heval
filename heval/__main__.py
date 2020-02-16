@@ -137,7 +137,8 @@ class MainWindow(Frame):
         self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
         self.parent.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
-        self.bind_all('<<HumanModelChanged>>', self.MText.eval)
+        self.bind_all('<<HumanModelChanged>>', self.eval)
+        self.bind_all('<<HumanModelChanged>>', self.MText.eval, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CNutrition.eval, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.eval, add='+')
         self.bind_all('<<HumanModelChanged>>', self.CGFR.eval, add='+')
@@ -220,11 +221,6 @@ class MainWindow(Frame):
 
     def set_model_height(self, event=None):
         self.HBody.height = float(self.ctl_height.get()) / 100
-        if self.HBody.use_ibw:
-            self.ctl_weight['state'] = NORMAL
-            self.ctl_weight.delete(0, END)
-            self.ctl_weight.insert(0, round(self.HBody.weight, 1))
-            self.ctl_weight['state'] = self.lbl_weight['state']
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_weight(self, event=None):
@@ -253,6 +249,14 @@ class MainWindow(Frame):
         """
         self.HBody.debug = not self.HBody.debug  # Invert boolean
         self.event_generate("<<HumanModelChanged>>")
+
+    def eval(self, event=None):
+        """Update GUI."""
+        if self.HBody.use_ibw:
+            self.ctl_weight['state'] = NORMAL
+            self.ctl_weight.delete(0, END)
+            self.ctl_weight.insert(0, round(self.HBody.weight, 1))
+            self.ctl_weight['state'] = self.lbl_weight['state']
 
 
 class HelpWindow(Toplevel):
@@ -420,7 +424,7 @@ class MainText(Frame):
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
         self.TxtView.set_text(textwrap.dedent("""\
-        Just set sex and height - that's enough. Select \"Help\" in menu, or press F1 key.
+        Just set sex and height. Open \"Help\" from menu or by pressing F1 key.
 
         Не знаете с чего начать? Выберите \"Help\" в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.
         """))
@@ -543,7 +547,7 @@ class CalcNutrition(Frame):
         self.set_input_protein_defaults()
         self.set_nutr_gui_state()
         self.TxtView.set_text(textwrap.dedent("""\
-            Just set sex and height - that's enough.
+            Just set sex and height.
 
             Nutrition mixtures dosage can be estimated in two ways:
               * As daily caloric goal by weight (kcal/kg/24h)

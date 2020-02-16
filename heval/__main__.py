@@ -480,6 +480,7 @@ class CalcNutrition(Frame):
             self.fr_kcal_entry, text=None, variable=self.var_rbtm_calc_method,
             value=0, command=self.set_nutr_gui_state)
         ctl_rbtn0_method.grid(row=0, column=1)
+        CreateToolTip(ctl_rbtn0_method, "Calculate daily nutrition dose by caloric (not protein) requirement")
 
         Label(self.fr_kcal_entry, text="kcal/kg/24h").grid(row=1, column=0)
         self.ctl_sbx_kcal_mul = Spinbox(
@@ -510,6 +511,7 @@ class CalcNutrition(Frame):
             self.fr_nitrogen_entry, text=None, variable=self.var_rbtm_calc_method,
             value=1, command=self.set_nutr_gui_state)
         ctl_rbtn1_method.grid(row=0, column=1)
+        CreateToolTip(ctl_rbtn1_method, "Calculate daily nutrition dose by measured protein (not caloric) requirement")
 
         Label(self.fr_nitrogen_entry, text="Urine urea, mmol/24h").grid(row=1, column=0)
         self.ctl_sbx_uurea = Spinbox(
@@ -540,7 +542,13 @@ class CalcNutrition(Frame):
         self.set_input_kcal_defaults()
         self.set_input_protein_defaults()
         self.set_nutr_gui_state()
-        self.TxtView.set_text("Nutrition for adults")
+        self.TxtView.set_text(textwrap.dedent("""\
+            Dosage of nutrition mixtures can be estimated in two ways:
+              * Daily caloric goal by weight (kcal/kg/24h)
+              * Daily protein goal by urine nitrogen loss (mmol/24h) or expected protein demand (g/kg/24h)
+
+            Heval will suggest additional fluid if nutrition mixture doesn't contain 24h volume.
+            """))
 
     def set_input_fluid_defaults(self, event=None):
         self.ctl_sbx_fluid_mul.delete(0, END)

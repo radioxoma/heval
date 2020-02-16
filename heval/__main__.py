@@ -419,11 +419,11 @@ class MainText(Frame):
 
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=BOTH)
-        self.TxtView.set_text(
-            "Got lost? Select \"Help\" in menu, or just press F1 key.\n\n"
-            "Не знаете с чего начать? Выберите \"Help\" в меню, чтобы "
-            "вызвать краткую справку на русском языке. Или просто "
-            "нажмите клавишу F1.")
+        self.TxtView.set_text(textwrap.dedent("""\
+        Just set sex and height - that's enough. Select \"Help\" in menu, or press F1 key.
+
+        Не знаете с чего начать? Выберите \"Help\" в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.
+        """))
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
@@ -543,11 +543,13 @@ class CalcNutrition(Frame):
         self.set_input_protein_defaults()
         self.set_nutr_gui_state()
         self.TxtView.set_text(textwrap.dedent("""\
-            Dosage of nutrition mixtures can be estimated in two ways:
-              * Daily caloric goal by weight (kcal/kg/24h)
-              * Daily protein goal by urine nitrogen loss (mmol/24h) or expected protein demand (g/kg/24h)
+            Just set sex and height - that's enough.
 
-            Heval will suggest additional fluid if nutrition mixture doesn't contain 24h volume.
+            Nutrition mixtures dosage can be estimated in two ways:
+              * As daily caloric goal by weight (kcal/kg/24h)
+              * As daily protein goal by urine nitrogen loss (mmol/24h) or expected protein demand (g/kg/24h)
+
+            Heval will suggest additional fluid if nutrition mixture doesn't contain full 24h volume.
             """))
 
     def set_input_fluid_defaults(self, event=None):

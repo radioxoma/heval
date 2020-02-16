@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+
+"""
+Heval autimatically estimates required kcal and fluid volume by RBW.
+User can switch from default kcal estimation to protein estimation
+(measured nitrogen balance).
+
+Heval will calculate additional fluid to calculated nitrotional mixture to fit daily requirement.
+
+There is no evidence-based gold standard in quality and quantity of
+nutrition composition. Pre-made commercial mixtures considered as
+containing all required components in suitable propotions.
+End user shouldn't mess with protein/nonprotein caloric proportions,
+gucose/fat caloric proportions, add unsaturated fatty acids etc.
+"""
+
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
     рН 5,0-6,0
@@ -161,6 +176,9 @@ enteral_enterolin_caloric = {
 
 
 class HumanNutritionModel(object):
+    """
+    ESPEN https://www.ncbi.nlm.nih.gov/pubmed/19464090
+    """
     def __init__(self, human_model):
         super(HumanNutritionModel, self).__init__()
         self.human_model = human_model
@@ -208,7 +226,7 @@ class HumanNutritionModel(object):
         info += "Enteral nutrition\n-----------------\n"
         if self.human_model.debug:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
-        NForm = NutritionFormula(enteral_nutricomp_standard, self)
+        NForm = NutritionFormula(enteral_nutricomp_standard, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
             full_enteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
@@ -225,7 +243,7 @@ class HumanNutritionModel(object):
         info += "Total parenteral nutrition\n--------------------------\n"
         if self.human_model.debug:
             info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirement (total parenteral nutrition criteria).\n"
-        NForm = NutritionFormula(parenteral_nutriflex_48_150, self)
+        NForm = NutritionFormula(parenteral_nutriflex_48_150, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
             full_parenteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
@@ -240,7 +258,7 @@ class HumanNutritionModel(object):
         info += "Partial periferal + enteral nutrition\n-------------------------------------\n"
         if self.human_model.debug:
             info += "Using periferal vein is possible for <900 mOsm/kg mixtures, but needs simultanious enteral feeding to meet daily requirement.\n"
-        NForm = NutritionFormula(parenteral_kabiven_perif, self)
+        NForm = NutritionFormula(parenteral_kabiven_perif, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
             full_parenteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
@@ -259,20 +277,22 @@ class HumanNutritionModel(object):
 
 
 class NutritionFormula(object):
-    def __init__(self, preparation, parent):
+    """Calculate pre-made mixture volume by protein or caloric demand.
+    """
+    def __init__(self, preparation, human_model):
         """
         :param dict preparation: Specific dict with an nutrition preparation.
-        :param class parent: HumanModel class instance.
+        :param class human_model: HumanModel class instance.
         """
-        self.parent = parent
+        self.human_model = human_model
         for k, v in preparation.items():
             setattr(self, k, v)
 
     def __str__(self):
         return self.name
 
-    def estimete_calories(self):
-        """Test caloric content.
+    def theoretical_kcal(self):
+        """Test caloric content. Use if not provides by manufacturer specification.
         """
         prt = 4  # 4.1
         lip = 9
@@ -285,6 +305,13 @@ class NutritionFormula(object):
         else:
             info += "Manufacturer states: {:.1f} kcal/ml".format(self.c_kcal)
         return info
+
+    # def theoretical_osmolality(self):
+    #     """Returns garbage, because electrolytes not included.
+
+    #     :return: Theoretical osmolality, mOsm/kg
+    #     """
+    #     return self.c_glu * 5000 + self.c_prt * 10000
 
     def dose_by_kcal(self, kcal_24h):
         """Dose by non-protein kcal_24h.
@@ -312,11 +339,11 @@ class NutritionFormula(object):
 
         Nutriflex 48/150.
         """
-        if self.parent.human_model.sex in ('male', 'female'):  # 2-5 years and adults,
+        if self.human_model.sex in ('male', 'female'):  # 2-5 years and adults,
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.parent.human_model.sex == 'child':  # 5-14 years
+        elif self.human_model.sex == 'child':  # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
-        return self.parent.human_model.weight * daily_volume
+        return self.human_model.weight * daily_volume
 
     def dose_max_kcal(self):
         """How many kcal provides maximal daily dose.
@@ -328,16 +355,15 @@ class NutritionFormula(object):
 
         :param float vol_24h: Dose, ml
         """
-        weight = self.parent.human_model.weight
         kcal_24h = vol_24h * self.c_kcal
         info = ""
         if self.type == 'parenteral':
             rate_1h = vol_24h / 24
-            top_rate_1h = self.max_1h_rate * weight
+            top_rate_1h = self.max_1h_rate * self.human_model.weight
             info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h) at rate {:.0f}-{:.0f} ml/h:\n".format(vol_24h, kcal_24h, rate_1h, top_rate_1h)
-            info += "  * Proteins {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * rate_1h / weight, self.c_prt * top_rate_1h / weight)
-            info += "  * Lipids   {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * rate_1h / weight, self.c_lip * top_rate_1h / weight)
-            info += "  * Glusose  {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * rate_1h / weight, self.c_glu * top_rate_1h / weight)
+            info += "  * Proteins {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * rate_1h / self.human_model.weight, self.c_prt * top_rate_1h / self.human_model.weight)
+            info += "  * Lipids   {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * rate_1h / self.human_model.weight, self.c_lip * top_rate_1h / self.human_model.weight)
+            info += "  * Glusose  {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * rate_1h / self.human_model.weight, self.c_glu * top_rate_1h / self.human_model.weight)
         else:
             info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h)\n".format(vol_24h, kcal_24h)
             info += "  * Proteins {:>5.1f} g/24h\n".format(self.c_prt * vol_24h)

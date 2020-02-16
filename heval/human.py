@@ -763,26 +763,28 @@ def parcland_volume(weight, burned_surface):
     return volume_ml
 
 
-def fluid_req_holidaysegar_mod(rbm):
+def fluid_req_holidaysegar_mod(rbw):
     """Daily fluid requirement for children.
 
     Looks like Holliday-Segar method, but modified for infants with body weight <3 kg.
 
     References
     ----------
-    The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
-    Курек 2013, стр. 121 или 418. По идее, дложен соответствовать таблице с 121, но для >20 кг это не так.
+    [1] The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
+        https://www.ncbi.nlm.nih.gov/pubmed/13431307
 
-    :param float rbm: Real body mass, kg
+    [2] Курек 2013, стр. 121 или 418. По идее, дложен соответствовать таблице с 121, но для >20 кг это не так.
+
+    :param float rbw: Real body mass, kg
     """
-    if rbm < 2:  # Kurek modification?
-        return 150 * rbm
-    elif 2 <= rbm < 10:  # 100 ml/kg for the 1st 10 kg of wt
-        return 100 * rbm
-    elif 10 <= rbm < 20:  # 50 ml/kg for the 2nd 10 kg of wt
-        return 1000 + 50 * (rbm - 10)
+    if rbw < 2:  # Kurek modification?
+        return 150 * rbw
+    elif 2 <= rbw < 10:  # 100 ml/kg for the 1st 10 kg of wt
+        return 100 * rbw
+    elif 10 <= rbw < 20:  # 50 ml/kg for the 2nd 10 kg of wt
+        return 1000 + 50 * (rbw - 10)
     else:  # 20 kg and up
-        return 1500 + 20 * (rbm - 20)
+        return 1500 + 20 * (rbw - 20)
 
 
 def wetflag(age=None, weight=None):

@@ -612,7 +612,7 @@ class CalcNutrition(Frame):
         if self.var_rbtm_calc_method.get() == 0:  # By kcal
             info += "{}\n".format(self.human_model.nutrition.describe_nutrition())
         elif self.var_rbtm_calc_method.get() == 1:  # By UUN
-            info += "{}\n".format(self.human_model.nutrition.describe_nitrogen_balance())
+            info += "{}\n".format(self.human_model.nutrition.describe_nutrition(by_protein=True))
         self.TxtView.set_text(info)
 
 

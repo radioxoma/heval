@@ -14,6 +14,8 @@ End user shouldn't mess with protein/nonprotein caloric proportions,
 gucose/fat caloric proportions, add unsaturated fatty acids etc.
 """
 
+import textwrap
+
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
     рН 5,0-6,0
@@ -185,7 +187,16 @@ class HumanNutritionModel(object):
         self.fluid_multipler = 30  # ml/kg RBW
         self.kcal_multipler = 25  # ml/kg RBW
         self.uurea = None  # Total urine urea, mmol
-        # self.protein_24h = 1.5 * self.human_model.weight
+        # self.protein_24h = None  # 1.5 * self.human_model.weight
+
+    def __str__(self):
+        return textwrap.dedent("""\
+            Generic approximation by body mass
+            ==================================
+            Start point:
+             * Fluid demand {:.0f} ml/24h ({:.0f} ml/kg/24h)
+             * Energy demand {:.0f} kcal/24h ({:.0f} kcal/kg/24h)""".format(
+                self.fluid_24h, self.fluid_multipler, self.kcal_24h, self.kcal_multipler))
 
     @property
     def fluid_24h(self):
@@ -218,10 +229,9 @@ class HumanNutritionModel(object):
     def describe_nutrition(self, by_protein=False):
         """Trying to find a compromise between fluids, electrolytes and energy.
         """
-
-        info = "Generic approximation by body mass\n==================================\n"
-        info += "Start point:\n * Fluid demand {:.0f} ml/24h ({:.0f} ml/kg/24h)\n * Energy demand {:.0f} kcal/24h ({:.0f} kcal/kg/24h)\n\n".format(self.fluid_24h, self.fluid_multipler, self.kcal_24h, self.kcal_multipler)
-
+        info = ""
+        if self.human_model.debug:
+            info += "{}\n".format(self.describe_nitrogen_balance())
         # Total enteral nutrition
         info += "Enteral nutrition\n-----------------\n"
         if self.human_model.debug:
@@ -229,7 +239,7 @@ class HumanNutritionModel(object):
         NForm = NutritionFormula(enteral_nutricomp_standard, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
-            full_enteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
+            full_enteral_nutrition = NForm.dose_by_protein(self.uurea_prot_24h)
         else:
             full_enteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
         full_enteral_fluid = self.fluid_24h - full_enteral_nutrition
@@ -246,7 +256,7 @@ class HumanNutritionModel(object):
         NForm = NutritionFormula(parenteral_nutriflex_48_150, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
-            full_parenteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
+            full_parenteral_nutrition = NForm.dose_by_protein(self.uurea_prot_24h)
         else:
             full_parenteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
@@ -261,7 +271,7 @@ class HumanNutritionModel(object):
         NForm = NutritionFormula(parenteral_kabiven_perif, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
-            full_parenteral_nutrition = NForm.dose_by_protein(self.kcal_24h)
+            full_parenteral_nutrition = NForm.dose_by_protein(self.uurea_prot_24h)
         else:
             full_parenteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
@@ -320,24 +330,17 @@ class NutritionFormula(object):
         """
         return kcal_24h / self.c_kcal
 
-    # def dose_by_kcal_total(self, kcal_24h):
-    #     """Dose by non-protein kcal_24h.
-    #     """
-    #     return kcal_24h / self.c_kcal
-
     def dose_by_protein(self, protein_24h):
         """Dose by required protein in 24 h.
 
         Mathod can returm volume exceeding maximal recommended daily dose.
 
-        protein, g
+        :param float protein_24h: Required protein for 24h, grams
         """
         return protein_24h / self.c_prt
 
     def dose_max_ml(self):
-        """Maximal 24h parenteral nutrition volume, recommended by manufacturer.
-
-        Nutriflex 48/150.
+        """Maximal recommended by manufacturer dose per 24 hours.
         """
         if self.human_model.sex in ('male', 'female'):  # 2-5 years and adults,
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
@@ -346,10 +349,10 @@ class NutritionFormula(object):
         return self.human_model.weight * daily_volume
 
     def dose_max_kcal(self):
-        """How many kcal provides maximal daily dose.
+        """Maximal recommended by manufacturer dose per 24 hours.
         """
         return self.dose_max_ml() * self.c_kcal
-    
+
     def describe_dose(self, vol_24h):
         """Info about given volime content.
 

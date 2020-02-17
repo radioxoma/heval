@@ -43,13 +43,14 @@ An web or Android application is planned, but implementation deferred until calc
 | -------- | ------ | ------- |
 | Human body: anthropometry | **Good** | Straightforward implementation. Broselow for children. Small issues with IBW |
 | Human body: respiration | **Good** | Use as start ventilator settings for adults and children |
-| Human body: energy & electrolytes | Limited | Generic approximation for healthy human. Real demands are unpredictably dependent on body fat/muscle compound, fever, sepsis, burns etc |
+| Human body: energy & electrolytes | Limited | Generic approximation for healthy human. Real demands are unpredictably dependent on body fat/muscle compound, fever, sepsis, burns etc. [REE](https://en.wikipedia.org/wiki/Resting_metabolic_rate) formulas has been taken from original papers, so your lovely Harris-Benedict equation don't have dubious correction coefficients, leading to irreproducible result. |
 | Human body: fluid demand | Limited | Generic approximation for healthy human. Pathologic [fluid loss](https://en.wikipedia.org/wiki/Volume_contraction) must be taken into account |
 | Human body: urinary output | **Good** | Adults and children, though eGFR estimation may be necessary |
 | Human body: drug dosage | Medium | Verified, but limited drug list |
+| Nutrition | Limited | Enteral and parenteral. Based on [ESPEN](https://www.espen.org/) 25-30 kcal/kg recommendation and nitrogen balance. Use [indirect calorimetry](https://en.wikipedia.org/wiki/Indirect_calorimetry) if you need a real tool. |
 | ABG: anion gap | **Good** | Excellent prediction, but please **USE REAL DATA** |
 | ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation is impossible. High/low warnings still usable though. |
-| ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all pH range covered. |
+| ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all SBE range covered. |
 | eGFR | **Good** | Straightforward implementation for adults and children |
 
 

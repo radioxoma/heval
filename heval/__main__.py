@@ -463,7 +463,7 @@ class CalcNutrition(Frame):
             format='%1.0f', increment=1, command=self.set_model_fluid_multipler)
         self.ctl_sbx_fluid_mul.bind("<Return>", self.set_model_fluid_multipler)
         self.ctl_sbx_fluid_mul.grid(row=1, column=1)
-        CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid intake requirement.\nTypical 30-35 ml/kg")
+        CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid demand.\nTypical 30-35 ml/kg.")
 
         Label(fr_fluid_entry, text="ml/24h").grid(row=2, column=0)
         self.lbl_fluid_24h = Label(fr_fluid_entry)
@@ -473,7 +473,7 @@ class CalcNutrition(Frame):
         # Label(fr_fluid_entry).grid(row=3, column=1)  # Placeholder
 
         # Kcal input
-        self.fr_kcal_entry = LabelFrame(fr_entry, text="By caloric demand")
+        self.fr_kcal_entry = LabelFrame(fr_entry, text="By calorie demand")
         self.fr_kcal_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
 
         ctl_btn_kcal = Button(self.fr_kcal_entry, text="Reset", command=self.set_input_kcal_defaults)
@@ -484,7 +484,7 @@ class CalcNutrition(Frame):
             self.fr_kcal_entry, text=None, variable=self.var_rbtm_calc_method,
             value=0, command=self.set_nutr_gui_state)
         ctl_rbtn0_method.grid(row=0, column=1)
-        CreateToolTip(ctl_rbtn0_method, "Calculate daily nutrition dose by caloric (not protein) requirement")
+        CreateToolTip(ctl_rbtn0_method, "Calculate daily nutrition dose by calorie (not protein) requirement")
 
         Label(self.fr_kcal_entry, text="kcal/kg/24h").grid(row=1, column=0)
         self.ctl_sbx_kcal_mul = Spinbox(
@@ -492,7 +492,7 @@ class CalcNutrition(Frame):
             format='%1.0f', increment=1, command=self.set_model_kcal_multipler)
         self.ctl_sbx_kcal_mul.bind("<Return>", self.set_model_kcal_multipler)
         self.ctl_sbx_kcal_mul.grid(row=1, column=1)
-        CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours energy intake requirement.\nTypical 25-30 kcal/kg")
+        CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours energy demand.\nTypical 25-30 kcal/kg.")
 
         Label(self.fr_kcal_entry, text="kcal/24h").grid(row=2, column=0)
         self.lbl_kcal_24h = Label(self.fr_kcal_entry)
@@ -515,7 +515,7 @@ class CalcNutrition(Frame):
             self.fr_nitrogen_entry, text=None, variable=self.var_rbtm_calc_method,
             value=1, command=self.set_nutr_gui_state)
         ctl_rbtn1_method.grid(row=0, column=1)
-        CreateToolTip(ctl_rbtn1_method, "Calculate daily nutrition dose by measured protein (not caloric) requirement")
+        CreateToolTip(ctl_rbtn1_method, "Calculate daily nutrition dose by measured protein (not calorie) requirement")
 
         Label(self.fr_nitrogen_entry, text="Urine urea, mmol/24h").grid(row=1, column=0)
         self.ctl_sbx_uurea = Spinbox(
@@ -523,7 +523,7 @@ class CalcNutrition(Frame):
             format='%.0f', increment=10, command=self.set_model_uurea)
         self.ctl_sbx_uurea.bind("<Return>", self.set_model_uurea)
         self.ctl_sbx_uurea.grid(row=1, column=1)
-        CreateToolTip(self.ctl_sbx_uurea, "Total urea in whole 24h urine")
+        CreateToolTip(self.ctl_sbx_uurea, "Urine urea excreted during 24h (equals to total urea nitrogen, when measured in mmol/24h)")
 
         Label(self.fr_nitrogen_entry, text="Protein g/24h").grid(row=2, column=0)
         self.lbl_prot_24h = Label(self.fr_nitrogen_entry)
@@ -550,10 +550,10 @@ class CalcNutrition(Frame):
             Just set sex and height.
 
             Nutrition mixtures dosage can be estimated in two ways:
-              * As daily caloric goal by weight (kcal/kg/24h)
-              * As daily protein goal by urine nitrogen loss (mmol/24h) or expected protein demand (g/kg/24h)
+              * As daily calorie goal by weight (kcal/kg/24h)
+              * As daily protein goal by nitrogen balance (urea nitrogen loss mmol/24h) or expected protein demand (g/kg/24h) which are dependent on each other
 
-            Heval will suggest additional fluid if nutrition mixture doesn't contain full 24h volume.
+            Heval will suggest additional fluid if nutrition mixture doesn't contain full 24h volume. Negative value means fluid excess.
             """))
 
     def set_input_fluid_defaults(self, event=None):

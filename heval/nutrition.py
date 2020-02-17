@@ -234,7 +234,8 @@ class HumanNutritionModel(object):
             info += "{}\n".format(self.describe_nitrogen_balance())
 
         # Total enteral nutrition
-        info += "Enteral nutrition\n-----------------\n"
+        info += "Enteral nutrition\n"
+        info += "-----------------\n"
         if self.human_model.debug:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
         NForm = NutritionFormula(enteral_nutricomp_standard, self.human_model)
@@ -246,14 +247,15 @@ class HumanNutritionModel(object):
         full_enteral_fluid = self.fluid_24h - full_enteral_nutrition
         info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
         # full_enteral_nutrition and self.fluid_24h in ml, so they reduce each other
-        info += "Resulting osmolality is {:.1f} mOsm/kg\n".format(
+        info += "Mixture osmolality is {:.0f} mOsm/kg\n".format(
             (full_enteral_nutrition * NForm.osmolality) / self.fluid_24h)
         info += "{}\n".format(NForm.describe_dose(full_enteral_nutrition))
 
         # Total parenteral nutrition
-        info += "Total parenteral nutrition\n--------------------------\n"
+        info += "Total parenteral nutrition\n"
+        info += "--------------------------\n"
         if self.human_model.debug:
-            info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirement (total parenteral nutrition criteria).\n"
+            info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirements (total parenteral nutrition criteria).\n"
         NForm = NutritionFormula(parenteral_nutriflex_48_150, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
@@ -263,14 +265,15 @@ class HumanNutritionModel(object):
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
         info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
-        if self.kcal_24h > NForm.dose_max_kcal():
-            info += "REACHED MAXIMAL RECOMMENDED DOSE. DAILY NUTRITION REQUIREMENT NOT SATISFIED.\n"
+        if full_parenteral_nutrition > NForm.dose_max_ml():
+            info += "REACHED MAXIMAL RECOMMENDED DOSE, BUT DAILY NUTRITION REQUIREMENTS NOT SATISFIED. Consider enteral nutrition, whenever possible.\n"
             info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_ml()))
 
         # Mixed parenteral with enteral
-        info += "Partial peripheral + enteral nutrition\n-------------------------------------\n"
+        info += "Total parenteral peripheral nutrition\n"
+        info += "-------------------------------------\n"
         if self.human_model.debug:
-            info += "Using peripheral vein is possible for <900 mOsm/kg mixtures, but needs simultaneous enteral feeding to meet daily requirement. Peripheral nutrition diluted, so additional fluid not required.\n"
+            info += "Using peripheral vein is possible for <900 mOsm/kg mixtures, but needs simultaneous enteral feeding to meet daily requirements. Peripheral nutrition diluted, so additional fluid not required.\n"
         NForm = NutritionFormula(parenteral_kabiven_perif, self.human_model)
         info += "{}\n".format(str(NForm))
         if by_protein:
@@ -280,8 +283,8 @@ class HumanNutritionModel(object):
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml.\n".format(full_parenteral_nutrition, full_parenteral_fluid)
         info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
-        if self.kcal_24h > NForm.dose_max_kcal():
-            info += "REACHED MAXIMAL RECOMMENDED DOSE. DAILY NUTRITION REQUIREMENT NOT SATISFIED.\n"
+        if full_parenteral_nutrition > NForm.dose_max_ml():
+            info += "REACHED MAXIMAL RECOMMENDED DOSE, BUT DAILY NUTRITION REQUIREMENTS NOT SATISFIED. Consider enteral nutrition, whenever possible.\n"
             info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_ml()))
         return info
 

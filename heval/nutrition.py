@@ -364,14 +364,14 @@ class NutritionFormula(object):
             rate_1h = vol_24h / 24
             top_rate_1h = self.max_1h_rate * self.human_model.weight
             info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h) at rate {:.0f}-{:.0f} ml/h:\n".format(vol_24h, kcal_24h, rate_1h, top_rate_1h)
-            info += "  * Proteins {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * rate_1h / self.human_model.weight, self.c_prt * top_rate_1h / self.human_model.weight)
-            info += "  * Lipids   {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * rate_1h / self.human_model.weight, self.c_lip * top_rate_1h / self.human_model.weight)
-            info += "  * Glusose  {:>5.1f} g/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * rate_1h / self.human_model.weight, self.c_glu * top_rate_1h / self.human_model.weight)
+            info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_model.weight, self.c_prt * rate_1h / self.human_model.weight, self.c_prt * top_rate_1h / self.human_model.weight)
+            info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_model.weight, self.c_lip * rate_1h / self.human_model.weight, self.c_lip * top_rate_1h / self.human_model.weight)
+            info += "  * Glusose  {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_model.weight, self.c_glu * rate_1h / self.human_model.weight, self.c_glu * top_rate_1h / self.human_model.weight)
         else:
             info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h)\n".format(vol_24h, kcal_24h)
-            info += "  * Proteins {:>5.1f} g/24h\n".format(self.c_prt * vol_24h)
-            info += "  * Lipids   {:>5.1f} g/24h\n".format(self.c_lip * vol_24h)
-            info += "  * Glusose  {:>5.1f} g/24h\n".format(self.c_glu * vol_24h)
+            info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_model.weight)
+            info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_model.weight)
+            info += "  * Glusose  {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_model.weight)
         return info
 
 

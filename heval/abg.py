@@ -215,7 +215,7 @@ class HumanBloodModel(object):
 
         Diabetes mellitus decompensation:
           1 type - DKA (no insulin enables ketogenesis).
-            dehydration (osmotic diuresis and vomit)
+            dehydration (osmotic diuresis and vomiting)
             cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
           2 type - HHNS (cells not sensitive to Ins)
             dehydration (osmotic diuresis)
@@ -382,8 +382,8 @@ class HumanBloodModel(object):
         if Cl_serum > Cl_high:
             info += "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion?".format(Cl_high)
         elif Cl_serum < Cl_low:
-            # KCL replacement?
-            info += "Cl⁻ is low (<{} mmol/L). Vomit? Diuretics abuse?".format(Cl_low)
+            # KCl replacement?
+            info += "Cl⁻ is low (<{} mmol/L). Vomiting? Diuretics abuse?".format(Cl_low)
         else:
             info += "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])
         return info

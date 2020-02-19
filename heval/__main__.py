@@ -59,6 +59,7 @@ RBW - real body weight, kg
 RR - respiratory rate
 SBE - standard base excess
 TIVA - total intravenous anesthesia
+GA - general anesthesia
 TOF - train of four
 TV - tidal volume
 VDaw - dead space airway volume

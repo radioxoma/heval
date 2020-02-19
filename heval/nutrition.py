@@ -69,7 +69,7 @@ parenteral_nutriflex_48_150 = {
     что примерно соответствует потребности в азоте 0,15–0,3 г/кг/сут.
     Потребность в энергии составляет 30–50 ккал/кг/сут.
 
-У пациентов без катаболического стресса 
+У пациентов без катаболического стресса
     потребность в аминокислотах составляет 0,7–1 г/кг/сут,
     что примерно равно потребности в азоте 0,1–0,15 г/кг/сут.
     Потребность в энергии составляет 20–30 ккал/кг/сут.
@@ -119,7 +119,7 @@ enteral_nutricomp_standard = {
     'type': 'enteral',
     'c_prt': 3.8 / 100,     # g/ml proteins
     'c_lip': 3.3 / 100,     # g/ml lipids
-    'c_glu':  14 / 100,     # g/ml glucose
+    'c_glu': 14 / 100,     # g/ml glucose
     'water': 0.84,          # H2O/ml
     'c_kcal': 1,            # kcal/ml total calories including proteins
 #     'c_kcal_noprot': 0,     # kcal/ml nonprotein calories
@@ -151,7 +151,7 @@ enteral_enterolin_vanilla = {
     'type': 'enteral',
     'c_prt': 4 / 100,     # g/ml proteins
     'c_lip': 3.8 / 100,     # g/ml lipids
-    'c_glu':  12 / 100,     # g/ml glucose
+    'c_glu': 12 / 100,     # g/ml glucose
     'water': None,          # H2O/ml
     'c_kcal': 1,            # kcal/ml total calories including proteins
 #     'c_kcal_noprot': 0,     # kcal/ml nonprotein calories
@@ -196,7 +196,7 @@ class HumanNutritionModel(object):
             Start point:
              * Fluid demand {:.0f} ml/24h ({:.0f} ml/kg/24h)
              * Energy demand {:.0f} kcal/24h ({:.0f} kcal/kg/24h)""".format(
-                self.fluid_24h, self.fluid_multipler, self.kcal_24h, self.kcal_multipler))
+            self.fluid_24h, self.fluid_multipler, self.kcal_24h, self.kcal_multipler))
 
     @property
     def fluid_24h(self):

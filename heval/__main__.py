@@ -13,7 +13,6 @@ except ImportError:  # python2
     import ScrolledText as scrolledtext
     from ttk import *
 from heval import abg
-from heval import electrolytes
 from heval import human
 from heval import __version__
 

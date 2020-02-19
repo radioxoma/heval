@@ -188,11 +188,11 @@ class Arduan(object):
     def __str__(self):
         if self.parent.sex in ('male, female'):
             info = "Arduan adult mono intubation {:.2f}-{:.2f} mg for 60-90 min; load after Sux {:.2f} mg for 30-60 min. Maintenance {:.2f}-{:.2f} mg every 30-60 min.".format(
-            0.06 * self.parent.weight, 0.08 * self.parent.weight,
-            0.05 * self.parent.weight,
-            0.01 * self.parent.weight, 0.02 * self.parent.weight)
+                0.06 * self.parent.weight, 0.08 * self.parent.weight,
+                0.05 * self.parent.weight,
+                0.01 * self.parent.weight, 0.02 * self.parent.weight)
         elif self.parent.sex == 'child':
-            info = "Arduan child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min)".format(
+            info = "Arduan child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min).".format(
                 0.04 * self.parent.weight,
                 0.05 * self.parent.weight, 0.06 * self.parent.weight)
         return info

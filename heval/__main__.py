@@ -45,6 +45,7 @@ CKD - chronic kidney disease
 D5 - dextrose 5%
 DKE - diabetic ketoacidosis
 eGFR - estimated glomerular filtration rate
+GA - general anesthesia
 gg - gap-gap, delta gap
 HAGMA - high anion gap metabolic acidosis
 HHS - hyperosmolar hyperglycemic state
@@ -54,15 +55,15 @@ KULT - Ketones, Uremia, Lactate, Toxins
 MV - minute volume
 NAGMA - normal anion gap metabolic acidosis
 NMT - neuromuscular monitoring
+pRBC - packed red blood cells
 RBW - real body weight, kg
 RR - respiratory rate
 SBE - standard base excess
 TIVA - total intravenous anesthesia
-GA - general anesthesia
 TOF - train of four
 TV - tidal volume
-VDaw - dead space airway volume
 UUN - Urine Urea Nitrogen
+VDaw - dead space airway volume
 
 ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
 """

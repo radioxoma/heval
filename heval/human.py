@@ -139,8 +139,9 @@ class HumanBodyModel(object):
 
         # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
         # older than 3 month. ml/kg ratio more in neonates and underweight
-        info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens).\n".format(
+        info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
             self.weight * 70, self.total_blood_volume)
+        info += "Transfusion of one pRBC dose will increase Hb by {:.2f} g/dL.\n".format(hb_transfusion_response(self.weight))
 
         # if self.sex == 'child':
         #     info += "{}\n".format(wetflag(weight=self.weight))
@@ -936,3 +937,70 @@ def nadler_total_blood_volume(sex, height, weight):
         return ((0.3561 * height ** 3) + (0.03308 * weight) + 0.1833) * 1000
     else:
         raise ValueError("Nadler formula isn't applicable to children")
+
+
+def hb_transfusion_dose(weight, target_hb_increment=1, prbc_hct=0.6):
+    """Estimate needed pRBC transfusion volume to reach target Hb.
+
+    Applicable to adult and children.
+
+    Dose response:
+      * In an average adult (70 kg): one pRBC unit increases Hgb by 1 g/dL (Hct by 2–3%) [1]
+      * Infant: 10-15 ml/kg to achieve the same response
+
+    References
+    ----------
+    [1] Calculating the required transfusion volume in children, 2007
+        https://www.ncbi.nlm.nih.gov/pubmed/17302766
+        * 10 mL/kg gives an increment of 2 g/dL
+        * Hb estimation 1 hour after transfusion is the same as 7 hours after transfusion.
+    [2] Ness PM, Kruskall MS. Principles of red blood cell transfusion. In: Hoffman K, editor.
+        Hematology: basic principles and practice. 4th ed. Orlando, FL: Churchill Livingstone; 2005.
+    [3] https://www.sciencedirect.com/topics/biochemistry-genetics-and-molecular-biology/hemoglobin-blood-level
+        One RBC unit:
+          * 300 ml, prbc_hct 0.7, so rbc_volume = 300 * 0.7
+          * 200 mg of iron
+    [4] https://www.omnicalculator.com/health/pediatric-transfusion
+
+    Examples
+    --------
+    >>> hb_transfusion_dose(70)
+    350.0
+
+    Parameters
+    ----------
+    :param float weight: Real body weight, kg
+    :param float target_hb_increment: Desired Hb increment, g/dL
+    :param float prbc_hct: Haematocrit of pRBC dose, fraction
+    :return: Required pRBC volume to reach target Hb, ml
+    """
+    return weight * target_hb_increment * 3 / prbc_hct
+
+
+def hb_transfusion_response(weight, prbc_volume=350, prbc_hct=0.6):
+    """Estimate Hb increase after one pRBC dose transfusion.
+
+    Applicable to adult and children.
+
+    References
+    ----------
+    See function `hb_prbc_dose` for complete reference.
+
+    [1] https://www.ncbi.nlm.nih.gov/pubmed/17302766
+        10 mL/kg gives an increment of 2 g/dL
+
+    Examples
+    --------
+    >>> hb_transfusion_response(70, 10 * 70)
+    2.0
+    >>> hb_transfusion_response(70)
+    1.0
+
+    Parameters
+    ----------
+    :param float weight: Real body weight, kg
+    :param float prbc_volume: Volume of one pRBC package, ml
+    :param float prbc_hct: Haematocrit of pRBC dose, fraction
+    :return: Expected Hb increase, g/dL
+    """
+    return prbc_volume / (weight * 3 / prbc_hct)

@@ -4,14 +4,9 @@
 import random
 import textwrap
 from datetime import datetime
-try:
-    from tkinter import *
-    from tkinter import scrolledtext
-    from tkinter.ttk import *
-except ImportError:  # python2
-    from Tkinter import *
-    import ScrolledText as scrolledtext
-    from ttk import *
+from tkinter import *
+from tkinter import scrolledtext
+from tkinter.ttk import *
 from heval import abg
 from heval import human
 from heval import __version__
@@ -82,16 +77,15 @@ Written by Eugene Dvoretsky 2016-2020. Check source code for references and \
 formulas. Contact E-mail: radioxoma@gmail.com
 
 Heval is a free software and licensed under the terms of \
-GNU General Public License version 3. """
+GNU General Public License version 3."""
 
 
-__EASTER_TEXT__ = ("It's got what plants crave!", "It's got electrolytes!")
+__easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
 
 
 class MainWindow(Frame):
     def __init__(self, parent=None, *args, **kwargs):
-        # super(MainWindow, self).__init__(parent, *args, **kwargs)
-        Frame.__init__(self, parent, *args, **kwargs)
+        super(MainWindow, self).__init__(parent, *args, **kwargs)
         self.parent = parent
         self.parent.title("Heval — a human evaluator v{}".format(__version__))
         self.parent.geometry("600x590")
@@ -262,8 +256,7 @@ class MainWindow(Frame):
 
 class HelpWindow(Toplevel):
     def __init__(self, parent=None):
-        # super(HelpWindow, self).__init__(parent)
-        Toplevel.__init__(self, parent)
+        super(HelpWindow, self).__init__(parent)
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
@@ -309,16 +302,15 @@ class HelpWindow(Toplevel):
 
 class AboutWindow(Toplevel):
     def __init__(self, parent=None):
-        # super(AboutWindow, self).__init__(parent)
-        Toplevel.__init__(self, parent)
+        super(AboutWindow, self).__init__(parent)
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('About v{}'.format(__version__))
 
-        abouttext = __about__ + "And remember: {}".format(
-            random.choice(__EASTER_TEXT__))
+        abouttext = __about__ + " And remember: {}".format(
+            random.choice(__easter_text__))
         self.lbl = Label(self, text=abouttext, wraplength=500, padding=8)
         self.lbl.pack(expand=True, fill=BOTH)
 
@@ -334,8 +326,7 @@ class AboutWindow(Toplevel):
 
 class TextViewCustom(Frame):
     def __init__(self, *args, **kwargs):
-        # super(TextViewCustom, self).__init__(parent, *args, **kwargs)
-        Frame.__init__(self, parent, *args, **kwargs)
+        super(TextViewCustom, self).__init__(parent, *args, **kwargs)
         self.parent = parent
 
         frm_txt = Frame(self, width=450, height=300)
@@ -385,8 +376,7 @@ class TextViewCustom(Frame):
 
 class TextView(scrolledtext.ScrolledText):
     def __init__(self, *args, **kwargs):
-        # super(TextView, self).__init__(*args, **kwargs)
-        scrolledtext.ScrolledText.__init__(self, *args, **kwargs)
+        super(TextView, self).__init__(*args, **kwargs)
         self.config(font=('consolas', 10), wrap='word')
 
         self.popup_menu = Menu(self, tearoff=False)
@@ -417,8 +407,7 @@ class TextView(scrolledtext.ScrolledText):
 
 class MainText(Frame):
     def __init__(self, parent, human_model):
-        # super(MainText, self).__init__(parent)
-        Frame.__init__(self, parent)
+        super(MainText, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
@@ -439,8 +428,7 @@ class MainText(Frame):
 
 class CalcNutrition(Frame):
     def __init__(self, parent, human_model):
-        # super(CalcNutrition, self).__init__(parent)
-        Frame.__init__(self, parent)
+        super(CalcNutrition, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
@@ -619,8 +607,7 @@ class CalcNutrition(Frame):
 
 class CalcElectrolytes(Frame):
     def __init__(self, parent, human_model):
-        # super(CalcElectrolytes, self).__init__(parent)
-        Frame.__init__(self, parent)
+        super(CalcElectrolytes, self).__init__(parent)
         self.__form_ready = False
         self.parent = parent
         self.human_model = human_model
@@ -791,8 +778,7 @@ class CalcElectrolytes(Frame):
 class CalcGFR(Frame):
     """Esimate glomerular filtration rate (eGFR)."""
     def __init__(self, parent, human_model):
-        # super(CalcGFR, self).__init__(parent)
-        Frame.__init__(self, parent)
+        super(CalcGFR, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Heval autimatically estimates required kcal and fluid volume by RBW.
 User can switch from default kcal estimation to protein estimation
@@ -122,7 +121,7 @@ enteral_nutricomp_standard = {
     'c_glu': 14 / 100,     # g/ml glucose
     'water': 0.84,          # H2O/ml
     'c_kcal': 1,            # kcal/ml total calories including proteins
-#     'c_kcal_noprot': 0,     # kcal/ml nonprotein calories
+    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
     'max_1h_rate': 0,
     'osmolality': 240,      # mOsm/kg
     'has_vitamins': True,
@@ -138,7 +137,7 @@ enteral_nutricomp_energy = {
     'c_glu': 20 / 100,      # g/ml glucose
     'water': 0.76,          # H2O/ml
     'c_kcal': 1.5,          # kcal/ml total calories including proteins
-#     'c_kcal_noprot': 0,     # kcal/ml nonprotein calories
+    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
     'max_1h_rate': None,
     'osmolality': 495,      # mOsm/kg
     'has_vitamins': True,
@@ -154,7 +153,7 @@ enteral_enterolin_vanilla = {
     'c_glu': 12 / 100,     # g/ml glucose
     'water': None,          # H2O/ml
     'c_kcal': 1,            # kcal/ml total calories including proteins
-#     'c_kcal_noprot': 0,     # kcal/ml nonprotein calories
+    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
     'max_1h_rate': None,
     'osmolality': 330,      # mOsm/kg
     'has_vitamins': True,
@@ -169,7 +168,7 @@ enteral_enterolin_caloric = {
     'c_glu': 17.5 / 100,     # g/ml glucose
     'water': None,          # H2O/ml
     'c_kcal': 1.5,            # kcal/ml total calories including proteins
-#     'c_kcal_noprot': 0,     # kcal/ml nonprotein calories
+    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
     'max_1h_rate': None,
     'osmolality': 420,      # mOsm/kg
     'has_vitamins': True,

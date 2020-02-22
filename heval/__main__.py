@@ -458,9 +458,6 @@ class CalcNutrition(Frame):
         self.lbl_fluid_24h = Label(fr_fluid_entry)
         self.lbl_fluid_24h.grid(row=2, column=1)
 
-        # Label(fr_fluid_entry).grid(row=3, column=0)  # Placeholder
-        # Label(fr_fluid_entry).grid(row=3, column=1)  # Placeholder
-
         # Kcal input
         self.fr_kcal_entry = LabelFrame(fr_entry, text="By calorie demand")
         self.fr_kcal_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
@@ -486,9 +483,6 @@ class CalcNutrition(Frame):
         Label(self.fr_kcal_entry, text="kcal/24h").grid(row=2, column=0)
         self.lbl_kcal_24h = Label(self.fr_kcal_entry)
         self.lbl_kcal_24h.grid(row=2, column=1)
-
-        # Label(self.fr_kcal_entry).grid(row=3, column=0)  # Placeholder
-        # Label(self.fr_kcal_entry).grid(row=3, column=1)  # Placeholder
 
         # Protein & Nitrogen balance input
         self.fr_nitrogen_entry = LabelFrame(fr_entry, text="By nitrogen balance")
@@ -638,6 +632,7 @@ class CalcElectrolytes(Frame):
 
         Label(fr_abg_entry, text="HCO₃(P), mmol/L").grid(row=4, column=0)
         self.lbl_hco3 = Label(fr_abg_entry)
+        CreateToolTip(self.lbl_hco3, "Actual bicarbonate")
         self.lbl_hco3.grid(row=4, column=1)
 
         # ELECTROLYTE INPUT

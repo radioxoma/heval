@@ -377,7 +377,7 @@ class TextViewCustom(Frame):
 class TextView(scrolledtext.ScrolledText):
     def __init__(self, *args, **kwargs):
         super(TextView, self).__init__(*args, **kwargs)
-        self.config(font=('consolas', 10), wrap='word')
+        self.config(font='TkFixedFont', wrap='word')
 
         self.popup_menu = Menu(self, tearoff=False)
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
@@ -636,6 +636,10 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)
         self.ctl_sbx_pCO2.grid(row=3, column=1)  # Default pCO2 40.0 mmHg
 
+        Label(fr_abg_entry, text="HCO₃(P), mmol/L").grid(row=4, column=0)
+        self.lbl_hco3 = Label(fr_abg_entry)
+        self.lbl_hco3.grid(row=4, column=1)
+
         # ELECTROLYTE INPUT
         fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
         fr_elec_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
@@ -764,6 +768,7 @@ class CalcElectrolytes(Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
+        self.lbl_hco3['text'] = round(self.human_model.blood.hco3p, 1)
         info = "Basic ABG assessment\n====================\n"
         info += "{}\n".format(self.human_model.blood.describe_abg())
         info += "{}\n\n".format(self.human_model.blood.describe_sbe())

@@ -6,6 +6,7 @@ import textwrap
 from datetime import datetime
 from tkinter import *
 from tkinter import scrolledtext
+from tkinter import font
 from tkinter.ttk import *
 from heval import abg
 from heval import human
@@ -89,10 +90,19 @@ class MainWindow(Frame):
         self.parent = parent
         self.parent.title("Heval — a human evaluator v{}".format(__version__))
         self.parent.geometry("600x590")
-        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
+
         self.parent.style = Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.parent.style.configure('TButton', padding=2)
+
+        # Detect actual monospaced font name and hardcode size to 9
+        # on Windows it's Courier new 10pt, on Linux DejaVu Sans Mono 9 pt
+        # mono_font = font.Font(font='TkFixedFont')
+        mono_font = font.nametofont("TkFixedFont")
+        mono_font['size'] = 9
+        # print(mono_font.actual())
+
+        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
         # self.bind('<r>', lambda e: self.set_input_defaults())
         # self.bind('<Control-s>', lambda e: self.save_text())
@@ -378,7 +388,6 @@ class TextView(scrolledtext.ScrolledText):
     def __init__(self, *args, **kwargs):
         super(TextView, self).__init__(*args, **kwargs)
         self.config(font='TkFixedFont', wrap='word')
-
         self.popup_menu = Menu(self, tearoff=False)
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)

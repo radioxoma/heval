@@ -382,7 +382,7 @@ class HumanBloodModel(object):
             else:
                 info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
                 if self.cGlu <= 20:  # Arbitrary threshold
-                    info += ", consider insulin {:.0f} IU subcut".format(insulin_by_glucose(self.cGlu))
+                    info += ", consider insulin {:.0f} IU subcut for adult".format(insulin_by_glucose(self.cGlu))
                 else:
                     info += ", refer to DKE/HHS protocol (HAGMA and urine ketone) and start I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
 

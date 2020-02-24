@@ -688,7 +688,7 @@ class CalcElectrolytes(Frame):
 
         Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=2, column=0)
         self.ctl_sbx_cGlu = Spinbox(
-            fr_extra_entry, width=3, from_=0, to=50,
+            fr_extra_entry, width=4, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_cGlu)
         CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood contains other osmotically active molecules, such as ethanol or BUN (due to kidney damage), you shall add it manually or use lab osmometer.")
         self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
@@ -696,7 +696,7 @@ class CalcElectrolytes(Frame):
 
         Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
         self.ctl_sbx_ctAlb = Spinbox(
-            fr_extra_entry, width=3, from_=0, to=15,
+            fr_extra_entry, width=4, from_=0, to=15,
             format='%.1f', increment=0.1, command=self.set_model_ctAlb)
         CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
         self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
@@ -773,10 +773,13 @@ class CalcElectrolytes(Frame):
 
     def eval(self, event=None):
         self.lbl_hco3['text'] = round(self.human_model.blood.hco3p, 1)
-        info = "Basic ABG assessment\n====================\n"
+        info = ""
+        info += "Basic ABG assessment\n"
+        info += "====================\n"
         info += "{}\n".format(self.human_model.blood.describe_abg())
-        info += "{}\n\n".format(self.human_model.blood.describe_sbe())
-        info += "\nComplex electrolyte assessment\n==============================\n"
+        info += "{}\n\n\n".format(self.human_model.blood.describe_sbe())
+        info += "Complex electrolyte assessment\n"
+        info += "==============================\n"
         info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
         info += "{}\n\n".format(self.human_model.blood.describe_glucose())

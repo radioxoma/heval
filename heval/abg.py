@@ -77,8 +77,6 @@ norm_pCO2mmHg_mean = 40.0  # mmHg
 norm_HCO3 = (22, 26)  # mEq/L
 norm_pO2 = (80, 100)  # mmHg
 
-norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
-
 # NB! Changing 'norm_gap' will affect Gap-Gap calculation
 norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
 
@@ -368,24 +366,7 @@ class HumanBloodModel(object):
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolytes.electrolyte_Na(self.parent.weight, self.cNa))
-        info += "{}\n".format(self.electrolyte_Cl(self.parent.weight, self.cCl))
-        return info
-
-    def electrolyte_Cl(self, weight, Cl_serum):
-        """Assess blood serum chloride level.
-
-        :param float weight: Real body weight, kg
-        :param float Cl_serum: mmol/L
-        """
-        info = ""
-        Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
-        if Cl_serum > Cl_high:
-            info += "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion?".format(Cl_high)
-        elif Cl_serum < Cl_low:
-            # KCl replacement?
-            info += "Cl⁻ is low (<{} mmol/L). Vomiting? Diuretics abuse?".format(Cl_low)
-        else:
-            info += "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])
+        info += "{}\n".format(electrolytes.electrolyte_Cl(self.cCl))
         return info
 
     def describe_glucose(self):

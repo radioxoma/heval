@@ -136,50 +136,52 @@ def electrolyte_K(weight, K_serum):
         * CaCl2 - только если есть изменения на ЭКГ [PICU: Electrolyte Emergencies]
         * гипервентиляция
     """
-    if norm_K[0] <= K_serum <= norm_K[1]:
-        return "K⁺ is ok ({:.1f}-{:.1f} mmol/L)".format(norm_K[0], norm_K[1])
-
     K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
     K_low = 3.5  # Курек 132
 
-    info = ''
-    if K_serum < K_low:
-        info += "K⁺ is dangerously low (<{:.0f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
-        info += "NB! Potassium calculations considered inaccurate, so use standard replacement rate and check ABG every 2-4 hours: "
-        if weight < 40:
-            info += "KCl {:.0f}-{:.0f} mmol/h for child.\n".format(0.25 * weight, 0.5 * weight)
+    info = ""
+    if K_serum > norm_K[1]:
+        if K_serum >= K_high:
+            glu_mass = 0.5 * weight  # Child and adults
+            info += "K⁺ is dangerously high (>{:.1f} mmol/L)\n".format(K_high)
+            info += "Inject bolus 0.5 g/kg "
+            info += solution_glucose(glu_mass, weight)
+            info += "Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
+            # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
+            info += "NaHCO₃ 8.4% {:.0f} ml (RBWx2={:.0f} mmol) [Курек 2013]\n".format(
+                2 * weight, 2 * weight)
+            info += "Don't forget furesemide, hyperventilation\n"
+            info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
         else:
-            info += "KCl 10-20 mmol/h (standard rate) for all adults will be ok.\n"
+            info += "K⁺ on the upper acceptable border {:.1f} ({:.1f}-{:.1f} mmol/L)".format(K_serum, K_low, K_high)
+    elif K_serum < norm_K[0]:
+        if K_serum < K_low:
+            info += "K⁺ is dangerously low (<{:.1f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
+            info += "NB! Potassium calculations considered inaccurate, so use standard replacement rate and check ABG every 2-4 hours: "
+            if weight < 40:
+                info += "KCl {:.0f}-{:.0f} mmol/h for child.\n".format(0.25 * weight, 0.5 * weight)
+            else:
+                info += "KCl 10-20 mmol/h (standard rate) for all adults will be ok.\n"
 
-        # coefficient = 0.45  # новорождённые
-        # coefficient = 0.4   # грудные
-        # coefficient = 0.3   # < 5 лет
-        coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
+            # coefficient = 0.45  # новорождённые
+            # coefficient = 0.4   # грудные
+            # coefficient = 0.3   # < 5 лет
+            coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
 
-        K_deficiency = (K_target - K_serum) * weight * coefficient
-        # K_deficiency += weight * 1  # mmol/kg/24h Should I also add daily requirement?
+            K_deficiency = (K_target - K_serum) * weight * coefficient
+            # K_deficiency += weight * 1  # mmol/kg/24h Should I also add daily requirement?
 
-        info += "Estimated K⁺ deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
-        if K_deficiency > 4 * weight:
-            info += "Too much potassium for 24 hours"
+            info += "Estimated K⁺ deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
+            if K_deficiency > 4 * weight:
+                info += "Too much potassium for 24 hours"
 
-        glu_mass = K_deficiency * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
-        info += solution_glucose(glu_mass, weight)
-
-    elif K_serum >= K_high:
-        glu_mass = 0.5 * weight  # Child and adults
-        info += "K⁺ is dangerously high (>{} mmol/L)\n".format(K_high)
-        info += "Inject bolus 0.5 g/kg "
-        info += solution_glucose(glu_mass, weight)
-        info += "Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
-        # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-        info += "NaHCO₃ 8.4% {:.0f} ml (RBWx2={:.0f} mmol) [Курек 2013]\n".format(
-            2 * weight, 2 * weight)
-        info += "Don't forget furesemide, hyperventilation\n"
-        info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
+            glu_mass = K_deficiency * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
+            info += solution_glucose(glu_mass, weight)
+        else:
+            info += "K⁺ on lower acceptable border {:.1f} ({:.1f}-{:.1f} mmol/L)".format(K_serum, K_low, K_high)
     else:
-        info += "K⁺ in range [{:.1f}-{:.1f} mmol/L]".format(K_low, K_high)
+        info += "K⁺ is ok ({:.1f}-{:.1f} mmol/L)]".format(norm_K[0], norm_K[1])
     return info
 
 

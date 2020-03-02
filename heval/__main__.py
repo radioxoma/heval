@@ -96,29 +96,21 @@ class MainWindow(Frame):
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.parent.style.configure('TButton', padding=2)
 
-        # Detect actual monospaced font name and hardcode size to 9
-        # on Windows it's Courier new 10pt, on Linux DejaVu Sans Mono 9 pt
-        # mono_font = font.Font(font='TkFixedFont')
-        mono_font = font.nametofont("TkFixedFont")
-        mono_font['size'] = 9
-        # print(mono_font.actual())
-
-        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
-        self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
-        # self.bind('<r>', lambda e: self.set_input_defaults())
-        # self.bind('<Control-s>', lambda e: self.save_text())
-        # self.bind('<Control-a>', lambda e: self.select_all())
-        # self.bind('<Control-c>', lambda e: self.copy_text())
-
         menubar = Menu(self.parent)
-        menu_file = Menu(menubar, tearoff=0)
-        # menu_file.add_command(label="Reset values", command=self.set_input_defaults, accelerator="R")
-        # menu_file.add_command(label="Save text...", command=self.save_text, accelerator="Ctrl+S")
+        menu_file = Menu(menubar, tearoff=False)
         menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
-        menu_about = Menu(menubar, tearoff=0)
+
+        menu_view = Menu(menubar, tearoff=False)
+        # Not using tkinter BooleanVar here
+        menu_view.add_checkbutton(label="Verbose report", command=self.set_debug, accelerator="v")
+        menu_view.add_command(label="Increase font size", command=lambda: self.adjust_font_size('increase'), accelerator="Ctrl++")
+        menu_view.add_command(label="Decrease font size", command=lambda: self.adjust_font_size('decrease'), accelerator="Ctrl+-")
+        menu_view.add_command(label="Default font size", command=lambda: self.adjust_font_size(), accelerator="Ctrl+0")
+        menubar.add_cascade(label="View", menu=menu_view)
+
+        menu_about = Menu(menubar, tearoff=False)
         menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
-        menu_about.add_checkbutton(label="Verbose report", command=self.set_debug)  # Not using tkinter BooleanVar here
         menu_about.add_command(label="Website and updates", command=visit_website)
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
@@ -129,6 +121,7 @@ class MainWindow(Frame):
         nb = Notebook(self)
         self.create_input()
         self.set_input_defaults()
+        self.adjust_font_size()
         self.MText = MainText(nb, self.HBody)
         self.CNutrition = CalcNutrition(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
@@ -139,6 +132,16 @@ class MainWindow(Frame):
         nb.add(self.CGFR, text='eGFR')
         nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
 
+        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
+        self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
+        self.bind_all('<v>', self.set_debug)
+        self.bind_all('<Control-Key-equal>', lambda e: self.adjust_font_size('increase'))
+        self.bind_all('<Control-Key-minus>', lambda e: self.adjust_font_size('decrease'))
+        self.bind_all('<Control-Key-0>', lambda e: self.adjust_font_size())
+        # self.bind('<r>', lambda e: self.set_input_defaults())
+        # self.bind('<Control-s>', lambda e: self.save_text())
+        # self.bind('<Control-a>', lambda e: self.select_all())
+        # self.bind('<Control-c>', lambda e: self.copy_text())
         self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
@@ -153,6 +156,30 @@ class MainWindow(Frame):
         # self.statusbar_str.set("Hello world!")
         # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
         # statusbar.pack(side=BOTTOM, fill=X)
+
+    def adjust_font_size(self, cmd=None):
+        """Set default font size or adjust current size.
+
+        Bug 1. Detect actual monospaced font name and hardcode size to 9
+        on Windows it's Courier new 10pt, on Linux DejaVu Sans Mono 9 pt
+
+        Bug 2. Must be called once on __init__ without parameters, because
+        `some_font['size']` has negative value by default.
+        """
+        # mono_font = font.Font(font='TkFixedFont')
+        mono_font = font.nametofont("TkFixedFont")
+        default_font = font.nametofont("TkDefaultFont")
+        # print(mono_font.actual())
+        # print(default_font.actual())
+        if cmd == 'increase':
+            mono_font['size'] += 1
+            default_font['size'] += 1
+        elif cmd == 'decrease':
+            mono_font['size'] -= 1
+            default_font['size'] -= 1
+        else:  # Set default font size
+            mono_font['size'] = 9
+            default_font['size'] = 9
 
     def create_input(self):
         """One row of input widgets."""

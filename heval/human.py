@@ -415,7 +415,7 @@ class HumanBodyModel(object):
             # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
             if self.body_temp > 37:
                 deg = self.body_temp - 37
-                info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
+                info += " + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)\n".format(
                     5 * self.weight * deg,
                     7 * self.weight * deg)
         elif self.sex == 'child':
@@ -522,8 +522,8 @@ class HumanBodyModel(object):
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
             if self.age:
                 info += "\nResting energy expenditure for healthy adults:\n"
-                info += " * {:.0f} kcal/24h Harris-Benedict (revised 1984) \n".format(ree_harris_benedict(self.height, self.weight, self.sex, self.age))
-                info += " * {:.0f} kcal/24h Mifflin (1990)\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(ree_harris_benedict(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
             else:
                 info += "Enter age to calculate REE\n"
             info += " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]".format(25 * self.weight_ideal, 30 * self.weight_ideal)

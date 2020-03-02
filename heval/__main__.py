@@ -34,6 +34,7 @@ __helptext__ = """\
   ABBREVIATIONS
 ABG - arterial blood gas test
 AG - anion gap
+AKI - acute kidney injury
 BMI - body mass index
 BMR - basal metabolic rate
 BSA - body surface area, m²
@@ -74,7 +75,7 @@ Heval is an experimental medical software intended for healthcare \
 specialists. Software is provided ​"as is". Developer makes no warranties, \
 express or implied.
 
-Written by Eugene Dvoretsky 2016-2020. Check source code for references and \
+Written by Eugene Dvoretsky 2015-2020. Check source code for references and \
 formulas. Contact E-mail: radioxoma@gmail.com
 
 Heval is a free software and licensed under the terms of \
@@ -326,6 +327,7 @@ class AboutWindow(Toplevel):
 
         self.ctl_frame = Frame(self, padding=8)
         self.ctl_btn_website = Button(self.ctl_frame, text="Visit website", command=visit_website)
+        CreateToolTip(self.ctl_btn_website, "Source code, docs and updates")
         self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=RIGHT)
         self.ctl_btn_website.pack(side=RIGHT)
@@ -560,7 +562,7 @@ class CalcNutrition(Frame):
 
     def set_input_protein_defaults(self, event=None):
         self.ctl_sbx_uurea.delete(0, END)
-        self.ctl_sbx_uurea.insert(0, 190)
+        self.ctl_sbx_uurea.insert(0, 190)  # Corresponds to 0.8 g/kg/h
         self.set_model_uurea()
 
     def set_nutr_gui_state(self, event=None):

@@ -309,21 +309,34 @@ class HumanBloodModel(object):
         return info
 
     def describe_sbe(self):
-        """
-        # * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
-        # * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
-        # TCA poisoning target pH 7.45-7.55 [Костюченко 204]
+        """Calculate needed NaHCO3 for metabolic acidosis correction
 
-        Calculate needed NaHCO3 for metabolic acidosis correction
         Using SBE (not pH) as threshold point guaranties that bicarbonate
         administration won't be suggested in case of respiratory acidosis.
         https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
 
+        * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
+        * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
+
+
+        First approach
+        --------------
         "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
         but both values pretty close to BE -9 meq/L, so I use it as threshold.
 
         Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
+
+
+        Second approach
+        ---------------
+        According to BICAR-ICU 2018:
+          * Using more restrictive threshold pH 7.11, which is
+              correspondent to BE -15 mEq/L.
+          * Tip only for AKI patients
+          * https://pubmed.ncbi.nlm.nih.gov/29910040/
+          * https://en.wikipedia.org/wiki/Metabolic_acidosis
         """
+        NaHCO3_threshold = -15  # was -9 mEq/L
         info = ""
         if self.sbe > norm_sbe[1]:
             # FIXME: can be high if cloride is low. Calculate SID?
@@ -332,8 +345,8 @@ class HumanBloodModel(object):
             # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
             info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
         elif self.sbe < norm_sbe[0]:
-            if self.sbe < -9:
-                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), could use NaHCO₃ for severe metabolic acidosis:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
+            if self.sbe <= NaHCO3_threshold:
+                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
                 info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
                 NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
@@ -349,13 +362,16 @@ class HumanBloodModel(object):
                     info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
                 if self.parent.debug:
                     info += textwrap.dedent("""\
-                        Main concepts of NaHCO₃ usage:
+                        Confirmed NaHCO₃ use cases:
+                          * Metabolic acidosis correction leads to decreased 28 day mortality only in AKI patients (target pH 7.3) [BICAR-ICU 2018]
+                          * TCA poisoning with prolonged QT interval (target pH 7.45-7.55 [Костюченко 204])
+                          * In hyperkalemia (when pH increases, K⁺ level decreases)
+                        Main concepts of usage:
                           * Must hyperventilate to make use of bicarbonate buffer
                           * Control ABG after each NaHCO₃ infusion or every 4 hours
-                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]
-                          * When pH increases, K⁺ level decreases""")
+                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]""")
             else:
-                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO₃ not recommended above -9 mEq/L".format(self.sbe, norm_sbe[0], norm_sbe[1])
+                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {:.0f} mEq/L".format(self.sbe, norm_sbe[0], norm_sbe[1], NaHCO3_threshold)
         else:
             info += "SBE is ok {:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sbe, norm_sbe[0], norm_sbe[1])
         return info
@@ -1323,8 +1339,8 @@ def abg_approach_research(pH, pCO2):
     wint_ac = 1.5 * HCO3act + 8
     wint_alc = 0.7 * HCO3act + 20
     info += "pCO2 by cHCO3(P) - expected respiratory compensation [Winters]:\n"
-    info += " * Met. acid. lungs will drop pCO2, but not lower than {:.1f}±2 mmHg (≥{:.1f}-{:.1f})\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
-    info += " * Met. alc. lungs will save pCO2, but not higher than {:.1f}±1.5 mmHg (≤{:.1f}-{:.1f})\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
+    info += " * Met. acid. lungs will drop pCO2, but not lower than ≥{:.1f}-{:.1f} mmHg\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
+    info += " * Met. alc. lungs will save pCO2, but not higher than ≤{:.1f}-{:.1f} mmHg\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
     # try:
     #     y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
     #     info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)

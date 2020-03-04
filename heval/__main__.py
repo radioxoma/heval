@@ -157,7 +157,7 @@ class MainWindow(Frame):
         # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
         # statusbar.pack(side=BOTTOM, fill=X)
 
-    def adjust_font_size(self, cmd=None):
+    def adjust_font_size(self, event=None):
         """Set default font size or adjust current size.
 
         Bug 1. Detect actual monospaced font name and hardcode size to 9
@@ -166,20 +166,16 @@ class MainWindow(Frame):
         Bug 2. Must be called once on __init__ without parameters, because
         `some_font['size']` has negative value by default.
         """
-        # mono_font = font.Font(font='TkFixedFont')
-        mono_font = font.nametofont("TkFixedFont")
-        default_font = font.nametofont("TkDefaultFont")
-        # print(mono_font.actual())
-        # print(default_font.actual())
-        if cmd == 'increase':
-            mono_font['size'] += 1
-            default_font['size'] += 1
-        elif cmd == 'decrease':
-            mono_font['size'] -= 1
-            default_font['size'] -= 1
-        else:  # Set default font size
-            mono_font['size'] = 9
-            default_font['size'] = 9
+        for fontvar in ('TkDefaultFont', 'TkTextFont', 'TkFixedFont', 'TkMenuFont'):
+            font_obj = font.nametofont(fontvar)
+            # print(font_obj.actual())
+            # font_obj = font.Font(font=fontvar)
+            if event == 'increase':
+                font_obj['size'] += 1
+            elif event == 'decrease':
+                font_obj['size'] -= 1
+            else:  # Set default font size
+                font_obj['size'] = 9
 
     def create_input(self):
         """One row of input widgets."""

@@ -96,14 +96,17 @@ class MainWindow(Frame):
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.parent.style.configure('TButton', padding=2)
 
+        self.HBody = human.HumanBodyModel()
+
         menubar = Menu(self.parent)
         menu_file = Menu(menubar, tearoff=False)
         menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
 
         menu_view = Menu(menubar, tearoff=False)
-        # Not using tkinter BooleanVar here
-        menu_view.add_checkbutton(label="Verbose report", command=self.set_debug, accelerator="v")
+        self._debug = BooleanVar()
+        self._debug.set(self.HBody.debug)  # Model debug flag is superior
+        menu_view.add_checkbutton(label="Verbose report", command=self.set_model_debug, variable=self._debug, accelerator="v")
         menu_view.add_command(label="Increase font size", command=lambda: self.adjust_font_size('increase'), accelerator="Ctrl++")
         menu_view.add_command(label="Decrease font size", command=lambda: self.adjust_font_size('decrease'), accelerator="Ctrl+-")
         menu_view.add_command(label="Default font size", command=lambda: self.adjust_font_size(), accelerator="Ctrl+0")
@@ -116,7 +119,6 @@ class MainWindow(Frame):
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
 
-        self.HBody = human.HumanBodyModel()
 
         nb = Notebook(self)
         self.create_input()
@@ -134,7 +136,7 @@ class MainWindow(Frame):
 
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
-        self.bind_all('<v>', self.set_debug)
+        self.bind_all('<v>', self.set_model_debug)
         self.bind_all('<Control-Key-equal>', lambda e: self.adjust_font_size('increase'))
         self.bind_all('<Control-Key-minus>', lambda e: self.adjust_font_size('decrease'))
         self.bind_all('<Control-Key-0>', lambda e: self.adjust_font_size())
@@ -273,10 +275,11 @@ class MainWindow(Frame):
             self.lbl_weight['state'] = DISABLED
         self.event_generate("<<HumanModelChanged>>")
 
-    def set_debug(self, event=None):
+    def set_model_debug(self, event=None):
         """Be verbose if debug is True.
         """
         self.HBody.debug = not self.HBody.debug  # Invert boolean
+        self._debug.set(self.HBody.debug)  # Change flag in menu accordingly
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):

@@ -400,7 +400,7 @@ class HumanBloodModel(object):
                 if self.cGlu <= 20:  # Arbitrary threshold
                     info += ", consider insulin {:.0f} IU subcut for adult".format(insulin_by_glucose(self.cGlu))
                 else:
-                    info += ", refer to DKE/HHS protocol (HAGMA and urine ketone) and start I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
+                    info += ", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
 
         elif self.cGlu < norm_cGlu[0]:
             if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?

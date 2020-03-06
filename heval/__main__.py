@@ -175,7 +175,8 @@ class MainWindow(Frame):
             if event == 'increase':
                 font_obj['size'] += 1
             elif event == 'decrease':
-                font_obj['size'] -= 1
+                if font_obj['size'] > 2:
+                    font_obj['size'] -= 1
             else:  # Set default font size
                 font_obj['size'] = 9
 

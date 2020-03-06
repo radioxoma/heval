@@ -11,8 +11,9 @@ M_NaCl = 58.5
 M_KCl = 74.5
 
 norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
-norm_Na = (130, 155)  # mmol/L, Radiometer, adult
+# norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
+norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
 norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
 
 
@@ -230,16 +231,13 @@ def electrolyte_Na(weight, Na_serum):
     coef = 0.6  # for adult, non-elderly males (**default for hyponatremia**);
     # coef = 0.5  # for adult elderly males, malnourished males, or females;
     # coef = 0.45  # for adult elderly or malnourished females.
-    total_body_water = weight * coef
+    total_body_water = weight * coef  # Liters
     desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
     info = ""
     if Na_serum > norm_Na[1]:
-        info += "Na⁺ is high {}, expect coma, use D5. ".format(desc)
-        free_water_def = (1 - Na_target / Na_serum) * total_body_water * 1000  # ml just a proportion
-        info += "Free water deficit is {:.0f} ml. Check osmolarity.".format(free_water_def)
-        # Every 3 mmol above 145 mmol/L corresponds of 1 L volume deficiency [Рябов 1994, с 37, 43]
-        # free_water_def2 = (Na_serum - 145) / 3 * 1000
-        # info += " ('3 mmol' {:.0f} ml)\n".format(free_water_def2)
+        water_deficiency = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
+        info += "Na⁺ is high {}, use D5. ".format(desc)
+        info += "Free water deficit is {:.0f} ml. Check osmolarity.".format(water_deficiency)
     elif Na_serum < norm_Na[0]:
         Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,

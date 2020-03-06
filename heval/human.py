@@ -63,6 +63,11 @@ newborn = {
 
 
 class HumanBodyModel(object):
+    """Must set 'sex' and 'height' to make it work. See `is_init()`.
+
+    Note that 'use_ibw == False' by default.
+    """
+
     def __init__(self):
         self.debug = False
         self._int_prop = ('height', 'age', 'weight', 'body_temp')
@@ -197,6 +202,7 @@ class HumanBodyModel(object):
 
     @property
     def weight(self):
+        """Set 'use_ibw = True' to return 'weight_ideal' instead 'weight'."""
         if self._use_ibw:
             return self.weight_ideal
         else:

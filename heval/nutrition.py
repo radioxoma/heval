@@ -457,7 +457,8 @@ def nitrogen_balance(c_uurea, diuresis=1000, text=False):
     Parameters
     ----------
     :param float c_urea: Urea concentration in 24 hours urine, mmol/L.
-        If diuresis not given, total Urea mmol/24h
+        If diuresis not given, total Urea mmol/24h.
+        May vary 430–720 mmol/24h for an adult.
     :param float diuresis: Total diuresis, ml/24h
     :return float: Protein reqirement per g/24h
     """

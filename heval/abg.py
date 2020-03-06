@@ -471,6 +471,12 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
     See also Delta Ratio - an derived calculation to asses acidosis cause and
     mixed disturbances.
 
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Anion_gap
+    [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
+        Acid base balance in critical care medicine
+    [4] Hypoalbuminemia correction: Anion gap and hypoalbuminemia Figge 1998 10.1097/00003246-199811000-00019 https://journals.lww.com/ccmjournal/Citation/2000/05000/Reliability_of_the_Anion_Gap.101.aspx
 
     Examples
     --------
@@ -486,15 +492,6 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
     >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
     93.07578958435911
 
-
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Anion_gap
-    [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
-        Acid base balance in critical care medicine
-    [4] Hypoalbuminemia correction: Anion gap and hypoalbuminemia Figge 1998 10.1097/00003246-199811000-00019 https://journals.lww.com/ccmjournal/Citation/2000/05000/Reliability_of_the_Anion_Gap.101.aspx
-
-
     :param float Na: Serum sodium, mmol/L.
     :param float Cl: Serum chloride, mmol/L.
     :param float HCO3act: Serum actual bicarbonate (HCO3(P)), mmol/L.
@@ -503,8 +500,7 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
         usually low and frequently omitted. Usually not used.
     :param float albumin: Protein correction, g/dL. If not given,
         hypoalbuminemia leads to lower anion gap.
-    :return:
-        Anion gap or Anion gap (K+), mEq/L.
+    :return: Anion gap or Anion gap (K+), mEq/L.
     :rtype: float
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
@@ -550,8 +546,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
 
     :param float AG: Anion gap without potassium, mEq/L.
     :param float HCO3act: Actual bicarbonate, mmol/L.
-    :return:
-        Opinion.
+    :return: Opinion.
     :rtype: str
     """
     # 12 - normal anion gap without potassium
@@ -602,8 +597,7 @@ def calculate_osmolarity(Na, glucosae):
 
     :param float Na: mmol/L
     :param float glucosae: mmol/L
-    :return:
-        Serum osmolarity, mmol/L (mOsm/L).
+    :return: Serum osmolarity, mmol/L (mOsm/L).
     :rtype: float
     """
     # Sometimes `2 * (Na + K) + Glucose + Urea` all in mmol/L
@@ -626,8 +620,7 @@ def simple_hco3(pH, pCO2):
 
     :param float pH:
     :param float pCO2: kPa
-    :return:
-        cHCO3(P), mmol/L.
+    :return: cHCO3(P), mmol/L.
     :rtype: float
     """
     # 0.03 - CO2 solubility coefficient mmol/L/mmHg
@@ -655,8 +648,7 @@ def calculate_hco3p(pH, pCO2):
 
     :param float pH:
     :param float pCO2: kPa
-    :return:
-        cHCO3(P), mmol/L.
+    :return: cHCO3(P), mmol/L.
     :rtype: float
     """
     pKp = 6.125 - math.log10(1 + 10 ** (pH - 8.7))  # Dissociation constant
@@ -684,8 +676,7 @@ def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     :param float pCO2: CO2 partial pressure, kPa
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L
     :param float sO2: Fraction of saturated hemoglobin, fraction.
-    :return:
-        cHCO3(P,st), mmol/L.
+    :return: cHCO3(P,st), mmol/L.
     :rtype: float
     """
     a = 4.04 * 10 ** -3 + 4.25 * 10 ** -4 * ctHb
@@ -709,8 +700,7 @@ def simple_be(pH, HCO3act):
 
     :param float pH:
     :param float HCO3act: mmol/L
-    :return:
-        Base excess, mEq/L.
+    :return: Base excess, mEq/L.
     :rtype: float
     """
     return 0.9287 * HCO3act + 13.77 * pH - 124.58
@@ -736,8 +726,7 @@ def calculate_cbase(pH, pCO2, ctHb=3):
     :param float pCO2: kPa
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L
         If given, calculates ABE, if not - SBE.
-    :return:
-        Standard base excess (SBE) or actual base excess (ABE), mEq/L.
+    :return: Standard base excess (SBE) or actual base excess (ABE), mEq/L.
     :rtype: float
     """
     a = 4.04 * 10 ** -3 + 4.25 * 10 ** -4 * ctHb
@@ -771,8 +760,7 @@ def calculate_hct(ctHb):
         Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
 
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L.
-    :return:
-        Hematocrit, fraction (not %).
+    :return: Hematocrit, fraction (not %).
     :rtype: float
     """
     # ctHb(mmol/L) == ctHb(g/dL) / 1.61140 == ctHb(g/dL) * 0.62058
@@ -783,6 +771,11 @@ def calculate_hct(ctHb):
 def calculate_pHT(pH, t):
     """Calculate pH of blood at patient body temperature.
 
+    References
+    ----------
+    [1] Radiometer ABL800 Flex Reference Manual English US.
+        chapter 6-28, p. 264, equation 1.
+
     Examples
     --------
     >>> calculate_pHT(6.919, 39.6)
@@ -790,16 +783,9 @@ def calculate_pHT(pH, t):
     >>> calculate_pHT(7.509, 38.6)
     7.4845064
 
-
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-28, p. 264, equation 1.
-
     :param float pH:
     :param float t: Body temperature, °C.
-    :return:
-        pH of blood at given temperature.
+    :return: pH of blood at given temperature.
     :rtype: float
     """
     # 37 °C is temperature of measurement in device
@@ -839,8 +825,7 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
     :param float FCOHb: fraction
     :param float FMetHb: fraction
     :param float ctHb: mmol/L
-    :return:
-        O2 content, mmol/L.
+    :return: O2 content, mmol/L.
     :rtype: float
     """
     # May be negative FMetHb replased with zero?
@@ -900,6 +885,8 @@ def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
     :param float pCO2: CO2 partial pressure, kPa
     :param float pO2: O2 partial pressure, kPa
     :param float FiO2: FiO2 fraction, uses 0.21 (atmosphere air), if not given
+    :return: Alveolar–arterial gradient.
+    :rtype: float
     """
     # Also PAO2 = (20 - 5 / 4 * pCO2) - pO2 [1]
     PAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
@@ -918,8 +905,7 @@ def calculate_Ca74(pH, Ca):
         used for a pH value in the range 7.2-7.6 [1].
         Radiometer device returns '?' with pH=6.928, Ca=1.62.
     :param float Ca: mmol/L
-    :return:
-        cCa2+(7.4), mmol/L.
+    :return: cCa2+(7.4), mmol/L.
     :rtype: float
     """
     if not 7.2 <= pH <= 7.4:
@@ -934,14 +920,6 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     For patients >18 years, can't be used for acute renal failure.
 
 
-    Examples
-    --------
-    >>> egfr_mdrd('male', 74.4, 27)
-    109.36590492087734
-    >>> egfr_mdrd('female', 100, 80, True)
-    55.98942027449337
-
-
     References
     ----------
     [1] Radiometer ABL800 Flex Reference Manual English US.
@@ -950,12 +928,19 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     24. U.S Department of Health and Human Services, National Institutes of Health, National Institute of Diabetes and Digestive and Kidney Diseases: NKDEP National Kidney Disease Education Program. Rationale for Use and Reporting of Estimated GFR. NIH Publication No. 04-5509. Revised November 2005.
     25. Myers GL, Miller WG, Coresh J, Fleming J, Greenberg N, Greene T, Hostetter T, Levey AS, Panteghini M, Welch M, and Eckfeldt JH for the National Kidney Disease Education Program Laboratory Working Group. Clin Chem, 52:5-18, 2006; First published December 6, 2005, 10.1373/clinchem.2005.0525144.
 
+
+    Examples
+    --------
+    >>> egfr_mdrd('male', 74.4, 27)
+    109.36590492087734
+    >>> egfr_mdrd('female', 100, 80, True)
+    55.98942027449337
+
     :param str sex: Choose 'male', 'female'.
     :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
-    :return:
-        eGFR, mL/min/1.73 m2
+    :return: eGFR, mL/min/1.73 m2
     :rtype: float
     """
     # Original equation from 1999 (non IDMS)
@@ -991,8 +976,7 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
-    :return:
-        eGFR, mL/min/1.73 m2
+    :return: eGFR, mL/min/1.73 m2
     :rtype: float
     """
     cCrea /= m_Crea  # to mg/dl
@@ -1036,8 +1020,7 @@ def egfr_schwartz(cCrea, height):
         http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
 
     :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
-    :return:
-        eGFR, mL/min/1.73 m2.
+    :return: eGFR, mL/min/1.73 m2.
     :rtype: float
     """
     cCrea /= m_Crea  # to mg/dl
@@ -1149,8 +1132,7 @@ def abg_approach_stable(pH, pCO2):
 
     :param float pH:
     :param float pCO2: kPa
-    :return:
-        Two strings: verbose opinion and main disorder.
+    :return: Two strings: verbose opinion and main disorder.
     :rtype: tuple
     """
     # Inspired by https://abg.ninja/abg
@@ -1253,6 +1235,8 @@ def abg_approach_ryabov(pH, pCO2):
 
     :param float pH:
     :param float pCO2: kPa
+    :return: Opinion.
+    :rtype: str
     """
     # Same as `pH_expected = resp_acidosis_pH(pCO2, status='acute')`
     pH_expected = 7.4 + 0.008 * (40 - pCO2 / kPa)  # What is the original paper?
@@ -1274,8 +1258,7 @@ def abg_approach_research(pH, pCO2):
     :param float pCO2: kPa
     :param float HCO3: mEq/L, standartized. Evaluated automatically if not
         provided
-    :return:
-        Opinion.
+    :return: Opinion.
     :rtype: str
     """
     info = ""
@@ -1318,8 +1301,7 @@ def insulin_by_glucose(cGlu):
     [2] Lipman, T. Let's abandon urine fractionals in TPN. Nutrition Support Services. 4:38-40, 1984.
 
     :param float cGlu: Serum glucose mmol/L
-    :return:
-        Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
+    :return: Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
     :rtype: float
     """
     # cGlu mg/dl * 0.0555 = mmol/L

@@ -96,12 +96,12 @@ def electrolyte_K(weight, K_serum):
 
     Hypokalemia (additional K if <3.5 mmol/L)
     -----------------------------------------
-    # Comment:
-    # 1. As far it's practically impossible to calculate K deficiency,
-    # administer continuously i/v with rate 10 mmol/h and check ABG  every 2-4 hour in acute period
-    #     * If there are ECG changes and muscle relaxation, speed up to 20 mmol/h [Курек 2009 с 557]
-    # 2. In severe hypokalemia (<= 3 mmol/L) administrate with NaCl, not glucose
-    #     * When deficiency compensated (> 3 mmol/L) it's now possible to switch to glucose+insulin
+    Comment:
+    1. As far it's practically impossible to calculate K deficiency,
+    administer continuously i/v with rate 10 mmol/h and check ABG  every 2-4 hour in acute period
+        * If there are ECG changes and muscle relaxation, speed up to 20 mmol/h [Курек 2009 с 557; Ryabov, p 56]
+    2. In severe hypokalemia (<= 3 mmol/L) administrate with NaCl, not glucose
+        * When deficiency compensated (> 3 mmol/L) it's now possible to switch to glucose+insulin
 
     * Содержание K до 5 лет значительно выше [Курек 2013 с 38]
     * Если K+ <3 mmol/L, то введение глюкозы с инсулином может усугубить гипокалиемию, поэтому K+ вводить вместе с NaCl. [Курек ИТ 557]
@@ -115,7 +115,7 @@ def electrolyte_K(weight, K_serum):
             * Если принять калорийность глюкозы за 3.74-4.1 kcal/g, то нужно 2.67-2.44 g глюкозы, примерно 2.5 г
     [132]:
         * Вводить K+ со скоростью 0.25-0.5 mmol/kg/h (не быстрее)
-            * Но для веса > 40 кг, получается скорость >20 mmol/h, чего быть не должно?
+            * Но для веса > 40 кг, получается скорость >20 mmol/h, чего быть не должно.
         * На каждый mmol K+ вводить
             * Glu 2.5 g/mmol + Ins 0.2-0.3 IU/mmol (потребность в инсулине у детей меньше)
 

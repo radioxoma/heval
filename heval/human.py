@@ -358,6 +358,7 @@ class HumanBodyModel(object):
 
             :param float ibw: Ideal body mass for given adult or child >=3 kg.
             :return: l/kg/min
+            :rtype: float
             """
             # Approximation to Hamilton graph
             if ibw < 3:
@@ -564,10 +565,12 @@ def body_mass_index(height, weight):
 
     NB! Normal ranges in children differ from adults.
 
+    http://apps.who.int/bmi/index.jsp?introPage=intro_3.html
+
     :param float height: meters
     :param float weight: kilograms
-
-    http://apps.who.int/bmi/index.jsp?introPage=intro_3.html
+    :return: Opinion
+    :rtype: str
     """
     bmi = weight / height ** 2
 
@@ -602,20 +605,22 @@ def body_surface_area(height, weight):
 
     BSA = (W ** 0.425 * H ** 0.725) * 0.007184
 
-    :param float height: Patient height, meters
-    :param float weight: Real body mass, kg
-    :return:
-        m2, square meters
-    :rtype: float
-
-    >>> body_surface_area(1.86, 70)
-    1.931656390627583
-
     References
     ----------
     [1] https://en.wikipedia.org/wiki/Body_surface_area
     [2] DuBois D, DuBois EF. A formula to estimate the approximate surface area if height and weight be known. Arch Intern Medicine. 1916; 17:863-71.
     [3] http://www-users.med.cornell.edu/~spon/picu/calc/bsacalc.htm
+
+    Examples
+    --------
+    >>> body_surface_area(1.86, 70)
+    1.931656390627583
+
+    :param float height: Patient height, meters
+    :param float weight: Real body mass, kg
+    :return:
+        m2, square meters
+    :rtype: float
     """
     return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
 
@@ -623,19 +628,19 @@ def body_surface_area(height, weight):
 def ree_harris_benedict(height, weight, sex, age):
     """Resting energy expenditure, revised Harris-Benedict equation (revised 1984).
 
-    Examples
-    --------
-    >>> ree_harris_benedict(1.68, 59, 'male', 55)
-    1372.7820000000002
-    >>> ree_harris_benedict(1.68, 59, 'female', 55)
-    1275.4799999999998
-
     References
     ----------
     [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
     [2] Roza AM, Shizgal HM (1984). "The Harris Benedict equation reevaluated:
         resting energy requirements and the body cell mass" (PDF).
         The American Journal of Clinical Nutrition. 40 (1): 168–182.
+
+    Examples
+    --------
+    >>> ree_harris_benedict(1.68, 59, 'male', 55)
+    1372.7820000000002
+    >>> ree_harris_benedict(1.68, 59, 'female', 55)
+    1275.4799999999998
 
     :param float height: Height, meters
     :param float weight: Weight, kg
@@ -660,12 +665,6 @@ def ree_mifflin(height, weight, sex, age):
 
     Considered as more accurate than revised Harris-Benedict equation.
 
-    Examples
-    --------
-    >>> ree_mifflin(1.68, 59, 'male', 55)
-    1373.81
-    >>> ree_mifflin(1.68, 59, 'female', 55)
-    1207.81
 
     References
     ----------
@@ -674,6 +673,13 @@ def ree_mifflin(height, weight, sex, age):
         "A new predictive equation for resting energy expenditure in healthy
         individuals".
         The American Journal of Clinical Nutrition. 51 (2): 241–247.
+
+    Examples
+    --------
+    >>> ree_mifflin(1.68, 59, 'male', 55)
+    1373.81
+    >>> ree_mifflin(1.68, 59, 'female', 55)
+    1207.81
 
     :param float height: Height, meters
     :param float weight: Weight, kg
@@ -698,16 +704,16 @@ def ree_mifflin(height, weight, sex, age):
 def mean_arterial_pressure(SysP, DiasP):
     """Calculate mean arterial pressure (MAP).
 
+    Examples
+    --------
+    >>> mean_arterial_pressure(120, 87)
+    98.0
+
     :param float SysP: Systolic pressure, mmHg
     :param float DyasP: Diastolic pressure, mmHg
     :return:
         Mean arterial pressure, mmHg
     :rtype: float
-
-    Examples
-    --------
-    >>> mean_arterial_pressure(120, 87)
-    98.0
     """
     # (120 + 2 * 87) / 3
     # return (SysP - DiasP) / 3 + DiasP  # Just different algebra
@@ -723,18 +729,17 @@ def parcland_volume(weight, burned_surface):
 
     Increase volume if urinary output <0.5 ml/kg/h). Don't use potassium solutions!
 
-    Examples
-    --------
-    V = 4 * m * A%
-    V = 4 x 75 kg x 20% = 6000 ml
-
-
     References
     ----------
     [1] https://en.wikipedia.org/wiki/Parkland_formula
     [2] Клинические случаи в анестезиологии А.П. Рид, Дж. Каплан 1995 г, с 309
     [3] https://www.remm.nlm.gov/burns.htm
     [4] В.В. Курек, А.Е. Кулагин «Анестезия и интенсивная терапия у детей» изд. третье 2013, с 418
+
+    Examples
+    --------
+    V = 4 * m * A%
+    V = 4 x 75 kg x 20% = 6000 ml
 
     :param float weight: Real body mass (not ideal), kg
     :param float burned_surface: Percent (not fraction) of body surface area

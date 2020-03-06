@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Calculate pre-made nutrition solution dose.
+
 Heval autimatically estimates required kcal and fluid volume by RBW.
 User can switch from default kcal estimation to protein estimation
 (measured nitrogen balance).
@@ -177,9 +179,8 @@ enteral_enterolin_caloric = {
 
 
 class HumanNutritionModel(object):
-    """
-    ESPEN https://www.ncbi.nlm.nih.gov/pubmed/19464090
-    """
+    """ESPEN https://www.ncbi.nlm.nih.gov/pubmed/19464090."""
+
     def __init__(self, human_model):
         super(HumanNutritionModel, self).__init__()
         self.human_model = human_model
@@ -226,8 +227,7 @@ class HumanNutritionModel(object):
         return ((protein_req * self.human_model.weight / 6.25) - 4) / 28 * 1000
 
     def describe_nutrition(self, by_protein=False):
-        """Trying to find a compromise between fluids, electrolytes and energy.
-        """
+        """Find a compromise between fluids, electrolytes and energy."""
         info = ""
         if self.human_model.debug:
             info += "{}\n".format(self.describe_nitrogen_balance())
@@ -292,10 +292,9 @@ class HumanNutritionModel(object):
 
 
 class NutritionFormula(object):
-    """Calculate pre-made mixture volume by protein or caloric demand.
-    """
     def __init__(self, preparation, human_model):
-        """
+        """Calculate pre-made mixture volume by protein or caloric demand.
+
         :param dict preparation: Specific dict with an nutrition preparation.
         :param class human_model: HumanModel class instance.
         """
@@ -307,8 +306,7 @@ class NutritionFormula(object):
         return self.name
 
     def theoretical_kcal(self):
-        """Test caloric content. Use if not provides by manufacturer specification.
-        """
+        """Estimate caloric content if not provided by manufacturer specs."""
         prt = 4  # 4.1
         lip = 9
         glu = 4.1  # pure glucose
@@ -345,8 +343,7 @@ class NutritionFormula(object):
         return protein_24h / self.c_prt
 
     def dose_max_ml(self):
-        """Maximal recommended by manufacturer dose per 24 hours.
-        """
+        """Maximal recommended by manufacturer dose per 24 hours."""
         if self.human_model.sex in ('male', 'female'):  # 2-5 years and adults,
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
         elif self.human_model.sex == 'child':  # 5-14 years
@@ -354,8 +351,7 @@ class NutritionFormula(object):
         return self.human_model.weight * daily_volume
 
     def dose_max_kcal(self):
-        """Maximal recommended by manufacturer dose per 24 hours.
-        """
+        """Maximal recommended by manufacturer dose per 24 hours."""
         return self.dose_max_ml() * self.c_kcal
 
     def describe_dose(self, vol_24h):

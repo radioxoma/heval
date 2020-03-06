@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Heval tkinter-based GUI."""
 
 import random
 import textwrap
@@ -118,7 +119,6 @@ class MainWindow(Frame):
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
-
 
         nb = Notebook(self)
         self.create_input()
@@ -276,8 +276,7 @@ class MainWindow(Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_debug(self, event=None):
-        """Be verbose if debug is True.
-        """
+        """Be verbose if debug is True."""
         self.HBody.debug = not self.HBody.debug  # Invert boolean
         self._debug.set(self.HBody.debug)  # Change flag in menu accordingly
         self.event_generate("<<HumanModelChanged>>")
@@ -817,6 +816,7 @@ class CalcElectrolytes(Frame):
 
 class CalcGFR(Frame):
     """Esimate glomerular filtration rate (eGFR)."""
+
     def __init__(self, parent, human_model):
         super(CalcGFR, self).__init__(parent)
         self.parent = parent
@@ -905,6 +905,7 @@ class CalcGFR(Frame):
 
 class CreateToolTip(object):
     """Create a tooltip for a given widget."""
+
     def __init__(self, widget, text="Widget's empty tooltip"):
         self.waittime = 500     # miliseconds
         self.wraplength = 180   # pixels

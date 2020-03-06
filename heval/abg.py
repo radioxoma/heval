@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Arterial blood gas interpreter. May be considered as reference realization
-of multiple interconnected compatible algorithms.
+Arterial blood gas interpreter.
 
 Eugene Dvoretsky, 2015-05-20
 
@@ -10,6 +9,8 @@ $ md5sum *
 a00e5f337bd2c65e513fda1202827c6a ABL800 Operators Manual English US.pdf
 
 Main statements:
+    * This code may be considered as reference realization of multiple
+      interconnected compatible algorithms.
     * You need deep theoretical background to understand this code,
         ABG is hard and functions' docs couldn't be self-explaining
     * Use International System of Units (m, kPa, mmol/L)
@@ -99,6 +100,7 @@ norm_ctAlb = (3.5, 5)  # g/dL
 
 class HumanBloodModel(object):
     """Represents an human blood ABG status."""
+
     def __init__(self, parent=None):
         self.parent = parent
         self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb')
@@ -166,7 +168,7 @@ class HumanBloodModel(object):
 
     @property
     def anion_gap(self):
-        """Default anion gap calculation method without potassium."""
+        """Calculate anion gap without potassium. Preferred method."""
         return calculate_anion_gap(
             Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
             albumin=self.ctAlb)
@@ -249,8 +251,7 @@ class HumanBloodModel(object):
         return info
 
     def describe_abg(self):
-        """Describe pH and pCO2 - an old implementation considered stable.
-        """
+        """Describe pH and pCO2 - an old implementation considered stable."""
         info = textwrap.dedent("""\
         pCO2    {:2.1f} kPa
         HCO3(P) {:2.1f} mmol/L
@@ -307,7 +308,7 @@ class HumanBloodModel(object):
         return info
 
     def describe_sbe(self):
-        """Calculate needed NaHCO3 for metabolic acidosis correction
+        """Calculate needed NaHCO3 for metabolic acidosis correction.
 
         Using SBE (not pH) as threshold point guaranties that bicarbonate
         administration won't be suggested in case of respiratory acidosis.
@@ -375,9 +376,6 @@ class HumanBloodModel(object):
         return info
 
     def describe_electrolytes(self):
-        """
-        I would like to know potassium level at pH 7.4 ("Is it really low K or just because pH shift?")
-        """
         info = "- Electrolyte and osmolar abnormalities ------------\n"
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolytes.electrolyte_K(self.parent.weight, self.cK))
@@ -417,8 +415,7 @@ class HumanBloodModel(object):
         return info
 
     def describe_albumin(self):
-        """Albumin as nutrition marker in adults.
-        """
+        """Albumin as nutrition marker in adults."""
         ctalb_range = "{} ({}-{} g/dL)".format(self.ctAlb, norm_ctAlb[0], norm_ctAlb[1])
         if norm_ctAlb[1] < self.ctAlb:
             info = "ctAlb is high {}. Dehydration?".format(ctalb_range)
@@ -427,7 +424,7 @@ class HumanBloodModel(object):
         elif 3 <= self.ctAlb < norm_ctAlb[0]:
             info = "ctAlb is low: light hypoalbuminemia {}".format(ctalb_range)
         elif 2.5 <= self.ctAlb < 3:
-            info = "ctAlb is low: meduim hypoalbuminemia {}".format(ctalb_range)
+            info = "ctAlb is low: medium hypoalbuminemia {}".format(ctalb_range)
         elif self.ctAlb < 2.5:
             info = "ctAlb is low: severe hypoalbuminemia {}. Expect oncotic edema".format(ctalb_range)
         return info
@@ -492,7 +489,6 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
 
     References
     ----------
-
     [1] https://en.wikipedia.org/wiki/Anion_gap
     [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
         Acid base balance in critical care medicine
@@ -600,7 +596,6 @@ def calculate_osmolarity(Na, glucosae):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-41, p. 277, equation 48.
     [2] https://en.wikipedia.org/wiki/Osmotic_concentration
@@ -612,12 +607,12 @@ def calculate_osmolarity(Na, glucosae):
     :rtype: float
     """
     # Sometimes `2 * (Na + K) + Glucose + Urea` all in mmol/L
-    # Also etanol can cause https://en.wikipedia.org/wiki/Osmol_gap
+    # Also ethanol can cause https://en.wikipedia.org/wiki/Osmol_gap
     return 2 * Na + glucosae
 
 
 def simple_hco3(pH, pCO2):
-    """Concentration of HCO3 in plasma (actual bicarbonate).
+    """Calculate actual bicarbonate concentration in plasma.
 
     Also known as cHCO3(P), HCO3act.
 
@@ -627,7 +622,6 @@ def simple_hco3(pH, pCO2):
 
     References
     ----------
-
     [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
 
     :param float pH:
@@ -642,7 +636,7 @@ def simple_hco3(pH, pCO2):
 
 
 def calculate_hco3p(pH, pCO2):
-    """Concentration of HCO3 in plasma (actual bicarbonate).
+    """Calculate actual bicarbonate aka cHCO3(P) concentration in plasma.
 
     Also known as cHCO3(P), HCO3act [1].
 
@@ -652,7 +646,6 @@ def calculate_hco3p(pH, pCO2):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-28, p. 264, equation 4.
     [2] Siggaard-Andersen O, Wimberley PD, Fogh-Andersen N, Gøthgen IH.
@@ -672,16 +665,18 @@ def calculate_hco3p(pH, pCO2):
 
 
 def calculate_hco3pst(pH, pCO2, ctHb, sO2):
-    """Standard Bicarbonate, the concentration of HCO3- in the plasma
+    """Calculate standard bicarbonate aka cHCO3(P,st) concentration in plasma.
+
+    Also known as cHCO3(P,st)) [1].
+
+    Standard Bicarbonate, the concentration of HCO3- in the plasma
     from blood which is equilibrated with a gas mixture with
     pCO2 = 5.33 kPa (40 mmHg) and pO2 >= 13.33 kPa (100 mmHg) at 37 °C.
     (Normal pCO2 and pO2 level enough to saturate Hb.)
 
-    Also known as cHCO3(P,st)) [1].
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-29, p. 265, equation 9.
 
@@ -709,7 +704,6 @@ def simple_be(pH, HCO3act):
 
     References
     ----------
-
     [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
     [2] http://www.acid-base.com/computing.php
 
@@ -731,7 +725,6 @@ def calculate_cbase(pH, pCO2, ctHb=3):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-29, p. 265, equation 5.
 
@@ -769,7 +762,6 @@ def calculate_hct(ctHb):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-30, p. 266, equation 13.
     [2] http://www.derangedphysiology.com/php/Arterial-blood-gases/
@@ -789,12 +781,10 @@ def calculate_hct(ctHb):
 
 
 def calculate_pHT(pH, t):
-    """pH of blood at patient temperature.
-
+    """Calculate pH of blood at patient body temperature.
 
     Examples
     --------
-
     >>> calculate_pHT(6.919, 39.6)
     6.8891689
     >>> calculate_pHT(7.509, 38.6)
@@ -803,7 +793,6 @@ def calculate_pHT(pH, t):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-28, p. 264, equation 1.
 
@@ -820,10 +809,8 @@ def calculate_pHT(pH, t):
 def calculate_pCO2T(pCO2, t):
     """Partial pressure of CO2 in blood at patient temperature.
 
-
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-28, p. 264, equation 3.
 
@@ -844,7 +831,6 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-35, p. 271, equation 27.
 
@@ -925,7 +911,6 @@ def calculate_Ca74(pH, Ca):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-41, p. 277, equation 45.
 
@@ -951,7 +936,6 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
 
     Examples
     --------
-
     >>> egfr_mdrd('male', 74.4, 27)
     109.36590492087734
     >>> egfr_mdrd('female', 100, 80, True)
@@ -960,7 +944,6 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
 
     References
     ----------
-
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-43, p. 279, equations 53, 54.
     [2] https://www.kidney.org/sites/default/files/docs/12-10-4004_abe_faqs_aboutgfrrev1b_singleb.pdf
@@ -1066,8 +1049,7 @@ def egfr_schwartz(cCrea, height):
 
 
 def gfr_describe(gfr):
-    """Describe GFR value meaning and stage of Chronic Kidney Disease.
-    """
+    """Describe GFR value meaning and stage of Chronic Kidney Disease."""
     if 90 <= gfr:
         return "Normal kidney function if no proteinuria, otherwise CKD1 (90-100 %)"
     elif 60 <= gfr < 90:
@@ -1084,7 +1066,6 @@ def gfr_describe(gfr):
 
 def resp_acidosis_pH(pCO2, status='acute'):
     """Calculate expected pH by pCO2 for simple respiratory acidosis.
-
 
     Metabolic acidosis compensated by respiratory alcalosis
     -------------------------------------------------------
@@ -1143,7 +1124,6 @@ def resp_acidosis_pH(pCO2, status='acute'):
 
     References
     ----------
-
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
     [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
     [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
@@ -1263,14 +1243,12 @@ def abg_approach_ryabov(pH, pCO2):
 
     Examples
     --------
-
     >>> abg_approach_ryabov(7.36, 55*kPa)
     'pH, calculated by pCO2, is 7.28, estimated SBE (7.36-7.28)/0.015=+5.33 mEq/L'
 
 
     References
     ----------
-
     [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США (AHA?)
 
     :param float pH:
@@ -1287,7 +1265,6 @@ def abg_approach_ryabov(pH, pCO2):
 
 def abg_approach_research(pH, pCO2):
     """Calculate expected ABG values.
-
 
     References
     ----------

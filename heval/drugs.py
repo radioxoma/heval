@@ -48,6 +48,7 @@ press_dobutamine = {
 
 class HumanDrugsModel(object):
     """Human drugs list."""
+
     def __init__(self, parent):
         super(HumanDrugsModel, self).__init__()
         self.parent = parent
@@ -89,8 +90,8 @@ class HumanDrugsModel(object):
 
 
 class Dithylin(object):
-    """According to RUE Belmedpreparaty instruction.
-    """
+    """According to RUE Belmedpreparaty instruction."""
+
     def __init__(self, parent=None):
         self.parent = parent
         self.name = "Dithylin"
@@ -108,8 +109,8 @@ class Dithylin(object):
 
 
 class Propofol(object):
-    """Propofol Fresenius Kabi 1 %.
-    """
+    """Propofol Fresenius Kabi 1 %."""
+
     def __init__(self, parent=None):
         self.parent = parent
         self.name = "Propofol"
@@ -120,8 +121,7 @@ class Propofol(object):
         # For RBW
 
     def delay(self, bolus=50):
-        """Delay in minutes between boluses. Tupical bolus is 25-50 mg.
-        """
+        """Delay in minutes between boluses. Tupical bolus is 25-50 mg."""
         per_hour = self.maintenance_dosage * self.parent.weight
         return 60 / (per_hour / bolus)
 
@@ -132,8 +132,8 @@ class Propofol(object):
 
 
 class Fentanyl(object):
-    """According to RUE Belmedpreparaty instruction.
-    """
+    """According to RUE Belmedpreparaty instruction."""
+
     def __init__(self, parent=None):
         self.parent = parent
         self.name = "Fentanyl"
@@ -156,6 +156,7 @@ class Tracrium(object):
     Eleminated by nonspecific plasma esterases.
     No cumulation, block recovery not dependent from kidney/liver metabolism.
     """
+
     def __init__(self, parent=None):
         self.parent = parent
         self.name = "Tracrium"
@@ -179,8 +180,8 @@ class Tracrium(object):
 
 
 class Arduan(object):
-    """https://www.rlsnet.ru/tn_index_id_358.htm
-    """
+    """https://www.rlsnet.ru/tn_index_id_358.htm."""
+
     def __init__(self, parent=None):
         self.parent = parent
         self.name = "Arduan"
@@ -199,8 +200,8 @@ class Arduan(object):
 
 
 class Esmeron(object):
-    """According to http://www.rceth.by/NDfiles/instr/8675_08_13_i.pdf.
-    """
+    """According to http://www.rceth.by/NDfiles/instr/8675_08_13_i.pdf."""
+
     def __init__(self, parent=None):
         self.parent = parent
         self.name = "Esmeron"

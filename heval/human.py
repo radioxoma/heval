@@ -167,7 +167,7 @@ class HumanBodyModel(object):
 
     @use_ibw.setter
     def use_ibw(self, value):
-        """Set flag to use calculated IBW instead real weight
+        """Set flag to use calculated IBW instead real weight.
 
         :param value bool: Use or not IBW, bool
         """
@@ -439,8 +439,7 @@ class HumanBodyModel(object):
         return info
 
     def _info_in_electrolytes(self):
-        """Daily electrolytes demand.
-        """
+        """Daily electrolytes demand."""
         info = ""
         if self.sex in ('male', 'female'):
             info += "Electrolytes daily requirements:\n"
@@ -626,7 +625,6 @@ def ree_harris_benedict(height, weight, sex, age):
 
     Examples
     --------
-
     >>> ree_harris_benedict(1.68, 59, 'male', 55)
     1372.7820000000002
     >>> ree_harris_benedict(1.68, 59, 'female', 55)
@@ -658,14 +656,12 @@ def ree_harris_benedict(height, weight, sex, age):
 
 
 def ree_mifflin(height, weight, sex, age):
-    """Resting energy expenditure in healthy individuals, Mifflin
-    St Jeor Equation (1990).
+    """Resting energy expenditure in healthy individuals, Mifflin St Jeor Equation (1990).
 
     Considered as more accurate than revised Harris-Benedict equation.
 
     Examples
     --------
-
     >>> ree_mifflin(1.68, 59, 'male', 55)
     1373.81
     >>> ree_mifflin(1.68, 59, 'female', 55)
@@ -700,7 +696,7 @@ def ree_mifflin(height, weight, sex, age):
 
 
 def mean_arterial_pressure(SysP, DiasP):
-    """Расчёт Среднего АД (mean arterial pressure, MAP)
+    """Calculate mean arterial pressure (MAP).
 
     :param float SysP: Systolic pressure, mmHg
     :param float DyasP: Diastolic pressure, mmHg
@@ -708,6 +704,8 @@ def mean_arterial_pressure(SysP, DiasP):
         Mean arterial pressure, mmHg
     :rtype: float
 
+    Examples
+    --------
     >>> mean_arterial_pressure(120, 87)
     98.0
     """
@@ -727,14 +725,12 @@ def parcland_volume(weight, burned_surface):
 
     Examples
     --------
-
     V = 4 * m * A%
     V = 4 x 75 kg x 20% = 6000 ml
 
 
     References
     ----------
-
     [1] https://en.wikipedia.org/wiki/Parkland_formula
     [2] Клинические случаи в анестезиологии А.П. Рид, Дж. Каплан 1995 г, с 309
     [3] https://www.remm.nlm.gov/burns.htm

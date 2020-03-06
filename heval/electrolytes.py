@@ -254,7 +254,7 @@ def electrolyte_Na(weight, Na_serum):
     if Na_serum > Na_high:
         info += "Na⁺ is high (>{} mmol/L), expect coma, use D5. ".format(Na_high)
         free_water_def = (1 - Na_target / Na_serum) * total_body_water * 1000  # ml just a proportion
-        info += "Free water deficit is {:.0f} ml. Check osmolarity in ABG.".format(free_water_def)
+        info += "Free water deficit is {:.0f} ml. Check osmolarity.".format(free_water_def)
         # Every 3 mmol above 145 mmol/L corresponds of 1 L volume deficiency [Рябов 1994, с 37, 43]
         # free_water_def2 = (Na_serum - 145) / 3 * 1000
         # info += " ('3 mmol' {:.0f} ml)\n".format(free_water_def2)

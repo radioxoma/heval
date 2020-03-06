@@ -6,7 +6,7 @@ import textwrap
 from datetime import datetime
 from tkinter import *
 from tkinter import scrolledtext
-from tkinter import font
+from tkinter import font as tkfont
 from tkinter.ttk import *
 from heval import abg
 from heval import human
@@ -169,7 +169,7 @@ class MainWindow(Frame):
         `some_font['size']` has negative value by default.
         """
         for fontvar in ('TkDefaultFont', 'TkTextFont', 'TkFixedFont', 'TkMenuFont'):
-            font_obj = font.nametofont(fontvar)
+            font_obj = tkfont.nametofont(fontvar)
             # print(font_obj.actual())
             # font_obj = font.Font(font=fontvar)
             if event == 'increase':

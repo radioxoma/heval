@@ -7,8 +7,9 @@ Author: Eugene Dvoretsky
 Function parameters tends to be in International System of Units.
 """
 
-import math
 import copy
+import math
+import textwrap
 from itertools import chain
 from heval import abg
 from heval import drugs
@@ -141,10 +142,10 @@ class HumanBodyModel(object):
         # older than 3 month. ml/kg ratio more in neonates and underweight
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
             self.weight * 70, self.total_blood_volume)
-        info += "Transfusion of one pRBC dose will increase Hb by {:.2f} g/dL.\n".format(hb_transfusion_response(self.weight))
+        info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.\n".format(hb_transfusion_response(self.weight))
 
-        # if self.sex == 'child':
-        #     info += "{}\n".format(wetflag(weight=self.weight))
+        if self.sex == 'child' and self.debug:
+            info += "\n{}\n".format(wetflag(weight=self.weight))
         info += "\n--- IN -----------------------------------------\n"
         info += "{}\n".format(self._info_in_respiration())
         info += "\n{}\n".format(self._info_in_fluids())
@@ -808,28 +809,28 @@ def wetflag(age=None, weight=None):
     framework in a stressful situation reducing the risk or error.
 
     :param float age: years, 1-10
-    :param float weight: kg, jus a fallback now
+    :param float weight: kg, just a fallback now
     """
     if not any((age, weight)):
-        raise ValueError("Specify children age or weight")
+        raise ValueError("Specify children's age or weight")
     if weight:  # Don't want to add age field now
         age = weight / 2 - 4
     if not 1 <= age <= 10:
-        return "WETFlAG: Age must be in range 1-10 years"
+        return "WETFLAG: Age must be in range 1-10 years"
 
     W = (age + 4) * 2   # Weight, kg
     E = 4 * W  # Energy, Joules. Mono or bifasic?
     T = age / 4 + 4  # Tube (endotracheal), ID mm (uncuffed)
     Fl = 20 * W  # Fluids (bolus), ml of isotonic fluid (caution in some cases)
-    A = 10 * W  # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
-    G = 2 * W  # 2 mL/kg Glucose 10 %
-    info = """\
-WETFlAG report for {} yo, weight {} kg child:
-    Energy for defib {:.0f} J
-    Tube {:.1f} mm
-    Fluid bolus {:.0f} ml of isotonic fluid
-    Adrenaline {:.0f} mcg
-    Glucosae 10 % {:.0f} ml""".format(age, W, E, T, Fl, A, G)
+    A = 10 * W   # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
+    G = 2 * W    # 2 mL/kg Glucose 10 %
+    info = textwrap.dedent("""\
+        WETFlAG report for {:.1f} yo, {:.1f} kg child:
+        Energy for defib {:.0f} J
+        Tube {:.1f} mm
+        Fluid bolus {:.0f} ml of isotonic fluid
+        Adrenaline {:.0f} mcg
+        Glucosae 10 % {:.0f} ml""".format(age, W, E, T, Fl, A, G))
     return info
 
 

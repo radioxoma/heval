@@ -489,7 +489,7 @@ class CalcNutrition(Frame):
             format='%1.0f', increment=1, command=self.set_model_fluid_multipler)
         self.ctl_sbx_fluid_mul.bind("<Return>", self.set_model_fluid_multipler)
         self.ctl_sbx_fluid_mul.grid(row=1, column=1)
-        CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid demand.\nTypical 30-35 ml/kg.")
+        CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid demand.\nTypical 30-35 ml/kg for an adult. Much higher for children.")
 
         Label(fr_fluid_entry, text="ml/24h").grid(row=2, column=0)
         self.lbl_fluid_24h = Label(fr_fluid_entry)

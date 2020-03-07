@@ -235,15 +235,18 @@ def electrolyte_Na(weight, Na_serum):
     desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
     info = ""
     if Na_serum > norm_Na[1]:
+        # water_deficiency = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
         water_deficiency = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
         info += "Na⁺ is high {}, use D5. ".format(desc)
         info += "Free water deficit is {:.0f} ml. Check osmolarity.".format(water_deficiency)
+        info += " N.B. too fast Na⁺ decrease (>Δ1 mmol/L/h) will cause cerebral edema."
     elif Na_serum < norm_Na[0]:
         Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
         info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death. Na⁺ deficiency is {:.0f} mmol:\n".format(desc, Na_deficiency)
         info += solution_normal_saline(Na_deficiency)
+        info += " N.B. too fast Na⁺ replacement (>Δ1 mmol/L/h) will cause osmotic demyelination."
     else:
         info += "Na⁺ is ok {}".format(desc)
     return info

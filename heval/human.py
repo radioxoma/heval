@@ -119,14 +119,6 @@ class HumanBodyModel(object):
         if not self.is_init():
             return "Empty human model (set sex, height, weight)"
         info = ""
-        if self.sex == 'child':
-            try:
-                br_code, br_age, br_weight = get_broselow_code(self.height)
-                info += "BROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
-                    br_code.upper(), br_age.lower(), br_weight)
-            except ValueError:
-                pass
-
         info += "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
 
         if self._weight_ideal_valid:
@@ -149,8 +141,15 @@ class HumanBodyModel(object):
             self.weight * 70, self.total_blood_volume)
         info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.\n".format(hb_transfusion_response(self.weight))
 
-        if self.sex == 'child' and self.debug:
+        if self.sex == 'child':
+            try:
+                br_code, br_age, br_weight = get_broselow_code(self.height)
+                info += "\nBROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
+                    br_code.upper(), br_age.lower(), br_weight)
+            except ValueError:
+                pass
             info += "\n{}\n".format(wetflag(weight=self.weight))
+
         info += "\n--- IN -----------------------------------------\n"
         info += "{}\n".format(self._info_in_respiration())
         info += "\n{}\n".format(self._info_in_fluids())
@@ -826,19 +825,19 @@ def wetflag(age=None, weight=None):
         return "WETFLAG: Age must be in range 1-10 years"
 
     W = (age + 4) * 2   # Weight, kg
-    E = 4 * W  # Energy, Joules. Mono or bifasic?
+    E = 4 * W    # Energy, Joules. Mono or bifasic?
     T = age / 4 + 4  # Tube (endotracheal), ID mm (uncuffed)
     Fl = 20 * W  # Fluids (bolus), ml of isotonic fluid (caution in some cases)
     A = 10 * W   # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
     G = 2 * W    # 2 mL/kg Glucose 10 %
-    info = textwrap.dedent("""\
-        WETFlAG report for {:.1f} yo, {:.1f} kg child:
-        Energy for defib {:.0f} J
-        Tube {:.1f} mm
-        Fluid bolus {:.0f} ml of isotonic fluid
-        Adrenaline {:.0f} mcg
-        Glucosae 10 % {:.0f} ml""".format(age, W, E, T, Fl, A, G))
-    return info
+    return textwrap.dedent("""\
+        WETFlAG tip for {:.1f} yo
+          Weight           {:>4.1f} kg  = (age + 4) * 2
+          Energy for defib {:>4.0f} J   = 4 J/kg
+          Tube             {:>4.1f} mm  = age / 4 + 4
+          Fluid bolus      {:>4.0f} ml  = 20 ml/kg of isotonic fluid 
+          Adrenaline       {:>4.0f} mcg = 10 mcg/kg
+          Glucose 10 %     {:>4.0f} ml  = 2 mL/kg""".format(age, W, E, T, Fl, A, G))
 
 
 def get_broselow_code(height):

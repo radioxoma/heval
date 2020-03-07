@@ -342,7 +342,7 @@ class HumanBloodModel(object):
             # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
             # https://en.wikipedia.org/wiki/Contraction_alkalosis
             # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += "SBE is hight {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
+            info += "SBE is high {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
         elif self.sbe < norm_sbe[0]:
             if self.sbe <= NaHCO3_threshold:
                 info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
@@ -404,7 +404,7 @@ class HumanBloodModel(object):
             if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
                 info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
             else:
-                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS glucose 10 % 2.5 mL/kg:\n"
+                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS GLUCOSE 10 % 2.5 mL/kg:\n"
                 # https://litfl.com/glucose/
                 # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
                 info += electrolytes.solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)

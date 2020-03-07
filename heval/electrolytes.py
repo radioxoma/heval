@@ -98,11 +98,11 @@ def electrolyte_K(weight, K_serum):
     Hypokalemia (additional K if <3.5 mmol/L)
     -----------------------------------------
     Comment:
-    1. As far it's practically impossible to calculate K deficiency,
+    1. As far it's practically impossible to calculate K deficit,
     administer continuously i/v with rate 10 mmol/h and check ABG  every 2-4 hour in acute period
         * If there are ECG changes and muscle relaxation, speed up to 20 mmol/h [Курек 2009 с 557; Ryabov, p 56]
     2. In severe hypokalemia (<= 3 mmol/L) administrate with NaCl, not glucose
-        * When deficiency compensated (> 3 mmol/L) it's now possible to switch to glucose+insulin
+        * When deficit compensated (> 3 mmol/L) it's now possible to switch to glucose+insulin
 
     * Содержание K до 5 лет значительно выше [Курек 2013 с 38]
     * Если K+ <3 mmol/L, то введение глюкозы с инсулином может усугубить гипокалиемию, поэтому K+ вводить вместе с NaCl. [Курек ИТ 557]
@@ -171,14 +171,14 @@ def electrolyte_K(weight, K_serum):
             # coefficient = 0.3   # < 5 лет
             coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
 
-            K_deficiency = (K_target - K_serum) * weight * coefficient
-            # K_deficiency += weight * 1  # mmol/kg/24h Should I also add daily requirement?
+            K_deficit = (K_target - K_serum) * weight * coefficient
+            # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement?
 
-            info += "Estimated K⁺ deficiency (for children too?) is {:.0f} mmol + ".format(K_deficiency)
-            if K_deficiency > 4 * weight:
+            info += "Estimated K⁺ deficit (for children too?) is {:.0f} mmol + ".format(K_deficit)
+            if K_deficit > 4 * weight:
                 info += "Too much potassium for 24 hours"
 
-            glu_mass = K_deficiency * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
+            glu_mass = K_deficit * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
             info += solution_glucose(glu_mass, weight)
         else:
             info += "K⁺ on lower acceptable border {:.1f} ({:.1f}-{:.1f} mmol/L)".format(K_serum, K_low, K_high)
@@ -224,29 +224,45 @@ def electrolyte_Na(weight, Na_serum):
             Формула отличается от Курека только другим коэффицинтом и Na_target.
             Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
             Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
+
+    References
+    ----------
+    [1] http://www.medcalc.com/sodium.html
     """
     Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
+
+    # Na decrease not faster than 0.5-1 mmol/L/h for hypernatremia (cerebral edema risk)
+    # Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)
+    Na_shift_rate = 0.5  # mmol/L/h. May be set to 1 in future
+    Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
 
     # Коэффициенты разные для восполнения дефицита Na, K?
     coef = 0.6  # for adult, non-elderly males (**default for hyponatremia**);
     # coef = 0.5  # for adult elderly males, malnourished males, or females;
     # coef = 0.45  # for adult elderly or malnourished females.
     total_body_water = weight * coef  # Liters
-    desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
+
     info = ""
+    desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
     if Na_serum > norm_Na[1]:
-        # water_deficiency = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
-        water_deficiency = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
-        info += "Na⁺ is high {}, use D5. ".format(desc)
-        info += "Free water deficit is {:.0f} ml. Check osmolarity.".format(water_deficiency)
-        info += " N.B. too fast Na⁺ decrease (>Δ1 mmol/L/h) will cause cerebral edema."
+        # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
+        water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
+        info += "Na⁺ is high {}, check osmolarity. ".format(desc)
+        info += "Free water deficit is {:.0f} ml, ".format(water_deficit)
+        info += "replace it with D5 at rate {:.1f} ml/h (Na⁺ decrement {:.1f} mmol/L/h) during {:.1f} hours.".format(
+            water_deficit / Na_shift_hours, Na_shift_rate, Na_shift_hours)
+        info += " Faster fluid replacement will cause cerebral edema."
     elif Na_serum < norm_Na[0]:
-        Na_deficiency = (Na_target - Na_serum) * total_body_water  # mmol
+        Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death. Na⁺ deficiency is {:.0f} mmol:\n".format(desc, Na_deficiency)
-        info += solution_normal_saline(Na_deficiency)
-        info += " N.B. too fast Na⁺ replacement (>Δ1 mmol/L/h) will cause osmotic demyelination."
+        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death.\n".format(desc)
+        info += "Na⁺ deficit is {:.0f} mmol:\n".format(Na_deficit)
+        info += solution_normal_saline(Na_deficit)
+        info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.1f} hours:\n".format(
+            Na_shift_rate, Na_shift_hours)
+        info += solution_normal_saline(Na_deficit / Na_shift_hours)
+        info += "Faster Na⁺ replacement will cause osmotic central pontine myelinolysis."
     else:
         info += "Na⁺ is ok {}".format(desc)
     return info

@@ -190,47 +190,56 @@ def electrolyte_K(weight, K_serum):
 def electrolyte_Na(weight, Na_serum):
     """Assess blood serum sodium level.
 
-    :param float weight: Real body weight, kg
-    :param float Na_serum: mmol/L
+    Current human body fluid model status in context of Na replacement:
+    1. total body water = intracellular + extracellular + interstitial fluid
+    2. total body water = ideal_weight * 0.6
+        * Coefficients of TBW (0.6) may vary
+        * Some Na bound to bones and not included in model calculation
+        * Sodium and water almost freely moves within TBW compartments,
+            so proportion-like formulas are used
+    4. Formulas:
+        * Two "classic" formulas: for high and low Na
+        * Newer Adrogue formula for both high and low Na
 
-    Расчёт дефицита и избытка Na+ [Курек 2013 стр. 130, 132]
 
     Hyponatremia
     ------------
-    Корректировать Na медленно, иначе:
-        * Было много Na (>145 mmol/L) {и вводится D5} -> отёк мозга
-        * Было мало Na {вводится NaCl гипертонический} -> быстрое увличение осмолярности -> центральный понтинный миелинолиз
-    Скорость:
-        * Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0,25-0,5 мл/кг/час [ПосДеж 90]
-        * Восполнение Na не быстрее 10 mmol/L/24h
-    Возможно имеется гипокортицизм и потребуется вводить гидрокортизон.
+    Common chromic causes: SIADH, CHF, cirrosis.
+    Rare acute causes: psychogenic polydipsia, thiazide diuretics, postoperative
+
+    Slow Na replacement:
+        * Rapid Na increase -> serum osmolarity increase -> central pontine myelinolysis
+        * Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)
+        
+        * Slow 0.5-1 mmol/L/h inctease to 125-130 mmol/L [Нейрореаниматология: практическое руководство 2017 - Гипонатриемия]
+        * Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0.25-0.5 мл/кг/час [ПосДеж 90]
+        * Возможно имеется гипокортицизм и потребуется вводить гидрокортизон
+
 
     Hypernatremia
     -------------
-        * Устраняется постепенно за 48 часов
+    Slow Na decrease:
+        * Было много Na (>145 mmol/L) {и вводится D5} -> отёк мозга
+        * Na decrease not faster than 0.5-1 mmol/L/h for hypernatremia (cerebral edema risk)
+
         * Скорость снижения Na_serum <0.5 ммоль/л/ч или 12-15 ммоль/24h
+        * Устраняется постепенно за 48 часов [Маневич, Плохой 2000 с. 116]
+        * Скорость снижения не быстрее 20 ммоль/л в сутки
         * If Na>150 mmol/L use D5 or NaCl 0.45 %
         * If Na<150 use enteral water (https://med.virginia.edu/ginutrition/wp-content/uploads/sites/199/2014/06/Parrish_Rosner-Dec-14.pdf)
+        * Spironolactone 25 mg, Furosemide 10-20 mg
 
-
-    Другие источники
-    ================
-        Маневич, Плохой 2000 с. 116:
-            * Na_target 140 mmol/L
-            * coefficient 0.2
-            * Скорость снижения не быстрее 20 ммоль/л в сутки
-            * Spironolactone 25 mg, Furosemide 10-20 mg
-
-        Нейрореаниматология: практическое руководство 2017 - Гипонатриемия
-            Формула отличается от Курека только другим коэффицинтом и Na_target.
-            Необходимое количество натрия (ммоль) = [125 или желаемая концентрация Na+ − Na+ фактический (ммоль/л)] × 0.6 × масса (кг)
-            Концентрацию натрия следует медленно (со скоростью 0,5-1 ммоль/л/ч) повышать до достижения уровня 125-130 ммоль/л.
 
     References
     ----------
     [1] http://www.medcalc.com/sodium.html
+
+    Parameters
+    ----------
+    :param float weight: Real body weight, kg
+    :param float Na_serum: mmol/L
     """
-    Na_target = 140  # mmol/L (just mean value, from Маневич и Плохой, в Куреке не указано)
+    Na_target = 140  # mmol/L just mean value, from Маневич и Плохой
 
     # Na decrease not faster than 0.5-1 mmol/L/h for hypernatremia (cerebral edema risk)
     # Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)

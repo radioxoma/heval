@@ -49,7 +49,7 @@ An web or Android application is planned, but implementation deferred until calc
 | Human body: drug dosage | Medium | Verified, but limited drug list |
 | Nutrition | Limited | Enteral and parenteral. Based on [ESPEN](https://www.espen.org/) 25-30 kcal/kg recommendation and nitrogen balance. Use [indirect calorimetry](https://en.wikipedia.org/wiki/Indirect_calorimetry) if you need a real tool. |
 | ABG: anion gap | **Good** | Excellent prediction, but please **USE REAL DATA** |
-| ABG: Electrolytes replacement | Garbage | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation is impossible. High/low warnings still usable though. |
+| ABG: Electrolytes replacement | Limited | Multiple calculation methods in books, no one applicable in real world. Exact depletion/excess estimation is impossible. High/low warnings still usable though. |
 | ABG: pH correction | Limited | Dubious benefit. Lack of theory. Not all SBE range covered. |
 | eGFR | **Good** | Straightforward implementation for adults and children |
 

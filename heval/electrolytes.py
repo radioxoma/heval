@@ -210,6 +210,7 @@ def electrolyte_Na(weight, Na_serum):
         * Устраняется постепенно за 48 часов
         * Скорость снижения Na_serum <0.5 ммоль/л/ч или 12-15 ммоль/24h
         * If Na>150 mmol/L use D5 or NaCl 0.45 %
+        * If Na<150 use enteral water (https://med.virginia.edu/ginutrition/wp-content/uploads/sites/199/2014/06/Parrish_Rosner-Dec-14.pdf)
 
 
     Другие источники
@@ -248,10 +249,10 @@ def electrolyte_Na(weight, Na_serum):
         # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
         water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
         info += "Na⁺ is high {}, check osmolarity. ".format(desc)
-        info += "Free water deficit is {:.0f} ml, ".format(water_deficit)
-        info += "replace it with D5 at rate {:.1f} ml/h (Na⁺ decrement {:.1f} mmol/L/h) during {:.1f} hours.".format(
+        info += "Free water deficit is {:.0f} ml, give enteral water if possible or ".format(water_deficit)
+        info += "replace it with D5 at rate {:.1f} ml/h (Na⁺ decrement {:.1f} mmol/L/h) during {:.1f} hours. ".format(
             water_deficit / Na_shift_hours, Na_shift_rate, Na_shift_hours)
-        info += " Faster fluid replacement will cause cerebral edema."
+        info += "Faster fluid replacement will cause cerebral edema."
     elif Na_serum < norm_Na[0]:
         Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
@@ -277,7 +278,7 @@ def electrolyte_Cl(Cl_serum):
     info = ""
     Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
     if Cl_serum > Cl_high:
-        info += "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion?".format(Cl_high)
+        info += "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion or dehydration (check osmolarity).".format(Cl_high)
     elif Cl_serum < Cl_low:
         # KCl replacement?
         info += "Cl⁻ is low (<{} mmol/L). Vomiting? Diuretics abuse?".format(Cl_low)

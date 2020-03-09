@@ -92,6 +92,8 @@ def solution_normal_saline(salt_mmol):
 def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
     """Correct hyper- hyponatremia correction with two classic formulas.
 
+    Calculates amount of pure water or Na.
+
     References
     ----------
     Original paper is unknown. Plenty simplified calculations among the books.
@@ -112,15 +114,15 @@ def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_r
         # Classic hypernatremia formula
         # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
         water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
-        info += "Free water deficit is {:.0f} ml, give enteral water if possible or ".format(water_deficit)
-        info += "replace it with D5 at rate {:.1f} ml/h (Na⁺ decrement {:.1f} mmol/L/h) during {:.1f} hours. ".format(
-            water_deficit / Na_shift_hours, Na_shift_rate, Na_shift_hours)
+        info += "Free water deficit is {:.0f} ml, ".format(water_deficit)
+        info += "replace it with D5 at rate {:.1f} ml/h during {:.0f} hours. ".format(
+            water_deficit / Na_shift_hours, Na_shift_hours)
     elif Na_serum < Na_target:
         # Classic hyponatremia formula
         Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
-        info += "Na⁺ deficit is {:.0f} mmol, equals to:\n".format(Na_deficit)
+        info += "Na⁺ deficit is {:.0f} mmol, which equals to:\n".format(Na_deficit)
         info += solution_normal_saline(Na_deficit)
-        info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.1f} hours:\n".format(
+        info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.0f} hours:\n".format(
             Na_shift_rate, Na_shift_hours)
         info += solution_normal_saline(Na_deficit / Na_shift_hours)
     return info
@@ -129,6 +131,8 @@ def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_r
 def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
     """Correct hyper- hyponatremia correction with Adrogue–Madias formula.
 
+    Calculates amount of specific solution needed to correct Na.
+    Considered as more precise then classic formula.
 
     References
     ----------
@@ -155,8 +159,8 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
         # Threshold
         {'name': "Lactate Ringer", 'K_inf': 4, 'Na_inf': 130},
         # Threshold
-        {'name': 'NaCl 0.45',      'K_inf': 0, 'Na_inf': 77},
-        {'name': 'NaCl 0.2',       'K_inf': 0, 'Na_inf': 34},
+        {'name': 'NaCl 0.45%',     'K_inf': 0, 'Na_inf': 77},
+        {'name': 'NaCl 0.2%',      'K_inf': 0, 'Na_inf': 34},
         {'name': 'D5W',            'K_inf': 0, 'Na_inf': 0},
     ]
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
@@ -175,7 +179,7 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
             # Will lead to volume overload, not an option
             # Using 50000 ml threshold to cut off unreal volumes
             continue
-        info += " * {:<10} {:>7.1f} ml, {:6.1f} ml/h during {:.1f} hours\n".format(
+        info += " * {:<15} {:>7.1f} ml, {:6.1f} ml/h during {:.0f} hours\n".format(
             sol['name'], vol, vol / Na_shift_hours, Na_shift_hours)
     return info
 
@@ -188,7 +192,6 @@ def electrolyte_K(weight, K_serum):
 
     Hypokalemia (additional K if <3.5 mmol/L)
     -----------------------------------------
-    Comment:
     1. As far it's practically impossible to calculate K deficit,
     administer continuously i/v with rate 10 mmol/h and check ABG  every 2-4 hour in acute period
         * If there are ECG changes and muscle relaxation, speed up to 20 mmol/h [Курек 2009 с 557; Ryabov, p 56]
@@ -289,8 +292,11 @@ def electrolyte_Na(weight, Na_serum):
         * Sodium and water almost freely moves within TBW compartments,
             so proportion-like formulas are used
     4. Formulas:
-        * Two "classic" formulas: for high and low Na
-        * Newer Adrogue formula for both high and low Na
+        * Two "classic" formulas: for high and low Na can calculate:
+            * Hypernatremia - volume of pure water
+            * Hyponatremia - required Na
+        * Newer Adrogue formula for both high and low Na and able to calculate
+            volume of the specific solution.
 
 
     Hyponatremia
@@ -310,12 +316,10 @@ def electrolyte_Na(weight, Na_serum):
     Hypernatremia
     -------------
     Slow Na decrease:
-        * Было много Na (>145 mmol/L) {и вводится D5} -> отёк мозга
         * Na decrease not faster than 0.5-1 mmol/L/h for hypernatremia (cerebral edema risk)
-
         * Скорость снижения Na_serum <0.5 ммоль/л/ч или 12-15 ммоль/24h
-        * Устраняется постепенно за 48 часов [Маневич, Плохой 2000 с. 116]
         * Скорость снижения не быстрее 20 ммоль/л в сутки
+        * Устраняется постепенно за 48 часов [Маневич, Плохой 2000 с. 116]
         * If Na>150 mmol/L use D5 or NaCl 0.45 %
         * If Na<150 use enteral water (https://med.virginia.edu/ginutrition/wp-content/uploads/sites/199/2014/06/Parrish_Rosner-Dec-14.pdf)
         * Spironolactone 25 mg, Furosemide 10-20 mg
@@ -345,17 +349,17 @@ def electrolyte_Na(weight, Na_serum):
     info = ""
     desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
     if Na_serum > norm_Na[1]:
-        info += "Na⁺ is high {}, check osmolarity.\n".format(desc)
-        info += "Classic replacement calculation:\n{}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        info += "Na⁺ is high {}, check osmolarity. Give enteral water if possible. ".format(desc)
+        info += "Warning: Na⁺ decrement faster than {:.1f} mmol/L/h can cause cerebral edema.\n".format(Na_shift_rate)
+        info += "Classic replacement calculation: {}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
         info += "Adrogue replacement calculation:\n{}\n".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
-        info += "Faster fluid replacement will cause cerebral edema."
     elif Na_serum < norm_Na[0]:
-        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death.\n".format(desc)
+        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death. ".format(desc)
+        info += "Warning: Na⁺ replacement faster than {:.1f} mmol/L/h can cause osmotic central pontine myelinolysis.\n".format(Na_shift_rate)
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += "Classic replacement calculation:\n{}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        info += "Classic replacement calculation: {}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
         info += "Adrogue replacement calculation:\n{}\n".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
-        info += "Faster Na⁺ replacement will cause osmotic central pontine myelinolysis."
     else:
         info += "Na⁺ is ok {}".format(desc)
     return info

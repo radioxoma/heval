@@ -102,11 +102,69 @@ def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_r
     elif Na_serum < Na_target:
         # Classic hyponatremia formula
         Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
-        info += "Na⁺ deficit is {:.0f} mmol:\n".format(Na_deficit)
+        info += "Na⁺ deficit is {:.0f} mmol, equals to:\n".format(Na_deficit)
         info += solution_normal_saline(Na_deficit)
         info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.1f} hours:\n".format(
             Na_shift_rate, Na_shift_hours)
         info += solution_normal_saline(Na_deficit / Na_shift_hours)
+    return info
+
+
+def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
+    """Adrogue formula.
+
+    Solutions
+    ---------
+    5% NaCl                    855
+    3% NaCl                    513
+    0.9% NaCl                  154
+    Lactate Ringer's           130
+    0.45% NaCl                  77
+    0.2% NaCl                   34
+    5% Dextrose in water (D5W)  0
+
+
+    Examples
+    --------
+    For NaCl 3 %, Na_serum=108 and Na increase delta=10.125
+    >>> electrolyte_Na_adrogue(weight=65, Na_inf=513.0, Na_serum=108, Na_target=108+10.125)
+    1000.0
+    >>> electrolyte_Na_adrogue(weight=65, Na_inf=513.0, Na_serum=108, Na_target=140)
+    3160.5
+    >>> electrolyte_Na_adrogue(weight=65, Na_inf=0, Na_serum=160, Na_target=140)
+    5000.0
+    :param total_body_water: For most cases `weight * 0.6` (children and adults)
+    :param: Na_shift_rate = 0.5  # mmol/L/h. May be set to 1 in future
+    """
+    Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
+
+    solutions = [
+        {'name': 'nacl5',          'K_inf': 0, 'Na_inf': 855},
+        {'name': 'nacl3',          'K_inf': 0, 'Na_inf': 513},
+        {'name': 'nacl0.9',        'K_inf': 0, 'Na_inf': 154},
+        # Threshold
+        {'name': 'lactate_ringer', 'K_inf': 0, 'Na_inf': 130}, # K+ 4
+        # Threshold
+        {'name': 'nacl0.45',       'K_inf': 0, 'Na_inf': 77},
+        {'name': 'nacl0.2',        'K_inf': 0, 'Na_inf': 34},
+        {'name': 'd5w',            'K_inf': 0, 'Na_inf': 0},
+    ]
+    info = ""
+    for sol in solutions:
+        Na_inf = sol['Na_inf']
+        K_inf = sol['K_inf']
+        if Na_serum == Na_inf:
+            # Prevent zero division if solution same as the patient Na
+            continue
+        vol = (Na_target - Na_serum) / (Na_inf + K_inf - Na_serum) * (total_body_water + 1) * 1000
+        if vol < 0:
+            # Wrong solution, will make patient worse
+            continue
+        elif vol > 50000:
+            # Will lead to volume overload, not an option
+            continue
+        info += "{:<15} {:>7.1f} ml, {:.1f} ml/h during {:.1f} hours\n".format(
+            sol['name'], vol, vol / Na_shift_hours, Na_shift_hours)
     return info
 
 
@@ -275,14 +333,16 @@ def electrolyte_Na(weight, Na_serum):
     info = ""
     desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
     if Na_serum > norm_Na[1]:
-        info += "Na⁺ is high {}, check osmolarity. ".format(desc)
-        info += electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate)
+        info += "Na⁺ is high {}, check osmolarity.\n".format(desc)
+        info += "Classic replacement calculation:\n{}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        info += "Adrogue replacement calculation:\n{}\n".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
         info += "Faster fluid replacement will cause cerebral edema."
     elif Na_serum < norm_Na[0]:
         info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death.\n".format(desc)
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate)
+        info += "Classic replacement calculation:\n{}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        info += "Adrogue replacement calculation:\n{}\n".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
         info += "Faster Na⁺ replacement will cause osmotic central pontine myelinolysis."
     else:
         info += "Na⁺ is ok {}".format(desc)

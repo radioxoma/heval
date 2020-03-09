@@ -179,7 +179,7 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
             # Will lead to volume overload, not an option
             # Using 50000 ml threshold to cut off unreal volumes
             continue
-        info += " * {:<15} {:>7.1f} ml, {:6.1f} ml/h during {:.0f} hours\n".format(
+        info += " * {:<15} {:>6.0f} ml, {:6.1f} ml/h during {:.0f} hours\n".format(
             sol['name'], vol, vol / Na_shift_hours, Na_shift_hours)
     return info
 
@@ -281,7 +281,7 @@ def electrolyte_K(weight, K_serum):
     return info
 
 
-def electrolyte_Na(weight, Na_serum):
+def electrolyte_Na(weight, Na_serum, verbose=True):
     """Assess blood serum sodium level.
 
     Current human body fluid model status in context of Na replacement:
@@ -351,15 +351,17 @@ def electrolyte_Na(weight, Na_serum):
     if Na_serum > norm_Na[1]:
         info += "Na⁺ is high {}, check osmolarity. Give enteral water if possible. ".format(desc)
         info += "Warning: Na⁺ decrement faster than {:.1f} mmol/L/h can cause cerebral edema.\n".format(Na_shift_rate)
-        info += "Classic replacement calculation: {}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
-        info += "Adrogue replacement calculation:\n{}\n".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        if verbose:
+            info += "Classic replacement calculation: {}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        info += "Adrogue replacement calculation:\n{}".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
     elif Na_serum < norm_Na[0]:
         info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death. ".format(desc)
         info += "Warning: Na⁺ replacement faster than {:.1f} mmol/L/h can cause osmotic central pontine myelinolysis.\n".format(Na_shift_rate)
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += "Classic replacement calculation: {}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
-        info += "Adrogue replacement calculation:\n{}\n".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        if verbose:
+            info += "Classic replacement calculation: {}".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+        info += "Adrogue replacement calculation:\n{}".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
     else:
         info += "Na⁺ is ok {}".format(desc)
     return info

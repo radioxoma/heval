@@ -2,9 +2,7 @@
 
 The program describes an human being, small or grown from position of [intensive care medicine](https://en.wikipedia.org/wiki/Intensive_care_medicine). See [screenshots](https://github.com/radioxoma/heval#screenshots).
 
-From just *sex* and *height* it calculates [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more.
-
-[ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggest urgent correction measures and infusion therapy.
+From just *sex* and *height* it calculates [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more. [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggest urgent correction measures and infusion therapy.
 
 Main features:
 
@@ -15,7 +13,7 @@ Main features:
 * It's got electrolytes
 
 
-### Human body
+## Tabs overview
 
 > Tip: Get yourself a [ruler](https://en.wikipedia.org/wiki/Tape_measure), not all humans are able to talk.
 
@@ -23,15 +21,25 @@ Main features:
 * No input field for a human age, even for children, because of it poor prediction power. Incorporated [Broselow-Luten color zones](https://en.wikipedia.org/wiki/Broselow_tape) and [weight-by-height](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight) formulas at your service
 
 
+### Human body
+Ready to use if you have filled *sex* and *height*.
+
+
+### Nutrition
+Ready to use if you have filled *sex* and *height*. No need to change additional parameters.
+
+
 ### Arterial blood gas & Electrolytes
 
 > Tip: You can test Heval's ability to interpret ABG with [case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html). Some books provide case studies with invalid data (see below).
 
-1. Enter pH and pCO2 for overall acid-base status assessment
+Requires some bloodwork to be done. Take [arterial blood gas](https://en.wikipedia.org/wiki/Arterial_blood_gas_test) sample whenever possible.
+1. Enter only pH and pCO2 for simplest acid-base status assessment
 2. Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
     * Algorithm able to detect vomiting, hypoalbuminemia, [HHS](https://en.wikipedia.org/wiki/Hyperosmolar_hyperglycemic_state)
     * Sex and weight used only for dosage calculations, not for ABG diagnostics itself
-3. Adjust optional data for precise calculations in complex cases
+    * Tips for emergency cases
+3. Enter optional data for precise calculations in complex cases
 
 Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).
 **Some imagined case studies from books aren't designed well and will fail too.**
@@ -43,7 +51,7 @@ Heval is an experimental software. Whatever it calculates, it's *your* decisions
 
 An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
 
-> Key: Garbadge > Limited > Meduim > Good > Exellent
+> Key: Garbage -> Limited -> Medium -> Good -> Excellent
 
 | Function | Status | Comment |
 | -------- | ------ | ------- |

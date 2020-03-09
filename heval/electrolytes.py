@@ -89,6 +89,27 @@ def solution_normal_saline(salt_mmol):
     return info
 
 
+def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
+    info = ""
+    Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
+    if Na_serum > Na_target:
+        # Classic hypernatremia formula
+        # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
+        water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
+        info += "Free water deficit is {:.0f} ml, give enteral water if possible or ".format(water_deficit)
+        info += "replace it with D5 at rate {:.1f} ml/h (Na⁺ decrement {:.1f} mmol/L/h) during {:.1f} hours. ".format(
+            water_deficit / Na_shift_hours, Na_shift_rate, Na_shift_hours)
+    elif Na_serum < Na_target:
+        # Classic hyponatremia formula
+        Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
+        info += "Na⁺ deficit is {:.0f} mmol:\n".format(Na_deficit)
+        info += solution_normal_saline(Na_deficit)
+        info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.1f} hours:\n".format(
+            Na_shift_rate, Na_shift_hours)
+        info += solution_normal_saline(Na_deficit / Na_shift_hours)
+    return info
+
+
 def electrolyte_K(weight, K_serum):
     """Assess blood serum potassium level.
 
@@ -244,7 +265,6 @@ def electrolyte_Na(weight, Na_serum):
     # Na decrease not faster than 0.5-1 mmol/L/h for hypernatremia (cerebral edema risk)
     # Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)
     Na_shift_rate = 0.5  # mmol/L/h. May be set to 1 in future
-    Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
 
     # Коэффициенты разные для восполнения дефицита Na, K?
     coef = 0.6  # for adult, non-elderly males (**default for hyponatremia**);
@@ -255,23 +275,14 @@ def electrolyte_Na(weight, Na_serum):
     info = ""
     desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
     if Na_serum > norm_Na[1]:
-        # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
-        water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
         info += "Na⁺ is high {}, check osmolarity. ".format(desc)
-        info += "Free water deficit is {:.0f} ml, give enteral water if possible or ".format(water_deficit)
-        info += "replace it with D5 at rate {:.1f} ml/h (Na⁺ decrement {:.1f} mmol/L/h) during {:.1f} hours. ".format(
-            water_deficit / Na_shift_hours, Na_shift_rate, Na_shift_hours)
+        info += electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate)
         info += "Faster fluid replacement will cause cerebral edema."
     elif Na_serum < norm_Na[0]:
-        Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
+        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death.\n".format(desc)
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
-        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death.\n".format(desc)
-        info += "Na⁺ deficit is {:.0f} mmol:\n".format(Na_deficit)
-        info += solution_normal_saline(Na_deficit)
-        info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.1f} hours:\n".format(
-            Na_shift_rate, Na_shift_hours)
-        info += solution_normal_saline(Na_deficit / Na_shift_hours)
+        info += electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate)
         info += "Faster Na⁺ replacement will cause osmotic central pontine myelinolysis."
     else:
         info += "Na⁺ is ok {}".format(desc)

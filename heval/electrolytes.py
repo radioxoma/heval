@@ -90,6 +90,22 @@ def solution_normal_saline(salt_mmol):
 
 
 def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
+    """Correct hyper- hyponatremia correction with two classic formulas.
+
+    References
+    ----------
+    Original paper is unknown. Plenty simplified calculations among the books.
+    [1] http://www.medcalc.com/sodium.html
+
+    Parameters
+    ----------
+    :param float total_body_water: Liters
+    :param float Na_serum: Serum sodium level, mmol/L
+    :param float Na_target: 140 mmol/L by default
+    :param float Na_shift_rate: 0.5 mmol/L/h by default is safe
+    :return: Text describing Na deficit/excess and solutions dosage to correct.
+    :rtupe: str
+    """
     info = ""
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
     if Na_serum > Na_target:
@@ -111,59 +127,55 @@ def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_r
 
 
 def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
-    """Adrogue formula.
-
-    Solutions
-    ---------
-    5% NaCl                    855
-    3% NaCl                    513
-    0.9% NaCl                  154
-    Lactate Ringer's           130
-    0.45% NaCl                  77
-    0.2% NaCl                   34
-    5% Dextrose in water (D5W)  0
+    """Correct hyper- hyponatremia correction with Adrogue–Madias formula.
 
 
-    Examples
-    --------
-    For NaCl 3 %, Na_serum=108 and Na increase delta=10.125
-    >>> electrolyte_Na_adrogue(weight=65, Na_inf=513.0, Na_serum=108, Na_target=108+10.125)
-    1000.0
-    >>> electrolyte_Na_adrogue(weight=65, Na_inf=513.0, Na_serum=108, Na_target=140)
-    3160.5
-    >>> electrolyte_Na_adrogue(weight=65, Na_inf=0, Na_serum=160, Na_target=140)
-    5000.0
-    :param total_body_water: For most cases `weight * 0.6` (children and adults)
-    :param: Na_shift_rate = 0.5  # mmol/L/h. May be set to 1 in future
+    References
+    ----------
+    [1] Adrogue, HJ; and Madias, NE. Primary Care: Hypernatremia. New England Journal of Medicine 2000.
+        https://www.ncbi.nlm.nih.gov/pubmed/10824078
+        https://www.ncbi.nlm.nih.gov/pubmed/10816188
+    [2] Does the Adrogue–Madias formula accurately predict serum sodium levels in patients with dysnatremias?
+        https://www.nature.com/articles/ncpneph0335
+    [3] http://www.medcalc.com/sodium.html
+
+    Parameters
+    ----------
+    :param float total_body_water: Liters
+    :param float Na_serum: Serum sodium level, mmol/L
+    :param float Na_target: 140 mmol/L by default
+    :param float Na_shift_rate: 0.5 mmol/L/h by default is safe
+    :return: Text describing Na deficit/excess and solutions dosage to correct.
+    :rtupe: str
     """
-    Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
-
     solutions = [
-        {'name': 'nacl5',          'K_inf': 0, 'Na_inf': 855},
-        {'name': 'nacl3',          'K_inf': 0, 'Na_inf': 513},
-        {'name': 'nacl0.9',        'K_inf': 0, 'Na_inf': 154},
+        {'name': 'NaCl 5%',        'K_inf': 0, 'Na_inf': 855},
+        {'name': 'NaCl 3%',        'K_inf': 0, 'Na_inf': 513},
+        {'name': 'NaCl 0.9%',      'K_inf': 0, 'Na_inf': 154},
         # Threshold
-        {'name': 'lactate_ringer', 'K_inf': 0, 'Na_inf': 130}, # K+ 4
+        {'name': "Lactate Ringer", 'K_inf': 4, 'Na_inf': 130},
         # Threshold
-        {'name': 'nacl0.45',       'K_inf': 0, 'Na_inf': 77},
-        {'name': 'nacl0.2',        'K_inf': 0, 'Na_inf': 34},
-        {'name': 'd5w',            'K_inf': 0, 'Na_inf': 0},
+        {'name': 'NaCl 0.45',      'K_inf': 0, 'Na_inf': 77},
+        {'name': 'NaCl 0.2',       'K_inf': 0, 'Na_inf': 34},
+        {'name': 'D5W',            'K_inf': 0, 'Na_inf': 0},
     ]
+    Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
     info = ""
     for sol in solutions:
         Na_inf = sol['Na_inf']
         K_inf = sol['K_inf']
-        if Na_serum == Na_inf:
+        if Na_serum == Na_inf + K_inf:
             # Prevent zero division if solution same as the patient Na
             continue
         vol = (Na_target - Na_serum) / (Na_inf + K_inf - Na_serum) * (total_body_water + 1) * 1000
         if vol < 0:
-            # Wrong solution, will make patient worse
+            # Wrong solution, will only make patient worse
             continue
         elif vol > 50000:
             # Will lead to volume overload, not an option
+            # Using 50000 ml threshold to cut off unreal volumes
             continue
-        info += "{:<15} {:>7.1f} ml, {:.1f} ml/h during {:.1f} hours\n".format(
+        info += " * {:<10} {:>7.1f} ml, {:6.1f} ml/h during {:.1f} hours\n".format(
             sol['name'], vol, vol / Na_shift_hours, Na_shift_hours)
     return info
 

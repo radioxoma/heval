@@ -1,11 +1,15 @@
 ## Heval — a human evaluator. Calculate what your human crave!
 
-The program describes an human being, small or grown. It takes basic anthropometric values (sex, height) and calculates [BMI](https://en.wikipedia.org/wiki/Body_mass_index), [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [energy](https://en.wikipedia.org/wiki/Basal_metabolic_rate) demands, urinary output, some drugs dosage and more. Heval also incorporates sophisticated [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis). **See [screenshots](https://github.com/radioxoma/heval#screenshots).**
+The program describes an human being, small or grown from position of [intensive care medicine](https://en.wikipedia.org/wiki/Intensive_care_medicine). See [screenshots](https://github.com/radioxoma/heval#screenshots).
+
+From just *sex* and *height* it calculates [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more.
+
+[ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggest urgent correction measures and infusion therapy.
 
 Main features:
 
 * Minimal user input — unknown values estimated automatically whenever possible (e.g. weight by height)
-* Only measurable parameters — no need to speak with a human of interest or it's congeners
+* Only measurable parameters — no need to speak with a human of interest
 * No "Calculate" button — evaluated data changes immediately with your input
 * Every calculation referenced and explained in source code, so everyone can reproduce it
 * It's got electrolytes
@@ -13,7 +17,7 @@ Main features:
 
 ### Human body
 
-> Tip: Get yourself a ruler, not all humans are able to talk.
+> Tip: Get yourself a [ruler](https://en.wikipedia.org/wiki/Tape_measure), not all humans are able to talk.
 
 * Just enter sex and height
 * No input field for a human age, even for children, because of it poor prediction power. Incorporated [Broselow-Luten color zones](https://en.wikipedia.org/wiki/Broselow_tape) and [weight-by-height](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight) formulas at your service
@@ -38,6 +42,8 @@ Please use a real patient's data: all electrolytes interconnected by electroneut
 Heval is an experimental software. Whatever it calculates, it's *your* decisions will affect your human's live longevity. I have no responsibility for your collateral damage.
 
 An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
+
+> Key: Garbadge > Limited > Meduim > Good > Exellent
 
 | Function | Status | Comment |
 | -------- | ------ | ------- |

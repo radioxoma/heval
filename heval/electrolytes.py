@@ -134,6 +134,9 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
     Calculates amount of specific solution needed to correct Na.
     Considered as more precise then classic formula.
 
+    If patient urinates during Na replacement, calculated dose may be excessive
+    because total body water won't be increased as expected.
+
     References
     ----------
     [1] Adrogue, HJ; and Madias, NE. Primary Care: Hypernatremia. New England Journal of Medicine 2000.
@@ -298,6 +301,7 @@ def electrolyte_Na(weight, Na_serum, verbose=True):
         * Newer Adrogue formula for both high and low Na and able to calculate
             volume of the specific solution.
 
+    Hyperglycemia decreases Na_serum concentration https://www.ncbi.nlm.nih.gov/pubmed/10225241
 
     Hyponatremia
     ------------
@@ -333,6 +337,7 @@ def electrolyte_Na(weight, Na_serum, verbose=True):
     ----------
     :param float weight: Real body weight, kg
     :param float Na_serum: mmol/L
+    :param bool verbose: Return all possible text if True
     """
     Na_target = 140  # mmol/L just mean value, from Маневич и Плохой
 

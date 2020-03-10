@@ -62,7 +62,7 @@ An web or Android application is planned, but implementation deferred until calc
 | Human body: urinary output | **Good** | Simple ml/kg/h approach for adults and children, though eGFR estimation may be necessary |
 | Human body: drug dosage | Medium | Verified, but limited drug list |
 | Nutrition | Limited | Enteral and parenteral. Based on [ESPEN](https://www.espen.org/) 25-30 kcal/kg recommendation and nitrogen balance. Use [indirect calorimetry](https://en.wikipedia.org/wiki/Indirect_calorimetry) if you need a real tool. |
-| ABG: pH correction | Limited | Recent papers deny benefit from iv bicarbonate if BE <-15 mEq/L. Some benefit possible in AKI patients. No validated formula found. |
+| ABG: pH correction | Limited | Recent papers deny benefit from [iv bicarbonate](https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate) if BE <-15 mEq/L. Mortality decrease is possible in AKI patients. No validated formula found. |
 | ABG: anion gap | **Good** | Excellent prediction, but please **USE REAL DATA** |
 | ABG: Electrolytes replacement | Limited | Exact depletion/excess estimation is impossible due to multiple body compartments. High/low warnings still usable though. K<sup>+</sup> — no reliable model, use daily requirement and standard iv replacement rate for hypokalemia. Na<sup>+</sup> — Adrogue and classic one compartment model. Cl<sup>-</sup> — no model at all. Multiple calculation methods in books, few applicable in real world. |
 | eGFR | **Good** | Straightforward implementation for adults and children |

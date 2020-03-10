@@ -63,6 +63,16 @@ def solution_glucose(glu_mass, body_weight, add_insuline=True):
     return info
 
 
+def solution_kcl4(salt_mmol):
+    """Convert mmol of KCl to volume of saline solution.
+
+    :param float salt_mmol: KCl, amount of substance, mmol
+    :return: KCl 4 % ml solution, ml
+    :rtype: str
+    """
+    return salt_mmol / 1000 * M_KCl / 4 * 100
+
+
 def solution_normal_saline(salt_mmol):
     """Convert mmol of NaCl to volume of saline solution (several dilutions).
 
@@ -261,11 +271,15 @@ def electrolyte_K(weight, K_serum):
         if K_serum < K_low:
             info += "K⁺ is dangerously low (<{:.1f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
 
-            info += "NB! Potassium calculations considered inaccurate, so use standard replacement rate "
+            info += "NB! Potassium calculations considered inaccurate, so use standard K⁺ replacement rate "
             if weight < 40:
-                info += "(KCl {:.1f}-{:.1f} mmol/h for child)".format(0.25 * weight, 0.5 * weight)
+                info += "{:.1f}-{:.1f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
+                    0.25 * weight, 0.5 * weight,
+                    solution_kcl4(0.25 * weight), solution_kcl4(0.5 * weight))
             else:
-                info += "(KCl 10-20 mmol/h for adult)"
+                info += "{:.0f}-{:.0f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
+                    10, 20,
+                    solution_kcl4(10), solution_kcl4(20))
             info += " and check ABG every 2-4 hours.\n"
 
             # coefficient = 0.45  # новорождённые
@@ -276,7 +290,7 @@ def electrolyte_K(weight, K_serum):
             K_deficit = (K_target - K_serum) * weight * coefficient
             # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement?
 
-            info += "Estimated K⁺ deficit is {:.0f} mmol + ".format(K_deficit)
+            info += "Estimated K⁺ deficit is {:.0f} mmol (KCl 4 % {:.1f} ml) + ".format(K_deficit, solution_kcl4(K_deficit))
             if K_deficit > 4 * weight:
                 info += "Too much potassium for 24 hours"
 

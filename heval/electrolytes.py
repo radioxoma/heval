@@ -208,13 +208,13 @@ def electrolyte_K(weight, K_serum):
     * Если K+ <3 mmol/L, то введение глюкозы с инсулином может усугубить гипокалиемию, поэтому K+ вводить вместе с NaCl. [Курек ИТ 557]
     * Metabolic acidosis raises plasma K+ level by displacing it from cells. E.g. in DKA [Рябов 1994, с 70]
 
-    [130]:
+    [Курек 130]:
         * Top 24h dose 4 mmol/kg/24h
         * Полностью восполнять дефицит не быстрее чем за 48 ч
         * Допустимая скорость 0.5 mmol/kg/h (тогда суточная доза введётся за 8 часов)
         * На каждый mmol K+ вводить 10 kcal glucosae
             * Если принять калорийность глюкозы за 3.74-4.1 kcal/g, то нужно 2.67-2.44 g глюкозы, примерно 2.5 г
-    [132]:
+    [Курек 132]:
         * Вводить K+ со скоростью 0.25-0.5 mmol/kg/h (не быстрее)
             * Но для веса > 40 кг, получается скорость >20 mmol/h, чего быть не должно.
         * На каждый mmol K+ вводить
@@ -232,11 +232,12 @@ def electrolyte_K(weight, K_serum):
     ------------
     Неотложеные мероприятия при K >= 7 mmol/L или ЭКГ-признаках гиперкалиемии [131]
         * Glu 20 % 0.5 g/kg + Ins 0.3 IU/g
+        * Salbutamol
 
     Уменьшние количества ионизированного калия:
         * NaHCO3 2 mmol/kg (за 10-20 минут)
         * CaCl2 - только если есть изменения на ЭКГ [PICU: Electrolyte Emergencies]
-        * гипервентиляция
+        * hyperventilation
     """
     K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
@@ -253,28 +254,29 @@ def electrolyte_K(weight, K_serum):
             # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
             info += "NaHCO₃ 8.4% {:.0f} ml (RBWx2={:.0f} mmol) [Курек 2013]\n".format(
                 2 * weight, 2 * weight)
-            info += "Don't forget furesemide, hyperventilation\n"
-            info += "If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
+            info += "Don't forget salbutamol, furesemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
         else:
             info += "K⁺ on the upper acceptable border {:.1f} ({:.1f}-{:.1f} mmol/L)".format(K_serum, K_low, K_high)
     elif K_serum < norm_K[0]:
         if K_serum < K_low:
             info += "K⁺ is dangerously low (<{:.1f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
-            info += "NB! Potassium calculations considered inaccurate, so use standard replacement rate and check ABG every 2-4 hours: "
+
+            info += "NB! Potassium calculations considered inaccurate, so use standard replacement rate "
             if weight < 40:
-                info += "KCl {:.0f}-{:.0f} mmol/h for child.\n".format(0.25 * weight, 0.5 * weight)
+                info += "(KCl {:.1f}-{:.1f} mmol/h for child)".format(0.25 * weight, 0.5 * weight)
             else:
-                info += "KCl 10-20 mmol/h (standard rate) for all adults will be ok.\n"
+                info += "(KCl 10-20 mmol/h for adult)"
+            info += " and check ABG every 2-4 hours.\n"
 
             # coefficient = 0.45  # новорождённые
             # coefficient = 0.4   # грудные
             # coefficient = 0.3   # < 5 лет
-            coefficient = 0.2   # >5 лет [Курек 2013, Маневич и Плохой c. 116]
+            coefficient = 0.2   # >5 лет [Курек 2013]
 
             K_deficit = (K_target - K_serum) * weight * coefficient
             # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement?
 
-            info += "Estimated K⁺ deficit (for children too?) is {:.0f} mmol + ".format(K_deficit)
+            info += "Estimated K⁺ deficit is {:.0f} mmol + ".format(K_deficit)
             if K_deficit > 4 * weight:
                 info += "Too much potassium for 24 hours"
 
@@ -314,7 +316,6 @@ def electrolyte_Na(weight, Na_serum, verbose=True):
     Slow Na replacement:
         * Rapid Na increase -> serum osmolarity increase -> central pontine myelinolysis
         * Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)
-        
         * Slow 0.5-1 mmol/L/h inctease to 125-130 mmol/L [Нейрореаниматология: практическое руководство 2017 - Гипонатриемия]
         * Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0.25-0.5 мл/кг/час [ПосДеж 90]
         * Возможно имеется гипокортицизм и потребуется вводить гидрокортизон

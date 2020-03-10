@@ -40,7 +40,7 @@ BMI - body mass index
 BMR - basal metabolic rate
 BSA - body surface area, m²
 CKD - chronic kidney disease
-D5 - dextrose 5%
+D5, D5W - dextrose 5%
 DKE - diabetic ketoacidosis
 eGFR - estimated glomerular filtration rate
 GA - general anesthesia
@@ -77,7 +77,7 @@ specialists. Software is provided ​"as is". Developer makes no warranties, \
 express or implied.
 
 Written by Eugene Dvoretsky 2015-2020. Check source code for references and \
-formulas. Contact E-mail: radioxoma@gmail.com
+formulas. Contact e-mail: radioxoma@gmail.com
 
 Heval is a free software and licensed under the terms of \
 GNU General Public License version 3."""

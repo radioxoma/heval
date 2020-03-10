@@ -835,7 +835,7 @@ def wetflag(age=None, weight=None):
           Weight           {:>4.1f} kg  = (age + 4) * 2
           Energy for defib {:>4.0f} J   = 4 J/kg
           Tube             {:>4.1f} mm  = age / 4 + 4
-          Fluid bolus      {:>4.0f} ml  = 20 ml/kg of isotonic fluid 
+          Fluid bolus      {:>4.0f} ml  = 20 ml/kg of isotonic fluid
           Adrenaline       {:>4.0f} mcg = 10 mcg/kg
           Glucose 10 %     {:>4.0f} ml  = 2 mL/kg""".format(age, W, E, T, Fl, A, G))
 

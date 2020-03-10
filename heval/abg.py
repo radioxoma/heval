@@ -964,8 +964,8 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
 
     For patients >18 years. Appears as more accurate than MDRD, especially
     when actual GFR is greater than 60 mL/min per 1.73 m2.
-    Cahexy, limb loss will reduce creatinine production, so eGFR will look
-    better than it is.
+    Cahexy, limb amputation will reduce creatinine production, so eGFR
+    will look better than it is.
 
     References
     ----------

@@ -691,7 +691,7 @@ class CalcElectrolytes(Frame):
 
         Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=3, column=0)
         self.ctl_sbx_Na = Spinbox(
-            fr_elec_entry, width=3, from_=0.0, to=200.0,
+            fr_elec_entry, width=3, from_=0.0, to=300.0,
             format='%3.0f', increment=1, command=self.set_model_Na)
         CreateToolTip(self.ctl_sbx_Na, "Na⁺ and cGlu are used for serum osmolarity calculations")
         self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
@@ -699,7 +699,7 @@ class CalcElectrolytes(Frame):
 
         Label(fr_elec_entry, text='Cl⁻, mmol/L').grid(row=4, column=0)
         self.ctl_sbx_Cl = Spinbox(
-            fr_elec_entry, width=3, from_=0.0, to=200.0,
+            fr_elec_entry, width=3, from_=0.0, to=300.0,
             format='%3.0f', increment=1, command=self.set_model_Cl)
         self.ctl_sbx_Cl.bind("<Return>", self.set_model_Cl)
         self.ctl_sbx_Cl.grid(row=4, column=1)
@@ -754,7 +754,7 @@ class CalcElectrolytes(Frame):
 
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, END)
-        self.ctl_sbx_K.insert(0, 4.3)
+        self.ctl_sbx_K.insert(0, 4.3)  # May be set to 4.0
         self.set_model_K()
         self.ctl_sbx_Na.delete(0, END)
         self.ctl_sbx_Na.insert(0, 140)

@@ -156,15 +156,18 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
     :rtupe: str
     """
     solutions = [
-        {'name': 'NaCl 5%',        'K_inf': 0, 'Na_inf': 855},
-        {'name': 'NaCl 3%',        'K_inf': 0, 'Na_inf': 513},
-        {'name': 'NaCl 0.9%',      'K_inf': 0, 'Na_inf': 154},
-        # Threshold
-        {'name': "Lactate Ringer", 'K_inf': 4, 'Na_inf': 130},
-        # Threshold
-        {'name': 'NaCl 0.45%',     'K_inf': 0, 'Na_inf': 77},
-        {'name': 'NaCl 0.2%',      'K_inf': 0, 'Na_inf': 34},
-        {'name': 'D5W',            'K_inf': 0, 'Na_inf': 0},
+        # Hyper
+        {'name': "NaCl 5%         (Na⁺ 855 mmol/L)", 'K_inf': 0, 'Na_inf': 855},
+        {'name': "NaCl 3%         (Na⁺ 513 mmol/L)", 'K_inf': 0, 'Na_inf': 513},
+        {'name': "NaCl 0.9%       (Na⁺ 154 mmol/L)", 'K_inf': 0, 'Na_inf': 154},
+        # Iso
+        {'name': "Sterofundin ISO (Na⁺ 145 mmol/L)", 'K_inf': 4, 'Na_inf': 145},  # BBraun
+        {'name': "Ionosteril      (Na⁺ 137 mmol/L)", 'K_inf': 4, 'Na_inf': 137},  # Fresenius Kabi
+        {'name': "Lactate Ringer  (Na⁺ 130 mmol/L)", 'K_inf': 4, 'Na_inf': 130},  # Hartmann's solution
+        # Hypo
+        {'name': "NaCl 0.45%      (Na⁺  77 mmol/L)", 'K_inf': 0, 'Na_inf': 77},
+        {'name': "NaCl 0.2%       (Na⁺  34 mmol/L)", 'K_inf': 0, 'Na_inf': 34},
+        {'name': "D5W or water    (Na⁺   0 mmol/L)", 'K_inf': 0, 'Na_inf': 0},
     ]
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
     info = ""

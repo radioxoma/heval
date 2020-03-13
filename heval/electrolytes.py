@@ -303,7 +303,7 @@ def electrolyte_K(weight, K_serum):
     return info
 
 
-def electrolyte_Na(weight, Na_serum, verbose=True):
+def electrolyte_Na(weight, Na_serum, cGlu, verbose=True):
     """Assess blood serum sodium level.
 
     Current human body fluid model status in context of Na replacement:
@@ -354,7 +354,8 @@ def electrolyte_Na(weight, Na_serum, verbose=True):
     Parameters
     ----------
     :param float weight: Real body weight, kg
-    :param float Na_serum: mmol/L
+    :param float Na_serum: Serum sodium level, mmol/L
+    :param float cGlu: Serum glucose level, mmol/L
     :param bool verbose: Return all possible text if True
     """
     Na_target = 140  # mmol/L just mean value, from Маневич и Плохой
@@ -387,7 +388,56 @@ def electrolyte_Na(weight, Na_serum, verbose=True):
         info += "Adrogue replacement calculation:\n{}".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
     else:
         info += "Na⁺ is ok {}".format(desc)
+
+    # Should corrected Na be used instead of Na_serum for replacement calculation?
+    Na_corr = correct_Na_hyperosmolar(Na_serum, cGlu)
+    if abs(Na_corr - Na_serum) > 5:  # Arbitrary threshold
+        info += "\nHigh cGlu causes high osmolarity and apparent hyponatremia. Corrected Na⁺ is {:.0f} mmol/L.".format(Na_corr)
     return info
+
+
+def correct_Na_hyperosmolar(cNa, cGlu):
+    """Sodium correction for high osmolarity (hyperglycemia).
+
+    Elevated glucose (or mannitol) raise plasma tonicity which draws
+    water from the intracellular compartment diluting plasma sodium and
+    causing pseudohyponatremia.
+
+    Other osmotic active molecules: mannitol, glycerol.
+
+    Theoretically there is no difference between osmotic particles,
+    e.g. glucose and mannitol, so formula could be transformed to work
+    with arbitrary particles, trough chemical amount of substance,
+    but anyway we can measure only glucose concentration.
+
+    References
+    ----------
+    https://emedicine.medscape.com/article/767624-workup
+    https://www.mdcalc.com/sodium-correction-hyperglycemia#evidence
+
+    https://www.ncbi.nlm.nih.gov/pubmed/4763428
+        Corrected Sodium (Katz, 1973) = Measured sodium + 0.016 * (Serum glucose - 100)
+        Underestimates Na derease in comparison to [Hillier, 1999].
+
+    https://www.ncbi.nlm.nih.gov/pubmed/10225241
+        Corrected Sodium (Hillier, 1999) = Measured sodium + 0.024 * (Serum glucose - 100)
+
+    Examples
+    --------
+    # >>> correct_Na_hyperosmolar(126, 33.3)  # Katz, 1973
+    # 133.9904
+    >>> correct_Na_hyperosmolar(126, 33.3)  # Hillier, 1999
+    137.9856
+
+    :param float cNa: Na, mmol/L
+    :param float cGlu: cGlu, mmol/L
+    :return: Corrected cNa concentration, mmol/L
+    :rtype: float
+    """
+    cGlu_mgdl = cGlu * M_C6H12O6 / 10
+    # Na_shift = (cGlu_mgdl - 100) / 100 * 1.6  # Katz, 1973
+    Na_shift = (cGlu_mgdl - 100) / 100 * 2.4  # Hillier, 1999
+    return cNa + Na_shift
 
 
 def electrolyte_Cl(Cl_serum):

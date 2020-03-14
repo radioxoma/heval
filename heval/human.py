@@ -12,9 +12,8 @@ import math
 import textwrap
 from itertools import chain
 
-import heval.electrolytes
-from heval import abg
 from heval import drugs
+from heval import electrolytes
 from heval import nutrition
 
 
@@ -84,7 +83,7 @@ class HumanBodyModel(object):
         self._weight_ideal_method = ""
         self.weight_ideal = None  # Changes only at sex/weight change
 
-        self.blood = heval.electrolytes.HumanBloodModel(self)
+        self.blood = electrolytes.HumanBloodModel(self)
         self.drugs = drugs.HumanDrugsModel(self)
         self.nutrition = nutrition.HumanNutritionModel(self)
         self.body_temp = 36.6
@@ -407,7 +406,6 @@ class HumanBodyModel(object):
 
     def _info_in_fluids(self):
         # Панкреатит жидкость 50-70 мл/кг/сут, [Пособие дежуранта 2014, стр. 259]
-        info = ""
         info = "BSA fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
         if self.sex in ('male', 'female'):
             info += "RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
@@ -717,7 +715,7 @@ def mean_arterial_pressure(SysP, DiasP):
     98.0
 
     :param float SysP: Systolic pressure, mmHg
-    :param float DyasP: Diastolic pressure, mmHg
+    :param float DiasP: Diastolic pressure, mmHg
     :return:
         Mean arterial pressure, mmHg
     :rtype: float
@@ -826,12 +824,12 @@ def wetflag(age=None, weight=None):
     if not 1 <= age <= 10:
         return "WETFLAG: Age must be in range 1-10 years"
 
-    W = (age + 4) * 2   # Weight, kg
-    E = 4 * W    # Energy, Joules. Mono or bifasic?
-    T = age / 4 + 4  # Tube (endotracheal), ID mm (uncuffed)
-    Fl = 20 * W  # Fluids (bolus), ml of isotonic fluid (caution in some cases)
-    A = 10 * W   # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
-    G = 2 * W    # 2 mL/kg Glucose 10 %
+    w = (age + 4) * 2   # Weight, kg
+    e = 4 * w    # Energy, Joules. Mono or bifasic?
+    t = age / 4 + 4  # Tube (endotracheal), ID mm (uncuffed)
+    fl = 20 * w  # Fluids (bolus), ml of isotonic fluid (caution in some cases)
+    a = 10 * w   # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
+    g = 2 * w    # 2 mL/kg Glucose 10 %
     return textwrap.dedent("""\
         WETFlAG tip for {:.1f} yo
           Weight           {:>4.1f} kg  = (age + 4) * 2
@@ -839,7 +837,7 @@ def wetflag(age=None, weight=None):
           Tube             {:>4.1f} mm  = age / 4 + 4
           Fluid bolus      {:>4.0f} ml  = 20 ml/kg of isotonic fluid
           Adrenaline       {:>4.0f} mcg = 10 mcg/kg
-          Glucose 10 %     {:>4.0f} ml  = 2 mL/kg""".format(age, W, E, T, Fl, A, G))
+          Glucose 10 %     {:>4.0f} ml  = 2 mL/kg""".format(age, w, e, t, fl, a, g))
 
 
 def get_broselow_code(height):
@@ -932,11 +930,10 @@ def nadler_total_blood_volume(sex, height, weight):
 
     [1] Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
 
-    :param height float: Human height, meters
-    :param weight float: Human weight, kg
+    :param float height: Human height, meters
+    :param float weight: Human weight, kg
     :param str sex: Choose 'male', 'female'.
-    :return:
-        Total blood volume, ml
+    :return: Total blood volume, ml
     :rtype: float
     """
     # Same as http://apheresisnurses.org/apheresis-calculators

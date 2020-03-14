@@ -58,14 +58,11 @@ except ImportError:
 
 # Units conversion
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
-M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
-
 
 # Reference blood test ranges
 norm_pH = (7.35, 7.45)
 norm_pH_mean = 7.40
 norm_pH_alive = (6.8, 7.8)  # Live borders
-norm_sbe = (-2, 2)  # mEq/L
 
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
@@ -73,20 +70,6 @@ norm_pCO2mmHg_mean = 40.0  # mmHg
 
 norm_HCO3 = (22, 26)  # mEq/L
 norm_pO2 = (80, 100)  # mmHg
-
-# NB! Changing 'norm_gap' will affect Gap-Gap calculation
-norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
-
-# Minimal low value has been chosen (<280), as I believe it
-# corresponds to mOsm reference range without BUN
-norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
-
-# Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
-# Used as initial value for mOsm calculation.
-norm_cGlu_mean = 5.5  # mmol/L
-norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
-norm_cGlu_target = (4.5, 10)  # ICU target range. 10 mmol/L stands for glucose renal threshold
-# Note: gap between lower norm_cGlu and norm_cGlu_target
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
@@ -245,6 +228,44 @@ def calculate_anion_gap_delta(AG, HCO3act):
         #   * a pre-existing compensated respiratory acidosis
         # tiazide diuretics?
         return info + "(2 < gg): concurrent metabolic alcalosis or chronic respiratory acidosis with high HCO₃⁻"
+
+
+def calculate_sid_abbr(cNa, cCl, ctAlb):
+    """Strong ion difference.
+
+    Strong ion gap (SIG).
+
+    * increased SID (>0) leads to alkalosis
+        dehydration: concentrates the alkalinity
+        increased unmeasured anions
+    * decreased SID (<0) acidosis
+        overhydration dilutes the alkaline state (dilutional acidosis) and decreases SID
+        increased unmeasured cations
+
+    apparent SID = SIDa = (Na+ + K+ + Ca2+ + Mg2+) – (Cl– – L-lactate – urate)
+    Abbreviated SID = (Na+) – (Cl–)
+
+    Normal difference:
+        38 = 140     - 102
+        42 = 140 + 4 - 102  # Potassium
+
+    If SBE is normal but patient is acidotic must all be from CO2
+    If SBE is abnormal must explain by SID, weak acids, or unmeasured strong ions
+
+    References
+    ----------
+    [1] https://litfl.com/strong-ion-difference/
+    [2] https://wikem.org/wiki/Acid-base_disorders
+    :param float cNa: Na concentration, mmol/L
+    :param float cCl: Cl concentration, mmol/L
+    :param float ctAlb: Albumin, g/dL for correction.
+    :return: Strong ion difference.
+    :rtype: float
+    """
+    sid = cNa - cCl - 38
+    if ctAlb:
+        sid += 2.5 * (norm_ctAlb_mean - ctAlb)
+    return sid
 
 
 def calculate_osmolarity(Na, glucosae):
@@ -517,7 +538,7 @@ def calculate_pO2_FO2_fraction(pO2, FiO2):
     [3] https://litfl.com/pao2-fio2-ratio
 
     :param float pO2: kPa
-    :param float FO2: Fraction of oxygen in dry inspired air, fraction.
+    :param float FiO2: Fraction of oxygen in dry inspired air, fraction.
     :return:
         pO2(a)/FO2(I), dimensionless quantity - no units
         if pf < 100:
@@ -578,3 +599,242 @@ def calculate_Ca74(pH, Ca):
     return Ca * (1 - 0.53 * (7.4 - pH))
 
 
+def resp_acidosis_pH(pCO2, status='acute'):
+    """Calculate expected pH by pCO2 for simple respiratory acidosis.
+
+    Metabolic acidosis compensated by respiratory alcalosis
+    -------------------------------------------------------
+    https://web.archive.org/web/20170824094226/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_metabolic_acidosis.html
+    Respiratory comp. results in a 1.2 mmHg reduction in PCO2 for every
+    1.0 meq/L reduction in the plasma HCO3- concentration down to a
+    minimum PCO2 of 10 to 15 mmHg:
+
+        pCO2 = 40 - (24 - HCO3act) * 1.2,
+        where 40 is normal pCO2, 24 is normal HCO2act and 1.2 - coefficient.
+
+    So, if HCO3act is 9 mmHg, then expected pCO2 will be equal:
+
+        40 - (24 - 9) * 1.2 = 22 mmHg
+
+    pCO2 can be predicted more accurately by Winters' formula:
+
+        pCO2_acid = 1.5 * HCO3act + 8  # mmHg
+
+
+    Metabolic alcalosis, compensated by respiratory acidosis
+    ---------------------------------------------------------
+    https://web.archive.org/web/20170829100840/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_metabolic_alkalosis.html
+
+        pCO2 = (HCO3act - 24) * 0.7 + 40
+
+    pCO2 can be predicted more accurately by Winters' formula:
+
+        pCO2_alc = 0.7 * HCO3act + 20  # mmHg
+
+
+    Respiratory acidosis
+    --------------------
+    https://web.archive.org/web/20170815212711/http://fitsweb.uchc.edu/student/selectives/TimurGraham/compensatory_responses_respiratory%20acidosis.html
+    Note: COPD patient can tolerate 90-110 mmHg/
+    Acutely, there is an increase in the plasma [HCO3-], averaging 1 meq/L for
+    every 10 mmHg rise in the PCO2:
+
+        Acute:   HCO3act = (pCO2 - 40) / 10 * 1   + 24
+            also pH = 7.4 + 0.008 * (40 - pCO2)  # What is the original paper?
+        Chronic: HCO3act = (pCO2 - 40) / 10 * 3.5 + 24
+            also pH = 7.4 + 0.003 * (40 - pCO2)  # What is the original paper?
+
+        pH = 6.1 + math.log10(HCO3act / (0.03 * pCO2))
+
+
+    Respiratory alcalosis
+    ---------------------
+    https://web.archive.org/web/20170918201557/http://fitsweb.uchc.edu/student/selectives/TimurGraham/compensatory_responses_respiratory_alkalosis.html
+
+        Acute:  HCO3act = 24 - ((40 - pCO2) / 10 * 2)
+        Chronic HCO3act = 24 - ((40 - pCO2) / 10 * 4)
+
+        pH = 6.1 + math.log10(HCO3act / (0.03 * pCO2))
+
+
+    References
+    ----------
+    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
+    [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
+    [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
+    [4] https://web.archive.org/web/20170904175146/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_summary.html
+
+    :param float pCO2: kPa
+    :param str status: 'acute' (no renal compensation) or 'chronic'
+        (renal compensation turns on after 3-5 days).
+    :return:
+        Expected pH.
+    :rtype: float
+    """
+    if status == 'acute':
+        return 7.4 + 0.008 * (40.0 - pCO2 / kPa)  # Acute
+    else:
+        return 7.4 + 0.003 * (40.0 - pCO2 / kPa)  # Chronic
+
+
+def abg_approach_stable(pH, pCO2):
+    """Evaluate arterial blood gas status for complex acid-base disorders.
+
+    http://en.wikipedia.org/wiki/Arterial_blood_gas
+
+    :param float pH:
+    :param float pCO2: kPa
+    :return: Two strings: verbose opinion and main disorder.
+    :rtype: tuple
+    """
+    # Inspired by https://abg.ninja/abg
+
+    # https://www.kernel.org/doc/Documentation/process/coding-style.rst
+    # The answer to that is that if you need more than 3 levels of
+    # indentation, you're screwed anyway, and should fix your program.
+
+    def check_metabolic(pH, pCO2):
+        """Check metabolic status by expected pH level.
+
+        Does this pH and pCO2 means hidden metabolic process?
+        """
+        guess = ''
+        # magic_threshold = 0.07
+        magic_threshold = 0.04  # To conform this case: https://web.archive.org/web/20170729124831/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_6.html
+        ex_pH = resp_acidosis_pH(pCO2)
+        if abs(pH - ex_pH) > magic_threshold:
+            if pH > ex_pH:
+                guess += "background metabolic alcalosis: "
+            else:
+                guess += "background metabolic acidosis: "
+        return "{}expected pH {:.2f}".format(guess, ex_pH)
+
+    if norm_pH[0] <= pH <= norm_pH[1]:  # pH is normal or compensated
+        # Don't calculating expected CO2/pH values because both values are
+        # normal or represent two opposed processes (no need for searching
+        # hidden one)
+        # pCO2 is abnormal, checking slight pH shifts
+        if pCO2 < norm_pCO2[0]:
+            # Low (respiratory alcalosis)
+            if pH >= 7.41:
+                return ("Respiratory alcalosis, full comp. by metabolic acidosis",
+                        "respiratory_alcalosis")
+            else:
+                return ("Metabolic acidosis, full comp. by CO₂ alcalosis",
+                        "metabolic_acidosis")
+        elif pCO2 > norm_pCO2[1]:
+            # High (respiratory acidosis)
+            if pH <= 7.39:  # pH almost acidic
+                # Classic "chronic" COPD gas
+                return ("Respiratory acidosis, full comp. by metabolic alcalosis. COPD?",
+                        "respiratory_acidosis")
+            else:
+                return ("Metabolic alcalosis, full comp. by CO₂ acidosis",
+                        "metabolic_alcalosis")
+        else:
+            return "Normal ABG", None
+    else:
+        # pH decompensation
+        if pCO2 < norm_pCO2[0]:  # Low (respiratory alcalosis)
+            # Can this pH lead to given pCO2?
+            if pH < norm_pH[0]:
+                # Always check anion gap here
+                return ("Metabolic acidosis, partial comp. by CO₂ alcalosis (check AG)",
+                        "metabolic_acidosis")
+            elif pH > norm_pH[1]:
+                return ("Respiratory alcalosis ({})".format(check_metabolic(pH, pCO2)),
+                        "respiratory_alcalosis")
+        elif pCO2 > norm_pCO2[1]:
+            if pH < norm_pH[0]:
+                return ("Respiratory acidosis ({})".format(check_metabolic(pH, pCO2)),
+                        "respiratory_acidosis")
+            elif pH > norm_pH[1]:
+                # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
+                return ("Metabolic alcalosis, partial comp. by CO₂ acidosis (check Na, Cl, albumin)",
+                        "metabolic_alcalosis")
+        else:
+            # Normal pCO2 (35 <= pCO2 <= 45 normal)
+            if pH < norm_pH[0]:
+                # Always check anion gap here
+                return ("Metabolic acidosis, no respiratory comp.",
+                        "metabolic_acidosis")
+            elif pH > norm_pH[1]:
+                return ("Metabolic alcalosis, no respiratory comp.",
+                        "metabolic_alcalosis")
+
+
+def abg_approach_ryabov(pH, pCO2):
+    """Describe ABG by Ryabov algorithm.
+
+    1. Calculate how measured pCO2 will change normal pH 7.4
+    2. Compare measured and calculated pH. Big difference between measured and
+       calculated pH points at hidden metabolic process
+    3. Divide measured and calculated pH difference by 0.015 to calculate
+       base excess (BE) approximation in mEq/L
+    4. If extracellular fluid (HCO3- distribution volume) represents 25 % of
+       real body weight (RBW), global base excess will be near "BE * 0.25 * RBW"
+
+
+    Examples
+    --------
+    >>> abg_approach_ryabov(7.36, 55*kPa)
+    'pH, calculated by pCO2, is 7.28, estimated SBE (7.36-7.28)/0.015=+5.33 mEq/L'
+
+
+    References
+    ----------
+    [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США (AHA?)
+
+    :param float pH:
+    :param float pCO2: kPa
+    :return: Opinion.
+    :rtype: str
+    """
+    # Same as `pH_expected = resp_acidosis_pH(pCO2, status='acute')`
+    pH_expected = 7.4 + 0.008 * (40 - pCO2 / kPa)  # What is the original paper?
+    info = "pH, calculated by pCO2, is {:.02f}, ".format(pH_expected)
+    pH_diff = pH - pH_expected
+    sbe = pH_diff / 0.015
+    info += "estimated SBE ({:.02f}-{:.02f})/0.015={:+.02f} mEq/L".format(pH, pH_expected, sbe)
+    return info
+
+
+def abg_approach_research(pH, pCO2):
+    """Calculate expected ABG values.
+
+    References
+    ----------
+    [1] Kostuchenko S.S., ABB in the ICU, 2009
+
+    :param float pH:
+    :param float pCO2: kPa
+    :return: Opinion.
+    :rtype: str
+    """
+    info = ""
+    HCO3act = calculate_hco3p(pH, pCO2)
+    # pCO2mmHg = pCO2 / kPa
+
+    info += "pH by pCO2: acute {:.2f}, chronic {:.2f} for primary respiratory condition [AHA?]\n".format(
+        resp_acidosis_pH(pCO2, 'acute'),
+        resp_acidosis_pH(pCO2, 'chronic'))
+
+    """
+    Winters' formula - checks if respiratory response (pCO2 level) adequate
+    for current metabolic acidosis or alcalosis (for given pH and pCO2)
+      * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
+      * https://www.ncbi.nlm.nih.gov/pubmed/6016545
+      * https://en.wikipedia.org/wiki/Winters%27_formula
+      * https://jasn.asnjournals.org/content/21/6/920
+    """
+    wint_ac = 1.5 * HCO3act + 8
+    wint_alc = 0.7 * HCO3act + 20
+    info += "pCO2 by cHCO3(P) - expected respiratory compensation [Winters]:\n"
+    info += " * Met. acid. lungs will drop pCO2, but not lower than ≥{:.1f}-{:.1f} mmHg\n".format(wint_ac, wint_ac - 2, wint_ac + 2)
+    info += " * Met. alc. lungs will save pCO2, but not higher than ≤{:.1f}-{:.1f} mmHg\n".format(wint_alc, wint_alc - 1.5, wint_alc + 1.5)
+    # try:
+    #     y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
+    #     info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)
+    # except ZeroDivisionError:
+    #     pass
+    return info

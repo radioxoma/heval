@@ -10,9 +10,9 @@ from tkinter import scrolledtext
 from tkinter import font as tkfont
 from tkinter.ttk import *
 
-import heval.electrolytes
 from heval import abg
 from heval import human
+from heval import electrolytes
 from heval import __version__
 
 
@@ -767,7 +767,7 @@ class CalcElectrolytes(Frame):
 
     def set_input_extra_defaults(self, event=None):
         self.ctl_sbx_cGlu.delete(0, END)
-        self.ctl_sbx_cGlu.insert(0, abg.norm_cGlu_mean)
+        self.ctl_sbx_cGlu.insert(0, electrolytes.norm_cGlu_mean)
         self.set_model_cGlu()
         self.ctl_sbx_ctAlb.delete(0, END)
         self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
@@ -881,28 +881,29 @@ class CalcGFR(Frame):
     def eval(self, event=None):
         sex = self.human_model.sex
         cCrea = float(self.ctl_sbx_ccrea.get())
-        cCrea_mgdl = cCrea / abg.M_Crea
+        cCrea_mgdl = cCrea / electrolytes.M_Crea
+        info = ""
         if sex in ('male', 'female'):
             age = self.human_model.age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = (self.var_isblack.get() == 1)
-            mdrd = heval.electrolytes.egfr_mdrd(sex, cCrea, age, black_skin)
-            epi = heval.electrolytes.egfr_ckd_epi(sex, cCrea, age, black_skin)
-            info = """\
+            mdrd = electrolytes.egfr_mdrd(sex, cCrea, age, black_skin)
+            epi = electrolytes.egfr_ckd_epi(sex, cCrea, age, black_skin)
+            info += """\
             cCrea\t{:.2f} mg/dL
             Year of birth: {:.0f}
             MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
             CKD-EPI\t{:3.0f} mL/min/1.73 m2
 
             Conclusion: {}
-            """.format(cCrea_mgdl, dob, mdrd, epi, heval.electrolytes.gfr_describe(epi))
+            """.format(cCrea_mgdl, dob, mdrd, epi, electrolytes.gfr_describe(epi))
         elif sex == 'child':
-            schwartz = heval.electrolytes.egfr_schwartz(cCrea, self.human_model.height)
-            info = """\
+            schwartz = electrolytes.egfr_schwartz(cCrea, self.human_model.height)
+            info += """\
             cCrea\t{:.2f} mg/dL
             {:.0f} mL/min/1.73 m2 [Schwartz revised 2009]
             {}
-            """.format(cCrea_mgdl, schwartz, heval.electrolytes.gfr_describe(schwartz))
+            """.format(cCrea_mgdl, schwartz, electrolytes.gfr_describe(schwartz))
         self.TxtView.set_text(textwrap.dedent(info))
 
 

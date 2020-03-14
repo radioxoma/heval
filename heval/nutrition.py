@@ -237,54 +237,54 @@ class HumanNutritionModel(object):
         info += "-----------------\n"
         if self.human_model.debug:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
-        NForm = NutritionFormula(enteral_nutricomp_standard, self.human_model)
-        info += "{}\n".format(str(NForm))
+        n_form = NutritionFormula(enteral_nutricomp_standard, self.human_model)
+        info += "{}\n".format(str(n_form))
         if by_protein:
-            full_enteral_nutrition = NForm.dose_by_protein(self.uurea_prot_24h)
+            full_enteral_nutrition = n_form.dose_by_protein(self.uurea_prot_24h)
         else:
-            full_enteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
+            full_enteral_nutrition = n_form.dose_by_kcal(self.kcal_24h)
         full_enteral_fluid = self.fluid_24h - full_enteral_nutrition
         info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
         # full_enteral_nutrition and self.fluid_24h in ml, so they reduce each other
         info += "Mixture osmolality is {:.0f} mOsm/kg\n".format(
-            (full_enteral_nutrition * NForm.osmolality) / self.fluid_24h)
-        info += "{}\n".format(NForm.describe_dose(full_enteral_nutrition))
+            (full_enteral_nutrition * n_form.osmolality) / self.fluid_24h)
+        info += "{}\n".format(n_form.describe_dose(full_enteral_nutrition))
 
         # Total parenteral nutrition
         info += "Total parenteral nutrition\n"
         info += "--------------------------\n"
         if self.human_model.debug:
             info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirements (total parenteral nutrition criteria).\n"
-        NForm = NutritionFormula(parenteral_nutriflex_48_150, self.human_model)
-        info += "{}\n".format(str(NForm))
+        n_form = NutritionFormula(parenteral_nutriflex_48_150, self.human_model)
+        info += "{}\n".format(str(n_form))
         if by_protein:
-            full_parenteral_nutrition = NForm.dose_by_protein(self.uurea_prot_24h)
+            full_parenteral_nutrition = n_form.dose_by_protein(self.uurea_prot_24h)
         else:
-            full_parenteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
+            full_parenteral_nutrition = n_form.dose_by_kcal(self.kcal_24h)
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
-        info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
-        if full_parenteral_nutrition > NForm.dose_max_ml():
+        info += "{}\n".format(n_form.describe_dose(full_parenteral_nutrition))
+        if full_parenteral_nutrition > n_form.dose_max_ml():
             info += "REACHED MAXIMAL RECOMMENDED DOSE, BUT DAILY NUTRITION REQUIREMENTS NOT SATISFIED. Consider enteral nutrition, whenever possible.\n"
-            info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_ml()))
+            info += "Maximal {}\n".format(n_form.describe_dose(n_form.dose_max_ml()))
 
         # Mixed parenteral with enteral
         info += "Total parenteral peripheral nutrition\n"
         info += "-------------------------------------\n"
         if self.human_model.debug:
             info += "Using peripheral vein is possible for <900 mOsm/kg mixtures, but needs simultaneous enteral feeding to meet daily requirements. Peripheral nutrition diluted, so additional fluid not required.\n"
-        NForm = NutritionFormula(parenteral_kabiven_perif, self.human_model)
-        info += "{}\n".format(str(NForm))
+        n_form = NutritionFormula(parenteral_kabiven_perif, self.human_model)
+        info += "{}\n".format(str(n_form))
         if by_protein:
-            full_parenteral_nutrition = NForm.dose_by_protein(self.uurea_prot_24h)
+            full_parenteral_nutrition = n_form.dose_by_protein(self.uurea_prot_24h)
         else:
-            full_parenteral_nutrition = NForm.dose_by_kcal(self.kcal_24h)
+            full_parenteral_nutrition = n_form.dose_by_kcal(self.kcal_24h)
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
         info += "Give {:.0f} ml + isotonic fluid {:.0f} ml.\n".format(full_parenteral_nutrition, full_parenteral_fluid)
-        info += "{}\n".format(NForm.describe_dose(full_parenteral_nutrition))
-        if full_parenteral_nutrition > NForm.dose_max_ml():
+        info += "{}\n".format(n_form.describe_dose(full_parenteral_nutrition))
+        if full_parenteral_nutrition > n_form.dose_max_ml():
             info += "REACHED MAXIMAL RECOMMENDED DOSE, BUT DAILY NUTRITION REQUIREMENTS NOT SATISFIED. Consider enteral nutrition, whenever possible.\n"
-            info += "Maximal {}\n".format(NForm.describe_dose(NForm.dose_max_ml()))
+            info += "Maximal {}\n".format(n_form.describe_dose(n_form.dose_max_ml()))
         return info
 
     def describe_nitrogen_balance(self):
@@ -456,11 +456,12 @@ def nitrogen_balance(c_uurea, diuresis=1000, text=False):
 
     Parameters
     ----------
-    :param float c_urea: Urea concentration in 24 hours urine, mmol/L.
+    :param float c_uurea: Urea concentration in 24 hours urine, mmol/L.
         If diuresis not given, total Urea mmol/24h.
         May vary 430–720 mmol/24h for an adult.
     :param float diuresis: Total diuresis, ml/24h
-    :return float: Protein reqirement per g/24h
+    :param bool text: If true, return text message
+    :return float: Protein requirement per g/24h
     """
     # UUN - Urine Urea Nitrogen
     # M_UUN = (14 + 1 * 2) * 2 + 12  + 16  # 60 g/mol (NH_2)_2 CO

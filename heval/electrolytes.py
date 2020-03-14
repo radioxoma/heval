@@ -547,7 +547,7 @@ def electrolyte_K(weight, K_serum):
         * Top 24h dose 4 mmol/kg/24h
         * Полностью восполнять дефицит не быстрее чем за 48 ч
         * Допустимая скорость 0.5 mmol/kg/h (тогда суточная доза введётся за 8 часов)
-        * На каждый mmol K+ вводить 10 kcal glucosae
+        * На каждый mmol K+ вводить 10 kcal glucose
             * Если принять калорийность глюкозы за 3.74-4.1 kcal/g, то нужно 2.67-2.44 g глюкозы, примерно 2.5 г
     [Курек 132]:
         * Вводить K+ со скоростью 0.25-0.5 mmol/kg/h (не быстрее)
@@ -557,7 +557,7 @@ def electrolyte_K(weight, K_serum):
 
     Готовый раствор:
         * Концентрация калия: периферия не более 40 mmol/L (KCl 0.3 % ?), CVC не более 100 mmol/L (KCl 0.74 % ?) [Курек 2009 с 557]
-            Т.е. для периферии можно Sol. Glucosae 5 % 250 ml + KCl 7.5 % 10 ml, а для CVC KCl 7.5 % 25 ml?
+            Т.е. для периферии можно Sol. Glucose 5 % 250 ml + KCl 7.5 % 10 ml, а для CVC KCl 7.5 % 25 ml?
         * Раствор K+ должен быть разбавлен до 1-2 % [?]
 
     [Hypokalemia: a clinical update](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5881435/)

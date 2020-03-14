@@ -8,13 +8,13 @@ Heval automatically estimates required kcal and fluid volume by RBW.
 User can switch from default kcal estimation to protein estimation
 (measured nitrogen balance).
 
-Heval will calculate additional fluid to calculated nutrotional mixture to fit daily requirement.
+Heval will calculate additional fluid to calculated nutritional mixture to fit daily requirement.
 
 There is no evidence-based gold standard in quality and quantity of
 nutrition composition. Pre-made commercial mixtures considered as
 containing all required components in suitable proportions.
 End user shouldn't mess with protein/nonprotein caloric proportions,
-gucose/fat caloric proportions, add unsaturated fatty acids etc.
+glucose/fat caloric proportions, add unsaturated fatty acids etc.
 """
 
 import textwrap
@@ -186,8 +186,8 @@ class HumanNutritionModel(object):
     def __init__(self, human_model):
         super(HumanNutritionModel, self).__init__()
         self.human_model = human_model
-        self.fluid_multipler = 30  # ml/kg RBW
-        self.kcal_multipler = 25  # ml/kg RBW
+        self.fluid_multiplier = 30  # ml/kg RBW
+        self.kcal_multiplier = 25  # ml/kg RBW
         self.uurea = None  # Total urine urea, mmol
         # self.protein_24h = None  # 1.5 * self.human_model.weight
 
@@ -198,11 +198,11 @@ class HumanNutritionModel(object):
             Start point:
              * Fluid demand {:.0f} ml/24h ({:.0f} ml/kg/24h)
              * Energy demand {:.0f} kcal/24h ({:.0f} kcal/kg/24h)""".format(
-            self.fluid_24h, self.fluid_multipler, self.kcal_24h, self.kcal_multipler))
+            self.fluid_24h, self.fluid_multiplier, self.kcal_24h, self.kcal_multiplier))
 
     @property
     def fluid_24h(self):
-        return self.fluid_multipler * self.human_model.weight
+        return self.fluid_multiplier * self.human_model.weight
 
     @property
     def fluid_1h(self):
@@ -210,7 +210,7 @@ class HumanNutritionModel(object):
 
     @property
     def kcal_24h(self):
-        return self.kcal_multipler * self.human_model.weight
+        return self.kcal_multiplier * self.human_model.weight
 
     @property
     def uurea_prot_24h(self):

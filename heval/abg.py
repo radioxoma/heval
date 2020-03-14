@@ -268,7 +268,7 @@ def calculate_sid_abbr(cNa, cCl, ctAlb):
     return sid
 
 
-def calculate_osmolarity(Na, glucosae):
+def calculate_osmolarity(cNa, cGlu):
     """Calculate serum osmotic concentration (osmolarity, mOsm/L).
 
     NB! This is not an osmolality (mOsm/kg), measured by an osmometer.
@@ -280,14 +280,14 @@ def calculate_osmolarity(Na, glucosae):
         chapter 6-41, p. 277, equation 48.
     [2] https://en.wikipedia.org/wiki/Osmotic_concentration
 
-    :param float Na: mmol/L
-    :param float glucosae: mmol/L
+    :param float cNa: Sodium, mmol/L
+    :param float cGlu: Glucose, mmol/L
     :return: Serum osmolarity, mmol/L (mOsm/L).
     :rtype: float
     """
-    # Sometimes `2 * (Na + K) + Glucose + Urea` all in mmol/L
+    # Sometimes `2 * (cNa + cK) + cGlu + Urea` all in mmol/L
     # Also ethanol can cause https://en.wikipedia.org/wiki/Osmol_gap
-    return 2 * Na + glucosae
+    return 2 * cNa + cGlu
 
 
 def simple_hco3(pH, pCO2):

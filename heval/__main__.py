@@ -491,8 +491,8 @@ class CalcNutrition(Frame):
         Label(fr_fluid_entry, text="ml/kg/24h").grid(row=1, column=0)
         self.ctl_sbx_fluid_mul = Spinbox(
             fr_fluid_entry, width=3, from_=0.0, to=200.0,
-            format='%1.0f', increment=1, command=self.set_model_fluid_multipler)
-        self.ctl_sbx_fluid_mul.bind("<Return>", self.set_model_fluid_multipler)
+            format='%1.0f', increment=1, command=self.set_model_fluid_multiplier)
+        self.ctl_sbx_fluid_mul.bind("<Return>", self.set_model_fluid_multiplier)
         self.ctl_sbx_fluid_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid demand.\nTypical 30-35 ml/kg for an adult. Much higher for children.")
 
@@ -517,8 +517,8 @@ class CalcNutrition(Frame):
         Label(self.fr_kcal_entry, text="kcal/kg/24h").grid(row=1, column=0)
         self.ctl_sbx_kcal_mul = Spinbox(
             self.fr_kcal_entry, width=2, from_=0.0, to=99.0,
-            format='%1.0f', increment=1, command=self.set_model_kcal_multipler)
-        self.ctl_sbx_kcal_mul.bind("<Return>", self.set_model_kcal_multipler)
+            format='%1.0f', increment=1, command=self.set_model_kcal_multiplier)
+        self.ctl_sbx_kcal_mul.bind("<Return>", self.set_model_kcal_multiplier)
         self.ctl_sbx_kcal_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours energy demand.\nTypical 25-30 kcal/kg.")
 
@@ -584,12 +584,12 @@ class CalcNutrition(Frame):
     def set_input_fluid_defaults(self, event=None):
         self.ctl_sbx_fluid_mul.delete(0, END)
         self.ctl_sbx_fluid_mul.insert(0, 30)  # ml/kg/24h
-        self.set_model_fluid_multipler()
+        self.set_model_fluid_multiplier()
 
     def set_input_kcal_defaults(self, event=None):
         self.ctl_sbx_kcal_mul.delete(0, END)
         self.ctl_sbx_kcal_mul.insert(0, 25)  # kcal/kg/24h
-        self.set_model_kcal_multipler()
+        self.set_model_kcal_multiplier()
 
     def set_input_protein_defaults(self, event=None):
         self.ctl_sbx_uurea.delete(0, END)
@@ -611,13 +611,13 @@ class CalcNutrition(Frame):
             set_state(self.fr_nitrogen_entry, NORMAL)
         self.eval()
 
-    def set_model_fluid_multipler(self, event=None):
-        self.human_model.nutrition.fluid_multipler = float(
+    def set_model_fluid_multiplier(self, event=None):
+        self.human_model.nutrition.fluid_multiplier = float(
             self.ctl_sbx_fluid_mul.get())
         self.event_generate("<<HumanModelChanged>>")
 
-    def set_model_kcal_multipler(self, event=None):
-        self.human_model.nutrition.kcal_multipler = float(
+    def set_model_kcal_multiplier(self, event=None):
+        self.human_model.nutrition.kcal_multiplier = float(
             self.ctl_sbx_kcal_mul.get())
         self.event_generate("<<HumanModelChanged>>")
 

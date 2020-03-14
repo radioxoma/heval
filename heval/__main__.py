@@ -97,11 +97,12 @@ class MainWindow(ttk.Frame):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.parent = parent
         self.parent.title("Heval — a human evaluator v{}".format(__version__))
-        self.parent.geometry("600x590")
+        self.parent.geometry("650x590")
 
         self.parent.style = ttk.Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.parent.style.configure('TButton', padding=2)
+        self.parent.style.configure("TMenubutton", padding=2, width=6)  # Otherwise too big on Linux
         self.adjust_font_size()
 
         self.HBody = human.HumanBodyModel()
@@ -131,10 +132,11 @@ class MainWindow(ttk.Frame):
         fr_entry = ttk.Frame(self)
         fr_entry.pack(anchor=tk.W)
         ttk.Label(fr_entry, text='Sex').pack(side=tk.LEFT)
-        self.ctl_sex = ttk.Combobox(fr_entry, values=['Male', 'Female', 'Child'], width=7)
-        self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
+        self.var_sex = tk.StringVar()
+        sex_list = ('Male', 'Female', 'Child')
+        self.ctl_sex = ttk.OptionMenu(fr_entry, self.var_sex, sex_list[0], *sex_list, command=self.set_model_sex)
         self.ctl_sex.pack(side=tk.LEFT)
-        CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and infants")
+        CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and children")
 
         ttk.Label(fr_entry, text='Height, cm').pack(side=tk.LEFT)
         self.ctl_height = ttk.Spinbox(fr_entry, width=3, from_=1, to=500, command=self.set_model_height)
@@ -210,7 +212,7 @@ class MainWindow(ttk.Frame):
         # statusbar.pack(side=BOTTOM, fill=X)
 
     def set_input_defaults(self, event=None):
-        self.ctl_sex.current(0)
+        self.var_sex.set("Male")
         self.set_model_sex()
 
         self.ctl_height.delete(0, tk.END)
@@ -253,7 +255,7 @@ class MainWindow(ttk.Frame):
                 font_obj['size'] = 9
 
     def set_model_sex(self, event=None):
-        self.HBody.sex = self.ctl_sex.get().lower()
+        self.HBody.sex = self.var_sex.get().lower()
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):

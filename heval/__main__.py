@@ -914,7 +914,7 @@ class CreateToolTip(object):
     """Create a tooltip for a given widget."""
 
     def __init__(self, widget, text="Widget's empty tooltip"):
-        self.waittime = 500     # miliseconds
+        self.waittime = 500     # milliseconds
         self.wraplength = 180   # pixels
         self.widget = widget
         self.text = text

@@ -912,6 +912,18 @@ class CalcGFR(ttk.Frame):
         self.TxtView.set_text(textwrap.dedent(info))
 
 
+class Spinbox(ttk.Entry):
+    """ttk.Spinbox implementation missing in python3.4.
+
+    https://stackoverflow.com/questions/52440314/ttk-spinbox-missing-in-tkinter-ttk/52440947
+    """
+    def __init__(self, master=None, **kw):
+        super(Spinbox, self).__init__(master, "ttk::spinbox", **kw)
+
+    def set(self, value):
+        self.tk.call(self._w, "set", value)
+
+
 class CreateToolTip(object):
     """Create a tooltip for a given widget."""
 
@@ -976,4 +988,7 @@ def main():
 
 
 if __name__ == '__main__':
+    if not hasattr(ttk, 'Spinbox'):
+        print("No 'ttk.Spinbox' found. Fallback to custom Spinbox")
+        ttk.Spinbox = Spinbox
     main()

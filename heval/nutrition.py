@@ -2,6 +2,8 @@
 """
 Calculate pre-made nutrition solution dose.
 
+Author: Eugene Dvoretsky
+
 Heval automatically estimates required kcal and fluid volume by RBW.
 User can switch from default kcal estimation to protein estimation
 (measured nitrogen balance).

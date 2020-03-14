@@ -369,16 +369,16 @@ class HumanBodyModel(object):
             # Approximation to Hamilton graph
             if ibw < 3:
                 print("WARNING: MV calculation for child <3 kg is not supported")
-                mv = 0
+                minute_volume = 0
             elif 3 <= ibw < 5:
-                mv = 0.3
+                minute_volume = 0.3
             elif 5 <= ibw < 15:
-                mv = 0.3 - 0.1 / 10 * (ibw - 5)
+                minute_volume = 0.3 - 0.1 / 10 * (ibw - 5)
             elif 15 <= ibw < 30:
-                mv = 0.2 - 0.1 / 15 * (ibw - 15)
+                minute_volume = 0.2 - 0.1 / 15 * (ibw - 15)
             else:  # >= 30:
-                mv = 0.1
-            return mv
+                minute_volume = 0.1
+            return minute_volume
 
         # Use RBW for neonates:
         #    * I don't know how to calculate IBW for neonates
@@ -546,15 +546,15 @@ class HumanBodyModel(object):
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
         """
         if self.sex in ('male', 'female'):
-            out = "RBW adult urinary output:\n"
-            out += " * x0.5={:.0f} ml/h, {:.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
-            out += " * x1  ={:.0f} ml/h, {:.0f} ml/24h".format(self.weight, self.weight * 24)
+            info = "RBW adult urinary output:\n"
+            info += " * x0.5={:.0f} ml/h, {:.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
+            info += " * x1  ={:.0f} ml/h, {:.0f} ml/24h".format(self.weight, self.weight * 24)
         if self.sex == 'child':
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
-            out = "RBW child urinary output:\n"
-            out += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(self.weight, self.weight * 24)
-            out += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(3.5 * self.weight, 3.5 * self.weight * 24)
-        return out
+            info = "RBW child urinary output:\n"
+            info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(self.weight, self.weight * 24)
+            info += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(3.5 * self.weight, 3.5 * self.weight * 24)
+        return info
 
     def describe_drugs(self):
         info = "--- Drugs --------------------------------------"
@@ -581,26 +581,26 @@ def body_mass_index(height, weight):
 
     # For adults
     if bmi < 18.5:
-        descr = "Underweight: "
+        info = "Underweight: "
         if bmi < 16:
-            descr += "Severe thinness"
+            info += "Severe thinness"
         elif 16 <= bmi < 17:
-            descr += "Moderate thinness"
+            info += "Moderate thinness"
         elif 17 <= bmi:
-            descr += "Mild thinness"
+            info += "Mild thinness"
     elif 18.5 <= bmi < 25:
-        descr = "Normal weight"
+        info = "Normal weight"
     elif 25 <= bmi < 30:
-        descr = "Overweight, pre-obese"
+        info = "Overweight, pre-obese"
     elif bmi >= 30:
-        descr = "Obese "
+        info = "Obese "
         if bmi < 35:
-            descr += "I"
+            info += "I"
         elif 35 <= bmi < 40:
-            descr += "II"
+            info += "II"
         elif bmi >= 40:
-            descr += "III"
-    return bmi, descr
+            info += "III"
+    return bmi, info
 
 
 def body_surface_area(height, weight):
@@ -651,18 +651,15 @@ def ree_harris_benedict(height, weight, sex, age):
     :param float weight: Weight, kg
     :param str sex: Choose 'male', 'female'.
     :param float age: Age, years
-    :return:
-        REE, kcal/24h
-    :rtype:
-        float
+    :return: Resting energy expenditure, kcal/24h
+    :rtype: float
     """
     if sex == 'male':
-        ree = 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
+        return 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
     elif sex == 'female':
-        ree = 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
+        return 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
     elif sex == 'child':
         raise ValueError("Harris-Benedict equation REE calculation for children not supported")
-    return ree
 
 
 def ree_mifflin(height, weight, sex, age):

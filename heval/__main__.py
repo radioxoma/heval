@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Heval tkinter-based GUI."""
+"""
+Heval tkinter-based GUI.
+
+Author: Eugene Dvoretsky
+"""
 
 import random
 import textwrap
@@ -11,8 +15,8 @@ from tkinter import font as tkfont
 from tkinter.ttk import *
 
 from heval import abg
-from heval import human
 from heval import electrolytes
+from heval import human
 from heval import __version__
 
 
@@ -98,6 +102,7 @@ class MainWindow(Frame):
         self.parent.style = Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.parent.style.configure('TButton', padding=2)
+        self.adjust_font_size()
 
         self.HBody = human.HumanBodyModel()
 
@@ -122,68 +127,7 @@ class MainWindow(Frame):
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
 
-        nb = Notebook(self)
-        self.create_input()
-        self.set_input_defaults()
-        self.adjust_font_size()
-        self.MText = MainText(nb, self.HBody)
-        self.CNutrition = CalcNutrition(nb, self.HBody)
-        self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
-        self.CGFR = CalcGFR(nb, self.HBody)
-        nb.add(self.MText, text="Human body")
-        nb.add(self.CNutrition, text="Nutrition")
-        nb.add(self.CElectrolytes, text="ABG & Electrolytes")
-        nb.add(self.CGFR, text='eGFR')
-        nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
-
-        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
-        self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
-        self.bind_all('<v>', self.set_model_debug)
-        self.bind_all('<Control-Key-equal>', lambda e: self.adjust_font_size('increase'))
-        self.bind_all('<Control-Key-minus>', lambda e: self.adjust_font_size('decrease'))
-        self.bind_all('<Control-Key-0>', lambda e: self.adjust_font_size())
-        # self.bind('<r>', lambda e: self.set_input_defaults())
-        # self.bind('<Control-s>', lambda e: self.save_text())
-        # self.bind('<Control-a>', lambda e: self.select_all())
-        # self.bind('<Control-c>', lambda e: self.copy_text())
-        self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
-        self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
-        self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
-        self.parent.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
-        self.bind_all('<<HumanModelChanged>>', self.eval)
-        self.bind_all('<<HumanModelChanged>>', self.MText.eval, add='+')
-        self.bind_all('<<HumanModelChanged>>', self.CNutrition.eval, add='+')
-        self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.eval, add='+')
-        self.bind_all('<<HumanModelChanged>>', self.CGFR.eval, add='+')
-
-        # self.statusbar_str = StringVar()
-        # self.statusbar_str.set("Hello world!")
-        # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
-        # statusbar.pack(side=BOTTOM, fill=X)
-
-    def adjust_font_size(self, event=None):
-        """Set default font size or adjust current size.
-
-        Bug 1. Detect actual monospaced font name and hardcode size to 9
-        on Windows it's Courier new 10pt, on Linux DejaVu Sans Mono 9 pt
-
-        Bug 2. Must be called once on __init__ without parameters, because
-        `some_font['size']` has negative value by default.
-        """
-        for fontvar in ('TkDefaultFont', 'TkTextFont', 'TkFixedFont', 'TkMenuFont'):
-            font_obj = tkfont.nametofont(fontvar)
-            # print(font_obj.actual())
-            # font_obj = font.Font(font=fontvar)
-            if event == 'increase':
-                font_obj['size'] += 1
-            elif event == 'decrease':
-                if font_obj['size'] > 2:
-                    font_obj['size'] -= 1
-            else:  # Set default font size
-                font_obj['size'] = 9
-
-    def create_input(self):
-        """One row of input widgets."""
+        # START INPUT SECTION
         fr_entry = Frame(self)
         fr_entry.pack(anchor=W)
         Label(fr_entry, text='Sex').pack(side=LEFT)
@@ -226,6 +170,44 @@ class MainWindow(Frame):
         reset = Button(fr_entry, text="Reset", command=self.set_input_defaults)
         reset.pack(side=LEFT)
         CreateToolTip(reset, "Set default values for sex, height, real body weight, temp")
+        # END INPUT SECTION
+        self.set_input_defaults()
+
+        nb = Notebook(self)
+        self.MText = MainText(nb, self.HBody)
+        self.CNutrition = CalcNutrition(nb, self.HBody)
+        self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
+        self.CGFR = CalcGFR(nb, self.HBody)
+        nb.add(self.MText, text="Human body")
+        nb.add(self.CNutrition, text="Nutrition")
+        nb.add(self.CElectrolytes, text="ABG & Electrolytes")
+        nb.add(self.CGFR, text='eGFR')
+        nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
+
+        self.parent.bind('<Escape>', lambda e: self.parent.destroy())
+        self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
+        self.bind_all('<v>', self.set_model_debug)
+        self.bind_all('<Control-Key-equal>', lambda e: self.adjust_font_size('increase'))
+        self.bind_all('<Control-Key-minus>', lambda e: self.adjust_font_size('decrease'))
+        self.bind_all('<Control-Key-0>', lambda e: self.adjust_font_size())
+        # self.bind('<r>', lambda e: self.set_input_defaults())
+        # self.bind('<Control-s>', lambda e: self.save_text())
+        # self.bind('<Control-a>', lambda e: self.select_all())
+        # self.bind('<Control-c>', lambda e: self.copy_text())
+        self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
+        self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
+        self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
+        self.parent.bind('<Alt-KeyPress-4>', lambda e: nb.select(3))
+        self.bind_all('<<HumanModelChanged>>', self.eval)
+        self.bind_all('<<HumanModelChanged>>', self.MText.eval, add='+')
+        self.bind_all('<<HumanModelChanged>>', self.CNutrition.eval, add='+')
+        self.bind_all('<<HumanModelChanged>>', self.CElectrolytes.eval, add='+')
+        self.bind_all('<<HumanModelChanged>>', self.CGFR.eval, add='+')
+
+        # self.statusbar_str = StringVar()
+        # self.statusbar_str.set("Hello world!")
+        # statusbar = Label(self, textvariable=self.statusbar_str, relief=SUNKEN, anchor=W)
+        # statusbar.pack(side=BOTTOM, fill=X)
 
     def set_input_defaults(self, event=None):
         self.ctl_sex.current(0)
@@ -248,6 +230,27 @@ class MainWindow(Frame):
         self.ctl_sbx_temp.delete(0, END)
         self.ctl_sbx_temp.insert(0, 36.6)  # celsus degrees
         self.set_model_body_temp()
+
+    def adjust_font_size(self, event=None):
+        """Set default font size or adjust current size.
+
+        Bug 1. Detect actual monospaced font name and hardcode size to 9
+        on Windows it's Courier new 10pt, on Linux DejaVu Sans Mono 9 pt
+
+        Bug 2. Must be called once on __init__ without parameters, because
+        `some_font['size']` has negative value by default.
+        """
+        for fontvar in ('TkDefaultFont', 'TkTextFont', 'TkFixedFont', 'TkMenuFont'):
+            font_obj = tkfont.nametofont(fontvar)
+            # print(font_obj.actual())
+            # font_obj = font.Font(font=fontvar)
+            if event == 'increase':
+                font_obj['size'] += 1
+            elif event == 'decrease':
+                if font_obj['size'] > 2:
+                    font_obj['size'] -= 1
+            else:  # Set default font size
+                font_obj['size'] = 9
 
     def set_model_sex(self, event=None):
         self.HBody.sex = self.ctl_sex.get().lower()

@@ -2,7 +2,7 @@
 """
 Arterial blood gas interpreter.
 
-Eugene Dvoretsky, 2015-05-20
+Author: Eugene Dvoretsky, 2015-05-20
 
 $ md5sum *
 41f8e7d98fcc26ea2319ac8da72ed8cd ABL800 Reference Manual English US.pdf

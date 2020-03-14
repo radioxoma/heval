@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Drug dosage calculator for humans.
+Drug dosage calculator.
 
 Author: Eugene Dvoretsky
 """
@@ -71,7 +71,7 @@ class HumanDrugsModel(object):
             :param float weight: Human weight, kg.
             """
             dilution = pressor['weight'] / pressor['volume']
-            info = "{} ({:.2f} mg/ml) rate {:.2f}-{:>5.2f} mkg/kg/h".format(
+            out_str = "{} ({:.2f} mg/ml) rate {:.2f}-{:>5.2f} mkg/kg/h".format(
                 pressor['name'], dilution,
                 pressor['speed_start'], pressor['speed_max'])
 
@@ -79,10 +79,10 @@ class HumanDrugsModel(object):
             speed_start_mlh = speed_start_mgh / dilution
             speed_max_mgh = pressor['speed_max'] / 1000 * weight * 60
             speed_max_mlh = speed_max_mgh / dilution
-            info += " ({:>4.1f}-{:>5.1f} mg/h, {:.1f}-{:>4.1f} ml/h)".format(
+            out_str += " ({:>4.1f}-{:>5.1f} mg/h, {:.1f}-{:>4.1f} ml/h)".format(
                 speed_start_mgh, speed_max_mgh,
                 speed_start_mlh, speed_max_mlh)
-            return info
+            return out_str
 
         info = ""
         for p in (press_nor, press_epi, press_phenylephrine, press_dopamine, press_dobutamine):

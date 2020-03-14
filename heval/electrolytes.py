@@ -6,14 +6,13 @@ Author: Eugene Dvoretsky
 """
 import textwrap
 from itertools import chain
-
 from heval import abg
 
-M_NaHCO3 = 84  # g/mol or mg/mmol
 M_C6H12O6 = 180
-M_NaCl = 58.5
-M_KCl = 74.5
 M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
+M_KCl = 74.5
+M_NaCl = 58.5
+M_NaHCO3 = 84  # g/mol or mg/mmol
 
 norm_sbe = (-2, 2)  # mEq/L
 
@@ -25,6 +24,7 @@ norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
 norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
 
 norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
+
 # norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
 norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia

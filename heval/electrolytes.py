@@ -38,6 +38,310 @@ norm_cGlu_target = (4.5, 10)  # ICU target range. 10 mmol/L stands for glucose r
 # Note: gap between lower norm_cGlu and norm_cGlu_target
 
 
+class HumanBloodModel(object):
+    """Represents an human blood ABG status."""
+
+    def __init__(self, parent=None):
+        self.parent = parent
+        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb')
+        self._txt_prop = ()
+
+        self.pH = None
+        self.pCO2 = None        # kPa
+
+        self.cK = None          # mmol/L
+        self.cNa = None         # mmol/L
+        self.cCl = None         # mmol/L
+
+        self.ctAlb = None       # g/dL albumin
+        self.cGlu = None        # mmol/L
+        # self.ctBun = None  # May be for osmolarity in future
+
+    def __str__(self):
+        int_prop = {}
+        for attr in chain(self._int_prop, self._txt_prop):
+            int_prop[attr] = getattr(self, attr)
+        return "HumanBlood: {}".format(str(int_prop))
+
+    def populate(self, properties):
+        """Populate model from data structure.
+
+        NB! Function changes passed property dictionary.
+
+        :param dict properties: Dictionary with model properties to set.
+            Key names must be equal to class properties names.
+        :return:
+            Not applied properties
+        :rtype: dict
+        """
+        for item in self._int_prop:
+            if item in properties:
+                setattr(self, item, float(properties.pop(item)))
+        for item in self._txt_prop:
+            if item in properties:
+                setattr(self, item, properties.pop(item))
+        return properties
+
+    # def __str__(self):
+    #     pass
+
+    # def is_init(self):
+    #     pass
+
+    @property
+    def sbe(self):
+        return abg.calculate_cbase(self.pH, self.pCO2)
+
+    @property
+    def hco3p(self):
+        return abg.calculate_hco3p(self.pH, self.pCO2)
+
+    @property
+    def anion_gapk(self):
+        """Anion gap (K+), usually not used."""
+        if self.cK is not None:
+            return abg.calculate_anion_gap(
+                Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
+                K=self.cK, albumin=self.ctAlb)
+        else:
+            raise ValueError("No potassium specified")
+
+    @property
+    def anion_gap(self):
+        """Calculate anion gap without potassium. Preferred method."""
+        return abg.calculate_anion_gap(
+            Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
+            albumin=self.ctAlb)
+
+    @property
+    def sid_abbr(self):
+        """Strong ion difference."""
+        return abg.calculate_sid_abbr(self.cNa, self.cCl, self.ctAlb)
+
+    @property
+    def osmolarity(self):
+        return abg.calculate_osmolarity(self.cNa, self.cGlu)
+
+    def describe_osmolarity(self):
+        """Verbally describe osmolarity impact on human.
+
+        Diabetes mellitus decompensation:
+          1 type - DKA (no insulin enables ketogenesis).
+            dehydration (osmotic diuresis and vomiting)
+            cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
+          2 type - HHNS (cells not sensitive to Ins)
+            dehydration (osmotic diuresis)
+            cGlu >30, mOsm >320, no acidosis and ketone bodies)
+        """
+        info = "Osmolarity is "
+        if self.osmolarity > norm_mOsm[1]:
+            info += "high"
+        elif self.osmolarity < norm_mOsm[0]:
+            info += "low"
+        else:
+            info += "ok"
+        info += " {:.0f} ({:.0f}-{:.0f} mOsm/L)".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
+
+        # Hyperosmolarity flags
+        # if self.osmolarity >=282: # mOsm/kg
+        #     info += " vasopressin released"
+        if self.osmolarity > 290:  # mOsm/kg
+            # plasma thirst point reached
+            info += ", human is thirsty (>290 mOsm/kg)"
+        if self.osmolarity > 320:  # mOsm/kg
+            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", acute kidney injury risk (>320 mOsm/kg)"
+        if self.osmolarity > 330:  # mOsm/kg
+            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", coma (>330 mOsm/kg)"
+
+        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
+        if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
+            # https://www.aafp.org/afp/2005/0501/p1723.html
+            # IV insulin drip and crystalloids
+            info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
+        return info
+
+    def describe_abg(self):
+        """Describe pH and pCO2 - an old implementation considered stable."""
+        info = textwrap.dedent("""\
+        pCO2    {:2.1f} kPa
+        HCO3(P) {:2.1f} mmol/L
+        Conclusion: {}\n""".format(
+            self.pCO2,
+            self.hco3p,
+            abg.abg_approach_stable(self.pH, self.pCO2)[0]))
+        if self.parent.debug:
+            info += "\n-- Manual compensatory response check --------------\n"
+            # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+            info += "{}".format(abg.abg_approach_research(self.pH, self.pCO2))
+        return info
+
+    def describe_anion_gap(self):
+        info = "-- Anion gap ---------------------------------------\n"
+        desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
+        if abg.abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
+            if norm_gap[1] < self.anion_gap:
+                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alcalosis
+                info += "HAGMA {} (KULT?), ".format(desc)
+                info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+            elif self.anion_gap < norm_gap[0]:
+                info += "Low AG {} - hypoalbuminemia or low Na?".format(desc)
+            else:
+                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
+                info += "NAGMA {}. Diarrhea or renal tubular acidosis?".format(desc)
+        else:
+            if norm_gap[1] < self.anion_gap:
+                info += "Unexpected high AG {} without main metabolic acidosis; ".format(desc)
+                # Can catch COPD or concurrent metabolic alcalosis here
+                info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+            elif self.anion_gap < norm_gap[0]:
+                info += "Unexpected low AG {}. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
+            else:
+                info += "AG is ok {}".format(desc)
+
+        if self.parent.debug:
+            """Strong ion difference.
+
+            Sometimes Na and Cl don't changes simultaneously.
+            Try distinguish Na-Cl balance in case high/low osmolarity.
+            Should help to choose better fluid for correction.
+            """
+            SIDabbr_norm = (-5, 5)  # Arbitrary threshold
+            ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
+            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
+            if self.sid_abbr > SIDabbr_norm[1]:
+                info += "is alcalotic {}, relative Na⁺ excess".format(ref_str)
+            elif self.sid_abbr < SIDabbr_norm[0]:
+                info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
+            else:
+                info += "is ok {}".format(ref_str)
+            info += ", BDE gap {:.01f} mEq/L".format(self.sbe - self.sid_abbr)  # Lactate?
+        return info
+
+    def describe_sbe(self):
+        """Calculate needed NaHCO3 for metabolic acidosis correction.
+
+        Using SBE (not pH) as threshold point guaranties that bicarbonate
+        administration won't be suggested in case of respiratory acidosis.
+        https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
+
+        * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
+        * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
+
+
+        First approach
+        --------------
+        "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
+        but both values pretty close to BE -9 meq/L, so I use it as threshold.
+
+        Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
+
+
+        Second approach
+        ---------------
+        According to BICAR-ICU 2018:
+          * Using more restrictive threshold pH 7.11, which is
+              correspondent to BE -15 mEq/L.
+          * Tip only for AKI patients
+          * https://pubmed.ncbi.nlm.nih.gov/29910040/
+          * https://en.wikipedia.org/wiki/Metabolic_acidosis
+        """
+        NaHCO3_threshold = -15  # was -9 mEq/L
+        info = ""
+        if self.sbe > norm_sbe[1]:
+            # FIXME: can be high if chloride is low. Calculate SID?
+            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
+            # https://en.wikipedia.org/wiki/Contraction_alkalosis
+            # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
+            info += "SBE is high {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
+        elif self.sbe < norm_sbe[0]:
+            if self.sbe <= NaHCO3_threshold:
+                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
+                info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
+                # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
+                NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
+                NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
+                NaHCO3_g = NaHCO3_mmol / 1000 * M_NaHCO3  # gram
+                NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * M_NaHCO3
+                info += "  * NaHCO₃ {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
+                # info += "  * NaHCO₃ {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
+                #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
+                for dilution in (4, 8.4):
+                    NaHCO3_ml = NaHCO3_g / dilution * 100
+                    NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
+                    info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
+                if self.parent.debug:
+                    info += textwrap.dedent("""\
+                        Confirmed NaHCO₃ use cases:
+                          * Metabolic acidosis correction leads to decreased 28 day mortality only in AKI patients (target pH 7.3) [BICAR-ICU 2018]
+                          * TCA poisoning with prolonged QT interval (target pH 7.45-7.55 [Костюченко 204])
+                          * In hyperkalemia (when pH increases, K⁺ level decreases)
+                        Main concepts of usage:
+                          * Must hyperventilate to make use of bicarbonate buffer
+                          * Control ABG after each NaHCO₃ infusion or every 4 hours
+                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]""")
+            else:
+                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {:.0f} mEq/L".format(self.sbe, norm_sbe[0], norm_sbe[1], NaHCO3_threshold)
+        else:
+            info += "SBE is ok {:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sbe, norm_sbe[0], norm_sbe[1])
+        return info
+
+    def describe_electrolytes(self):
+        info = "- Electrolyte and osmolar abnormalities ------------\n"
+        info += "{}\n\n".format(self.describe_osmolarity())
+        info += "{}\n\n".format(electrolyte_K(self.parent.weight, self.cK))
+        info += "{}\n\n".format(electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug))
+        info += "{}\n".format(electrolyte_Cl(self.cCl))
+        return info
+
+    def describe_glucose(self):
+        """Assess glucose level.
+
+        https://en.wikipedia.org/wiki/Renal_threshold
+        https://en.wikipedia.org/wiki/Glycosuria
+        """
+        info = ""
+        if self.cGlu > norm_cGlu[1]:
+            if self.cGlu <= norm_cGlu_target[1]:
+                info += "cGlu is above ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+            else:
+                info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+                if self.cGlu <= 20:  # Arbitrary threshold
+                    info += ", consider insulin {:.0f} IU subcut for adult".format(insulin_by_glucose(self.cGlu))
+                else:
+                    info += ", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
+
+        elif self.cGlu < norm_cGlu[0]:
+            if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
+                info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+            else:
+                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS GLUCOSE 10 % 2.5 mL/kg:\n"
+                # https://litfl.com/glucose/
+                # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
+                info += solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
+                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
+
+        else:
+            info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
+        return info
+
+    def describe_albumin(self):
+        """Albumin as nutrition marker in adults."""
+        ctalb_range = "{} ({}-{} g/dL)".format(self.ctAlb, abg.norm_ctAlb[0], abg.norm_ctAlb[1])
+        if abg.norm_ctAlb[1] < self.ctAlb:
+            info = "ctAlb is high {}. Dehydration?".format(ctalb_range)
+        elif abg.norm_ctAlb[0] <= self.ctAlb <= abg.norm_ctAlb[1]:
+            info = "ctAlb is ok {}".format(ctalb_range)
+        elif 3 <= self.ctAlb < abg.norm_ctAlb[0]:
+            info = "ctAlb is low: light hypoalbuminemia {}".format(ctalb_range)
+        elif 2.5 <= self.ctAlb < 3:
+            info = "ctAlb is low: medium hypoalbuminemia {}".format(ctalb_range)
+        elif self.ctAlb < 2.5:
+            info = "ctAlb is low: severe hypoalbuminemia {}. Expect oncotic edema".format(ctalb_range)
+        return info
+
+
 def solution_glucose(glu_mass, body_weight, add_insuline=True):
     """Glucose and insulin solution calculation.
 
@@ -476,310 +780,6 @@ def electrolyte_Cl(Cl_serum):
     else:
         info += "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])
     return info
-
-
-class HumanBloodModel(object):
-    """Represents an human blood ABG status."""
-
-    def __init__(self, parent=None):
-        self.parent = parent
-        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb')
-        self._txt_prop = ()
-
-        self.pH = None
-        self.pCO2 = None        # kPa
-
-        self.cK = None          # mmol/L
-        self.cNa = None         # mmol/L
-        self.cCl = None         # mmol/L
-
-        self.ctAlb = None       # g/dL albumin
-        self.cGlu = None        # mmol/L
-        # self.ctBun = None  # May be for osmolarity in future
-
-    def __str__(self):
-        int_prop = {}
-        for attr in chain(self._int_prop, self._txt_prop):
-            int_prop[attr] = getattr(self, attr)
-        return "HumanBlood: {}".format(str(int_prop))
-
-    def populate(self, properties):
-        """Populate model from data structure.
-
-        NB! Function changes passed property dictionary.
-
-        :param dict properties: Dictionary with model properties to set.
-            Key names must be equal to class properties names.
-        :return:
-            Not applied properties
-        :rtype: dict
-        """
-        for item in self._int_prop:
-            if item in properties:
-                setattr(self, item, float(properties.pop(item)))
-        for item in self._txt_prop:
-            if item in properties:
-                setattr(self, item, properties.pop(item))
-        return properties
-
-    # def __str__(self):
-    #     pass
-
-    # def is_init(self):
-    #     pass
-
-    @property
-    def sbe(self):
-        return abg.calculate_cbase(self.pH, self.pCO2)
-
-    @property
-    def hco3p(self):
-        return abg.calculate_hco3p(self.pH, self.pCO2)
-
-    @property
-    def anion_gapk(self):
-        """Anion gap (K+), usually not used."""
-        if self.cK is not None:
-            return abg.calculate_anion_gap(
-                Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
-                K=self.cK, albumin=self.ctAlb)
-        else:
-            raise ValueError("No potassium specified")
-
-    @property
-    def anion_gap(self):
-        """Calculate anion gap without potassium. Preferred method."""
-        return abg.calculate_anion_gap(
-            Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
-            albumin=self.ctAlb)
-
-    @property
-    def sid_abbr(self):
-        """Strong ion difference."""
-        return abg.calculate_sid_abbr(self.cNa, self.cCl, self.ctAlb)
-
-    @property
-    def osmolarity(self):
-        return abg.calculate_osmolarity(self.cNa, self.cGlu)
-
-    def describe_osmolarity(self):
-        """Verbally describe osmolarity impact on human.
-
-        Diabetes mellitus decompensation:
-          1 type - DKA (no insulin enables ketogenesis).
-            dehydration (osmotic diuresis and vomiting)
-            cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
-          2 type - HHNS (cells not sensitive to Ins)
-            dehydration (osmotic diuresis)
-            cGlu >30, mOsm >320, no acidosis and ketone bodies)
-        """
-        info = "Osmolarity is "
-        if self.osmolarity > norm_mOsm[1]:
-            info += "high"
-        elif self.osmolarity < norm_mOsm[0]:
-            info += "low"
-        else:
-            info += "ok"
-        info += " {:.0f} ({:.0f}-{:.0f} mOsm/L)".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
-
-        # Hyperosmolarity flags
-        # if self.osmolarity >=282: # mOsm/kg
-        #     info += " vasopressin released"
-        if self.osmolarity > 290:  # mOsm/kg
-            # plasma thirst point reached
-            info += ", human is thirsty (>290 mOsm/kg)"
-        if self.osmolarity > 320:  # mOsm/kg
-            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
-            info += ", acute kidney injury risk (>320 mOsm/kg)"
-        if self.osmolarity > 330:  # mOsm/kg
-            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
-            info += ", coma (>330 mOsm/kg)"
-
-        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
-        if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
-            # https://www.aafp.org/afp/2005/0501/p1723.html
-            # IV insulin drip and crystalloids
-            info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
-        return info
-
-    def describe_abg(self):
-        """Describe pH and pCO2 - an old implementation considered stable."""
-        info = textwrap.dedent("""\
-        pCO2    {:2.1f} kPa
-        HCO3(P) {:2.1f} mmol/L
-        Conclusion: {}\n""".format(
-            self.pCO2,
-            self.hco3p,
-            abg.abg_approach_stable(self.pH, self.pCO2)[0]))
-        if self.parent.debug:
-            info += "\n-- Manual compensatory response check --------------\n"
-            # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-            info += "{}".format(abg.abg_approach_research(self.pH, self.pCO2))
-        return info
-
-    def describe_anion_gap(self):
-        info = "-- Anion gap ---------------------------------------\n"
-        desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
-        if abg.abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
-            if norm_gap[1] < self.anion_gap:
-                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alcalosis
-                info += "HAGMA {} (KULT?), ".format(desc)
-                info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
-            elif self.anion_gap < norm_gap[0]:
-                info += "Low AG {} - hypoalbuminemia or low Na?".format(desc)
-            else:
-                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
-                info += "NAGMA {}. Diarrhea or renal tubular acidosis?".format(desc)
-        else:
-            if norm_gap[1] < self.anion_gap:
-                info += "Unexpected high AG {} without main metabolic acidosis; ".format(desc)
-                # Can catch COPD or concurrent metabolic alcalosis here
-                info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
-            elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low AG {}. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
-            else:
-                info += "AG is ok {}".format(desc)
-
-        if self.parent.debug:
-            """Strong ion difference.
-
-            Sometimes Na and Cl don't changes simultaneously.
-            Try distinguish Na-Cl balance in case high/low osmolarity.
-            Should help to choose better fluid for correction.
-            """
-            SIDabbr_norm = (-5, 5)  # Arbitrary threshold
-            ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
-            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
-            if self.sid_abbr > SIDabbr_norm[1]:
-                info += "is alcalotic {}, relative Na⁺ excess".format(ref_str)
-            elif self.sid_abbr < SIDabbr_norm[0]:
-                info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
-            else:
-                info += "is ok {}".format(ref_str)
-            info += ", BDE gap {:.01f} mEq/L".format(self.sbe - self.sid_abbr)  # Lactate?
-        return info
-
-    def describe_sbe(self):
-        """Calculate needed NaHCO3 for metabolic acidosis correction.
-
-        Using SBE (not pH) as threshold point guaranties that bicarbonate
-        administration won't be suggested in case of respiratory acidosis.
-        https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
-
-        * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
-        * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
-
-
-        First approach
-        --------------
-        "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
-        but both values pretty close to BE -9 meq/L, so I use it as threshold.
-
-        Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
-
-
-        Second approach
-        ---------------
-        According to BICAR-ICU 2018:
-          * Using more restrictive threshold pH 7.11, which is
-              correspondent to BE -15 mEq/L.
-          * Tip only for AKI patients
-          * https://pubmed.ncbi.nlm.nih.gov/29910040/
-          * https://en.wikipedia.org/wiki/Metabolic_acidosis
-        """
-        NaHCO3_threshold = -15  # was -9 mEq/L
-        info = ""
-        if self.sbe > norm_sbe[1]:
-            # FIXME: can be high if chloride is low. Calculate SID?
-            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
-            # https://en.wikipedia.org/wiki/Contraction_alkalosis
-            # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += "SBE is high {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
-        elif self.sbe < norm_sbe[0]:
-            if self.sbe <= NaHCO3_threshold:
-                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
-                info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
-                # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
-                NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
-                NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
-                NaHCO3_g = NaHCO3_mmol / 1000 * M_NaHCO3  # gram
-                NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * M_NaHCO3
-                info += "  * NaHCO₃ {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
-                # info += "  * NaHCO₃ {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
-                #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
-                for dilution in (4, 8.4):
-                    NaHCO3_ml = NaHCO3_g / dilution * 100
-                    NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
-                    info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
-                if self.parent.debug:
-                    info += textwrap.dedent("""\
-                        Confirmed NaHCO₃ use cases:
-                          * Metabolic acidosis correction leads to decreased 28 day mortality only in AKI patients (target pH 7.3) [BICAR-ICU 2018]
-                          * TCA poisoning with prolonged QT interval (target pH 7.45-7.55 [Костюченко 204])
-                          * In hyperkalemia (when pH increases, K⁺ level decreases)
-                        Main concepts of usage:
-                          * Must hyperventilate to make use of bicarbonate buffer
-                          * Control ABG after each NaHCO₃ infusion or every 4 hours
-                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]""")
-            else:
-                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {:.0f} mEq/L".format(self.sbe, norm_sbe[0], norm_sbe[1], NaHCO3_threshold)
-        else:
-            info += "SBE is ok {:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sbe, norm_sbe[0], norm_sbe[1])
-        return info
-
-    def describe_electrolytes(self):
-        info = "- Electrolyte and osmolar abnormalities ------------\n"
-        info += "{}\n\n".format(self.describe_osmolarity())
-        info += "{}\n\n".format(electrolyte_K(self.parent.weight, self.cK))
-        info += "{}\n\n".format(electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug))
-        info += "{}\n".format(electrolyte_Cl(self.cCl))
-        return info
-
-    def describe_glucose(self):
-        """Assess glucose level.
-
-        https://en.wikipedia.org/wiki/Renal_threshold
-        https://en.wikipedia.org/wiki/Glycosuria
-        """
-        info = ""
-        if self.cGlu > norm_cGlu[1]:
-            if self.cGlu <= norm_cGlu_target[1]:
-                info += "cGlu is above ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
-            else:
-                info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
-                if self.cGlu <= 20:  # Arbitrary threshold
-                    info += ", consider insulin {:.0f} IU subcut for adult".format(insulin_by_glucose(self.cGlu))
-                else:
-                    info += ", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
-
-        elif self.cGlu < norm_cGlu[0]:
-            if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
-                info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
-            else:
-                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS GLUCOSE 10 % 2.5 mL/kg:\n"
-                # https://litfl.com/glucose/
-                # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
-                info += solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
-                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
-
-        else:
-            info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
-        return info
-
-    def describe_albumin(self):
-        """Albumin as nutrition marker in adults."""
-        ctalb_range = "{} ({}-{} g/dL)".format(self.ctAlb, abg.norm_ctAlb[0], abg.norm_ctAlb[1])
-        if abg.norm_ctAlb[1] < self.ctAlb:
-            info = "ctAlb is high {}. Dehydration?".format(ctalb_range)
-        elif abg.norm_ctAlb[0] <= self.ctAlb <= abg.norm_ctAlb[1]:
-            info = "ctAlb is ok {}".format(ctalb_range)
-        elif 3 <= self.ctAlb < abg.norm_ctAlb[0]:
-            info = "ctAlb is low: light hypoalbuminemia {}".format(ctalb_range)
-        elif 2.5 <= self.ctAlb < 3:
-            info = "ctAlb is low: medium hypoalbuminemia {}".format(ctalb_range)
-        elif self.ctAlb < 2.5:
-            info = "ctAlb is low: severe hypoalbuminemia {}. Expect oncotic edema".format(ctalb_range)
-        return info
 
 
 def egfr_mdrd(sex, cCrea, age, black_skin=False):

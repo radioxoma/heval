@@ -174,7 +174,7 @@ class HumanBodyModel(object):
     def use_ibw(self, value):
         """Set flag to use calculated IBW instead real weight.
 
-        :param value bool: Use or not IBW, bool
+        :param bool value: Use or not IBW, bool
         """
         self._use_ibw = value
 

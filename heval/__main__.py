@@ -90,7 +90,7 @@ __easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
 
 class MainWindow(Frame):
     def __init__(self, parent=None, *args, **kwargs):
-        super(MainWindow, self).__init__(parent, *args, **kwargs)
+        super(MainWindow, self).__init__(*args, **kwargs)
         self.parent = parent
         self.parent.title("Heval — a human evaluator v{}".format(__version__))
         self.parent.geometry("600x590")
@@ -365,8 +365,8 @@ class AboutWindow(Toplevel):
 
 
 class TextViewCustom(Frame):
-    def __init__(self, *args, **kwargs):
-        super(TextViewCustom, self).__init__(parent, *args, **kwargs)
+    def __init__(self, parent, *args, **kwargs):
+        super(TextViewCustom, self).__init__(*args, **kwargs)
         self.parent = parent
 
         frm_txt = Frame(self, width=450, height=300)

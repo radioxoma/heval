@@ -2,15 +2,15 @@
 """
 Calculate pre-made nutrition solution dose.
 
-Heval autimatically estimates required kcal and fluid volume by RBW.
+Heval automatically estimates required kcal and fluid volume by RBW.
 User can switch from default kcal estimation to protein estimation
 (measured nitrogen balance).
 
-Heval will calculate additional fluid to calculated nitrotional mixture to fit daily requirement.
+Heval will calculate additional fluid to calculated nutrotional mixture to fit daily requirement.
 
 There is no evidence-based gold standard in quality and quantity of
 nutrition composition. Pre-made commercial mixtures considered as
-containing all required components in suitable propotions.
+containing all required components in suitable proportions.
 End user shouldn't mess with protein/nonprotein caloric proportions,
 gucose/fat caloric proportions, add unsaturated fatty acids etc.
 """

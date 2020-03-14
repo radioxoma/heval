@@ -182,7 +182,7 @@ class HumanBloodModel(object):
         desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
         if abg.abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
             if norm_gap[1] < self.anion_gap:
-                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alcalosis
+                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
                 info += "HAGMA {} (KULT?), ".format(desc)
                 info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
@@ -193,7 +193,7 @@ class HumanBloodModel(object):
         else:
             if norm_gap[1] < self.anion_gap:
                 info += "Unexpected high AG {} without main metabolic acidosis; ".format(desc)
-                # Can catch COPD or concurrent metabolic alcalosis here
+                # Can catch COPD or concurrent metabolic alkalosis here
                 info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
             elif self.anion_gap < norm_gap[0]:
                 info += "Unexpected low AG {}. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
@@ -211,7 +211,7 @@ class HumanBloodModel(object):
             ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
             info += "\nSIDabbr [Na⁺-Cl⁻-38] "
             if self.sid_abbr > SIDabbr_norm[1]:
-                info += "is alcalotic {}, relative Na⁺ excess".format(ref_str)
+                info += "is alkalotic {}, relative Na⁺ excess".format(ref_str)
             elif self.sid_abbr < SIDabbr_norm[0]:
                 info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
             else:

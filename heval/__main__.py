@@ -9,10 +9,10 @@ Author: Eugene Dvoretsky
 import random
 import textwrap
 from datetime import datetime
-from tkinter import *
+import tkinter as tk
 from tkinter import scrolledtext
 from tkinter import font as tkfont
-from tkinter.ttk import *
+from tkinter import ttk
 
 from heval import abg
 from heval import electrolytes
@@ -92,27 +92,27 @@ GNU General Public License version 3."""
 __easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
 
 
-class MainWindow(Frame):
+class MainWindow(ttk.Frame):
     def __init__(self, parent=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.parent = parent
         self.parent.title("Heval — a human evaluator v{}".format(__version__))
         self.parent.geometry("600x590")
 
-        self.parent.style = Style()
+        self.parent.style = ttk.Style()
         self.parent.style.theme_use('clam')  # ('clam', 'alt', 'default', 'classic')
         self.parent.style.configure('TButton', padding=2)
         self.adjust_font_size()
 
         self.HBody = human.HumanBodyModel()
 
-        menubar = Menu(self.parent)
-        menu_file = Menu(menubar, tearoff=False)
+        menubar = tk.Menu(self.parent)
+        menu_file = tk.Menu(menubar, tearoff=False)
         menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
 
-        menu_view = Menu(menubar, tearoff=False)
-        self._debug = BooleanVar()
+        menu_view = tk.Menu(menubar, tearoff=False)
+        self._debug = tk.BooleanVar()
         self._debug.set(self.HBody.debug)  # Model debug flag is superior
         menu_view.add_checkbutton(label="Verbose report", command=self.set_model_debug, variable=self._debug, accelerator="v")
         menu_view.add_command(label="Increase font size", command=lambda: self.adjust_font_size('increase'), accelerator="Ctrl++")
@@ -120,7 +120,7 @@ class MainWindow(Frame):
         menu_view.add_command(label="Default font size", command=lambda: self.adjust_font_size(), accelerator="Ctrl+0")
         menubar.add_cascade(label="View", menu=menu_view)
 
-        menu_about = Menu(menubar, tearoff=False)
+        menu_about = tk.Menu(menubar, tearoff=False)
         menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
         menu_about.add_command(label="Website and updates", command=visit_website)
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
@@ -128,52 +128,52 @@ class MainWindow(Frame):
         self.parent['menu'] = menubar
 
         # START INPUT SECTION
-        fr_entry = Frame(self)
-        fr_entry.pack(anchor=W)
-        Label(fr_entry, text='Sex').pack(side=LEFT)
-        self.ctl_sex = Combobox(fr_entry, values=['Male', 'Female', 'Child'], width=7)
+        fr_entry = ttk.Frame(self)
+        fr_entry.pack(anchor=tk.W)
+        ttk.Label(fr_entry, text='Sex').pack(side=tk.LEFT)
+        self.ctl_sex = ttk.Combobox(fr_entry, values=['Male', 'Female', 'Child'], width=7)
         self.ctl_sex.bind("<<ComboboxSelected>>", self.set_model_sex)
-        self.ctl_sex.pack(side=LEFT)
+        self.ctl_sex.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and infants")
 
-        Label(fr_entry, text='Height, cm').pack(side=LEFT)
-        self.ctl_height = Spinbox(fr_entry, width=3, from_=1, to=500, command=self.set_model_height)
+        ttk.Label(fr_entry, text='Height, cm').pack(side=tk.LEFT)
+        self.ctl_height = ttk.Spinbox(fr_entry, width=3, from_=1, to=500, command=self.set_model_height)
         self.ctl_height.bind("<Return>", self.set_model_height)
-        self.ctl_height.pack(side=LEFT)
+        self.ctl_height.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_height, "Height highly correlates with age, ideal body weight and body surface area")
 
-        self.var_use_ibw = IntVar()  # No real body weight
+        self.var_use_ibw = tk.IntVar()  # No real body weight
         self.var_use_ibw.set(1)
-        self.ctl_use_ibw_cb = Checkbutton(
+        self.ctl_use_ibw_cb = ttk.Checkbutton(
             fr_entry, variable=self.var_use_ibw, onvalue=1, offvalue=0,
             text="Use IBW", command=self.set_model_use_ibw)
-        self.ctl_use_ibw_cb.pack(side=LEFT)
+        self.ctl_use_ibw_cb.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_use_ibw_cb, "Estimate ideal body weight from height\nand use IBW instead RBW in all calculations")
 
-        self.lbl_weight = Label(fr_entry, text='Weight, kg')
-        self.lbl_weight.pack(side=LEFT)
-        self.ctl_weight = Spinbox(
+        self.lbl_weight = ttk.Label(fr_entry, text='Weight, kg')
+        self.lbl_weight.pack(side=tk.LEFT)
+        self.ctl_weight = ttk.Spinbox(
             fr_entry, width=4, from_=1, to=500,
             format='%.1f', increment=1, command=self.set_model_weight)
         self.ctl_weight.bind("<Return>", self.set_model_weight)
-        self.ctl_weight.pack(side=LEFT)
+        self.ctl_weight.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_weight, "Real body weight")
 
-        Label(fr_entry, text='Body temp, °C').pack(side=LEFT)
-        self.ctl_sbx_temp = Spinbox(
+        ttk.Label(fr_entry, text='Body temp, °C').pack(side=tk.LEFT)
+        self.ctl_sbx_temp = ttk.Spinbox(
             fr_entry, width=4, from_=0.0, to=50.0,
             format='%.1f', increment=0.1, command=self.set_model_body_temp)
         self.ctl_sbx_temp.bind("<Return>", self.set_model_body_temp)
-        self.ctl_sbx_temp.pack(side=LEFT)
+        self.ctl_sbx_temp.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sbx_temp, "Axillary temperature, used for perspiration evaluation")
 
-        reset = Button(fr_entry, text="Reset", command=self.set_input_defaults)
-        reset.pack(side=LEFT)
+        reset = ttk.Button(fr_entry, text="Reset", command=self.set_input_defaults)
+        reset.pack(side=tk.LEFT)
         CreateToolTip(reset, "Set default values for sex, height, real body weight, temp")
         # END INPUT SECTION
         self.set_input_defaults()
 
-        nb = Notebook(self)
+        nb = ttk.Notebook(self)
         self.MText = MainText(nb, self.HBody)
         self.CNutrition = CalcNutrition(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
@@ -182,7 +182,7 @@ class MainWindow(Frame):
         nb.add(self.CNutrition, text="Nutrition")
         nb.add(self.CElectrolytes, text="ABG & Electrolytes")
         nb.add(self.CGFR, text='eGFR')
-        nb.pack(expand=True, fill=BOTH)  # BOTH looks less ugly under Windows
+        nb.pack(expand=True, fill=tk.BOTH)  # BOTH looks less ugly under Windows
 
         self.parent.bind('<Escape>', lambda e: self.parent.destroy())
         self.bind_all('<F1>', lambda e: HelpWindow(self.parent))
@@ -213,13 +213,13 @@ class MainWindow(Frame):
         self.ctl_sex.current(0)
         self.set_model_sex()
 
-        self.ctl_height.delete(0, END)
+        self.ctl_height.delete(0, tk.END)
         self.ctl_height.insert(0, 177)  # cm
         self.set_model_height()
 
         # Can't change widget value while it being disabled, so here is a trick
-        self.ctl_weight['state'] = NORMAL
-        self.ctl_weight.delete(0, END)
+        self.ctl_weight['state'] = tk.NORMAL
+        self.ctl_weight.delete(0, tk.END)
         self.ctl_weight.insert(0, 69.0)  # kg
         self.ctl_weight['state'] = self.lbl_weight['state']
         self.set_model_weight()
@@ -227,7 +227,7 @@ class MainWindow(Frame):
         self.var_use_ibw.set(1)
         self.set_model_use_ibw()
 
-        self.ctl_sbx_temp.delete(0, END)
+        self.ctl_sbx_temp.delete(0, tk.END)
         self.ctl_sbx_temp.insert(0, 36.6)  # celsus degrees
         self.set_model_body_temp()
 
@@ -271,14 +271,14 @@ class MainWindow(Frame):
     def set_model_use_ibw(self, event=None):
         if self.var_use_ibw.get() == 0:
             self.HBody.use_ibw = False
-            self.lbl_weight['state'] = NORMAL
-            self.ctl_weight['state'] = NORMAL
+            self.lbl_weight['state'] = tk.NORMAL
+            self.ctl_weight['state'] = tk.NORMAL
         else:
             self.HBody.use_ibw = True
-            self.ctl_weight.delete(0, END)
+            self.ctl_weight.delete(0, tk.END)
             self.ctl_weight.insert(0, round(self.HBody.weight, 1))
-            self.ctl_weight['state'] = DISABLED
-            self.lbl_weight['state'] = DISABLED
+            self.ctl_weight['state'] = tk.DISABLED
+            self.lbl_weight['state'] = tk.DISABLED
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_debug(self, event=None):
@@ -290,13 +290,13 @@ class MainWindow(Frame):
     def eval(self, event=None):
         """Update GUI."""
         if self.HBody.use_ibw:
-            self.ctl_weight['state'] = NORMAL
-            self.ctl_weight.delete(0, END)
+            self.ctl_weight['state'] = tk.NORMAL
+            self.ctl_weight.delete(0, tk.END)
             self.ctl_weight.insert(0, round(self.HBody.weight, 1))
             self.ctl_weight['state'] = self.lbl_weight['state']
 
 
-class HelpWindow(Toplevel):
+class HelpWindow(tk.Toplevel):
     def __init__(self, parent=None):
         super(HelpWindow, self).__init__(parent)
         self.parent = parent
@@ -305,25 +305,25 @@ class HelpWindow(Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        self.text = scrolledtext.ScrolledText(self, wrap=WORD)
+        self.text = scrolledtext.ScrolledText(self, wrap=tk.WORD)
         self.text.insert(1.0, __helptext__)
 
         # Mimic Label colors
-        lbl_bg = Style().lookup('TLabel', 'background')
-        lbl_font = Style().lookup('TLabel', 'font')  # TkDefaultFont
+        lbl_bg = ttk.Style().lookup('TLabel', 'background')
+        lbl_font = ttk.Style().lookup('TLabel', 'font')  # TkDefaultFont
         self.configure(bg=lbl_bg)
         # relief=FLAT for Linux
-        self.text.configure(relief=FLAT, state=DISABLED, bg=lbl_bg, font=lbl_font)
-        self.text.pack(expand=True, fill=BOTH)
+        self.text.configure(relief=tk.FLAT, state=tk.DISABLED, bg=lbl_bg, font=lbl_font)
+        self.text.pack(expand=True, fill=tk.BOTH)
 
-        self.ctl_frame = Frame(self, padding=8)
-        self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
-        self.ctl_btn_close.pack(side=RIGHT)
-        self.ctl_frame.pack(fill=BOTH)
+        self.ctl_frame = ttk.Frame(self, padding=8)
+        self.ctl_btn_close = ttk.Button(self.ctl_frame, text="Close", command=self.destroy)
+        self.ctl_btn_close.pack(side=tk.RIGHT)
+        self.ctl_frame.pack(fill=tk.BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
 
-        self.popup_menu = Menu(self, tearoff=False)
+        self.popup_menu = tk.Menu(self, tearoff=False)
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
         self.bind("<ButtonRelease-3>", self.popup)
@@ -339,10 +339,10 @@ class HelpWindow(Toplevel):
 
     def copy_all(self, event=None):
         self.clipboard_clear()
-        self.clipboard_append(self.text.get(1.0, END))
+        self.clipboard_append(self.text.get(1.0, tk.END))
 
 
-class AboutWindow(Toplevel):
+class AboutWindow(tk.Toplevel):
     def __init__(self, parent=None):
         super(AboutWindow, self).__init__(parent)
         self.parent = parent
@@ -353,46 +353,46 @@ class AboutWindow(Toplevel):
 
         abouttext = __about__ + " And remember: {}".format(
             random.choice(__easter_text__))
-        self.lbl = Label(self, text=abouttext, wraplength=500, padding=8)
-        self.lbl.pack(expand=True, fill=BOTH)
+        self.lbl = ttk.Label(self, text=abouttext, wraplength=500, padding=8)
+        self.lbl.pack(expand=True, fill=tk.BOTH)
 
-        self.ctl_frame = Frame(self, padding=8)
-        self.ctl_btn_website = Button(self.ctl_frame, text="Visit website", command=visit_website)
+        self.ctl_frame = ttk.Frame(self, padding=8)
+        self.ctl_btn_website = ttk.Button(self.ctl_frame, text="Visit website", command=visit_website)
         CreateToolTip(self.ctl_btn_website, "Source code, docs and updates")
-        self.ctl_btn_close = Button(self.ctl_frame, text="Close", command=self.destroy)
-        self.ctl_btn_close.pack(side=RIGHT)
-        self.ctl_btn_website.pack(side=RIGHT)
-        self.ctl_frame.pack(fill=BOTH)
+        self.ctl_btn_close = ttk.Button(self.ctl_frame, text="Close", command=self.destroy)
+        self.ctl_btn_close.pack(side=tk.RIGHT)
+        self.ctl_btn_website.pack(side=tk.RIGHT)
+        self.ctl_frame.pack(fill=tk.BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
 
 
-class TextViewCustom(Frame):
+class TextViewCustom(ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super(TextViewCustom, self).__init__(*args, **kwargs)
         self.parent = parent
 
-        frm_txt = Frame(self, width=450, height=300)
-        frm_txt.pack(expand=True, fill=BOTH)
+        frm_txt = ttk.Frame(self, width=450, height=300)
+        frm_txt.pack(expand=True, fill=tk.BOTH)
         frm_txt.grid_propagate(False)  # ensure a consistent GUI size
         frm_txt.grid_rowconfigure(0, weight=1)
         frm_txt.grid_columnconfigure(0, weight=1)  # implement stretchability
 
-        self.txt = Text(frm_txt, borderwidth=1, relief="sunken")
+        self.txt = tk.Text(frm_txt, borderwidth=1, relief="sunken")
         self.txt.config(font=("consolas", 10), undo=True, wrap='word')
         self.txt.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
 
         # Create a Scrollbar and associate it with txt
-        scrollb = Scrollbar(frm_txt, command=self.txt.yview)
+        scrollb = ttk.Scrollbar(frm_txt, command=self.txt.yview)
         scrollb.grid(row=0, column=1, sticky='nsew')
         self.txt['yscrollcommand'] = scrollb.set
 
     def set_text(self, text):
         """Replace current text."""
-        self.txt['state'] = NORMAL
-        self.txt.delete(1.0, END)
-        self.txt.insert(END, text)
-        self.txt['state'] = DISABLED
+        self.txt['state'] = tk.NORMAL
+        self.txt.delete(1.0, tk.END)
+        self.txt.insert(tk.END, text)
+        self.txt['state'] = tk.DISABLED
 
     # def save_text(self):
     #     dst_filepath = filedialog.asksaveasfilename(
@@ -411,9 +411,9 @@ class TextViewCustom(Frame):
     #             self.txt['state'] = DISABLED
 
     def select_all(self):
-        self.txt.tag_add(SEL, "1.0", END)
-        self.txt.mark_set(INSERT, "1.0")
-        self.txt.see(INSERT)
+        self.txt.tag_add(tk.SEL, "1.0", tk.END)
+        self.txt.mark_set(tk.INSERT, "1.0")
+        self.txt.see(tk.INSERT)
         return 'break'
 
 
@@ -421,7 +421,7 @@ class TextView(scrolledtext.ScrolledText):
     def __init__(self, *args, **kwargs):
         super(TextView, self).__init__(*args, **kwargs)
         self.config(font='TkFixedFont', wrap='word')
-        self.popup_menu = Menu(self, tearoff=False)
+        self.popup_menu = tk.Menu(self, tearoff=False)
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
         self.bind("<ButtonRelease-3>", self.popup)
@@ -437,24 +437,24 @@ class TextView(scrolledtext.ScrolledText):
 
     def copy_all(self, event=None):
         self.clipboard_clear()
-        self.clipboard_append(self.get(1.0, END))
+        self.clipboard_append(self.get(1.0, tk.END))
 
     def set_text(self, text):
         """Replace current text."""
-        self['state'] = NORMAL
-        self.delete(1.0, END)
-        self.insert(END, text)
-        self['state'] = DISABLED
+        self['state'] = tk.NORMAL
+        self.delete(1.0, tk.END)
+        self.insert(tk.END, text)
+        self['state'] = tk.DISABLED
 
 
-class MainText(Frame):
+class MainText(ttk.Frame):
     def __init__(self, parent, human_model):
         super(MainText, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
         self.TxtView = TextView(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.TxtView.set_text(textwrap.dedent("""\
         Just set sex and height. Open \"Help\" from menu or by pressing F1 key.
 
@@ -468,105 +468,105 @@ class MainText(Frame):
         self.TxtView.set_text(info)
 
 
-class CalcNutrition(Frame):
+class CalcNutrition(ttk.Frame):
     def __init__(self, parent, human_model):
         super(CalcNutrition, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
-        fr_entry = Frame(self)
-        fr_entry.pack(anchor=W)
+        fr_entry = ttk.Frame(self)
+        fr_entry.pack(anchor=tk.W)
 
-        self.var_rbtm_calc_method = IntVar()
+        self.var_rbtm_calc_method = tk.IntVar()
         self.var_rbtm_calc_method.set(0)
 
         # Fluid input
-        fr_fluid_entry = LabelFrame(fr_entry, text="Daily fluid")
-        fr_fluid_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+        fr_fluid_entry = ttk.LabelFrame(fr_entry, text="Daily fluid")
+        fr_fluid_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
 
-        ctl_btn_fluid = Button(fr_fluid_entry, text="Reset", command=self.set_input_fluid_defaults)
+        ctl_btn_fluid = ttk.Button(fr_fluid_entry, text="Reset", command=self.set_input_fluid_defaults)
         # CreateToolTip(ctl_btn_fluid, "Reset fluid")
         ctl_btn_fluid.grid(row=0, column=0)
 
-        Label(fr_fluid_entry, text="ml/kg/24h").grid(row=1, column=0)
-        self.ctl_sbx_fluid_mul = Spinbox(
+        ttk.Label(fr_fluid_entry, text="ml/kg/24h").grid(row=1, column=0)
+        self.ctl_sbx_fluid_mul = ttk.Spinbox(
             fr_fluid_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_fluid_multiplier)
         self.ctl_sbx_fluid_mul.bind("<Return>", self.set_model_fluid_multiplier)
         self.ctl_sbx_fluid_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid demand.\nTypical 30-35 ml/kg for an adult. Much higher for children.")
 
-        Label(fr_fluid_entry, text="ml/24h").grid(row=2, column=0)
-        self.lbl_fluid_24h = Label(fr_fluid_entry)
+        ttk.Label(fr_fluid_entry, text="ml/24h").grid(row=2, column=0)
+        self.lbl_fluid_24h = ttk.Label(fr_fluid_entry)
         self.lbl_fluid_24h.grid(row=2, column=1)
 
         # Kcal input
-        self.fr_kcal_entry = LabelFrame(fr_entry, text="By calorie demand")
-        self.fr_kcal_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+        self.fr_kcal_entry = ttk.LabelFrame(fr_entry, text="By calorie demand")
+        self.fr_kcal_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
 
-        ctl_btn_kcal = Button(self.fr_kcal_entry, text="Reset", command=self.set_input_kcal_defaults)
+        ctl_btn_kcal = ttk.Button(self.fr_kcal_entry, text="Reset", command=self.set_input_kcal_defaults)
         # CreateToolTip(ctl_btn_kcal, "Reset kcal")
         ctl_btn_kcal.grid(row=0, column=0)
 
-        ctl_rbtn0_method = Radiobutton(
+        ctl_rbtn0_method = ttk.Radiobutton(
             self.fr_kcal_entry, text=None, variable=self.var_rbtm_calc_method,
             value=0, command=self.set_nutr_gui_state)
         ctl_rbtn0_method.grid(row=0, column=1)
         CreateToolTip(ctl_rbtn0_method, "Calculate daily nutrition dose by calorie (not protein) requirement")
 
-        Label(self.fr_kcal_entry, text="kcal/kg/24h").grid(row=1, column=0)
-        self.ctl_sbx_kcal_mul = Spinbox(
+        ttk.Label(self.fr_kcal_entry, text="kcal/kg/24h").grid(row=1, column=0)
+        self.ctl_sbx_kcal_mul = ttk.Spinbox(
             self.fr_kcal_entry, width=2, from_=0.0, to=99.0,
             format='%1.0f', increment=1, command=self.set_model_kcal_multiplier)
         self.ctl_sbx_kcal_mul.bind("<Return>", self.set_model_kcal_multiplier)
         self.ctl_sbx_kcal_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours energy demand.\nTypical 25-30 kcal/kg.")
 
-        Label(self.fr_kcal_entry, text="kcal/24h").grid(row=2, column=0)
-        self.lbl_kcal_24h = Label(self.fr_kcal_entry)
+        ttk.Label(self.fr_kcal_entry, text="kcal/24h").grid(row=2, column=0)
+        self.lbl_kcal_24h = ttk.Label(self.fr_kcal_entry)
         self.lbl_kcal_24h.grid(row=2, column=1)
 
         # Protein & Nitrogen balance input
-        self.fr_nitrogen_entry = LabelFrame(fr_entry, text="By nitrogen balance")
-        self.fr_nitrogen_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+        self.fr_nitrogen_entry = ttk.LabelFrame(fr_entry, text="By nitrogen balance")
+        self.fr_nitrogen_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
 
-        ctl_btn_prot = Button(
+        ctl_btn_prot = ttk.Button(
             self.fr_nitrogen_entry, text="Reset",
             command=self.set_input_protein_defaults)
         # CreateToolTip(ctl_btn_prot, "Reset protein")
         ctl_btn_prot.grid(row=0, column=0)
 
-        ctl_rbtn1_method = Radiobutton(
+        ctl_rbtn1_method = ttk.Radiobutton(
             self.fr_nitrogen_entry, text=None, variable=self.var_rbtm_calc_method,
             value=1, command=self.set_nutr_gui_state)
         ctl_rbtn1_method.grid(row=0, column=1)
         CreateToolTip(ctl_rbtn1_method, "Calculate daily nutrition dose by measured protein (not calorie) requirement")
 
-        Label(self.fr_nitrogen_entry, text="Urine urea, mmol/24h").grid(row=1, column=0)
-        self.ctl_sbx_uurea = Spinbox(
+        ttk.Label(self.fr_nitrogen_entry, text="Urine urea, mmol/24h").grid(row=1, column=0)
+        self.ctl_sbx_uurea = ttk.Spinbox(
             self.fr_nitrogen_entry, width=4, from_=0.0, to=9999.0,
             format='%.0f', increment=10, command=self.set_model_uurea)
         self.ctl_sbx_uurea.bind("<Return>", self.set_model_uurea)
         self.ctl_sbx_uurea.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_uurea, "Urine urea excreted during 24h (equals to total urea nitrogen, when measured in mmol/24h)")
 
-        Label(self.fr_nitrogen_entry, text="Protein g/24h").grid(row=2, column=0)
-        self.lbl_prot_24h = Label(self.fr_nitrogen_entry)
+        ttk.Label(self.fr_nitrogen_entry, text="Protein g/24h").grid(row=2, column=0)
+        self.lbl_prot_24h = ttk.Label(self.fr_nitrogen_entry)
         self.lbl_prot_24h.grid(row=2, column=1)
         CreateToolTip(self.lbl_prot_24h, "24h protein intake needed to maintain zero nitrogen balance")
 
-        Label(self.fr_nitrogen_entry, text="Protein, g/kg/24h").grid(row=3, column=0)
+        ttk.Label(self.fr_nitrogen_entry, text="Protein, g/kg/24h").grid(row=3, column=0)
         # self.ctl_sbx_prot_g_kg_24h = Spinbox(
         #     self.fr_nitrogen_entry, width=4, from_=0.0, to=10.0,
         #     format='%.2f', increment=0.1, command=self.increment_uurea_widget)
         # self.ctl_sbx_prot_g_kg_24h.bind("<Return>", self.eval)
         # self.ctl_sbx_prot_g_kg_24h.grid(row=2, column=1)
         # CreateToolTip(self.ctl_sbx_prot_g_kg_24h, "Urine urea concentration in 24h sample")
-        self.lbl_sbx_prot_g_kg_24h = Label(self.fr_nitrogen_entry)
+        self.lbl_sbx_prot_g_kg_24h = ttk.Label(self.fr_nitrogen_entry)
         self.lbl_sbx_prot_g_kg_24h.grid(row=3, column=1)
 
         self.TxtView = TextView(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_fluid_defaults()
         self.set_input_kcal_defaults()
         self.set_input_protein_defaults()
@@ -582,17 +582,17 @@ class CalcNutrition(Frame):
             """))
 
     def set_input_fluid_defaults(self, event=None):
-        self.ctl_sbx_fluid_mul.delete(0, END)
+        self.ctl_sbx_fluid_mul.delete(0, tk.END)
         self.ctl_sbx_fluid_mul.insert(0, 30)  # ml/kg/24h
         self.set_model_fluid_multiplier()
 
     def set_input_kcal_defaults(self, event=None):
-        self.ctl_sbx_kcal_mul.delete(0, END)
+        self.ctl_sbx_kcal_mul.delete(0, tk.END)
         self.ctl_sbx_kcal_mul.insert(0, 25)  # kcal/kg/24h
         self.set_model_kcal_multiplier()
 
     def set_input_protein_defaults(self, event=None):
-        self.ctl_sbx_uurea.delete(0, END)
+        self.ctl_sbx_uurea.delete(0, tk.END)
         self.ctl_sbx_uurea.insert(0, 190)  # Corresponds to 0.8 g/kg/h
         self.set_model_uurea()
 
@@ -600,15 +600,15 @@ class CalcNutrition(Frame):
         def set_state(widget, state):
             # Set all subwidgets state NORMAL, DISABLED
             for child in widget.winfo_children():
-                if not isinstance(child, Radiobutton):
+                if not isinstance(child, ttk.Radiobutton):
                     child.configure(state=state)
 
         if self.var_rbtm_calc_method.get() == 0:  # By kcal
-            set_state(self.fr_kcal_entry, NORMAL)
-            set_state(self.fr_nitrogen_entry, DISABLED)
+            set_state(self.fr_kcal_entry, tk.NORMAL)
+            set_state(self.fr_nitrogen_entry, tk.DISABLED)
         elif self.var_rbtm_calc_method.get() == 1:  # By UUN
-            set_state(self.fr_kcal_entry, DISABLED)
-            set_state(self.fr_nitrogen_entry, NORMAL)
+            set_state(self.fr_kcal_entry, tk.DISABLED)
+            set_state(self.fr_nitrogen_entry, tk.NORMAL)
         self.eval()
 
     def set_model_fluid_multiplier(self, event=None):
@@ -641,94 +641,94 @@ class CalcNutrition(Frame):
         self.TxtView.set_text(info)
 
 
-class CalcElectrolytes(Frame):
+class CalcElectrolytes(ttk.Frame):
     def __init__(self, parent, human_model):
         super(CalcElectrolytes, self).__init__(parent)
         self.__form_ready = False
         self.parent = parent
         self.human_model = human_model
-        fr_entry = Frame(self)
-        fr_entry.pack(anchor=W)
+        fr_entry = ttk.Frame(self)
+        fr_entry.pack(anchor=tk.W)
 
         # ABG INPUT
-        fr_abg_entry = LabelFrame(fr_entry, text="Basic ABG")
-        fr_abg_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+        fr_abg_entry = ttk.LabelFrame(fr_entry, text="Basic ABG")
+        fr_abg_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
 
-        ctl_btn_abg = Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
+        ctl_btn_abg = ttk.Button(fr_abg_entry, text="Reset", command=self.set_input_abg_defaults)
         CreateToolTip(ctl_btn_abg, "Compare respiratory and metabolic impact on blood pH")
         ctl_btn_abg.grid(row=1, column=0)
 
-        Label(fr_abg_entry, text="pH").grid(row=2, column=0)
-        self.ctl_sbx_pH = Spinbox(
+        ttk.Label(fr_abg_entry, text="pH").grid(row=2, column=0)
+        self.ctl_sbx_pH = ttk.Spinbox(
             fr_abg_entry, width=4, from_=0, to=14,
             format='%.2f', increment=0.01, command=self.set_model_pH)
         self.ctl_sbx_pH.bind("<Return>", self.set_model_pH)
         self.ctl_sbx_pH.grid(row=2, column=1)
 
-        Label(fr_abg_entry, text="pCO₂, mmHg").grid(row=3, column=0)
-        self.ctl_sbx_pCO2 = Spinbox(
+        ttk.Label(fr_abg_entry, text="pCO₂, mmHg").grid(row=3, column=0)
+        self.ctl_sbx_pCO2 = ttk.Spinbox(
             fr_abg_entry, width=4, from_=0.0, to=150.0,
             format='%.1f', increment=1, command=self.set_model_pCO2)
         self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)
         self.ctl_sbx_pCO2.grid(row=3, column=1)  # Default pCO2 40.0 mmHg
 
-        Label(fr_abg_entry, text="HCO₃(P), mmol/L").grid(row=4, column=0)
-        self.lbl_hco3 = Label(fr_abg_entry)
+        ttk.Label(fr_abg_entry, text="HCO₃(P), mmol/L").grid(row=4, column=0)
+        self.lbl_hco3 = ttk.Label(fr_abg_entry)
         CreateToolTip(self.lbl_hco3, "Actual bicarbonate")
         self.lbl_hco3.grid(row=4, column=1)
 
         # ELECTROLYTE INPUT
-        fr_elec_entry = LabelFrame(fr_entry, text="Electrolytes")
-        fr_elec_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+        fr_elec_entry = ttk.LabelFrame(fr_entry, text="Electrolytes")
+        fr_elec_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
 
-        ctl_btn_elec = Button(
+        ctl_btn_elec = ttk.Button(
             fr_elec_entry, text="Reset",
             command=self.set_input_elec_defaults)
         CreateToolTip(ctl_btn_elec, "Find electrolyte imbalance and unmeasurable anion disturbances")
         ctl_btn_elec.grid(row=1, column=0)
 
-        Label(fr_elec_entry, text='K⁺, mmol/L').grid(row=2, column=0)
-        self.ctl_sbx_K = Spinbox(
+        ttk.Label(fr_elec_entry, text='K⁺, mmol/L').grid(row=2, column=0)
+        self.ctl_sbx_K = ttk.Spinbox(
             fr_elec_entry, width=3, from_=0, to=15,
             format='%2.1f', increment=0.1, command=self.set_model_K)
         self.ctl_sbx_K.bind("<Return>", self.set_model_K)
         self.ctl_sbx_K.grid(row=2, column=1)
 
-        Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=3, column=0)
-        self.ctl_sbx_Na = Spinbox(
+        ttk.Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=3, column=0)
+        self.ctl_sbx_Na = ttk.Spinbox(
             fr_elec_entry, width=3, from_=0.0, to=300.0,
             format='%3.0f', increment=1, command=self.set_model_Na)
         CreateToolTip(self.ctl_sbx_Na, "Na⁺ and cGlu are used for serum osmolarity calculations")
         self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
         self.ctl_sbx_Na.grid(row=3, column=1)
 
-        Label(fr_elec_entry, text='Cl⁻, mmol/L').grid(row=4, column=0)
-        self.ctl_sbx_Cl = Spinbox(
+        ttk.Label(fr_elec_entry, text='Cl⁻, mmol/L').grid(row=4, column=0)
+        self.ctl_sbx_Cl = ttk.Spinbox(
             fr_elec_entry, width=3, from_=0.0, to=300.0,
             format='%3.0f', increment=1, command=self.set_model_Cl)
         self.ctl_sbx_Cl.bind("<Return>", self.set_model_Cl)
         self.ctl_sbx_Cl.grid(row=4, column=1)
 
         # EXTRA INPUT
-        fr_extra_entry = LabelFrame(fr_entry, text="Optional data")
-        fr_extra_entry.pack(side=LEFT, anchor=N, expand=True, fill=BOTH)
+        fr_extra_entry = ttk.LabelFrame(fr_entry, text="Optional data")
+        fr_extra_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
 
-        ctl_btn_elec = Button(
+        ctl_btn_elec = ttk.Button(
             fr_extra_entry, text="Reset",
             command=self.set_input_extra_defaults)
         CreateToolTip(ctl_btn_elec, "Tweak electrolyte calculations like a pro")
         ctl_btn_elec.grid(row=1, column=0)
 
-        Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=2, column=0)
-        self.ctl_sbx_cGlu = Spinbox(
+        ttk.Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=2, column=0)
+        self.ctl_sbx_cGlu = ttk.Spinbox(
             fr_extra_entry, width=4, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_cGlu)
         CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood contains other osmotically active molecules, such as ethanol or BUN (due to kidney damage), you shall add it manually or use lab osmometer.")
         self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
         self.ctl_sbx_cGlu.grid(row=2, column=1)
 
-        Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
-        self.ctl_sbx_ctAlb = Spinbox(
+        ttk.Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
+        self.ctl_sbx_ctAlb = ttk.Spinbox(
             fr_extra_entry, width=4, from_=0, to=15,
             format='%.1f', increment=0.1, command=self.set_model_ctAlb)
         CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
@@ -736,7 +736,7 @@ class CalcElectrolytes(Frame):
         self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
         self.TxtView = TextView(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
         self.set_input_extra_defaults()
@@ -750,29 +750,29 @@ class CalcElectrolytes(Frame):
         # This one is quite good: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
 
     def set_input_abg_defaults(self, event=None):
-        self.ctl_sbx_pH.delete(0, END)
+        self.ctl_sbx_pH.delete(0, tk.END)
         self.ctl_sbx_pH.insert(0, abg.norm_pH_mean)
         self.set_model_pH()
-        self.ctl_sbx_pCO2.delete(0, END)
+        self.ctl_sbx_pCO2.delete(0, tk.END)
         self.ctl_sbx_pCO2.insert(0, abg.norm_pCO2mmHg_mean)  # kg
         self.set_model_pCO2()
 
     def set_input_elec_defaults(self, event=None):
-        self.ctl_sbx_K.delete(0, END)
+        self.ctl_sbx_K.delete(0, tk.END)
         self.ctl_sbx_K.insert(0, 4.3)  # May be set to 4.0
         self.set_model_K()
-        self.ctl_sbx_Na.delete(0, END)
+        self.ctl_sbx_Na.delete(0, tk.END)
         self.ctl_sbx_Na.insert(0, 140)
         self.set_model_Na()
-        self.ctl_sbx_Cl.delete(0, END)
+        self.ctl_sbx_Cl.delete(0, tk.END)
         self.ctl_sbx_Cl.insert(0, 105)
         self.set_model_Cl()
 
     def set_input_extra_defaults(self, event=None):
-        self.ctl_sbx_cGlu.delete(0, END)
+        self.ctl_sbx_cGlu.delete(0, tk.END)
         self.ctl_sbx_cGlu.insert(0, electrolytes.norm_cGlu_mean)
         self.set_model_cGlu()
-        self.ctl_sbx_ctAlb.delete(0, END)
+        self.ctl_sbx_ctAlb.delete(0, tk.END)
         self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
         self.set_model_ctAlb()
 
@@ -820,57 +820,57 @@ class CalcElectrolytes(Frame):
         self.TxtView.set_text(info)
 
 
-class CalcGFR(Frame):
-    """Esimate glomerular filtration rate (eGFR)."""
+class CalcGFR(ttk.Frame):
+    """Estimate glomerular filtration rate (eGFR)."""
 
     def __init__(self, parent, human_model):
         super(CalcGFR, self).__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
-        fr_entry = Frame(self)
-        fr_entry.pack(anchor=W)
+        fr_entry = ttk.Frame(self)
+        fr_entry.pack(anchor=tk.W)
 
-        Label(fr_entry, text="cCrea, μmol/L").pack(side=LEFT)
-        self.ctl_sbx_ccrea = Spinbox(
+        ttk.Label(fr_entry, text="cCrea, μmol/L").pack(side=tk.LEFT)
+        self.ctl_sbx_ccrea = ttk.Spinbox(
             fr_entry, width=4, from_=0.0, to=1000.0,
             format='%.1f', increment=10, command=self.eval)
         self.ctl_sbx_ccrea.bind("<Return>", self.eval)
-        self.ctl_sbx_ccrea.pack(side=LEFT)
+        self.ctl_sbx_ccrea.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
-        Label(fr_entry, text="Age, years").pack(side=LEFT)
-        self.ctl_sbx_age = Spinbox(
+        ttk.Label(fr_entry, text="Age, years").pack(side=tk.LEFT)
+        self.ctl_sbx_age = ttk.Spinbox(
             fr_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_age)
         self.ctl_sbx_age.bind("<Return>", self.set_model_age)
-        self.ctl_sbx_age.pack(side=LEFT)
+        self.ctl_sbx_age.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sbx_age, "Human age, years")
 
-        self.var_isblack = IntVar()  # No real body weight
+        self.var_isblack = tk.IntVar()  # No real body weight
         self.var_isblack.set(0)
-        self.ctl_ckb_isblack = Checkbutton(
+        self.ctl_ckb_isblack = ttk.Checkbutton(
             fr_entry, variable=self.var_isblack,
             onvalue=1, offvalue=0, text="Black human", command=self.eval)
-        self.ctl_ckb_isblack.pack(side=LEFT)
+        self.ctl_ckb_isblack.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
 
-        self.reset = Button(fr_entry, text="Reset", command=self.set_input_defaults)
-        self.reset.pack(side=LEFT)
+        self.reset = ttk.Button(fr_entry, text="Reset", command=self.set_input_defaults)
+        self.reset.pack(side=tk.LEFT)
         CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
 
         self.TxtView = TextView(self)
-        self.TxtView.pack(expand=True, fill=BOTH)
+        self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_defaults()
         self.TxtView.set_text(
             "Estimate glomerular filtration rate (eGFR).\n"
             "Make sure you set sex, cCrea (IDMS-calibrated), age, skin color.")
 
     def set_input_defaults(self, event=None):
-        self.ctl_sbx_ccrea.delete(0, END)
+        self.ctl_sbx_ccrea.delete(0, tk.END)
         self.ctl_sbx_ccrea.insert(0, 75.0)
 
-        self.ctl_sbx_age.delete(0, END)
+        self.ctl_sbx_age.delete(0, tk.END)
         self.ctl_sbx_age.insert(0, 40)
         self.set_model_age()
 
@@ -942,17 +942,16 @@ class CreateToolTip(object):
             self.widget.after_cancel(_id)
 
     def showtip(self, event=None):
-        x = y = 0
-        x, y, cx, cy = self.widget.bbox(INSERT)
+        x, y, cx, cy = self.widget.bbox(tk.INSERT)
         x += self.widget.winfo_rootx() + 25
         y += self.widget.winfo_rooty() + 20
         # Creates a toplevel window
-        self.tw = Toplevel(self.widget)
+        self.tw = tk.Toplevel(self.widget)
         # Leaves only the label and removes the app window
         self.tw.wm_overrideredirect(True)
         self.tw.wm_geometry("+%d+%d" % (x, y))
-        label = Label(
-            self.tw, text=self.text, justify=LEFT,
+        label = ttk.Label(
+            self.tw, text=self.text, justify=tk.LEFT,
             background="#ffffff", relief='solid', borderwidth=1,
             wraplength=self.wraplength)
         label.pack(ipadx=1)
@@ -969,8 +968,8 @@ def visit_website(event=None):
 
 
 def main():
-    root = Tk()
-    MainWindow(root).pack(expand=True, fill=BOTH)
+    root = tk.Tk()
+    MainWindow(root).pack(expand=True, fill=tk.BOTH)
     root.mainloop()
 
 

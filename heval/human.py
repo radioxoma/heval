@@ -11,6 +11,8 @@ import copy
 import math
 import textwrap
 from itertools import chain
+
+import heval.electrolytes
 from heval import abg
 from heval import drugs
 from heval import nutrition
@@ -82,7 +84,7 @@ class HumanBodyModel(object):
         self._weight_ideal_method = ""
         self.weight_ideal = None  # Changes only at sex/weight change
 
-        self.blood = abg.HumanBloodModel(self)
+        self.blood = heval.electrolytes.HumanBloodModel(self)
         self.drugs = drugs.HumanDrugsModel(self)
         self.nutrition = nutrition.HumanNutritionModel(self)
         self.body_temp = 36.6

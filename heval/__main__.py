@@ -9,6 +9,8 @@ from tkinter import *
 from tkinter import scrolledtext
 from tkinter import font as tkfont
 from tkinter.ttk import *
+
+import heval.electrolytes
 from heval import abg
 from heval import human
 from heval import __version__
@@ -879,13 +881,13 @@ class CalcGFR(Frame):
     def eval(self, event=None):
         sex = self.human_model.sex
         cCrea = float(self.ctl_sbx_ccrea.get())
-        cCrea_mgdl = cCrea / abg.m_Crea
+        cCrea_mgdl = cCrea / abg.M_Crea
         if sex in ('male', 'female'):
             age = self.human_model.age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = (self.var_isblack.get() == 1)
-            mdrd = abg.egfr_mdrd(sex, cCrea, age, black_skin)
-            epi = abg.egfr_ckd_epi(sex, cCrea, age, black_skin)
+            mdrd = heval.electrolytes.egfr_mdrd(sex, cCrea, age, black_skin)
+            epi = heval.electrolytes.egfr_ckd_epi(sex, cCrea, age, black_skin)
             info = """\
             cCrea\t{:.2f} mg/dL
             Year of birth: {:.0f}
@@ -893,14 +895,14 @@ class CalcGFR(Frame):
             CKD-EPI\t{:3.0f} mL/min/1.73 m2
 
             Conclusion: {}
-            """.format(cCrea_mgdl, dob, mdrd, epi, abg.gfr_describe(epi))
+            """.format(cCrea_mgdl, dob, mdrd, epi, heval.electrolytes.gfr_describe(epi))
         elif sex == 'child':
-            schwartz = abg.egfr_schwartz(cCrea, self.human_model.height)
+            schwartz = heval.electrolytes.egfr_schwartz(cCrea, self.human_model.height)
             info = """\
             cCrea\t{:.2f} mg/dL
             {:.0f} mL/min/1.73 m2 [Schwartz revised 2009]
             {}
-            """.format(cCrea_mgdl, schwartz, abg.gfr_describe(schwartz))
+            """.format(cCrea_mgdl, schwartz, heval.electrolytes.gfr_describe(schwartz))
         self.TxtView.set_text(textwrap.dedent(info))
 
 

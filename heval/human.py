@@ -34,7 +34,7 @@ female_generic_by = {
     'body_temp': 36.6
 }
 
-female_owerweight_by = {
+female_overweight_by = {
     'height': 1.62,
     'weight': 72.,
     'sex': 'female',
@@ -259,7 +259,7 @@ class HumanBodyModel(object):
             Упрощенный вариант расчета для обоих полов: self.weight_ideal = height – 100
         """
         # IBW estimation formulas cover not all ranges. This flag helps prevent
-        # misuse of explicitly invalid IBW in e.g. respirarory calculations
+        # misuse of explicitly invalid IBW in e.g. respiratory calculations
         self._weight_ideal_valid = True
         if self.sex == 'male':  # Adult male, negative value with height <97 cm
             # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
@@ -270,9 +270,9 @@ class HumanBodyModel(object):
             self.weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
             self._weight_ideal_method = "Hamilton"
         elif self.sex == 'child':
-            # Brocelow tape range. Temporary and only for lowest height
+            # Broselow tape range. Temporary and only for lowest height
             if 0.468 <= self.height < 0.74:
-                # print("WARNING: Braselow IBW for range 0.468-0.74 m")
+                # print("WARNING: Broselow IBW for range 0.468-0.74 m")
                 self._weight_ideal_method = "Broselow"
                 self.weight_ideal = get_broselow_code(self.height)[2]
             elif 0.74 <= self.height <= 1.524:
@@ -323,7 +323,7 @@ class HumanBodyModel(object):
         self._age = value
 
     def _info_in_respiration(self):
-        """Calulate optimal Tidal Volume for given patient (any gase mixture).
+        """Calulate optimal Tidal Volume for given patient (any gas mixture).
 
         IBW - ideal body weight
         RBW - real body weight
@@ -884,7 +884,7 @@ def get_broselow_code(height):
     ----------
     :param float height: Child height in meters.
     :return: Color code, approx age, approx weight (kg).
-    :rtype: typle
+    :rtype: tuple
     """
     height *= 100
     if 46.8 <= height < 51.9:

@@ -745,7 +745,7 @@ class CalcElectrolytes(Frame):
 
             Use real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap.
 
-            Same applies for analytical errors in lab: garbage in - grabage out. Some imagined book case studies will fail too.
+            Same applies for analytical errors in lab: garbage in - garbage out. Some imagined book case studies will fail too.
             """))
         # This one is quite good: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
 

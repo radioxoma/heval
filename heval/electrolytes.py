@@ -410,10 +410,10 @@ def solution_normal_saline(salt_mmol):
     NaCl 3%  , 0.51282 mmol/ml
     NaCl 10% , 1.70940 mmol/ml
 
-    :param float salt_mmol: Amount of substance (NaCl or single ion ecvivalent), mmol
+    :param float salt_mmol: Amount of substance (NaCl or single ion equivalent), mmol
     :return: Info string
     """
-    info = ''
+    info = ""
     for dilution in (0.9, 3, 5, 10):
         conc = 1000 * (dilution / 100) / M_NaCl  # mmol/ml
         vol = salt_mmol / conc  # ml
@@ -441,7 +441,7 @@ def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_r
     :param float Na_target: 140 mmol/L by default
     :param float Na_shift_rate: 0.5 mmol/L/h by default is safe
     :return: Text describing Na deficit/excess and solutions dosage to correct.
-    :rtupe: str
+    :rtype: str
     """
     info = ""
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate

@@ -67,7 +67,7 @@ class HumanDrugsModel(object):
         def describe_pressor(pressor, weight):
             """Generate pressor cheatsheet.
 
-            :param typle pressor: Pressor typle
+            :param tuple pressor: Pressor typle
             :param float weight: Human weight, kg.
             """
             dilution = pressor['weight'] / pressor['volume']

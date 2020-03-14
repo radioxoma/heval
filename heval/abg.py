@@ -428,7 +428,7 @@ def calculate_cbase(pH, pCO2, ctHb=3):
 
 
 def calculate_hct(ctHb):
-    """Calculate hematocrit.
+    """Calculate haematocrit.
 
     The ratio between the volume of erythrocytes and the volume of whole blood.
     See [4] for interpretating caveats.
@@ -445,7 +445,7 @@ def calculate_hct(ctHb):
         Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
 
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L.
-    :return: Hematocrit, fraction (not %).
+    :return: Haematocrit, fraction (not %).
     :rtype: float
     """
     # ctHb(mmol/L) == ctHb(g/dL) / 1.61140 == ctHb(g/dL) * 0.62058
@@ -660,7 +660,7 @@ def resp_acidosis_pH(pCO2, status='acute'):
     References
     ----------
     [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
-    [2] Рябов 1994, p 67 - related to USA Cardiology assocoaton
+    [2] Рябов 1994, p 67 - related to USA Cardiology association
     [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
     [4] https://web.archive.org/web/20170904175146/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_summary.html
 

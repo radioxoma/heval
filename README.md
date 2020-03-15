@@ -1,8 +1,8 @@
-## Heval — a human evaluator. Calculate what your human crave!
+## Heval: the human evaluator. Calculate what your human crave!
 
-The program describes an human being, small or grown from position of [intensive care medicine](https://en.wikipedia.org/wiki/Intensive_care_medicine). See [screenshots](https://github.com/radioxoma/heval#screenshots).
+Heval is a medical calculator for [intensive care unit](https://en.wikipedia.org/wiki/Intensive_care_medicine). See [screenshots](https://github.com/radioxoma/heval#screenshots).
 
-From just *sex* and *height* it calculates [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more. [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggests urgent correction measures and infusion therapy.
+From just *sex* and *height* it evaluates [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more. [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggests urgent correction measures and infusion therapy.
 
 Main features:
 

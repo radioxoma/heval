@@ -2,7 +2,7 @@
 Type=Application
 Version=1.0
 Name=Heval
-Comment=Heval — a human evaluator
+Comment=Medical calculator for intensive care unit
 Exec=python3 -m heval
 Terminal=false
 Icon=text-x-python

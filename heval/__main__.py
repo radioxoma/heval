@@ -74,7 +74,7 @@ VDaw - dead space airway volume
 
 __about__ = """\
 Heval — экспериментальное программное обеспечение, предназначенное для \
-использования врачами-анестезиологами-реаниматологами. Программа \
+использования врачами анестезиологами-реаниматологами. Программа \
 предоставляется "как есть". Автор не несёт ответственности за ваши \
 действия и не предоставляет никаких гарантий.
 
@@ -96,7 +96,7 @@ class MainWindow(ttk.Frame):
     def __init__(self, parent=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.parent = parent
-        self.parent.title("Heval — a human evaluator v{}".format(__version__))
+        self.parent.title("Heval: the human evaluator — v{}".format(__version__))
         self.parent.geometry("650x590")
 
         self.parent.style = ttk.Style()

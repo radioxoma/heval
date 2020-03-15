@@ -1,6 +1,6 @@
 @ECHO OFF
 
-rem Build Heval as one-file standalone windows executable
+rem Build Heval as one-file standalone Windows executable
 rem on Windows XP SP3 32 bit or Windows 7 SP1 32 bit
 rem Moving to python 3.5 means dropping support for Windows XP.
 

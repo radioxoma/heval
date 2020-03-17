@@ -1,6 +1,6 @@
 ## Heval: the human evaluator. Calculate what your human crave!
 
-Heval is a medical calculator for [intensive care unit](https://en.wikipedia.org/wiki/Intensive_care_medicine). See [screenshots](https://github.com/radioxoma/heval#screenshots).
+Heval is a medical calculator for [intensive care unit](https://en.wikipedia.org/wiki/Intensive_care_medicine). Easy to use and ugly as hell, see [screenshots](https://github.com/radioxoma/heval#screenshots).
 
 From just *sex* and *height* it evaluates [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more. [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggests urgent correction measures and infusion therapy.
 
@@ -34,16 +34,27 @@ Ready to use if you have filled *sex* and *height*. No need to change additional
 > Tip: You can test Heval's ability to interpret ABG with [case studies](https://web.archive.org/web/20170818090331/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_1.html). Some books provide case studies with invalid data (see below).
 
 Requires some bloodwork to be done. Take [arterial blood gas](https://en.wikipedia.org/wiki/Arterial_blood_gas_test) sample whenever possible.
-1. Enter only pH and pCO2 for simplest acid-base status assessment
-2. Use electrolytes panel to assess hidden processes of metabolic acidosis ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
-    * Algorithm able to detect vomiting, hypoalbuminemia, [HHS](https://en.wikipedia.org/wiki/Hyperosmolar_hyperglycemic_state)
-    * Sex and weight used only for dosage calculations, not for ABG diagnostics itself
+1. Enter only pH and pCO<sub>2</sub> for simplest acid-base status assessment
+2. Enter electrolytes to reveal hidden processes ([anion gap](https://en.wikipedia.org/wiki/Anion_gap), [delta-gap](https://en.wikipedia.org/wiki/Delta_ratio)) and general electrolyte disturbances
+    * Algorithm able to detect mixed acid-base disorders, vomiting etc
+    * Hi-low electrolytes correction strategies
     * Tips for emergency cases
+    * Sex and weight used only for dosage calculations, not for ABG diagnostics itself
 3. Enter optional data for precise calculations in complex cases
+    * Anion gap correction for hypoalbuminemia
+    * [DKE](https://en.wikipedia.org/wiki/Diabetic_ketoacidosis)/[HHS](https://en.wikipedia.org/wiki/Hyperosmolar_hyperglycemic_state)
+    * [Hyperosmolar pseudohyponatremia](https://en.wikipedia.org/wiki/Hyponatremia#False_hyponatremia) estimation
+
 
 Please use a real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap (e.g. `149 - (101 + 24) = 24` which is >16 mEq/L!).
 **Some imagined case studies from books aren't designed well and will fail too.**
 
+
+### eGFR
+
+Just [estimated glomerular filtration rate](https://en.wikipedia.org/w/index.php?title=Estimated_glomerular_filtration_rate) for tool completeness.
+* MDRD and CKD-EPI for adults. No Cockcroft-Gault formula intentionally.
+* Schwartz revised 2009 for children
 
 
 ## Disclaimer

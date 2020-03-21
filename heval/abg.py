@@ -444,6 +444,11 @@ def calculate_hct(ctHb):
     [4] http://www.derangedphysiology.com/php/Arterial-blood-gases/
         Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
 
+    Examples
+    --------
+    >>> calculate_hct(171 / 10 / 1.61140)
+    0.5229766786645154
+
     :param float ctHb: Concentration of total hemoglobin in blood, mmol/L.
     :return: Haematocrit, fraction (not %).
     :rtype: float
@@ -534,7 +539,7 @@ def calculate_pO2_FO2_fraction(pO2, FiO2):
 
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-32, p. 268, equation 17.
-    [2] https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2.2FFiO2_ratio
+    [2] https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2/FiO2_ratio
     [3] https://litfl.com/pao2-fio2-ratio
 
     :param float pO2: kPa

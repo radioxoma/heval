@@ -329,10 +329,12 @@ class HumanBodyModel(object):
         RBW - real body weight
 
         Главное - рассчитать безопасный дыхательный объём (TV) при
-            * повреждённых лёгких 6.5 ml/kg (ARDSNET, normal volume ventilation)
+            * повреждённых лёгких 6-8 ml/kg (ARDSNET, normal volume ventilation)
             * при здоровых лёгких 8.5 ml/kg (Drager documentation, типичная вентиляция во время ОЭТН)
         Если при вентиляции с таким рассчитанным TV Ppeak >35 (если пациент не поддыхивает и не кашляет)
         и Pplato > 30 (даже если поддыхивает), то TV уменьшается [видео Owning Oxylog].
+            Target Pplato <30 cmH2O
+            RR <=35/min
 
         Расчёт минутного объёма (MV) не так важен, поскольку всё равно не будут совпадать с расчётным:
             * целевая норма ETCO2 35-45 mmHg (не ниже 28 mmHg - спазм сосудов ГМ и риск ишемического инсульта)
@@ -394,14 +396,16 @@ class HumanBodyModel(object):
         # Dead space https://www.openanesthesia.org/aba_respiratory_function_-_dead_space
         VDaw = 2.2 * weight_chosen
         Tv_min = 2 * VDaw  # ml Lowest reasonable tidal volume
+        tv_mul_min = 6
+        tv_mul_max = 8
         info = ""
         mv = normal_minute_ventilation(weight_chosen)
         Vd = mv * weight_chosen  # l/min
         info += "{} respiration for {} {:.1f} kg [Hamilton ASV]\n".format(weight_type, self.sex, weight_chosen)
         info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
         info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
-        info += " * TV x6.5={:.0f} ml, RR {:.0f}/min\n".format(weight_chosen * 6.5, Vd * 1000 / (weight_chosen * 6.5))
-        info += " * TV x8.5={:.0f} ml, RR {:.0f}/min".format(weight_chosen * 8.5, Vd * 1000 / (weight_chosen * 8.5))
+        info += " * TV x{:.1f}={:.0f} ml, RR {:.0f}/min\n".format(tv_mul_min, weight_chosen * tv_mul_min, Vd * 1000 / (weight_chosen * tv_mul_min))
+        info += " * TV x{:.1f}={:.0f} ml, RR {:.0f}/min".format(tv_mul_max, weight_chosen * tv_mul_max, Vd * 1000 / (weight_chosen * tv_mul_max))
         return info
 
     def _info_in_fluids(self):

@@ -747,6 +747,10 @@ def correct_Na_hyperosmolar(cNa, cGlu):
     https://www.ncbi.nlm.nih.gov/pubmed/10225241
         Corrected Sodium (Hillier, 1999) = Measured sodium + 0.024 * (Serum glucose - 100)
 
+    Diagnosis and treatment of diabetic ketoacidosis and the hyperglycemic hyperosmolar state
+        * Psychopathology and necessity of Na correction explained
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC151994/
+
     Examples
     --------
     # >>> correct_Na_hyperosmolar(126, 33.3)  # Katz, 1973

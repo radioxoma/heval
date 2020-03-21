@@ -897,8 +897,8 @@ class CalcGFR(ttk.Frame):
             info += """\
             cCrea\t{:.2f} mg/dL
             Year of birth: {:.0f}
-            MDRD\t{:3.0f} mL/min/1.73 m2 (considered obsolete)
-            CKD-EPI\t{:3.0f} mL/min/1.73 m2
+            MDRD\t{:3.0f} mL/min/1.73 m² (considered obsolete)
+            CKD-EPI\t{:3.0f} mL/min/1.73 m²
 
             Conclusion: {}
             """.format(cCrea_mgdl, dob, mdrd, epi, electrolytes.gfr_describe(epi))
@@ -906,7 +906,7 @@ class CalcGFR(ttk.Frame):
             schwartz = electrolytes.egfr_schwartz(cCrea, self.human_model.height)
             info += """\
             cCrea\t{:.2f} mg/dL
-            {:.0f} mL/min/1.73 m2 [Schwartz revised 2009]
+            {:.0f} mL/min/1.73 m² [Schwartz revised 2009]
             {}
             """.format(cCrea_mgdl, schwartz, electrolytes.gfr_describe(schwartz))
         self.TxtView.set_text(textwrap.dedent(info))

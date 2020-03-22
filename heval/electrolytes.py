@@ -13,6 +13,7 @@ M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
 M_KCl = 74.5
 M_NaCl = 58.5
 M_NaHCO3 = 84  # g/mol or mg/mmol
+M_Hb = 16.1140  # g/mol
 
 norm_sbe = (-2, 2)  # mEq/L
 
@@ -37,13 +38,23 @@ norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
 norm_cGlu_target = (4.5, 10)  # ICU target range. 10 mmol/L stands for glucose renal threshold
 # Note: gap between lower norm_cGlu and norm_cGlu_target
 
+# Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
+hct_norm_male = (0.407, 0.503)
+hct_norm_female = (0.361, 0.443)
+hct_norm_child = (0.31, 0.41)
+
+# https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
+hb_norm_male = (13.5, 17.5)  # g/dl, 130-160 g/L
+hb_norm_female = (12.0, 15.5)  # g/dl, 120-140 g/L
+hb_norm_child = (11, 16)  # g/dl
+
 
 class HumanBloodModel(object):
     """Represents an human blood ABG status."""
 
     def __init__(self, parent=None):
         self.parent = parent
-        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb')
+        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb', 'ctHb')
         self._txt_prop = ()
 
         self.pH = None
@@ -55,6 +66,7 @@ class HumanBloodModel(object):
 
         self.ctAlb = None       # g/dL albumin
         self.cGlu = None        # mmol/L
+        self.ctHb = None        # g/dl, haemoglobin
         # self.ctBun = None  # May be for osmolarity in future
 
     def __str__(self):
@@ -121,6 +133,11 @@ class HumanBloodModel(object):
     @property
     def osmolarity(self):
         return abg.calculate_osmolarity(self.cNa, self.cGlu)
+
+    @property
+    def hct_calc(self):
+        """Haematocrit."""
+        return abg.calculate_hct(self.ctHb * 10 / M_Hb)
 
     def describe_osmolarity(self):
         """Verbally describe osmolarity impact on human.
@@ -339,6 +356,49 @@ class HumanBloodModel(object):
             info = "ctAlb is low: medium hypoalbuminemia {}".format(ctalb_range)
         elif self.ctAlb < 2.5:
             info = "ctAlb is low: severe hypoalbuminemia {}. Expect oncotic edema".format(ctalb_range)
+        return info
+
+    def describe_Hb(self):
+        """Describe Hb and hct_calc.
+
+        References
+        ----------
+        [1] https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
+        [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
+        """
+        # Top hct value for free water deficit calculation.
+        if self.parent.sex == 'male':
+            hb_norm = hb_norm_male
+            hct_norm = hct_norm_male
+        elif self.parent.sex == 'female':
+            hb_norm = hb_norm_female
+            hct_norm = hct_norm_female
+        elif self.parent.sex == 'child':
+            hb_norm = hb_norm_child
+            hct_norm = hct_norm_child
+        vol_def = volume_deficit_hct(self.parent.weight, self.hct_calc, hct_norm[1])
+
+        desc_hb = "{:.1f} ({:.1f}-{:.1f} g/dl)".format(self.ctHb, hb_norm[0], hb_norm[1])
+        desc_hct = "{:.3f} ({:.3f}-{:.3f})".format(self.hct_calc, hct_norm[0], hct_norm[1])
+
+        info = ""
+        if self.ctHb < 7:  # Generic threshold
+            info += "Hb is low {}, consider transfusion. ".format(desc_hb)
+        else:
+            info += "Hb {}. ".format(desc_hb)
+
+
+        if self.hct_calc > hct_norm[1]:
+            info += "Hct is high {}".format(desc_hct)
+            info += ", free water deficit {:.0f} ml (valid if no hemorrhage occurred)".format(vol_def)
+        elif self.hct_calc < hct_norm[0]:
+            info += "Hct is low {} ".format(desc_hct)
+        else:
+            info += "Hct is ok {} ".format(desc_hct)
+
+
+        if self.parent.sex == 'child':
+            info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 
 
@@ -767,6 +827,42 @@ def correct_Na_hyperosmolar(cNa, cGlu):
     # Na_shift = (cGlu_mgdl - 100) / 100 * 1.6  # Katz, 1973
     Na_shift = (cGlu_mgdl - 100) / 100 * 2.4  # Hillier, 1999
     return cNa + Na_shift
+
+
+def volume_deficit_hct(weight, hct, hct_target=0.4):
+    """Estimate intravascular volume deficit by hematocrit (hct).
+
+    Use if Hct reliable: no bleeding or blood diseases, polycythemia etc.
+
+    Na and water
+    ------------
+    1. Потеря чистой выоды через лёгкие и при потоотделении (лихорадка)
+        Жажда появляется при дефиците воды массой 2 % от RBW, осмолярности >290 mOsm/kg. Концентрированная моча, высокий Hct
+        Вводить D50 до снижения осмоляльности до 290 мосм/кг, снижения Na до 140 mmol/L.
+    2. Потеря внеклеточной жидкости (кишечная непроходимость - 3-е пространство, рвота, понос)
+        * Рвота - метаболический алкозоз, восполнять Cl- физраствором
+        * Понос - метаболический алкалоз? восполнять NaHCO3, NaCL, KCl?
+
+    References
+    ----------
+    [1] Рябов 1994, с 36
+    [2] Маневич, Плохой, с 113 
+    [3] https://en.wikipedia.org/wiki/Hematocrit
+
+    Examples
+    --------
+    >>> volume_deficit_hct(70, 0.55)  # 79 kg, hct 0.55
+    3818.181818181818
+
+    :param float weight: Real body weight, kg
+    :param float hct: Hematocrit fraction, e.g 0.5
+    :param float hct_target: Target hematocrit fraction, default 0.4
+        for simplicity. May be 0.407–0.503 for men and 0.361-0.443 for women.
+    :return: Volume deficiency, ml
+    :rtype: float
+    """
+    # 40 % - mean hematocrit for adult women and men
+    return (1 - hct_target / hct) * 0.2 * weight * 1000
 
 
 def electrolyte_Cl(Cl_serum):

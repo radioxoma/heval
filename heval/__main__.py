@@ -737,6 +737,14 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
         self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
+        ttk.Label(fr_extra_entry, text="ctHb, g/dL").grid(row=4, column=0)
+        self.ctl_sbx_ctHb = ttk.Spinbox(
+            fr_extra_entry, width=4, from_=0, to=50,
+            format='%.1f', increment=0.1, command=self.set_model_ctHb)
+        CreateToolTip(self.ctl_sbx_ctHb, "Not required. Enter to estimate free water deficit by hct.")
+        self.ctl_sbx_ctHb.bind("<Return>", self.set_model_ctHb)
+        self.ctl_sbx_ctHb.grid(row=4, column=1)
+
         self.TxtView = TextView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_abg_defaults()
@@ -777,6 +785,9 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.delete(0, tk.END)
         self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
         self.set_model_ctAlb()
+        self.ctl_sbx_ctHb.delete(0, tk.END)
+        self.ctl_sbx_ctHb.insert(0, 14.0)  #g/dl, mean value for both sexes
+        self.set_model_ctHb()
 
     def set_model_pH(self, event=None):
         self.human_model.blood.pH = float(self.ctl_sbx_pH.get())
@@ -806,6 +817,10 @@ class CalcElectrolytes(ttk.Frame):
         self.human_model.blood.cGlu = float(self.ctl_sbx_cGlu.get())
         self.event_generate("<<HumanModelChanged>>")
 
+    def set_model_ctHb(self, event=None):
+        self.human_model.blood.ctHb = float(self.ctl_sbx_ctHb.get())
+        self.event_generate("<<HumanModelChanged>>")
+
     def eval(self, event=None):
         self.lbl_hco3['text'] = round(self.human_model.blood.hco3p, 1)
         info = ""
@@ -818,7 +833,8 @@ class CalcElectrolytes(ttk.Frame):
         info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
         info += "{}\n".format(self.human_model.blood.describe_electrolytes())
         info += "{}\n\n".format(self.human_model.blood.describe_glucose())
-        info += "{}\n".format(self.human_model.blood.describe_albumin())
+        info += "{}\n\n".format(self.human_model.blood.describe_albumin())
+        info += "{}\n".format(self.human_model.blood.describe_Hb())
         self.TxtView.set_text(info)
 
 

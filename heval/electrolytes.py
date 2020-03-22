@@ -376,7 +376,8 @@ class HumanBloodModel(object):
         elif self.parent.sex == 'child':
             hb_norm = hb_norm_child
             hct_norm = hct_norm_child
-        vol_def = volume_deficit_hct(self.parent.weight, self.hct_calc, hct_norm[1])
+        hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
+        vol_def = volume_deficit_hct(self.parent.weight, self.hct_calc, hct_target)
 
         desc_hb = "{:.1f} ({:.1f}-{:.1f} g/dl)".format(self.ctHb, hb_norm[0], hb_norm[1])
         desc_hct = "{:.3f} ({:.3f}-{:.3f})".format(self.hct_calc, hct_norm[0], hct_norm[1])
@@ -390,12 +391,13 @@ class HumanBloodModel(object):
 
         if self.hct_calc > hct_norm[1]:
             info += "Hct is high {}".format(desc_hct)
-            info += ", free water deficit {:.0f} ml (valid if no hemorrhage occurred)".format(vol_def)
         elif self.hct_calc < hct_norm[0]:
-            info += "Hct is low {} ".format(desc_hct)
+            info += "Hct is low {}".format(desc_hct)
         else:
-            info += "Hct is ok {} ".format(desc_hct)
+            info += "Hct is ok {}".format(desc_hct)
 
+        if self.hct_calc > hct_target + 0.01:  # Age-independent threshold
+            info += ", free water deficit {:.0f} ml (limitations: valid if no hemorrhage occurred, osmolarity and Na⁺ are more specific).".format(vol_def)
 
         if self.parent.sex == 'child':
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."

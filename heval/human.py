@@ -140,7 +140,7 @@ class HumanBodyModel(object):
         # older than 3 month. ml/kg ratio more in neonates and underweight
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
             self.weight * 70, self.total_blood_volume)
-        info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.\n".format(hb_transfusion_response(self.weight))
+        info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.\n".format(transfusion_prbc_response(self.weight))
 
         if self.sex == 'child':
             try:
@@ -149,7 +149,7 @@ class HumanBodyModel(object):
                     br_code.upper(), br_age.lower(), br_weight)
             except ValueError:
                 pass
-            info += "\n{}\n".format(wetflag(weight=self.weight))
+            info += "\n{}\n".format(mnemonic_wetflag(weight=self.weight))
 
         info += "\n--- IN -----------------------------------------\n"
         info += "{}\n".format(self._info_in_respiration())
@@ -436,7 +436,7 @@ class HumanBodyModel(object):
             * ФП рассчитывается по формуле Валлачи `100 - (3 х возраст в годах) = ml/kg/24h`
             * Холидей и Сигар (https://meduniver.com/Medical/nefrologia/raschet_poddergivaiuchei_infuzionnoi_terapii.html).
             """
-            hs_fluid = fluid_req_holidaysegar_mod(self.weight)
+            hs_fluid = fluid_holidaysegar_mod(self.weight)
             info += "RBW child fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid / 24)
             # Max speed [1.2 ml/kg/min Курек 2013 с 127]
             info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (72 ml/kg/h) [Курек]".format(self.weight * 25, 1.2 * 60 * self.weight)
@@ -532,7 +532,7 @@ class HumanBodyModel(object):
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
             if self.age:
                 info += "\nResting energy expenditure for healthy adults:\n"
-                info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(ree_harris_benedict(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(ree_harris_benedict_revised(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
             else:
                 info += "Enter age to calculate REE\n"
@@ -634,7 +634,7 @@ def body_surface_area(height, weight):
     return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
 
 
-def ree_harris_benedict(height, weight, sex, age):
+def ree_harris_benedict_revised(height, weight, sex, age):
     """Resting energy expenditure, revised Harris-Benedict equation (revised 1984).
 
     References
@@ -643,12 +643,13 @@ def ree_harris_benedict(height, weight, sex, age):
     [2] Roza AM, Shizgal HM (1984). "The Harris Benedict equation reevaluated:
         resting energy requirements and the body cell mass" (PDF).
         The American Journal of Clinical Nutrition. 40 (1): 168–182.
+    [3] https://www.omnicalculator.com/health/bmr
 
     Examples
     --------
-    >>> ree_harris_benedict(1.68, 59, 'male', 55)
+    >>> ree_harris_benedict_revised(1.68, 59, 'male', 55)
     1372.7820000000002
-    >>> ree_harris_benedict(1.68, 59, 'female', 55)
+    >>> ree_harris_benedict_revised(1.68, 59, 'female', 55)
     1275.4799999999998
 
     :param float height: Height, meters
@@ -671,7 +672,6 @@ def ree_mifflin(height, weight, sex, age):
 
     Considered as more accurate than revised Harris-Benedict equation.
 
-
     References
     ----------
     [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
@@ -679,6 +679,7 @@ def ree_mifflin(height, weight, sex, age):
         "A new predictive equation for resting energy expenditure in healthy
         individuals".
         The American Journal of Clinical Nutrition. 51 (2): 241–247.
+    [3] https://www.omnicalculator.com/health/bmr
 
     Examples
     --------
@@ -726,7 +727,7 @@ def mean_arterial_pressure(SysP, DiasP):
     return (SysP + 2 * DiasP) / 3
 
 
-def parcland_volume(weight, burned_surface):
+def fluid_parcland(weight, burned_surface):
     """Calculate Ringer's lactate solution volume to support burned patient.
 
     Formula used to calculate volume of crystalloids (Ringer's lactate) to
@@ -772,7 +773,7 @@ def parcland_volume(weight, burned_surface):
     return volume_ml
 
 
-def fluid_req_holidaysegar_mod(rbw):
+def fluid_holidaysegar_mod(rbw):
     """Daily fluid requirement for children.
 
     Looks like Holliday-Segar method, but modified for infants with body weight <3 kg.
@@ -796,7 +797,7 @@ def fluid_req_holidaysegar_mod(rbw):
         return 1500 + 20 * (rbw - 20)
 
 
-def wetflag(age=None, weight=None):
+def mnemonic_wetflag(age=None, weight=None):
     """Fast and not very precise formulas for calculations in children.
 
     https://www.resus.org.uk/faqs/faqs-paediatric-life-support/
@@ -917,7 +918,7 @@ def get_broselow_code(height):
         raise ValueError("Out of Broselow height range")
 
 
-def nadler_total_blood_volume(sex, height, weight):
+def total_blood_volume_nadler(sex, height, weight):
     """Calculate total blood volume (TBV) for adult by Nadler 1962 formula.
 
     This formula is widely known and popular.
@@ -946,7 +947,7 @@ def nadler_total_blood_volume(sex, height, weight):
         raise ValueError("Nadler formula isn't applicable to children")
 
 
-def hb_transfusion_dose(weight, target_hb_increment=1, prbc_hct=0.6):
+def transfusion_prbc_target(weight, target_hb_increment=1, prbc_hct=0.6):
     """Estimate needed pRBC transfusion volume to reach target Hb.
 
     Applicable to adult and children.
@@ -971,7 +972,7 @@ def hb_transfusion_dose(weight, target_hb_increment=1, prbc_hct=0.6):
 
     Examples
     --------
-    >>> hb_transfusion_dose(70)
+    >>> transfusion_prbc_target(70)
     350.0
 
     Parameters
@@ -984,7 +985,7 @@ def hb_transfusion_dose(weight, target_hb_increment=1, prbc_hct=0.6):
     return weight * target_hb_increment * 3 / prbc_hct
 
 
-def hb_transfusion_response(weight, prbc_volume=350, prbc_hct=0.6):
+def transfusion_prbc_response(weight, prbc_volume=350, prbc_hct=0.6):
     """Estimate Hb increase after one pRBC dose transfusion.
 
     Applicable to adult and children.
@@ -998,16 +999,16 @@ def hb_transfusion_response(weight, prbc_volume=350, prbc_hct=0.6):
 
     Examples
     --------
-    >>> hb_transfusion_response(70, 10 * 70)
+    >>> transfusion_prbc_response(70, 10 * 70)
     2.0
-    >>> hb_transfusion_response(70)
+    >>> transfusion_prbc_response(70)
     1.0
 
     Parameters
     ----------
     :param float weight: Real body weight, kg
     :param float prbc_volume: Volume of one pRBC package, ml
-    :param float prbc_hct: Haematocrit of pRBC dose, fraction
+    :param float prbc_hct: Haematocrit of pRBC dose, fraction. Value is
     :return: Expected Hb increase, g/dL
     """
     return prbc_volume / (weight * 3 / prbc_hct)

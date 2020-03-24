@@ -741,7 +741,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctHb = ttk.Spinbox(
             fr_extra_entry, width=4, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_ctHb)
-        CreateToolTip(self.ctl_sbx_ctHb, "Not required. Enter to estimate free water deficit by hct.")
+        CreateToolTip(self.ctl_sbx_ctHb, "Not required. Enter to estimate free water deficit by Hct.")
         self.ctl_sbx_ctHb.bind("<Return>", self.set_model_ctHb)
         self.ctl_sbx_ctHb.grid(row=4, column=1)
 

@@ -10,9 +10,8 @@ import random
 import textwrap
 from datetime import datetime
 import tkinter as tk
-from tkinter import scrolledtext
-from tkinter import font as tkfont
 from tkinter import ttk
+from tkinter import font as tkfont
 
 from heval import abg
 from heval import electrolytes
@@ -307,7 +306,7 @@ class HelpWindow(tk.Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        self.text = scrolledtext.ScrolledText(self, wrap=tk.WORD)
+        self.text = ScrolledText(self, wrap=tk.WORD)
         self.text.insert(1.0, __helptext__)
 
         # Mimic Label colors
@@ -419,7 +418,34 @@ class TextViewCustom(ttk.Frame):
         return 'break'
 
 
-class TextView(scrolledtext.ScrolledText):
+class ScrolledText(tk.Text):
+    """Clone of the standard `tkinter.scrolledtext` with ttk widgets."""
+    def __init__(self, master=None, **kw):
+        self.frame = ttk.Frame(master)
+        self.vbar = ttk.Scrollbar(self.frame)
+        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        kw.update({'yscrollcommand': self.vbar.set})
+        super(ScrolledText, self).__init__(self.frame, **kw)
+
+        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.vbar['command'] = self.yview
+
+        # Copy geometry methods of self.frame without overriding Text
+        # methods -- hack!
+        text_meths = vars(tk.Text).keys()
+        methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
+        methods = methods.difference(text_meths)
+
+        for m in methods:
+            if m[0] != '_' and m != 'config' and m != 'configure':
+                setattr(self, m, getattr(self.frame, m))
+
+    def __str__(self):
+        return str(self.frame)
+
+
+class TextView(ScrolledText):
     def __init__(self, *args, **kwargs):
         super(TextView, self).__init__(*args, **kwargs)
         self.config(font='TkFixedFont', wrap='word')

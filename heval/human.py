@@ -781,15 +781,32 @@ def fluid_parcland(weight, burned_surface):
 def fluid_holidaysegar_mod(rbw):
     """Daily fluid requirement for children.
 
-    Looks like Holliday-Segar method, but modified for infants with body weight <3 kg.
+    Looks like Holliday-Segar method, but modified for premature infants
+    with body weight <3 kg.
 
     References
     ----------
     [1] The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
         https://www.ncbi.nlm.nih.gov/pubmed/13431307
 
-    [2] Курек 2013, стр. 121 или 418. По идее, дложен соответствовать таблице с 121, но для >20 кг это не так.
+    [2] Курек 2013, стр. 121 или 418. По идее, дложен соответствовать
+    таблице с 121, но для >20 кг это не так.
 
+    Examples
+    --------
+    >>> fluid_holidaysegar_mod(1)
+    150
+    >>> fluid_holidaysegar_mod(5)
+    500
+    >>> fluid_holidaysegar_mod(15)
+    1250
+    >>> fluid_holidaysegar_mod(30)
+    1700
+    >>> fluid_holidaysegar_mod(90)
+    2900
+
+    Parameters
+    ----------
     :param float rbw: Real body mass, kg
     """
     if rbw < 2:  # Kurek modification?

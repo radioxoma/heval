@@ -675,7 +675,7 @@ def electrolyte_K(weight, K_serum):
             coefficient = 0.2   # >5 лет [Курек 2013]
 
             K_deficit = (K_target - K_serum) * weight * coefficient
-            # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement?
+            # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement? https://nursemathmedblog.wordpress.com/2016/05/29/potassium-replacement-calculation/
 
             info += "Estimated K⁺ deficit is {:.0f} mmol (KCl 4 % {:.1f} ml) + ".format(K_deficit, solution_kcl4(K_deficit))
             if K_deficit > 4 * weight:

@@ -236,6 +236,11 @@ class HumanBodyModel(object):
                 self._weight_ideal_valid = False
 
     @property
+    def bmi(self):
+        """Body mass index."""
+        return body_mass_index(self.height, self.weight)
+
+    @property
     def bsa(self):
         """Body surface area, m2, square meters."""
         return body_surface_area(height=self.height, weight=self.weight)
@@ -269,8 +274,7 @@ class HumanBodyModel(object):
 
         :return: Total blood volume, ml
         """
-        bmi = self.weight / self.height ** 2
-        return 70 / math.sqrt(bmi / 22) * self.weight
+        return 70 / math.sqrt(self.bmi / 22) * self.weight
 
     def is_init(self):
         """Is class got all necessary data for calculations."""
@@ -303,13 +307,12 @@ class HumanBodyModel(object):
             info += " IBW {:.1f} kg [{}],".format(self.weight_ideal, self._weight_ideal_method)
         else:
             info += " IBW can't be calculated for this height, enter weight manually."
-        bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
 
         if self.sex in ('male', 'female'):
-            info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
+            info += " BMI {:.1f} ({}),".format(self.bmi, bmi_describe(self.bmi))
         else:
             # Adult normal ranges cannot be applied to children
-            info += " BMI {:.1f},".format(bmi_idx)
+            info += " BMI {:.1f},".format(self.bmi)
 
         info += " BSA {:.3f} m².\n".format(self.bsa)
 
@@ -412,21 +415,21 @@ class HumanBodyModel(object):
         info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(weight_type, self.sex, weight_chosen)
         info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
         info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
-        info += " * TV x{:.1f}={:.0f} ml, RR {:.0f}/min\n".format(tv_mul_min, weight_chosen * tv_mul_min, Vd * 1000 / (weight_chosen * tv_mul_min))
-        info += " * TV x{:.1f}={:.0f} ml, RR {:.0f}/min".format(tv_mul_max, weight_chosen * tv_mul_max, Vd * 1000 / (weight_chosen * tv_mul_max))
+        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min\n".format(tv_mul_min, weight_chosen * tv_mul_min, Vd * 1000 / (weight_chosen * tv_mul_min))
+        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min".format(tv_mul_max, weight_chosen * tv_mul_max, Vd * 1000 / (weight_chosen * tv_mul_max))
         return info
 
     def _info_in_fluids(self):
         # Normal physiologic demand
         info = ""
         if self.sex in ('male', 'female'):
-            info += "RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
+            info += " * RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
                 30 * self.weight, 35 * self.weight)
 
-        info += "BSA fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
-
         hs_fluid = fluid_holidaysegar_mod(self.weight)
-        info += "RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]".format(hs_fluid, hs_fluid / 24)
+        info += " * RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid / 24)
+
+        info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
 
         # Variable perspiration losses, which is not included in physiologic demand
         # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
@@ -436,7 +439,7 @@ class HumanBodyModel(object):
         # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
         if self.body_temp > 37:
             deg = self.body_temp - 37
-            info += " + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)\n".format(
+            info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
                 5 * self.weight * deg,
                 7 * self.weight * deg)
         return info
@@ -572,33 +575,41 @@ def body_mass_index(height, weight):
 
     :param float height: meters
     :param float weight: kilograms
+    :return: Body Mass Index
+    :rtype: float
+    """
+    assert height < 10  # Fall if height in centimeters
+    return weight / height ** 2
+
+
+def bmi_describe(bmi):
+    """Describe Body Mass Index for adults.
+
+    :param float bmi: Body Mass Index.
     :return: Opinion
     :rtype: str
     """
-    bmi = weight / height ** 2
-
-    # For adults
     if bmi < 18.5:
-        info = "Underweight: "
+        info = "underweight: "
         if bmi < 16:
-            info += "Severe thinness"
+            info += "severe thinness"
         elif 16 <= bmi < 17:
-            info += "Moderate thinness"
+            info += "moderate thinness"
         elif 17 <= bmi:
-            info += "Mild thinness"
+            info += "mild thinness"
     elif 18.5 <= bmi < 25:
-        info = "Normal weight"
+        info = "normal weight"
     elif 25 <= bmi < 30:
-        info = "Overweight, pre-obese"
+        info = "overweight, pre-obese"
     elif bmi >= 30:
-        info = "Obese "
+        info = "obese "
         if bmi < 35:
             info += "I"
         elif 35 <= bmi < 40:
             info += "II"
         elif bmi >= 40:
             info += "III"
-    return bmi, info
+    return info
 
 
 def body_surface_area(height, weight):

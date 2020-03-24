@@ -53,7 +53,7 @@ Please use a real patient's data: all electrolytes interconnected by electroneut
 ### eGFR
 
 Just [estimated glomerular filtration rate](https://en.wikipedia.org/w/index.php?title=Estimated_glomerular_filtration_rate) for tool completeness.
-* MDRD and CKD-EPI for adults. No Cockcroft-Gault formula intentionally.
+* MDRD and CKD-EPI for adults. Cockcroft-Gault formula omitted intentionally.
 * Schwartz revised 2009 for children
 
 

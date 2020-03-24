@@ -5,9 +5,17 @@ Drug dosage calculator.
 Author: Eugene Dvoretsky
 """
 
-press_nor = {
+press_nor16 = {
     'name': "Nor-16",
     'weight': 16,         # mg
+    'volume': 50,         # ml
+    'speed_start': 0.1,   # mcg/kg/min
+    'speed_max': 3,       # mcg/kg/min. Or 0.1 to 1 mcg/kg/min? https://litfl.com/noradrenaline/
+}
+
+press_nor32 = {
+    'name': "Nor-32",
+    'weight': 32,         # mg
     'volume': 50,         # ml
     'speed_start': 0.1,   # mcg/kg/min
     'speed_max': 3,       # mcg/kg/min. Or 0.1 to 1 mcg/kg/min? https://litfl.com/noradrenaline/
@@ -71,8 +79,10 @@ class HumanDrugsModel(object):
             :param float weight: Human weight, kg.
             """
             dilution = pressor['weight'] / pressor['volume']
-            out_str = "{} ({:.2f} mg/ml) rate {:.2f}-{:>5.2f} mkg/kg/h".format(
-                pressor['name'], dilution,
+            out_str = "{} ({:3.0f} mg / {:.0f} ml, {:.2f} mg/ml) rate {:.2f}-{:>5.2f} mkg/kg/h".format(
+                pressor['name'],
+                pressor['weight'], pressor['volume'],
+                dilution,
                 pressor['speed_start'], pressor['speed_max'])
 
             speed_start_mgh = pressor['speed_start'] / 1000 * weight * 60
@@ -85,7 +95,7 @@ class HumanDrugsModel(object):
             return out_str
 
         info = ""
-        for p in (press_nor, press_epi, press_phenylephrine, press_dopamine, press_dobutamine):
+        for p in (press_nor16, press_nor32, press_epi, press_phenylephrine, press_dopamine, press_dobutamine):
             info += "{}\n".format(describe_pressor(p, self.parent.weight))
         return info
 

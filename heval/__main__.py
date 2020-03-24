@@ -465,7 +465,7 @@ class MainText(ttk.Frame):
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        info = "{}\n".format(self.human_model.describe_body())
+        info = "{}\n".format(self.human_model.describe())
         info += "{}\n".format(self.human_model.describe_drugs())
         self.TxtView.set_text(info)
 

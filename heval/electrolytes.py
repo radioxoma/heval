@@ -305,7 +305,7 @@ class HumanBloodModel(object):
         return info
 
     def describe_electrolytes(self):
-        info = "- Electrolyte and osmolar abnormalities ------------\n"
+        info = "-- Electrolyte and osmolar abnormalities -----------\n"
         info += "{}\n\n".format(self.describe_osmolarity())
         info += "{}\n\n".format(electrolyte_K(self.parent.weight, self.cK))
         info += "{}\n\n".format(electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug))

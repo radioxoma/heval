@@ -116,68 +116,6 @@ class HumanBodyModel(object):
         self.blood.populate(prop)
         return prop
 
-    def describe_body(self):
-        if not self.is_init():
-            return "Empty human model (set sex, height, weight)"
-        info = ""
-        info += "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
-
-        if self._weight_ideal_valid:
-            info += " IBW {:.1f} kg [{}],".format(self.weight_ideal, self._weight_ideal_method)
-        else:
-            info += " IBW can't be calculated for this height, enter weight manually."
-        bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
-
-        if self.sex in ('male', 'female'):
-            info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
-        else:
-            # Adult normal ranges cannot be applied to children
-            info += " BMI {:.1f},".format(bmi_idx)
-
-        info += " BSA {:.3f} m².\n".format(self.bsa)
-
-        # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
-        # older than 3 month. ml/kg ratio more in neonates and underweight
-        info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
-            self.weight * 70, self.total_blood_volume)
-        info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.\n".format(transfusion_prbc_response(self.weight))
-
-        if self.sex == 'child':
-            try:
-                br_code, br_age, br_weight = get_broselow_code(self.height)
-                info += "\nBROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
-                    br_code.upper(), br_age.lower(), br_weight)
-            except ValueError:
-                pass
-            info += "\n{}\n".format(mnemonic_wetflag(weight=self.weight))
-
-        info += "\n--- IN -----------------------------------------\n"
-        info += "{}\n".format(self._info_in_respiration())
-        info += "\n{}\n".format(self._info_in_fluids())
-        info += "{}\n\n".format(self._info_in_electrolytes())
-        info += "{}\n".format(self.describe_energy())
-        info += "\n--- OUT ----------------------------------------\n"  # Also CO2, feces
-        info += "{}\n".format(self._info_out_fluids())
-        if self.comment:
-            info += "\nComments:\n{}\n".format(self.comment)
-        return info
-
-    def is_init(self):
-        """Is class got all necessary data for calculations."""
-        return all((self.height, self.weight, self.sex))
-
-    @property
-    def use_ibw(self):
-        return self._use_ibw
-
-    @use_ibw.setter
-    def use_ibw(self, value):
-        """Set flag to use calculated IBW instead real weight.
-
-        :param bool value: Use or not IBW, bool
-        """
-        self._use_ibw = value
-
     @property
     def sex(self):
         return self._sex
@@ -216,6 +154,18 @@ class HumanBodyModel(object):
         Never use 'self._weight' directly beyond setter/getter code.
         """
         self._weight = value
+
+    @property
+    def use_ibw(self):
+        return self._use_ibw
+
+    @use_ibw.setter
+    def use_ibw(self, value):
+        """Set flag to use calculated IBW instead real weight.
+
+        :param bool value: Use or not IBW, bool
+        """
+        self._use_ibw = value
 
     def _set_weight_ideal(self):
         """Evaluate ideal body weight (IBW) for all ages.
@@ -291,6 +241,15 @@ class HumanBodyModel(object):
         return body_surface_area(height=self.height, weight=self.weight)
 
     @property
+    def age(self):
+        return self._age
+
+    @age.setter
+    def age(self, value):
+        """Human age in years."""
+        self._age = value
+
+    @property
     def total_blood_volume(self):
         """Calculate total blood volume (TBV) by Lemmens-Bernstein-Brodsky.
 
@@ -313,14 +272,63 @@ class HumanBodyModel(object):
         bmi = self.weight / self.height ** 2
         return 70 / math.sqrt(bmi / 22) * self.weight
 
-    @property
-    def age(self):
-        return self._age
+    def is_init(self):
+        """Is class got all necessary data for calculations."""
+        return all((self.height, self.weight, self.sex))
 
-    @age.setter
-    def age(self, value):
-        """Human age in years."""
-        self._age = value
+    def describe(self):
+        info = ""
+        if not self.is_init():
+            return "Empty human model (set sex, height, weight)"
+        info += "{}\n".format(self._info_in_body())
+        info += "\n-- Respiration ---------------------------------\n"
+        info += "{}\n".format(self._info_in_respiration())
+        info += "\n-- Fluids --------------------------------------\n"
+        info += "{}\n".format(self._info_in_fluids())
+        info += "\n-- Metabolic -----------------------------------\n"
+        info += "{}\n".format(self._info_in_energy())
+        if self.debug:
+            info += "\n{}\n".format(self._info_in_food())
+        info += "\n-- Diuresis ------------------------------------\n"  # Also CO2, feces
+        info += "{}\n".format(self._info_out_fluids())
+        if self.comment:
+            info += "\nComments:\n{}\n".format(self.comment)
+        return info
+
+    def _info_in_body(self):
+        info = ""
+        info += "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
+
+        if self._weight_ideal_valid:
+            info += " IBW {:.1f} kg [{}],".format(self.weight_ideal, self._weight_ideal_method)
+        else:
+            info += " IBW can't be calculated for this height, enter weight manually."
+        bmi_idx, bmi_comment = body_mass_index(height=self.height, weight=self.weight)
+
+        if self.sex in ('male', 'female'):
+            info += " BMI {:.1f} ({}),".format(bmi_idx, bmi_comment.lower())
+        else:
+            # Adult normal ranges cannot be applied to children
+            info += " BMI {:.1f},".format(bmi_idx)
+
+        info += " BSA {:.3f} m².\n".format(self.bsa)
+
+        # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
+        # older than 3 month. ml/kg ratio more in neonates and underweight
+        info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
+            self.weight * 70, self.total_blood_volume)
+        info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.".format(
+            transfusion_prbc_response(self.weight))
+
+        if self.sex == 'child':
+            try:
+                br_code, br_age, br_weight = get_broselow_code(self.height)
+                info += "\nBROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
+                    br_code.upper(), br_age.lower(), br_weight)
+            except ValueError:
+                pass
+            info += "\n{}".format(mnemonic_wetflag(weight=self.weight))
+        return info
 
     def _info_in_respiration(self):
         """Calulate optimal Tidal Volume for given patient (any gas mixture).
@@ -401,7 +409,7 @@ class HumanBodyModel(object):
         info = ""
         mv = normal_minute_ventilation(weight_chosen)
         Vd = mv * weight_chosen  # l/min
-        info += "{} respiration for {} {:.1f} kg [Hamilton ASV]\n".format(weight_type, self.sex, weight_chosen)
+        info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(weight_type, self.sex, weight_chosen)
         info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
         info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
         info += " * TV x{:.1f}={:.0f} ml, RR {:.0f}/min\n".format(tv_mul_min, weight_chosen * tv_mul_min, Vd * 1000 / (weight_chosen * tv_mul_min))
@@ -409,49 +417,39 @@ class HumanBodyModel(object):
         return info
 
     def _info_in_fluids(self):
-        # Панкреатит жидкость 50-70 мл/кг/сут, [Пособие дежуранта 2014, стр. 259]
-        info = "BSA fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
+        # Normal physiologic demand
+        info = ""
         if self.sex in ('male', 'female'):
             info += "RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
                 30 * self.weight, 35 * self.weight)
 
-            # Something weird [2.0 ml/kg/min Курек 2013 с 127]
-            # info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (120 ml/kg/h) [Курек]".format(self.weight * 25, 2 * 60 * self.weight)
+        info += "BSA fluids demand {:.0f} ml/24h [1750 ml/m²]\n".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
 
-            # Видимо к жидкости потребления нужно добавлять перспирационные потери
-            # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
-            # info += "\nRBW Perspiration: {:.0f} ml/24h [Расенок]".format(persp_ros)
+        hs_fluid = fluid_holidaysegar_mod(self.weight)
+        info += "RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]".format(hs_fluid, hs_fluid / 24)
 
-            # Перспирационные потери – 5-7 мл/кг/сут на каждый градус выше 37°С [Пособие дежуранта 2014, стр. 230]
-            # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
-            if self.body_temp > 37:
-                deg = self.body_temp - 37
-                info += " + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)\n".format(
-                    5 * self.weight * deg,
-                    7 * self.weight * deg)
-        elif self.sex == 'child':
-            """
-            Infusion volume = ЖП + текущие потери
+        # Variable perspiration losses, which is not included in physiologic demand
+        # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
+        # info += "\nRBW Perspiration: {:.0f} ml/24h [Расенок]".format(persp_ros)
 
-            * ФП рассчитывается по формуле Валлачи `100 - (3 х возраст в годах) = ml/kg/24h`
-            * Холидей и Сигар (https://meduniver.com/Medical/nefrologia/raschet_poddergivaiuchei_infuzionnoi_terapii.html).
-            """
-            hs_fluid = fluid_holidaysegar_mod(self.weight)
-            info += "RBW child fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid / 24)
-            # Max speed [1.2 ml/kg/min Курек 2013 с 127]
-            info += "Bolus {:.0f} ml (20-30 ml/kg) at max speed {:.0f} ml/h (72 ml/kg/h) [Курек]".format(self.weight * 25, 1.2 * 60 * self.weight)
-            """
-            Тестовый болюс при низком давлении у детей 20 мл/кг?
-            [IV Fluids in Children](https://www.ncbi.nlm.nih.gov/books/NBK349484/)
-                * fluids, calculated on the basis of insensible losses within the range 300–400 ml/m2/24 hours plus urinary output
-                * Т.е. количество утилизированный на метаболические нужды воды + диурез + перспирация + другие потери
-            """
+        # Перспирационные потери – 5-7 мл/кг/сут на каждый градус выше 37°С [Пособие дежуранта 2014, стр. 230]
+        # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
+        if self.body_temp > 37:
+            deg = self.body_temp - 37
+            info += " + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)\n".format(
+                5 * self.weight * deg,
+                7 * self.weight * deg)
         return info
 
-    def _info_in_electrolytes(self):
+    def _info_in_food(self):
         """Daily electrolytes demand."""
         info = ""
         if self.sex in ('male', 'female'):
+            info += "Daily nutrition requirements for adults [ПосДеж]:\n"
+            info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
+            info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
+            info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
+
             info += "Electrolytes daily requirements:\n"
             info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
             info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
@@ -463,9 +461,9 @@ class HumanBodyModel(object):
             info += " * Ca²⁺\t{:3.1f} mmol/24h [~0.11 mmol/kg/24h]".format(self.weight * 0.11)
             return info
         else:
-            return "Electrolytes calculation for children not implemented. Refer to [Курек 2013, с 130]"
+            return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
 
-    def describe_energy(self):
+    def _info_in_energy(self):
         """Attempt to calculate energy requirements for an human.
 
         There are ESPEN and ASPEN recommendations. See:
@@ -525,13 +523,9 @@ class HumanBodyModel(object):
         """
         info = ''
         if self.sex in ('male', 'female'):
-            info += "Daily nutrition requirements for adults [ПосДеж]:\n"
-            info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
             if self.age:
-                info += "\nResting energy expenditure for healthy adults:\n"
+                info += "Resting energy expenditure for healthy adults:\n"
                 info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(ree_harris_benedict_revised(self.height, self.weight, self.sex, self.age))
                 info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
             else:
@@ -561,7 +555,7 @@ class HumanBodyModel(object):
         return info
 
     def describe_drugs(self):
-        info = "--- Drugs --------------------------------------"
+        info = "-- Drugs ---------------------------------------"
         info += "\nPressors:\n"
         info += "{}\n".format(self.drugs.describe_pressors())
         info += "Anesthesiology:\n"

@@ -388,7 +388,6 @@ class HumanBloodModel(object):
         else:
             info += "Hb {}. ".format(desc_hb)
 
-
         if self.hct_calc > hct_norm[1]:
             info += "Hct is high {}".format(desc_hct)
         elif self.hct_calc < hct_norm[0]:
@@ -848,7 +847,7 @@ def volume_deficit_hct(weight, hct, hct_target=0.4):
     References
     ----------
     [1] Рябов 1994, с 36
-    [2] Маневич, Плохой, с 113 
+    [2] Маневич, Плохой, с 113
     [3] https://en.wikipedia.org/wiki/Hematocrit
 
     Examples

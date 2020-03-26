@@ -310,7 +310,7 @@ class HelpWindow(tk.Toplevel):
         lbl_bg = ttk.Style().lookup('TLabel', 'background')
         lbl_font = ttk.Style().lookup('TLabel', 'font')  # TkDefaultFont
         self.configure(bg=lbl_bg)
-        # relief=FLAT for Linux
+        # relief=tk.FLAT for Linux
         self.text.configure(relief=tk.FLAT, state=tk.DISABLED, bg=lbl_bg, font=lbl_font)
         self.text.pack(expand=True, fill=tk.BOTH)
 
@@ -367,6 +367,7 @@ class AboutWindow(tk.Toplevel):
 
 class ScrolledText(tk.Text):
     """Clone of the standard `tkinter.scrolledtext` built with ttk widgets."""
+
     def __init__(self, master=None, **kw):
         self.frame = ttk.Frame(master)
         self.vbar = ttk.Scrollbar(self.frame)
@@ -392,17 +393,29 @@ class ScrolledText(tk.Text):
 
 
 class TextView(ScrolledText):
+    """Read only text widget with hotkeys."""
+
     def __init__(self, *args, **kwargs):
         super(TextView, self).__init__(*args, **kwargs)
-        self.config(font='TkFixedFont', wrap='word')
+        self.config(font='TkFixedFont', wrap=tk.WORD, relief=tk.FLAT)
         self.popup_menu = tk.Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
         self.bind("<ButtonRelease-3>", self.popup)
+        self.bind('<Control-a>', self.select_all)
         self.bind('<Control-c>', self.copy)  # Lowercase for Linux
+        # Make key bindings work again in disabled tk.Text widget under Linux
+        self.bind("<ButtonRelease-1>", lambda event: self.focus_set())
 
     def popup(self, event):
         self.popup_menu.tk_popup(event.x_root, event.y_root)
+
+    def select_all(self, event=None):
+        self.tag_add(tk.SEL, "1.0", tk.END)
+        self.mark_set(tk.INSERT, "1.0")
+        self.see(tk.INSERT)
+        return 'break'
 
     def copy(self, event=None):
         self.clipboard_clear()
@@ -418,7 +431,7 @@ class TextView(ScrolledText):
         self['state'] = tk.NORMAL
         self.delete(1.0, tk.END)
         self.insert(tk.END, text)
-        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled
+        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled, Use `focus_set` as workaround
 
 
 class TextViewCustom(ttk.Frame):
@@ -432,8 +445,8 @@ class TextViewCustom(ttk.Frame):
         frm_txt.grid_rowconfigure(0, weight=1)
         frm_txt.grid_columnconfigure(0, weight=1)  # implement stretchability
 
-        self.txt = tk.Text(frm_txt, borderwidth=1, relief="sunken")
-        self.txt.config(font=("consolas", 10), undo=True, wrap='word')
+        self.txt = tk.Text(frm_txt, borderwidth=1, relief=tk.FLAT)
+        self.txt.config(undo=True, wrap='word')
         self.txt.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
 
         # Create a Scrollbar and associate it with txt
@@ -808,7 +821,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
         self.set_model_ctAlb()
         self.ctl_sbx_ctHb.delete(0, tk.END)
-        self.ctl_sbx_ctHb.insert(0, 14.0)  #g/dl, mean value for both sexes
+        self.ctl_sbx_ctHb.insert(0, 14.0)  # g/dl, mean value for both sexes
         self.set_model_ctHb()
 
     def set_model_pH(self, event=None):
@@ -955,6 +968,7 @@ class Spinbox(ttk.Entry):
 
     https://stackoverflow.com/questions/52440314/ttk-spinbox-missing-in-tkinter-ttk/52440947
     """
+
     def __init__(self, master=None, **kw):
         super(Spinbox, self).__init__(master, "ttk::spinbox", **kw)
 

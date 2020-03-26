@@ -192,9 +192,6 @@ class MainWindow(ttk.Frame):
         self.bind_all('<Control-Key-minus>', lambda e: self.adjust_font_size('decrease'))
         self.bind_all('<Control-Key-0>', lambda e: self.adjust_font_size())
         # self.bind('<r>', lambda e: self.set_input_defaults())
-        # self.bind('<Control-s>', lambda e: self.save_text())
-        # self.bind('<Control-a>', lambda e: self.select_all())
-        # self.bind('<Control-c>', lambda e: self.copy_text())
         self.parent.bind('<Alt-KeyPress-1>', lambda e: nb.select(0))
         self.parent.bind('<Alt-KeyPress-2>', lambda e: nb.select(1))
         self.parent.bind('<Alt-KeyPress-3>', lambda e: nb.select(2))
@@ -328,7 +325,7 @@ class HelpWindow(tk.Toplevel):
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
         self.bind("<ButtonRelease-3>", self.popup)
-        self.bind('<Control-C>', self.copy)
+        self.bind('<Control-c>', self.copy)
 
     def popup(self, event):
         self.popup_menu.tk_popup(event.x_root, event.y_root)
@@ -366,6 +363,62 @@ class AboutWindow(tk.Toplevel):
         self.ctl_frame.pack(fill=tk.BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
+
+
+class ScrolledText(tk.Text):
+    """Clone of the standard `tkinter.scrolledtext` built with ttk widgets."""
+    def __init__(self, master=None, **kw):
+        self.frame = ttk.Frame(master)
+        self.vbar = ttk.Scrollbar(self.frame)
+        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
+        kw.update({'yscrollcommand': self.vbar.set})
+        super(ScrolledText, self).__init__(self.frame, **kw)
+
+        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.vbar['command'] = self.yview
+
+        # Copy geometry methods of self.frame without overriding Text
+        # methods -- hack!
+        text_meths = vars(tk.Text).keys()
+        methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
+        methods = methods.difference(text_meths)
+
+        for m in methods:
+            if m[0] != '_' and m != 'config' and m != 'configure':
+                setattr(self, m, getattr(self.frame, m))
+
+    def __str__(self):
+        return str(self.frame)
+
+
+class TextView(ScrolledText):
+    def __init__(self, *args, **kwargs):
+        super(TextView, self).__init__(*args, **kwargs)
+        self.config(font='TkFixedFont', wrap='word')
+        self.popup_menu = tk.Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
+        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
+        self.bind("<ButtonRelease-3>", self.popup)
+        self.bind('<Control-c>', self.copy)  # Lowercase for Linux
+
+    def popup(self, event):
+        self.popup_menu.tk_popup(event.x_root, event.y_root)
+
+    def copy(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.get("sel.first", "sel.last"))
+        self.update()  # Force copy on Windows
+
+    def copy_all(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.get(1.0, tk.END))
+
+    def set_text(self, text):
+        """Replace current text."""
+        self['state'] = tk.NORMAL
+        self.delete(1.0, tk.END)
+        self.insert(tk.END, text)
+        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled
 
 
 class TextViewCustom(ttk.Frame):
@@ -416,63 +469,6 @@ class TextViewCustom(ttk.Frame):
         self.txt.mark_set(tk.INSERT, "1.0")
         self.txt.see(tk.INSERT)
         return 'break'
-
-
-class ScrolledText(tk.Text):
-    """Clone of the standard `tkinter.scrolledtext` with ttk widgets."""
-    def __init__(self, master=None, **kw):
-        self.frame = ttk.Frame(master)
-        self.vbar = ttk.Scrollbar(self.frame)
-        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        kw.update({'yscrollcommand': self.vbar.set})
-        super(ScrolledText, self).__init__(self.frame, **kw)
-
-        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.vbar['command'] = self.yview
-
-        # Copy geometry methods of self.frame without overriding Text
-        # methods -- hack!
-        text_meths = vars(tk.Text).keys()
-        methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
-        methods = methods.difference(text_meths)
-
-        for m in methods:
-            if m[0] != '_' and m != 'config' and m != 'configure':
-                setattr(self, m, getattr(self.frame, m))
-
-    def __str__(self):
-        return str(self.frame)
-
-
-class TextView(ScrolledText):
-    def __init__(self, *args, **kwargs):
-        super(TextView, self).__init__(*args, **kwargs)
-        self.config(font='TkFixedFont', wrap='word')
-        self.popup_menu = tk.Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
-        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
-        self.bind("<ButtonRelease-3>", self.popup)
-        self.bind('<Control-C>', self.copy)
-
-    def popup(self, event):
-        self.popup_menu.tk_popup(event.x_root, event.y_root)
-
-    def copy(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.get("sel.first", "sel.last"))
-        self.update()  # Force copy
-
-    def copy_all(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.get(1.0, tk.END))
-
-    def set_text(self, text):
-        """Replace current text."""
-        self['state'] = tk.NORMAL
-        self.delete(1.0, tk.END)
-        self.insert(tk.END, text)
-        self['state'] = tk.DISABLED
 
 
 class MainText(ttk.Frame):

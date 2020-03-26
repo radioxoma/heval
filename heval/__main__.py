@@ -125,17 +125,24 @@ class TextView(ScrolledText):
         super(TextView, self).__init__(*args, **kwargs)
         self.config(font='TkFixedFont', wrap=tk.WORD)
         self.popup_menu = tk.Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
         self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
         self.popup_menu.add_command(label="Copy all", command=self.copy_all)
-        self.bind("<ButtonRelease-3>", self.popup)
-        self.bind('<Control-a>', self.select_all)
+        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
         self.bind('<Control-c>', self.copy)  # Lowercase for Linux
+        self.bind('<Control-a>', self.select_all)
+        self.bind("<ButtonRelease-3>", self.popup)
         # Make key bindings work again in disabled tk.Text widget under Linux
         self.bind("<ButtonRelease-1>", lambda event: self.focus_set())
 
     def popup(self, event):
         self.popup_menu.tk_popup(event.x_root, event.y_root)
+
+    def set_text(self, text):
+        """Replace current text."""
+        self['state'] = tk.NORMAL
+        self.delete(1.0, tk.END)
+        self.insert(tk.END, text)
+        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled, Use `focus_set` as workaround
 
     def select_all(self, event=None):
         self.tag_add(tk.SEL, "1.0", tk.END)
@@ -144,20 +151,14 @@ class TextView(ScrolledText):
         return 'break'
 
     def copy(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.get("sel.first", "sel.last"))
-        self.update()  # Force copy on Windows
+        if self.tag_ranges("sel"):
+            self.clipboard_clear()
+            self.clipboard_append(self.get("sel.first", "sel.last"))
+            self.update()  # Force copy on Windows
 
     def copy_all(self, event=None):
         self.clipboard_clear()
         self.clipboard_append(self.get(1.0, tk.END))
-
-    def set_text(self, text):
-        """Replace current text."""
-        self['state'] = tk.NORMAL
-        self.delete(1.0, tk.END)
-        self.insert(tk.END, text)
-        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled, Use `focus_set` as workaround
 
 
 class TextViewCustom(ttk.Frame):
@@ -414,7 +415,7 @@ class MainWindow(ttk.Frame):
 
 
 class HelpWindow(tk.Toplevel):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(HelpWindow, self).__init__(parent)
         self.parent = parent
         x = self.parent.winfo_x()
@@ -422,41 +423,22 @@ class HelpWindow(tk.Toplevel):
         self.geometry("+{:.0f}+{:.0f}".format(x + 50, y + 100))
         self.title('Help')
 
-        self.text = ScrolledText(self, wrap=tk.WORD)
-        self.text.insert(1.0, __helptext__)
-
         # Mimic Label colors
         lbl_bg = ttk.Style().lookup('TLabel', 'background')
         lbl_font = ttk.Style().lookup('TLabel', 'font')  # TkDefaultFont
         self.configure(bg=lbl_bg)
+
+        self.text = TextView(self, wrap=tk.WORD)
+        self.text.set_text(__helptext__)
         # relief=tk.FLAT for Linux
-        self.text.configure(relief=tk.FLAT, state=tk.DISABLED, bg=lbl_bg, font=lbl_font)
+        self.text.configure(bg=lbl_bg, font=lbl_font, relief=tk.FLAT)
         self.text.pack(expand=True, fill=tk.BOTH)
 
         self.ctl_frame = ttk.Frame(self, padding=8)
         self.ctl_btn_close = ttk.Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=tk.RIGHT)
         self.ctl_frame.pack(fill=tk.BOTH)
-        self.bind('<Escape>', lambda e: self.destroy())
-        self.focus_set()
-
-        self.popup_menu = tk.Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
-        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
-        self.bind("<ButtonRelease-3>", self.popup)
-        self.bind('<Control-c>', self.copy)
-
-    def popup(self, event):
-        self.popup_menu.tk_popup(event.x_root, event.y_root)
-
-    def copy(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.text.get("sel.first", "sel.last"))
-        self.update()  # Force copy
-
-    def copy_all(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.text.get(1.0, tk.END))
+        self.bind('<Escape>', lambda event: self.destroy())
 
 
 class AboutWindow(tk.Toplevel):

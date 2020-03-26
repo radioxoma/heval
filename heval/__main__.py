@@ -91,6 +91,125 @@ GNU General Public License version 3."""
 __easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
 
 
+class ScrolledText(tk.Text):
+    """Clone of the standard `tkinter.scrolledtext` built with ttk widgets."""
+
+    def __init__(self, master=None, **kw):
+        self.frame = ttk.Frame(master)
+        self.vbar = ttk.Scrollbar(self.frame)
+        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
+        kw.update({'yscrollcommand': self.vbar.set})
+        super(ScrolledText, self).__init__(self.frame, **kw)
+
+        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.vbar['command'] = self.yview
+
+        # Copy geometry methods of self.frame without overriding Text
+        # methods -- hack!
+        text_meths = vars(tk.Text).keys()
+        methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
+        methods = methods.difference(text_meths)
+
+        for m in methods:
+            if m[0] != '_' and m != 'config' and m != 'configure':
+                setattr(self, m, getattr(self.frame, m))
+
+    def __str__(self):
+        return str(self.frame)
+
+
+class TextView(ScrolledText):
+    """Read only text widget with hotkeys."""
+
+    def __init__(self, *args, **kwargs):
+        super(TextView, self).__init__(*args, **kwargs)
+        self.config(font='TkFixedFont', wrap=tk.WORD)
+        self.popup_menu = tk.Menu(self, tearoff=False)
+        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
+        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
+        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
+        self.bind("<ButtonRelease-3>", self.popup)
+        self.bind('<Control-a>', self.select_all)
+        self.bind('<Control-c>', self.copy)  # Lowercase for Linux
+        # Make key bindings work again in disabled tk.Text widget under Linux
+        self.bind("<ButtonRelease-1>", lambda event: self.focus_set())
+
+    def popup(self, event):
+        self.popup_menu.tk_popup(event.x_root, event.y_root)
+
+    def select_all(self, event=None):
+        self.tag_add(tk.SEL, "1.0", tk.END)
+        self.mark_set(tk.INSERT, "1.0")
+        self.see(tk.INSERT)
+        return 'break'
+
+    def copy(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.get("sel.first", "sel.last"))
+        self.update()  # Force copy on Windows
+
+    def copy_all(self, event=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.get(1.0, tk.END))
+
+    def set_text(self, text):
+        """Replace current text."""
+        self['state'] = tk.NORMAL
+        self.delete(1.0, tk.END)
+        self.insert(tk.END, text)
+        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled, Use `focus_set` as workaround
+
+
+class TextViewCustom(ttk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        super(TextViewCustom, self).__init__(*args, **kwargs)
+        self.parent = parent
+
+        frm_txt = ttk.Frame(self, width=450, height=300)
+        frm_txt.pack(expand=True, fill=tk.BOTH)
+        frm_txt.grid_propagate(False)  # ensure a consistent GUI size
+        frm_txt.grid_rowconfigure(0, weight=1)
+        frm_txt.grid_columnconfigure(0, weight=1)  # implement stretchability
+
+        self.txt = tk.Text(frm_txt, borderwidth=1, relief=tk.FLAT)
+        self.txt.config(undo=True, wrap='word')
+        self.txt.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        # Create a Scrollbar and associate it with txt
+        scrollb = ttk.Scrollbar(frm_txt, command=self.txt.yview)
+        scrollb.grid(row=0, column=1, sticky='nsew')
+        self.txt['yscrollcommand'] = scrollb.set
+
+    def set_text(self, text):
+        """Replace current text."""
+        self.txt['state'] = tk.NORMAL
+        self.txt.delete(1.0, tk.END)
+        self.txt.insert(tk.END, text)
+        self.txt['state'] = tk.DISABLED
+
+    # def save_text(self):
+    #     dst_filepath = filedialog.asksaveasfilename(
+    #         title='Save text output',
+    #         filetypes=[('Plain text', '.txt'), ('All files', '*')],
+    #         defaultextension='.txt',
+    #         initialfile="Patient_{}-{}.txt".format(self.ctl_height.get(), self.ctl_weight.get()))
+    #     if dst_filepath:
+    #         self.txt['state'] = NORMAL
+    #         try:
+    #             with open(dst_filepath, mode='w') as f:
+    #                 f.write(self.txt.get(1.0, "end-1c"))
+    #         except Exception as e:
+    #             raise
+    #         finally:
+    #             self.txt['state'] = DISABLED
+
+    def select_all(self):
+        self.txt.tag_add(tk.SEL, "1.0", tk.END)
+        self.txt.mark_set(tk.INSERT, "1.0")
+        self.txt.see(tk.INSERT)
+        return 'break'
+
+
 class MainWindow(ttk.Frame):
     def __init__(self, parent=None, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -363,125 +482,6 @@ class AboutWindow(tk.Toplevel):
         self.ctl_frame.pack(fill=tk.BOTH)
         self.bind('<Escape>', lambda e: self.destroy())
         self.focus_set()
-
-
-class ScrolledText(tk.Text):
-    """Clone of the standard `tkinter.scrolledtext` built with ttk widgets."""
-
-    def __init__(self, master=None, **kw):
-        self.frame = ttk.Frame(master)
-        self.vbar = ttk.Scrollbar(self.frame)
-        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
-        kw.update({'yscrollcommand': self.vbar.set})
-        super(ScrolledText, self).__init__(self.frame, **kw)
-
-        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.vbar['command'] = self.yview
-
-        # Copy geometry methods of self.frame without overriding Text
-        # methods -- hack!
-        text_meths = vars(tk.Text).keys()
-        methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
-        methods = methods.difference(text_meths)
-
-        for m in methods:
-            if m[0] != '_' and m != 'config' and m != 'configure':
-                setattr(self, m, getattr(self.frame, m))
-
-    def __str__(self):
-        return str(self.frame)
-
-
-class TextView(ScrolledText):
-    """Read only text widget with hotkeys."""
-
-    def __init__(self, *args, **kwargs):
-        super(TextView, self).__init__(*args, **kwargs)
-        self.config(font='TkFixedFont', wrap=tk.WORD, relief=tk.FLAT)
-        self.popup_menu = tk.Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Select all", command=self.select_all, accelerator="Ctrl+A")
-        self.popup_menu.add_command(label="Copy", command=self.copy, accelerator="Ctrl+C")
-        self.popup_menu.add_command(label="Copy all", command=self.copy_all)
-        self.bind("<ButtonRelease-3>", self.popup)
-        self.bind('<Control-a>', self.select_all)
-        self.bind('<Control-c>', self.copy)  # Lowercase for Linux
-        # Make key bindings work again in disabled tk.Text widget under Linux
-        self.bind("<ButtonRelease-1>", lambda event: self.focus_set())
-
-    def popup(self, event):
-        self.popup_menu.tk_popup(event.x_root, event.y_root)
-
-    def select_all(self, event=None):
-        self.tag_add(tk.SEL, "1.0", tk.END)
-        self.mark_set(tk.INSERT, "1.0")
-        self.see(tk.INSERT)
-        return 'break'
-
-    def copy(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.get("sel.first", "sel.last"))
-        self.update()  # Force copy on Windows
-
-    def copy_all(self, event=None):
-        self.clipboard_clear()
-        self.clipboard_append(self.get(1.0, tk.END))
-
-    def set_text(self, text):
-        """Replace current text."""
-        self['state'] = tk.NORMAL
-        self.delete(1.0, tk.END)
-        self.insert(tk.END, text)
-        self['state'] = tk.DISABLED  # Linux can't catch keypress when disabled, Use `focus_set` as workaround
-
-
-class TextViewCustom(ttk.Frame):
-    def __init__(self, parent, *args, **kwargs):
-        super(TextViewCustom, self).__init__(*args, **kwargs)
-        self.parent = parent
-
-        frm_txt = ttk.Frame(self, width=450, height=300)
-        frm_txt.pack(expand=True, fill=tk.BOTH)
-        frm_txt.grid_propagate(False)  # ensure a consistent GUI size
-        frm_txt.grid_rowconfigure(0, weight=1)
-        frm_txt.grid_columnconfigure(0, weight=1)  # implement stretchability
-
-        self.txt = tk.Text(frm_txt, borderwidth=1, relief=tk.FLAT)
-        self.txt.config(undo=True, wrap='word')
-        self.txt.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-
-        # Create a Scrollbar and associate it with txt
-        scrollb = ttk.Scrollbar(frm_txt, command=self.txt.yview)
-        scrollb.grid(row=0, column=1, sticky='nsew')
-        self.txt['yscrollcommand'] = scrollb.set
-
-    def set_text(self, text):
-        """Replace current text."""
-        self.txt['state'] = tk.NORMAL
-        self.txt.delete(1.0, tk.END)
-        self.txt.insert(tk.END, text)
-        self.txt['state'] = tk.DISABLED
-
-    # def save_text(self):
-    #     dst_filepath = filedialog.asksaveasfilename(
-    #         title='Save text output',
-    #         filetypes=[('Plain text', '.txt'), ('All files', '*')],
-    #         defaultextension='.txt',
-    #         initialfile="Patient_{}-{}.txt".format(self.ctl_height.get(), self.ctl_weight.get()))
-    #     if dst_filepath:
-    #         self.txt['state'] = NORMAL
-    #         try:
-    #             with open(dst_filepath, mode='w') as f:
-    #                 f.write(self.txt.get(1.0, "end-1c"))
-    #         except Exception as e:
-    #             raise
-    #         finally:
-    #             self.txt['state'] = DISABLED
-
-    def select_all(self):
-        self.txt.tag_add(tk.SEL, "1.0", tk.END)
-        self.txt.mark_set(tk.INSERT, "1.0")
-        self.txt.see(tk.INSERT)
-        return 'break'
 
 
 class MainText(ttk.Frame):
@@ -1041,6 +1041,6 @@ def main():
 
 if __name__ == '__main__':
     if not hasattr(ttk, 'Spinbox'):
-        print("No 'ttk.Spinbox' found. Fallback to custom Spinbox")
+        print("'ttk.Spinbox' is missing. Fallback to custom Spinbox")
         ttk.Spinbox = Spinbox
     main()

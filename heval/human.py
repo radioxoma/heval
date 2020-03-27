@@ -211,13 +211,8 @@ class HumanBodyModel(object):
         # IBW estimation formulas cover not all ranges. This flag helps prevent
         # misuse of explicitly invalid IBW in e.g. respiratory calculations
         self._weight_ideal_valid = True
-        if self.sex == 'male':  # Adult male, negative value with height <97 cm
-            # Как в таблице 4-1 руководства Hamilton, взятых от Pennsylvania Medical Center
-            self.weight_ideal = 0.9079 * self.height * 100 - 88.022  # kg
-            self._weight_ideal_method = "Hamilton"
-        elif self.sex == 'female':  # Adult female, negative value with height <101 cm
-            # Hamilton manual, table 4-1. Hamilton adopted from Pennsylvania Medical Center
-            self.weight_ideal = 0.9049 * self.height * 100 - 92.006  # kg
+        if self.sex in ('male', 'female'):
+            self.weight_ideal = ibw_hamilton(self.sex, self.height)
             self._weight_ideal_method = "Hamilton"
         elif self.sex == 'child':
             # Broselow tape range. Temporary and only for lowest height
@@ -637,6 +632,58 @@ def body_surface_area(height, weight):
     :rtype: float
     """
     return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
+
+
+def ibw_hamilton(sex, height):
+    """Calculate ideal body weight by height.
+
+    Reverse-engineered Hamilton implementation, no height restrictions.
+
+    References
+    ----------
+    Traub SL. Am J Hosp Pharm 1980 (pediatric patients):
+
+        height ≤ 70 cm       IBW = 0.125 x height – 0.75
+        70 < height ≤ 128    IBW = (0.0037 x height – 0.4018) x height + 18.62
+
+    Pennsylvania Medical Center (adults):
+
+        height ≥ 129
+            Male             IBW = 0.9079 x height – 88.022
+            Female           IBW = 0.9049 x height – 92.006
+
+    Examples
+    --------
+    >>> ibw_hamilton('male', 0.6)
+    6.75
+    >>> ibw_hamilton('male', 1.0)
+    15.440000000000001
+    >>> ibw_hamilton('male', 1.5)
+    48.163
+    >>> ibw_hamilton('female', 1.5)
+    43.72900000000001
+
+    Parameters
+    ----------
+    :param str sex: male, female. For height <129 doesn't matter which.
+    :param float height: Height (all range), meters
+    :return: Ideal body weight, kg
+    :rtype: float
+    """
+    height *= 100  # to cm
+    if height <= 70:
+        return 0.125 * height - 0.75
+    elif 70 < height < 129:
+        # Missing parentheses in Hamilton manual
+        return (0.0037 * height - 0.4018) * height + 18.62
+    elif height >= 129:
+        # Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center
+        if sex == 'male':
+            # Adult male, negative value with height <97 cm
+            return 0.9079 * height - 88.022
+        elif sex == 'female':
+            # Adult female, negative value with height <101 cm
+            return 0.9049 * height - 92.006
 
 
 def ree_harris_benedict_revised(height, weight, sex, age):

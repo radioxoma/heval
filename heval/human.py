@@ -221,11 +221,8 @@ class HumanBodyModel(object):
                 self._weight_ideal_method = "Broselow"
                 self.weight_ideal = get_broselow_code(self.height)[2]
             elif 0.74 <= self.height <= 1.524:
-                # Traub-Kichen 1983 can predict IBW for children aged 1 to 17 years
-                # and height 0.74-1.524 m
-                # [Am J Hosp Pharm. 1983 Jan;40(1):107-10](https://www.ncbi.nlm.nih.gov/pubmed/6823980)
                 self._weight_ideal_method = "Traub-Kichen 1983"
-                self.weight_ideal = 2.396 * math.exp(0.01863 * self.height * 100)
+                self.weight_ideal = ibw_traub_kichen(self.height)
             else:
                 print("WARNING: IBW cannot be calculated for children with this height")
                 self._weight_ideal_valid = False
@@ -635,7 +632,7 @@ def body_surface_area(height, weight):
 
 
 def ibw_hamilton(sex, height):
-    """Calculate ideal body weight by height.
+    """Calculate ideal body weight by height (any sex and height).
 
     Reverse-engineered Hamilton implementation, no height restrictions.
 
@@ -684,6 +681,30 @@ def ibw_hamilton(sex, height):
         elif sex == 'female':
             # Adult female, negative value with height <101 cm
             return 0.9049 * height - 92.006
+
+
+def ibw_traub_kichen(height):
+    """Calculate ideal body weight by height (child 0.74-1.524 m).
+
+    Can predict IBW for children aged 1 to 17 years and height 0.74-1.524 m
+
+    Traub-Kichen's formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](
+    https://www.ncbi.nlm.nih.gov/pubmed/6823980)
+
+    Derived in 1983 in the USA from data from more than 20,000 children
+    in the National Centre for Health Statistics database.
+    The formula was intended to estimate the 50th centile of weight-for-height
+    which the developers regarded as an approximation of ideal body weight.
+    Underestimates total body weight.
+    For children over 0.74-1.524 m and aged 1 to 17 years.
+
+    :param float height: meters, valid range is 0.74 < height < 1.524 (5 ft)
+    :return: Ideal children body weight in kg
+    :rtype: float
+    """
+    assert 0.74 <= height <= 1.524
+    # return 2.396 * 1.0188 ** (height * 100)  # First variant
+    return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
 
 
 def ree_harris_benedict_revised(height, weight, sex, age):
@@ -821,7 +842,6 @@ def fluid_parcland(weight, burned_surface):
     print("Patient {} kg with burns {} % of body surface area: deliver {} ml of lactated Ringer's within 24 hours".format(
         weight, burned_surface, volume_ml))
     print("{0:.0f} ml within first 8 hours\n{0:.0f} ml within next 16 hours".format(volume_ml / 2.))
-
     return volume_ml
 
 

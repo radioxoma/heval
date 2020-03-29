@@ -11,6 +11,7 @@ import copy
 import math
 import textwrap
 from itertools import chain
+import warnings
 
 from heval import drugs
 from heval import electrolytes
@@ -212,8 +213,8 @@ class HumanBodyModel(object):
         # misuse of explicitly invalid IBW in e.g. respiratory calculations
         self._weight_ideal_valid = True
         if self.sex in ('male', 'female'):
-            self.weight_ideal = ibw_hamilton(self.sex, self.height)
             self._weight_ideal_method = "Hamilton"
+            self.weight_ideal = ibw_hamilton(self.sex, self.height)
         elif self.sex == 'child':
             # Broselow tape range. Temporary and only for lowest height
             if 0.468 <= self.height < 0.74:
@@ -224,7 +225,7 @@ class HumanBodyModel(object):
                 self._weight_ideal_method = "Traub-Kichen 1983"
                 self.weight_ideal = ibw_traub_kichen(self.height)
             else:
-                print("WARNING: IBW cannot be calculated for children with this height")
+                warnings.warn("IBW cannot be calculated for children with this height")
                 self._weight_ideal_valid = False
 
     @property
@@ -235,7 +236,7 @@ class HumanBodyModel(object):
     @property
     def bsa(self):
         """Body surface area, m2, square meters."""
-        return body_surface_area(height=self.height, weight=self.weight)
+        return body_surface_area_dubois(height=self.height, weight=self.weight)
 
     @property
     def age(self):
@@ -421,7 +422,7 @@ class HumanBodyModel(object):
         hs_fluid = fluid_holidaysegar_mod(self.weight)
         info += " * RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid / 24)
 
-        info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(body_surface_area(height=self.height, weight=self.weight) * 1750)  # All ages
+        info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(body_surface_area_dubois(height=self.height, weight=self.weight) * 1750)  # All ages
 
         # Variable perspiration losses, which is not included in physiologic demand
         # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
@@ -604,10 +605,10 @@ def bmi_describe(bmi):
     return info
 
 
-def body_surface_area(height, weight):
+def body_surface_area_dubois(height, weight):
     """Human body surface area (Du Bois formula).
 
-    Sutable for newborn, adult, fat.
+    Suitable for newborn, adult, fat.
 
     BSA = (W ** 0.425 * H ** 0.725) * 0.007184
 
@@ -619,7 +620,7 @@ def body_surface_area(height, weight):
 
     Examples
     --------
-    >>> body_surface_area(1.86, 70)
+    >>> body_surface_area_dubois(1.86, 70)
     1.931656390627583
 
     :param float height: Patient height, meters
@@ -702,7 +703,8 @@ def ibw_traub_kichen(height):
     :return: Ideal children body weight in kg
     :rtype: float
     """
-    assert 0.74 <= height <= 1.524
+    if not 0.74 <= height <= 1.524:
+        warnings.warn("Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {}".format(height))
     # return 2.396 * 1.0188 ** (height * 100)  # First variant
     return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
 

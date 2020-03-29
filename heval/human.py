@@ -632,6 +632,119 @@ def body_surface_area_dubois(height, weight):
     return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
 
 
+def get_broselow_code(height):
+    """Get Brocelow-Luten color zone by height.
+
+    Broselow tape https://www.ncbi.nlm.nih.gov/pubmed/3377285
+    How to use Broselow tape https://www.jems.com/2019/04/29/a-tale-of-two-tapes-broselow-luten-tapes-2011-vs-2017/
+
+    Kinder-sicher T.O Zugck (numbers taken from this tape) https://kindersicher.biz
+    Each color zone estimates the 50th percentile weight for length
+    Color   Age,     Height,      Ideal body weight
+    Grey    Newborn  46.8- 51.9,   3    kg
+    Grey    Newborn  51.9- 55.0,   4    kg
+    Grey     2 mos   55.0- 59.2,   5    kg
+    Pink     4 mos   59.2- 66.9,   6- 7 kg (13-15 lbs)
+    Red      8 mos   66.9- 74.2,   8- 9 kg (17-20 lbs)
+    Purple   1 yr    74.2- 83.8,  10-11 kg (22-24 lbs)
+    Yellow   2 yr    83.8- 95.4,  12-14 kg (26-30 lbs)
+    White    4 yr    95.4-108.3,  15-18 kg (33-40 lbs)
+    Blue     6 yr   108.3-121.5,  19-23 kg (42-50 lbs)
+    Orange   8 yr   121.5-130.7,  24-29 kg (53-64 lbs)
+    Green   10 yr   130.7-143.3,  30-36 kg (66-80 lbs)
+
+
+    An remark
+    ---------
+    I don't think that estimating child weight by age is a good idea.
+    "Weight-by-height" approach declared as more accurate and objective.
+    But unfortunately I'm not able to find decent calculations
+    "weight-by-height", although it definitely exists:
+      * https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
+      * https://www.who.int/childgrowth/
+      * http://www.who.int/childgrowth/standards/Technical_report.pdf
+    So I have to use Broselow height ranges and it's weight percentiles for now.
+
+    The accuracy of emergency weight estimation systems:
+        * https://www.ncbi.nlm.nih.gov/pubmed/28936627
+        * https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6223606/
+    Real body weight estimation (not IBW!)
+        * PW10 70.9%, PW20 95.3% Mercy Tape method
+        * PW10 78.0%, PW20 96.6% PAWPER tape http://www.wjem.com.cn/default/articlef/index/id/674
+        * PW10 69.8%, PW20 87.1% parental estimates
+        * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
+        * Age-based estimates achieved a very low accuracy - use length-based
+
+    Parameters
+    ----------
+    :param float height: Child height in meters.
+    :return: Color code, approx age, approx weight (kg).
+    :rtype: tuple
+    """
+    height *= 100
+    if 46.8 <= height < 51.9:
+        return "Grey", "Newborn", 3
+    elif 51.9 <= height < 55.0:
+        return "Grey", "Newborn", 4
+    elif 55.0 <= height < 59.2:
+        return "Grey", "2 months", 5
+    elif 59.2 <= height < 66.9:
+        return "Pink", "4 months", 6.5  # 6-7
+    elif 66.9 <= height < 74.2:
+        return "Red", "8 months", 8.5  # 8-9
+    elif 74.2 <= height < 83.8:
+        return "Purple", "1 year", 10.5  # 10-11
+    elif 83.8 <= height < 95.4:
+        return "Yellow", "2 years", 13  # 12-14
+    elif 95.4 <= height < 108.3:
+        return "White", "4 years", 16.5  # 15-18
+    elif 108.3 <= height < 121.5:
+        return "Blue", "6 years", 21  # 19-23
+    elif 121.5 <= height < 130.7:
+        return "Orange", "8 years", 26.5  # 24-29
+    elif 130.7 <= height <= 143.3:
+        return "Green", "10 years", 33  # 30-36
+    else:
+        raise ValueError("Out of Broselow height range")
+
+
+def ibw_broselow(height):
+    """Calculate ideal body weight by height (Broselow).
+
+    Parameters
+    ----------
+    :param float height: Child height in meters.
+    :return: Ideal body weight, approx weight (kg).
+    :rtype: float
+    """
+    return get_broselow_code(height)[2]
+
+
+def ibw_traub_kichen(height):
+    """Calculate ideal body weight by height (child 0.74-1.524 m).
+
+    Can predict IBW for children aged 1 to 17 years and height 0.74-1.524 m
+
+    Traub-Kichen's formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](
+    https://www.ncbi.nlm.nih.gov/pubmed/6823980)
+
+    Derived in 1983 in the USA from data from more than 20,000 children
+    in the National Centre for Health Statistics database.
+    The formula was intended to estimate the 50th centile of weight-for-height
+    which the developers regarded as an approximation of ideal body weight.
+    Underestimates total body weight.
+    For children over 0.74-1.524 m and aged 1 to 17 years.
+
+    :param float height: meters, valid range is 0.74 < height < 1.524 (5 ft)
+    :return: Ideal children body weight in kg
+    :rtype: float
+    """
+    if not 0.74 <= height <= 1.524:
+        warnings.warn("Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {}".format(height))
+    # return 2.396 * 1.0188 ** (height * 100)  # First variant
+    return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
+
+
 def ibw_hamilton(sex, height):
     """Calculate ideal body weight by height (any sex and height).
 
@@ -674,7 +787,7 @@ def ibw_hamilton(sex, height):
     elif 70 < height < 129:
         # Missing parentheses in Hamilton manual
         return (0.0037 * height - 0.4018) * height + 18.62
-    elif height >= 129:
+    elif height >= 129:  # This switch fits only for males. Notch for females
         # Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center
         if sex == 'male':
             # Adult male, negative value with height <97 cm
@@ -682,31 +795,6 @@ def ibw_hamilton(sex, height):
         elif sex == 'female':
             # Adult female, negative value with height <101 cm
             return 0.9049 * height - 92.006
-
-
-def ibw_traub_kichen(height):
-    """Calculate ideal body weight by height (child 0.74-1.524 m).
-
-    Can predict IBW for children aged 1 to 17 years and height 0.74-1.524 m
-
-    Traub-Kichen's formula. [Am J Hosp Pharm. 1983 Jan;40(1):107-10](
-    https://www.ncbi.nlm.nih.gov/pubmed/6823980)
-
-    Derived in 1983 in the USA from data from more than 20,000 children
-    in the National Centre for Health Statistics database.
-    The formula was intended to estimate the 50th centile of weight-for-height
-    which the developers regarded as an approximation of ideal body weight.
-    Underestimates total body weight.
-    For children over 0.74-1.524 m and aged 1 to 17 years.
-
-    :param float height: meters, valid range is 0.74 < height < 1.524 (5 ft)
-    :return: Ideal children body weight in kg
-    :rtype: float
-    """
-    if not 0.74 <= height <= 1.524:
-        warnings.warn("Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {}".format(height))
-    # return 2.396 * 1.0188 ** (height * 100)  # First variant
-    return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
 
 
 def ree_harris_benedict_revised(height, weight, sex, age):
@@ -931,82 +1019,6 @@ def mnemonic_wetflag(age=None, weight=None):
           Fluid bolus      {:>4.0f} ml  = 20 ml/kg of isotonic fluid
           Adrenaline       {:>4.0f} mcg = 10 mcg/kg
           Glucose 10 %     {:>4.0f} ml  = 2 mL/kg""".format(age, w, e, t, fl, a, g))
-
-
-def get_broselow_code(height):
-    """Get Brocelow-Luten color zone by height.
-
-    Broselow tape https://www.ncbi.nlm.nih.gov/pubmed/3377285
-    How to use Broselow tape https://www.jems.com/2019/04/29/a-tale-of-two-tapes-broselow-luten-tapes-2011-vs-2017/
-
-    Kinder-sicher T.O Zugck (numbers taken from this tape) https://kindersicher.biz
-    Each color zone estimates the 50th percentile weight for length
-    Color   Age,     Height,      Ideal body weight
-    Grey    Newborn  46.8- 51.9,   3    kg
-    Grey    Newborn  51.9- 55.0,   4    kg
-    Grey     2 mos   55.0- 59.2,   5    kg
-    Pink     4 mos   59.2- 66.9,   6- 7 kg (13-15 lbs)
-    Red      8 mos   66.9- 74.2,   8- 9 kg (17-20 lbs)
-    Purple   1 yr    74.2- 83.8,  10-11 kg (22-24 lbs)
-    Yellow   2 yr    83.8- 95.4,  12-14 kg (26-30 lbs)
-    White    4 yr    95.4-108.3,  15-18 kg (33-40 lbs)
-    Blue     6 yr   108.3-121.5,  19-23 kg (42-50 lbs)
-    Orange   8 yr   121.5-130.7,  24-29 kg (53-64 lbs)
-    Green   10 yr   130.7-143.3,  30-36 kg (66-80 lbs)
-
-
-    An remark
-    ---------
-    I don't think that estimating child weight by age is a good idea.
-    "Weight-by-height" approach declared as more accurate and objective.
-    But unfortunately I'm not able to find decent calculations
-    "weight-by-height", although it definitely exists:
-      * https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
-      * https://www.who.int/childgrowth/
-      * http://www.who.int/childgrowth/standards/Technical_report.pdf
-    So I have to use Broselow height ranges and it's weight percentiles for now.
-
-    The accuracy of emergency weight estimation systems:
-        * https://www.ncbi.nlm.nih.gov/pubmed/28936627
-        * https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6223606/
-    Real body weight estimation (not IBW!)
-        * PW10 70.9%, PW20 95.3% Mercy Tape method
-        * PW10 78.0%, PW20 96.6% PAWPER tape http://www.wjem.com.cn/default/articlef/index/id/674
-        * PW10 69.8%, PW20 87.1% parental estimates
-        * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
-        * Age-based estimates achieved a very low accuracy - use length-based
-
-    Parameters
-    ----------
-    :param float height: Child height in meters.
-    :return: Color code, approx age, approx weight (kg).
-    :rtype: tuple
-    """
-    height *= 100
-    if 46.8 <= height < 51.9:
-        return "Grey", "Newborn", 3
-    elif 51.9 <= height < 55.0:
-        return "Grey", "Newborn", 4
-    elif 55.0 <= height < 59.2:
-        return "Grey", "2 months", 5
-    elif 59.2 <= height < 66.9:
-        return "Pink", "4 months", 6.5  # 6-7
-    elif 66.9 <= height < 74.2:
-        return "Red", "8 months", 8.5  # 8-9
-    elif 74.2 <= height < 83.8:
-        return "Purple", "1 year", 10.5  # 10-11
-    elif 83.8 <= height < 95.4:
-        return "Yellow", "2 years", 13  # 12-14
-    elif 95.4 <= height < 108.3:
-        return "White", "4 years", 16.5  # 15-18
-    elif 108.3 <= height < 121.5:
-        return "Blue", "6 years", 21  # 19-23
-    elif 121.5 <= height < 130.7:
-        return "Orange", "8 years", 26.5  # 24-29
-    elif 130.7 <= height <= 143.3:
-        return "Green", "10 years", 33  # 30-36
-    else:
-        raise ValueError("Out of Broselow height range")
 
 
 def total_blood_volume_nadler(sex, height, weight):

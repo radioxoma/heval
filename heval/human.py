@@ -784,7 +784,7 @@ def ibw_hamilton(sex, height):
     Parameters
     ----------
     :param str sex: male, female. For height <129 doesn't matter which.
-    :param float height: Height (all range), meters. 0.3-2.5 m
+    :param float height: Height (0.3-2.5 m), meters.
     :return: Ideal body weight, kg
     :rtype: float
     """

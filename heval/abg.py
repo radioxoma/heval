@@ -531,21 +531,28 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
 
 
 def calculate_pO2_FO2_fraction(pO2, FiO2):
-    """pO2(a)/FO2(I) - the ratio of pO2 and fraction of inspired oxygen.
+    """pO2(a)/FO2(I) - the ratio of pO2 and fraction of inspired oxygen measured at PEEP 5 mbar.
 
     Simplest calculation to diagnose ARDS. Known as:
         * PaO2/FiO2 ratio
         * p/f ratio
 
+    References
+    ----------
     [1] Radiometer ABL800 Flex Reference Manual English US.
         chapter 6-32, p. 268, equation 17.
     [2] https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2/FiO2_ratio
     [3] https://litfl.com/pao2-fio2-ratio
+    [4] https://litfl.com/acute-respiratory-distress-syndrome-definitions/
+
+    Examples
+    --------
+    >>> calculate_pO2_FO2_fraction(15, 0.21)
+    535.7583464807003
 
     :param float pO2: kPa
     :param float FiO2: Fraction of oxygen in dry inspired air, fraction.
-    :return:
-        pO2(a)/FO2(I), dimensionless quantity - no units
+    :return: pO2(a)/FO2(I), dimensionless quantity - no units
         if pf < 100:
             return "Severe, 45% mortality"
         elif 100 <= pf <= 200:
@@ -556,7 +563,6 @@ def calculate_pO2_FO2_fraction(pO2, FiO2):
             return "All well, no ARDS"
     :rtype: float
     """
-    # Example: mmHg/oxygen fraction, i.e. 105 / 0.21 = 500
     return pO2 / kPa / FiO2
 
 

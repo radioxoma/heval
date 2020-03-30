@@ -220,7 +220,7 @@ class HumanBodyModel(object):
             if 0.468 <= self.height < 0.74:
                 # print("WARNING: Broselow IBW for range 0.468-0.74 m")
                 self._weight_ideal_method = "Broselow"
-                self.weight_ideal = get_broselow_code(self.height)[2]
+                self.weight_ideal = ibw_broselow(self.height)
             elif 0.74 <= self.height <= 1.524:
                 self._weight_ideal_method = "Traub-Kichen 1983"
                 self.weight_ideal = ibw_traub_kichen(self.height)
@@ -746,9 +746,10 @@ def ibw_traub_kichen(height):
 
 
 def ibw_hamilton(sex, height):
-    """Calculate ideal body weight by height (any sex and height).
+    """Calculate ideal body weight by height (0.3-2.5 m) for adult and pediatric patients.
 
-    Reverse-engineered Hamilton implementation, no height restrictions.
+    Reverse-engineered Hamilton implementation.
+    For neonatal patients use real body weight.
 
     References
     ----------
@@ -777,7 +778,7 @@ def ibw_hamilton(sex, height):
     Parameters
     ----------
     :param str sex: male, female. For height <129 doesn't matter which.
-    :param float height: Height (all range), meters
+    :param float height: Height (all range), meters. 0.3-2.5 m
     :return: Ideal body weight, kg
     :rtype: float
     """
@@ -789,12 +790,13 @@ def ibw_hamilton(sex, height):
         return (0.0037 * height - 0.4018) * height + 18.62
     elif height >= 129:  # This switch fits only for males. Notch for females
         # Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center
+        # No difference between this and ARDSNET formulas (weight delta <0.5)
         if sex == 'male':
-            # Adult male, negative value with height <97 cm
-            return 0.9079 * height - 88.022
+            # 50 + 2.3 * (height / 2.54 - 60)  # ARDSNET formula
+            return 0.9079 * height - 88.022  # Adult male, negative value with height <97 cm
         elif sex == 'female':
-            # Adult female, negative value with height <101 cm
-            return 0.9049 * height - 92.006
+            # 45.5 + 2.3 * (height / 2.54 - 60)  # ARDSNET formula
+            return 0.9049 * height - 92.006  # Adult female, negative value with height <101 cm
 
 
 def ree_harris_benedict_revised(height, weight, sex, age):

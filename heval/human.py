@@ -210,15 +210,14 @@ class HumanBodyModel(object):
             Упрощенный вариант расчета для обоих полов: self.weight_ideal = height – 100
         """
         # IBW estimation formulas cover not all ranges. This flag helps prevent
-        # misuse of explicitly invalid IBW in e.g. respiratory calculations
+        # misuse of explicitly invalid IBW e.g. in respiratory calculations
         self._weight_ideal_valid = True
         if self.sex in ('male', 'female'):
             self._weight_ideal_method = "Hamilton"
             self.weight_ideal = ibw_hamilton(self.sex, self.height)
         elif self.sex == 'child':
-            # Broselow tape range. Temporary and only for lowest height
+            # Broselow tape range. Temporary and only for low height
             if 0.468 <= self.height < 0.74:
-                # print("WARNING: Broselow IBW for range 0.468-0.74 m")
                 self._weight_ideal_method = "Broselow"
                 self.weight_ideal = ibw_broselow(self.height)
             elif 0.74 <= self.height <= 1.524:
@@ -748,21 +747,28 @@ def ibw_traub_kichen(height):
 def ibw_hamilton(sex, height):
     """Calculate ideal body weight by height (0.3-2.5 m) for adult and pediatric patients.
 
-    Reverse-engineered Hamilton implementation.
-    For neonatal patients use real body weight.
+    Reverse-engineered Hamilton implementation. Main principles:
+      * Three height ranges
+
+    Known issues:
+    1. Not suitable for neonatal patients - use real body weight
+    2. Formula <=70 cm doesn't looks good. May be Broselow is better.
+    3. Joint between formulas has a notch around 127 cm for females
+        and no notch for males
 
     References
     ----------
     Traub SL. Am J Hosp Pharm 1980 (pediatric patients):
 
-        height ≤ 70 cm       IBW = 0.125 x height – 0.75
-        70 < height ≤ 128    IBW = (0.0037 x height – 0.4018) x height + 18.62
+        height ≤ 70 cm       IBW = 0.125 * height - 0.75
+        70 < height ≤ 128    IBW = (0.0037 * height - 0.4018) * height + 18.62
 
-    Pennsylvania Medical Center (adults):
+    Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center.
+    Same line as ARDSNET predicted body weight.
 
         height ≥ 129
-            Male             IBW = 0.9079 x height – 88.022
-            Female           IBW = 0.9049 x height – 92.006
+            Male             IBW = 0.9079 * height - 88.022
+            Female           IBW = 0.9049 * height - 92.006
 
     Examples
     --------
@@ -789,13 +795,13 @@ def ibw_hamilton(sex, height):
         # Missing parentheses in Hamilton manual
         return (0.0037 * height - 0.4018) * height + 18.62
     elif height >= 129:  # This switch fits only for males. Notch for females
-        # Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center
-        # No difference between this and ARDSNET formulas (weight delta <0.5)
+        # Looks like Devine formula from ARDSNET
+        # Devine BJ.Gentamicin therapy.Drug Intell Clin Pharm. 1974;8: 650–655.
         if sex == 'male':
-            # 50 + 2.3 * (height / 2.54 - 60)  # ARDSNET formula
+            # 50 + 0.91 * (height - 152.4)  # ARDSNET formula
             return 0.9079 * height - 88.022  # Adult male, negative value with height <97 cm
         elif sex == 'female':
-            # 45.5 + 2.3 * (height / 2.54 - 60)  # ARDSNET formula
+            # 45.5 + 0.91 * (height - 152.4)  # ARDSNET formula
             return 0.9049 * height - 92.006  # Adult female, negative value with height <101 cm
 
 
@@ -1014,7 +1020,7 @@ def mnemonic_wetflag(age=None, weight=None):
     a = 10 * w   # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
     g = 2 * w    # 2 mL/kg Glucose 10 %
     return textwrap.dedent("""\
-        WETFlAG tip for {:.1f} yo
+        WETFLAG tip for {:.1f} yo:
           Weight           {:>4.1f} kg  = (age + 4) * 2
           Energy for defib {:>4.0f} J   = 4 J/kg
           Tube             {:>4.1f} mm  = age / 4 + 4

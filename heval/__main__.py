@@ -231,18 +231,19 @@ class MainWindow(ttk.Frame):
         menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
 
-        menu_view = tk.Menu(menubar, tearoff=False)
+        menu_view = MenuTooltip(menubar, tearoff=False)
         self._debug = tk.BooleanVar()
         self._debug.set(self.HBody.debug)  # Model debug flag is superior
-        menu_view.add_checkbutton(label="Verbose report", command=self.set_model_debug, variable=self._debug, accelerator="v")
+        menu_view.add_checkbutton(label="Verbose report", command=self.set_model_debug, variable=self._debug, accelerator="v",
+                                  tooltip="Show normally hidden extra messages in report texts")
         menu_view.add_command(label="Increase font size", command=lambda: self.adjust_font_size('increase'), accelerator="Ctrl++")
         menu_view.add_command(label="Decrease font size", command=lambda: self.adjust_font_size('decrease'), accelerator="Ctrl+-")
         menu_view.add_command(label="Default font size", command=lambda: self.adjust_font_size(), accelerator="Ctrl+0")
         menubar.add_cascade(label="View", menu=menu_view)
 
-        menu_about = tk.Menu(menubar, tearoff=False)
-        menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
-        menu_about.add_command(label="Website and updates", command=visit_website)
+        menu_about = MenuTooltip(menubar, tearoff=False)
+        menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1", tooltip="Read short usage manual")
+        menu_about.add_command(label="Website and updates", command=visit_website, tooltip="Visit Heval's website for updates and additional documentation")
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar
@@ -1008,6 +1009,95 @@ class CreateToolTip(object):
         tw, self.tw = self.tw, None
         if tw:
             tw.destroy()
+
+
+class MenuTooltip(tk.Menu):
+    def __init__(self, parent, *args, **kwargs):
+        """
+        :param parent: 'root' or 'Menubar'.
+
+        https://stackoverflow.com/questions/55316791/how-can-i-add-a-tooltip-to-menu-item
+        """
+        super(MenuTooltip, self).__init__(parent, *args, **kwargs)
+        self.parent = parent
+        self.tooltip = list()
+        self.tooltip_active = None
+
+        self.waittime = 800     # milliseconds
+        self.wraplength = 180   # pixels
+        self.id = None
+        self.tw = None
+
+        # self.bind('<<MenuSelect>>', self.leave)  # https://stackoverflow.com/questions/4220441/python-tkinter-bind-to-event-related-to-currently-selected-menu-item
+        self.bind('<Motion>', self.schedule)
+        self.bind('<ButtonPress>', self.leave)
+        self.parent.bind('<Leave>', self.leave)
+        self.parent.bind('<FocusOut>', self.leave)
+
+    def add_command(self, *cnf, **kwargs):
+        """Wrapper."""
+        tooltip = kwargs.get('tooltip')
+        if tooltip:
+            del kwargs['tooltip']
+        super(MenuTooltip, self).add_command(*cnf, **kwargs)
+        self.add_tooltip(len(self.tooltip), tooltip)
+
+    def add_checkbutton(self, *cnf, **kwargs):
+        """Wrapper."""
+        tooltip = kwargs.get('tooltip')
+        if tooltip:
+            del kwargs['tooltip']
+        super(MenuTooltip, self).add_checkbutton(*cnf, **kwargs)
+        self.add_tooltip(len(self.tooltip), tooltip)
+
+    def add_tooltip(self, index, tooltip=None):
+        """
+        :param index: Index (0-based) of the Menu Item
+        :param tooltip: Text to show as Tooltip
+        :return: None
+        """
+        self.tooltip.append((self.yposition(index) + 2, tooltip))
+
+    def schedule(self, event):
+        self.unschedule()
+        self.id = self.parent.after(self.waittime, self.show_tooltip, event)
+
+    def show_tooltip(self, event):
+        """Loop .tooltip to find matching Menu Item."""
+        for idx in range(len(self.tooltip) - 1, -1, -1):
+            if event.y >= self.tooltip[idx][0]:
+                # Show tooltip
+                self.leave()
+                if self.tooltip[idx][1]:  # Has tooltip text
+                    self.tooltip_active = idx
+                    x = self.winfo_pointerx() + 10
+                    y = self.winfo_pointery()
+                    self.tw = tk.Toplevel(self)
+                    # Leaves only the label and removes the app window
+                    self.tw.wm_overrideredirect(True)
+                    self.tw.wm_geometry("+%d+%d" % (x, y))
+                    label = ttk.Label(
+                        self.tw, text=self.tooltip[idx][1], justify=tk.LEFT,
+                        background="#ffffff", relief=tk.SOLID, borderwidth=1,
+                        wraplength=self.wraplength)
+                    label.pack(ipadx=1)
+                return
+
+    def leave(self, event=None):
+        self.unschedule()
+        if self.tooltip_active is not None:
+            self.hidetip()
+            self.tooltip_active = None
+
+    def hidetip(self):
+        tw, self.tw = self.tw, None
+        if tw:
+            tw.destroy()
+
+    def unschedule(self):
+        _id, self.id = self.id, None
+        if _id:
+            self.parent.after_cancel(_id)
 
 
 def visit_website(event=None):

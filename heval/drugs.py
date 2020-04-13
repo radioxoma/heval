@@ -60,13 +60,15 @@ class HumanDrugsModel(object):
     def __init__(self, parent):
         super(HumanDrugsModel, self).__init__()
         self.parent = parent
+
+        # English names
         self.drug_list = [
             Fentanyl(parent),
             Propofol(parent),
-            Dithylin(parent),
-            Tracrium(parent),
-            Arduan(parent),
-            Esmeron(parent)]
+            Suxamethonium(parent),
+            Atracurium(parent),
+            Pipecuronium(parent),
+            Rocuronium(parent)]
 
     def describe_anesthesiology(self):
         return "\n".join(["* " + str(d) for d in self.drug_list])
@@ -100,12 +102,15 @@ class HumanDrugsModel(object):
         return info
 
 
-class Dithylin(object):
-    """According to RUE Belmedpreparaty instruction."""
+class Suxamethonium(object):
+    """According to RUE Belmedpreparaty instruction.
+
+    Dithylin, succinylcholine.
+    """
 
     def __init__(self, parent=None):
         self.parent = parent
-        self.name = "Dithylin"
+        self.name = "Suxamethonium"
         self.concentration = 20  # mg/ml
         # self.volume = 5  # ml
         # For IBW
@@ -161,8 +166,10 @@ class Fentanyl(object):
         return info
 
 
-class Tracrium(object):
-    """According to GlaxoSmithKline.
+class Atracurium(object):
+    """Tracrium.
+
+    According to GlaxoSmithKline.
 
     Eleminated by nonspecific plasma esterases.
     No cumulation, block recovery not dependent from kidney/liver metabolism.
@@ -170,7 +177,7 @@ class Tracrium(object):
 
     def __init__(self, parent=None):
         self.parent = parent
-        self.name = "Tracrium"
+        self.name = "Atracurium"
         # self.concentration =   # mg/ml
         # self.maintenance_dosage =   # mg/kg/h
         # self.volume =  # ml
@@ -190,33 +197,35 @@ class Tracrium(object):
         return info
 
 
-class Arduan(object):
+class Pipecuronium(object):
     """https://www.rlsnet.ru/tn_index_id_358.htm."""
 
     def __init__(self, parent=None):
         self.parent = parent
-        self.name = "Arduan"
+        self.name = "Pipecuronium"
 
     def __str__(self):
         info = ""
         if self.parent.sex in ('male', 'female'):
-            info += "Arduan adult mono intubation {:.2f}-{:.2f} mg for 60-90 min; load after Sux {:.2f} mg for 30-60 min. Maintenance {:.2f}-{:.2f} mg every 30-60 min.".format(
+            info += "{} adult mono intubation {:.2f}-{:.2f} mg for 60-90 min; load after Sux {:.2f} mg for 30-60 min. Maintenance {:.2f}-{:.2f} mg every 30-60 min.".format(
+                self.name,
                 0.06 * self.parent.weight, 0.08 * self.parent.weight,
                 0.05 * self.parent.weight,
                 0.01 * self.parent.weight, 0.02 * self.parent.weight)
         elif self.parent.sex == 'child':
-            info += "Arduan child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min).".format(
+            info += "{} child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min).".format(
+                self.name,
                 0.04 * self.parent.weight,
                 0.05 * self.parent.weight, 0.06 * self.parent.weight)
         return info
 
 
-class Esmeron(object):
+class Rocuronium(object):
     """According to http://www.rceth.by/NDfiles/instr/8675_08_13_i.pdf."""
 
     def __init__(self, parent=None):
         self.parent = parent
-        self.name = "Esmeron"
+        self.name = "Rocuronium"
         self.concentration = 10  # mg/ml
         # self.maintenance_dosage =   # mg/kg/h
         self.volume = 5  # ml

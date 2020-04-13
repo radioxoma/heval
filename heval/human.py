@@ -540,8 +540,8 @@ class HumanBodyModel(object):
         """
         if self.sex in ('male', 'female'):
             info = "RBW adult urinary output:\n"
-            info += " * x0.5={:.0f} ml/h, {:.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
-            info += " * x1  ={:.0f} ml/h, {:.0f} ml/24h".format(self.weight, self.weight * 24)
+            info += " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
+            info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(self.weight, self.weight * 24)
         if self.sex == 'child':
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
             info = "RBW child urinary output:\n"

@@ -445,8 +445,8 @@ class HelpWindow(tk.Toplevel):
         self.bind('<Escape>', lambda event: self.destroy())
 
     def update_tooltip(self, event=None):
-        info = "🎱 {}".format(magic8ball())
-        CreateToolTip(self.ctl_btn_close, info, delay=2000, wraplength=200)
+        info = "🎱 " + magic8ball()
+        CreateToolTip(self.ctl_btn_close, info, delay=2000, wraplength=400)
 
 
 class AboutWindow(tk.Toplevel):

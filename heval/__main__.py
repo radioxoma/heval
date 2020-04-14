@@ -439,14 +439,21 @@ class HelpWindow(tk.Toplevel):
 
         self.ctl_frame = ttk.Frame(self, padding=8)
         self.ctl_btn_close = ttk.Button(self.ctl_frame, text="Close", command=self.destroy)
+        self.ctl_btn_close_tip = None
+        self.ctl_btn_close.bind('<Leave>', self.update_tooltip, add='+')
         self.ctl_btn_close.pack(side=tk.RIGHT)
-        self.ctl_btn_close.bind('<Leave>', self.update_tooltip)
         self.ctl_frame.pack(fill=tk.BOTH)
         self.bind('<Escape>', lambda event: self.destroy())
 
     def update_tooltip(self, event=None):
-        info = "🎱 " + magic8ball()
-        CreateToolTip(self.ctl_btn_close, info, delay=2000, wraplength=400)
+        """Show egg only if mouse pointed twice."""
+        info = "⚫ " + magic8ball()
+        if self.ctl_btn_close_tip:
+            self.ctl_btn_close_tip.text = info
+            # self.ctl_btn_close['text'] = info
+        else:
+            self.ctl_btn_close_tip = CreateToolTip(
+                self.ctl_btn_close, info, delay=2000, wraplength=None)
 
 
 class AboutWindow(tk.Toplevel):
@@ -970,12 +977,12 @@ class CreateToolTip(object):
     """Create a tooltip for a given widget."""
 
     def __init__(self, parent, text="Widget's empty tooltip", delay=500, wraplength=180):
-        self.delay = delay     # milliseconds
-        self.wraplength = wraplength   # pixels
         self.parent = parent
+        self.delay = delay            # milliseconds
+        self.wraplength = wraplength  # pixels
         self.text = text
-        self.parent.bind("<Enter>", self.enter)
-        self.parent.bind("<Leave>", self.leave)
+        self.parent.bind("<Enter>", self.enter, add='+')
+        self.parent.bind("<Leave>", self.leave, add='+')
         self.parent.bind("<ButtonPress>", self.leave)
         self.id = None
         self.tw = None

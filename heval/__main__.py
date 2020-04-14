@@ -226,24 +226,26 @@ class MainWindow(ttk.Frame):
 
         self.HBody = human.HumanBodyModel()
 
-        menubar = tk.Menu(self.parent)
+        menubar = tk.Menu(self.parent)  # Conventional name
         menu_file = tk.Menu(menubar, tearoff=False)
         menu_file.add_command(label="Exit", command=self.parent.destroy, accelerator="Esc")
         menubar.add_cascade(label="File", menu=menu_file)
 
-        menu_view = MenuTooltip(menubar, tearoff=False)
+        menu_view = tk.Menu(menubar, tearoff=False)
         self._debug = tk.BooleanVar()
         self._debug.set(self.HBody.debug)  # Model debug flag is superior
-        menu_view.add_checkbutton(label="Verbose report", command=self.set_model_debug, variable=self._debug, accelerator="v",
-                                  tooltip="Show normally hidden extra messages in report texts")
+        # tooltip="Show normally hidden extra messages in report texts"
+        menu_view.add_checkbutton(label="Verbose report", command=self.set_model_debug, variable=self._debug, accelerator="v")
         menu_view.add_command(label="Increase font size", command=lambda: self.adjust_font_size('increase'), accelerator="Ctrl++")
         menu_view.add_command(label="Decrease font size", command=lambda: self.adjust_font_size('decrease'), accelerator="Ctrl+-")
         menu_view.add_command(label="Default font size", command=lambda: self.adjust_font_size(), accelerator="Ctrl+0")
         menubar.add_cascade(label="View", menu=menu_view)
 
-        menu_about = MenuTooltip(menubar, tearoff=False)
-        menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1", tooltip="Read short usage manual")
-        menu_about.add_command(label="Website and updates", command=visit_website, tooltip="Visit Heval's website for updates and additional documentation")
+        menu_about = tk.Menu(menubar, tearoff=False, name='help')
+        # tooltip="Read short usage manual"
+        menu_about.add_command(label="Help", command=lambda: HelpWindow(self.parent), accelerator="F1")
+        # tooltip="Visit Heval's website for updates and additional documentation"
+        menu_about.add_command(label="Website and updates", command=visit_website)
         menu_about.add_command(label="About...", command=lambda: AboutWindow(self.parent))
         menubar.add_cascade(label="Help", menu=menu_about)
         self.parent['menu'] = menubar

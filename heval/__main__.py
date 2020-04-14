@@ -440,8 +440,13 @@ class HelpWindow(tk.Toplevel):
         self.ctl_frame = ttk.Frame(self, padding=8)
         self.ctl_btn_close = ttk.Button(self.ctl_frame, text="Close", command=self.destroy)
         self.ctl_btn_close.pack(side=tk.RIGHT)
+        self.ctl_btn_close.bind('<Leave>', self.update_tooltip)
         self.ctl_frame.pack(fill=tk.BOTH)
         self.bind('<Escape>', lambda event: self.destroy())
+
+    def update_tooltip(self, event=None):
+        info = "🎱 {}".format(magic8ball())
+        CreateToolTip(self.ctl_btn_close, info, delay=2000, wraplength=200)
 
 
 class AboutWindow(tk.Toplevel):
@@ -964,14 +969,14 @@ class Spinbox(ttk.Entry):
 class CreateToolTip(object):
     """Create a tooltip for a given widget."""
 
-    def __init__(self, widget, text="Widget's empty tooltip"):
-        self.waittime = 500     # milliseconds
-        self.wraplength = 180   # pixels
-        self.widget = widget
+    def __init__(self, parent, text="Widget's empty tooltip", delay=500, wraplength=180):
+        self.delay = delay     # milliseconds
+        self.wraplength = wraplength   # pixels
+        self.parent = parent
         self.text = text
-        self.widget.bind("<Enter>", self.enter)
-        self.widget.bind("<Leave>", self.leave)
-        self.widget.bind("<ButtonPress>", self.leave)
+        self.parent.bind("<Enter>", self.enter)
+        self.parent.bind("<Leave>", self.leave)
+        self.parent.bind("<ButtonPress>", self.leave)
         self.id = None
         self.tw = None
 
@@ -984,20 +989,20 @@ class CreateToolTip(object):
 
     def schedule(self):
         self.unschedule()
-        self.id = self.widget.after(self.waittime, self.showtip)
+        self.id = self.parent.after(self.delay, self.showtip)
 
     def unschedule(self):
         _id = self.id
         self.id = None
         if _id:
-            self.widget.after_cancel(_id)
+            self.parent.after_cancel(_id)
 
     def showtip(self, event=None):
-        x, y, cx, cy = self.widget.bbox(tk.INSERT)
-        x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 20
+        x, y, cx, cy = self.parent.bbox(tk.INSERT)
+        x += self.parent.winfo_rootx() + 25
+        y += self.parent.winfo_rooty() + 20
         # Creates a toplevel window
-        self.tw = tk.Toplevel(self.widget)
+        self.tw = tk.Toplevel(self.parent)
         # Leaves only the label and removes the app window
         self.tw.wm_overrideredirect(True)
         self.tw.wm_geometry("+%d+%d" % (x, y))
@@ -1105,6 +1110,43 @@ class MenuTooltip(tk.Menu):
 def visit_website(event=None):
     import webbrowser
     webbrowser.open_new_tab("https://github.com/radioxoma/heval")
+
+
+def magic8ball():
+    """Well-known superior mind popularized by the movie "Interstate 60".
+
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Magic_8-Ball
+    [2] https://en.wikipedia.org/wiki/Interstate_60
+
+    Parameters
+    ----------
+    :return: Provides answers for any yes/no question.
+    :rtype: str
+    """
+    answers = (
+        "It is certain",
+        "It is decidedly so",
+        "Without a doubt",
+        "Yes definitely",
+        "You may rely on it",
+        "As I see it, yes",
+        "Most likely",
+        "Outlook good",
+        "Yes",
+        "Signs point to yes",
+        "Reply hazy, try again",
+        "Ask again later",
+        "Better not tell you now",
+        "Cannot predict now",
+        "Concentrate and ask again",
+        "Don't count on it",
+        "My reply is no",
+        "My sources say no",
+        "Outlook not so good",
+        "Very doubtful")
+    return random.choice(answers)
 
 
 def main():

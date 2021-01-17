@@ -262,7 +262,7 @@ class MainWindow(ttk.Frame):
 
         ttk.Label(fr_entry, text='Height, cm').pack(side=tk.LEFT)
         self.ctl_height = ttk.Spinbox(fr_entry, width=3, from_=1, to=500, command=self.set_model_height)
-        self.ctl_height.bind("<Return>", self.set_model_height)
+        self.ctl_height.bind("<KeyRelease>", self.set_model_height)
         self.ctl_height.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_height, "Height highly correlates with age, ideal body weight and body surface area")
 
@@ -279,7 +279,7 @@ class MainWindow(ttk.Frame):
         self.ctl_weight = ttk.Spinbox(
             fr_entry, width=4, from_=1, to=500,
             format='%.1f', increment=1, command=self.set_model_weight)
-        self.ctl_weight.bind("<Return>", self.set_model_weight)
+        self.ctl_weight.bind("<KeyRelease>", self.set_model_weight)
         self.ctl_weight.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_weight, "Real body weight")
 
@@ -287,7 +287,7 @@ class MainWindow(ttk.Frame):
         self.ctl_sbx_temp = ttk.Spinbox(
             fr_entry, width=4, from_=0.0, to=50.0,
             format='%.1f', increment=0.1, command=self.set_model_body_temp)
-        self.ctl_sbx_temp.bind("<Return>", self.set_model_body_temp)
+        self.ctl_sbx_temp.bind("<KeyRelease>", self.set_model_body_temp)
         self.ctl_sbx_temp.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sbx_temp, "Axillary temperature, used for perspiration evaluation")
 
@@ -526,7 +526,7 @@ class CalcNutrition(ttk.Frame):
         self.ctl_sbx_fluid_mul = ttk.Spinbox(
             fr_fluid_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_fluid_multiplier)
-        self.ctl_sbx_fluid_mul.bind("<Return>", self.set_model_fluid_multiplier)
+        self.ctl_sbx_fluid_mul.bind("<KeyRelease>", self.set_model_fluid_multiplier)
         self.ctl_sbx_fluid_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_fluid_mul, "24 hours fluid demand.\nTypical 30-35 ml/kg for an adult. Much higher for children.")
 
@@ -552,7 +552,7 @@ class CalcNutrition(ttk.Frame):
         self.ctl_sbx_kcal_mul = ttk.Spinbox(
             self.fr_kcal_entry, width=2, from_=0.0, to=99.0,
             format='%1.0f', increment=1, command=self.set_model_kcal_multiplier)
-        self.ctl_sbx_kcal_mul.bind("<Return>", self.set_model_kcal_multiplier)
+        self.ctl_sbx_kcal_mul.bind("<KeyRelease>", self.set_model_kcal_multiplier)
         self.ctl_sbx_kcal_mul.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_kcal_mul, "24 hours energy demand.\nTypical 25-30 kcal/kg.")
 
@@ -580,7 +580,7 @@ class CalcNutrition(ttk.Frame):
         self.ctl_sbx_uurea = ttk.Spinbox(
             self.fr_nitrogen_entry, width=4, from_=0.0, to=9999.0,
             format='%.0f', increment=10, command=self.set_model_uurea)
-        self.ctl_sbx_uurea.bind("<Return>", self.set_model_uurea)
+        self.ctl_sbx_uurea.bind("<KeyRelease>", self.set_model_uurea)
         self.ctl_sbx_uurea.grid(row=1, column=1)
         CreateToolTip(self.ctl_sbx_uurea, "Urine urea excreted during 24h (equals to total urea nitrogen, when measured in mmol/24h)")
 
@@ -593,7 +593,7 @@ class CalcNutrition(ttk.Frame):
         # self.ctl_sbx_prot_g_kg_24h = Spinbox(
         #     self.fr_nitrogen_entry, width=4, from_=0.0, to=10.0,
         #     format='%.2f', increment=0.1, command=self.increment_uurea_widget)
-        # self.ctl_sbx_prot_g_kg_24h.bind("<Return>", self.eval)
+        # self.ctl_sbx_prot_g_kg_24h.bind("<KeyRelease>", self.eval)
         # self.ctl_sbx_prot_g_kg_24h.grid(row=2, column=1)
         # CreateToolTip(self.ctl_sbx_prot_g_kg_24h, "Urine urea concentration in 24h sample")
         self.lbl_sbx_prot_g_kg_24h = ttk.Label(self.fr_nitrogen_entry)
@@ -696,14 +696,14 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_pH = ttk.Spinbox(
             fr_abg_entry, width=4, from_=0, to=14,
             format='%.2f', increment=0.01, command=self.set_model_pH)
-        self.ctl_sbx_pH.bind("<Return>", self.set_model_pH)
+        self.ctl_sbx_pH.bind("<KeyRelease>", self.set_model_pH)
         self.ctl_sbx_pH.grid(row=2, column=1)
 
         ttk.Label(fr_abg_entry, text="pCO₂, mmHg").grid(row=3, column=0)
         self.ctl_sbx_pCO2 = ttk.Spinbox(
             fr_abg_entry, width=4, from_=0.0, to=150.0,
             format='%.1f', increment=1, command=self.set_model_pCO2)
-        self.ctl_sbx_pCO2.bind("<Return>", self.set_model_pCO2)
+        self.ctl_sbx_pCO2.bind("<KeyRelease>", self.set_model_pCO2)
         self.ctl_sbx_pCO2.grid(row=3, column=1)  # Default pCO2 40.0 mmHg
 
         ttk.Label(fr_abg_entry, text="HCO₃(P), mmol/L").grid(row=4, column=0)
@@ -725,7 +725,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_K = ttk.Spinbox(
             fr_elec_entry, width=3, from_=0, to=15,
             format='%2.1f', increment=0.1, command=self.set_model_K)
-        self.ctl_sbx_K.bind("<Return>", self.set_model_K)
+        self.ctl_sbx_K.bind("<KeyRelease>", self.set_model_K)
         self.ctl_sbx_K.grid(row=2, column=1)
 
         ttk.Label(fr_elec_entry, text='Na⁺, mmol/L').grid(row=3, column=0)
@@ -733,14 +733,14 @@ class CalcElectrolytes(ttk.Frame):
             fr_elec_entry, width=3, from_=0.0, to=300.0,
             format='%3.0f', increment=1, command=self.set_model_Na)
         CreateToolTip(self.ctl_sbx_Na, "Na⁺ and cGlu are used for serum osmolarity calculations")
-        self.ctl_sbx_Na.bind("<Return>", self.set_model_Na)
+        self.ctl_sbx_Na.bind("<KeyRelease>", self.set_model_Na)
         self.ctl_sbx_Na.grid(row=3, column=1)
 
         ttk.Label(fr_elec_entry, text='Cl⁻, mmol/L').grid(row=4, column=0)
         self.ctl_sbx_Cl = ttk.Spinbox(
             fr_elec_entry, width=3, from_=0.0, to=300.0,
             format='%3.0f', increment=1, command=self.set_model_Cl)
-        self.ctl_sbx_Cl.bind("<Return>", self.set_model_Cl)
+        self.ctl_sbx_Cl.bind("<KeyRelease>", self.set_model_Cl)
         self.ctl_sbx_Cl.grid(row=4, column=1)
 
         # EXTRA INPUT
@@ -758,7 +758,7 @@ class CalcElectrolytes(ttk.Frame):
             fr_extra_entry, width=4, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_cGlu)
         CreateToolTip(self.ctl_sbx_cGlu, "Enter glucose to properly calculate serum osmolarity (formula is '2Na⁺ + cGlu').\n\nIf patient blood contains other osmotically active molecules, such as ethanol or BUN (due to kidney damage), you shall add it manually or use lab osmometer.")
-        self.ctl_sbx_cGlu.bind("<Return>", self.set_model_cGlu)
+        self.ctl_sbx_cGlu.bind("<KeyRelease>", self.set_model_cGlu)
         self.ctl_sbx_cGlu.grid(row=2, column=1)
 
         ttk.Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
@@ -766,7 +766,7 @@ class CalcElectrolytes(ttk.Frame):
             fr_extra_entry, width=4, from_=0, to=15,
             format='%.1f', increment=0.1, command=self.set_model_ctAlb)
         CreateToolTip(self.ctl_sbx_ctAlb, "Enter if anion gap is surprisingly low. Hypoalbuminemia causes low AG in starved humans.")
-        self.ctl_sbx_ctAlb.bind("<Return>", self.set_model_ctAlb)
+        self.ctl_sbx_ctAlb.bind("<KeyRelease>", self.set_model_ctAlb)
         self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
         ttk.Label(fr_extra_entry, text="ctHb, g/dL").grid(row=4, column=0)
@@ -774,7 +774,7 @@ class CalcElectrolytes(ttk.Frame):
             fr_extra_entry, width=4, from_=0, to=50,
             format='%.1f', increment=0.1, command=self.set_model_ctHb)
         CreateToolTip(self.ctl_sbx_ctHb, "Not required. Enter to estimate free water deficit by Hct.")
-        self.ctl_sbx_ctHb.bind("<Return>", self.set_model_ctHb)
+        self.ctl_sbx_ctHb.bind("<KeyRelease>", self.set_model_ctHb)
         self.ctl_sbx_ctHb.grid(row=4, column=1)
 
         self.TxtView = TextView(self)
@@ -885,7 +885,7 @@ class CalcGFR(ttk.Frame):
         self.ctl_sbx_ccrea = ttk.Spinbox(
             fr_entry, width=4, from_=0.0, to=1000.0,
             format='%.1f', increment=10, command=self.eval)
-        self.ctl_sbx_ccrea.bind("<Return>", self.eval)
+        self.ctl_sbx_ccrea.bind("<KeyRelease>", self.eval)
         self.ctl_sbx_ccrea.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
@@ -893,7 +893,7 @@ class CalcGFR(ttk.Frame):
         self.ctl_sbx_age = ttk.Spinbox(
             fr_entry, width=3, from_=0.0, to=200.0,
             format='%1.0f', increment=1, command=self.set_model_age)
-        self.ctl_sbx_age.bind("<Return>", self.set_model_age)
+        self.ctl_sbx_age.bind("<KeyRelease>", self.set_model_age)
         self.ctl_sbx_age.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sbx_age, "Human age, years")
 

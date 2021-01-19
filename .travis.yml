@@ -5,14 +5,16 @@ jobs:
   - os: linux
   - os: windows
     language: shell
-    env: PATH=/c/tools/python-x86_32:/c/tools/python-x86_32/Scripts:$PATH
+    # Don't use "C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/opt/bin/python.exe"
+    env: PATH=/c/tools/python-x86_32:/C/Users/travis/AppData/Roaming/Python/Scripts:$PATH
     install:
     # python3.4 last supporting Windows XP, python3.9 still supports windows 7
     # pip 19.2 drops support for python 3.4 (despite 19.3.1 been working fine)
+    # pyinstaller 4.0 drops support for python 3.4
     # Key '--user' is mandatory outside virtualenv 'language: python'
     - choco install python-x86_32 --version=3.4.3.20150501
     - python -m pip install --user --upgrade pip==19.1.1
-    - python -m pip install --user pyinstaller  # Avoid old binary in PATH
+    - python -m pip install --user pyinstaller==3.5  # pyinstaller==3.6 is missing
   - os: osx
     language: shell
     install:

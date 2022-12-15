@@ -18,6 +18,7 @@ glucose/fat caloric proportions, add unsaturated fatty acids etc.
 """
 
 import textwrap
+from heval import human
 
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
@@ -346,9 +347,9 @@ class NutritionFormula(object):
 
     def dose_max_ml(self):
         """Maximal recommended by manufacturer dose per 24 hours."""
-        if self.human_model.sex in ('male', 'female'):  # 2-5 years and adults,
+        if self.human_model.sex in (human.HumanSex.male, human.HumanSex.female):  # 2-5 years and adults,
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.human_model.sex == 'child':  # 5-14 years
+        elif self.human_model.sex == human.HumanSex.child:  # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
         return self.human_model.weight * daily_volume
 

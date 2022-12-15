@@ -255,8 +255,8 @@ class MainWindow(ttk.Frame):
         fr_entry.pack(anchor=tk.W)
         ttk.Label(fr_entry, text='Sex').pack(side=tk.LEFT)
         self.var_sex = tk.StringVar()
-        sex_list = ('Male', 'Female', 'Child')
-        self.ctl_sex = ttk.OptionMenu(fr_entry, self.var_sex, sex_list[0], *sex_list, command=self.set_model_sex)
+        self.sex_list = [sex.title() for sex in human.HumanSex.__members__.keys()]
+        self.ctl_sex = ttk.OptionMenu(fr_entry, self.var_sex, self.sex_list[0], *self.sex_list, command=self.set_model_sex)
         self.ctl_sex.pack(side=tk.LEFT)
         CreateToolTip(self.ctl_sex, "Age and sex selector. Calculations quite differ for adults and children")
 
@@ -331,7 +331,7 @@ class MainWindow(ttk.Frame):
         # statusbar.pack(side=BOTTOM, fill=X)
 
     def set_input_defaults(self, event=None):
-        self.var_sex.set("Male")
+        self.var_sex.set(self.sex_list[0])
         self.set_model_sex()
 
         self.ctl_height.delete(0, tk.END)
@@ -374,7 +374,7 @@ class MainWindow(ttk.Frame):
                 font_obj['size'] = 9
 
     def set_model_sex(self, event=None):
-        self.HBody.sex = self.var_sex.get().lower()
+        self.HBody.sex = human.HumanSex[self.var_sex.get().lower()]
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
@@ -936,7 +936,7 @@ class CalcGFR(ttk.Frame):
         cCrea = float(self.ctl_sbx_ccrea.get())
         cCrea_mgdl = cCrea / electrolytes.M_Crea
         info = ""
-        if sex in ('male', 'female'):
+        if sex in (human.HumanSex.male, human.HumanSex.female):
             age = self.human_model.age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = (self.var_isblack.get() == 1)
@@ -950,7 +950,7 @@ class CalcGFR(ttk.Frame):
 
             Conclusion: {}
             """.format(cCrea_mgdl, dob, mdrd, epi, electrolytes.gfr_describe(epi))
-        elif sex == 'child':
+        elif sex == human.HumanSex.child:
             schwartz = electrolytes.egfr_schwartz(cCrea, self.human_model.height)
             info += """\
             cCrea\t{:.2f} mg/dL

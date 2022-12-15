@@ -11,6 +11,7 @@ import copy
 import math
 import textwrap
 from itertools import chain
+from enum import IntEnum
 import warnings
 
 from heval import drugs
@@ -18,50 +19,14 @@ from heval import electrolytes
 from heval import nutrition
 
 
-# https://news.tut.by/society/311809.html
-# Average Belorussian male in 2008 >=18 years old
-male_generic_by = {
-    'height': 1.77,
-    'weight': 69.,
-    'sex': 'male',
-    'body_temp': 36.6
-}
-
-# Average Belorussian female in 2008 >=18 years old
-female_generic_by = {
-    'height': 1.65,
-    'weight': 56.,
-    'sex': 'female',
-    'body_temp': 36.6
-}
-
-female_overweight_by = {
-    'height': 1.62,
-    'weight': 72.,
-    'sex': 'female',
-    'body_temp': 36.6
-}
-
-male_thin = {  # Me
-    'height': 1.86,
-    'weight': 55.,
-    'sex': 'male',
-    'body_temp': 36.6
-}
-
-child = {  # 3 year old kid
-    'height': 0.95,
-    'weight': 16.5,
-    'sex': 'child',
-    'body_temp': 36.6
-}
-
-newborn = {
-    'height': 0.5,
-    'weight': 3.6,
-    'sex': 'child',
-    'body_temp': 36.6
-}
+class HumanSex(IntEnum):
+    """
+    Male/female integers comply EMIAS database
+    and belarusian sick leave documents.
+    """
+    male = 1
+    female = 2
+    child = 3  # For <12 years old
 
 
 class HumanBodyModel(object):
@@ -123,7 +88,7 @@ class HumanBodyModel(object):
 
     @sex.setter
     def sex(self, value):
-        """One from: 'male', 'female', 'child'."""
+        """Set HumanSex."""
         self._sex = value
         if all((self.height, self.sex)):  # optimization
             self._set_weight_ideal()
@@ -212,10 +177,10 @@ class HumanBodyModel(object):
         # IBW estimation formulas cover not all ranges. This flag helps prevent
         # misuse of explicitly invalid IBW e.g. in respiratory calculations
         self._weight_ideal_valid = True
-        if self.sex in ('male', 'female'):
+        if self.sex in (HumanSex.male, HumanSex.female):
             self._weight_ideal_method = "Hamilton"
             self.weight_ideal = ibw_hamilton(self.sex, self.height)
-        elif self.sex == 'child':
+        elif self.sex == HumanSex.child:
             # Broselow tape range. Temporary and only for low height
             if 0.468 <= self.height < 0.74:
                 self._weight_ideal_method = "Broselow"
@@ -292,15 +257,13 @@ class HumanBodyModel(object):
         return info
 
     def _info_in_body(self):
-        info = ""
-        info += "{} {:.0f}/{:.0f}:".format(self.sex.capitalize(), self.height * 100, self.weight)
-
+        info = "{} {:.0f}/{:.0f}:".format(self.sex.name.title(), self.height * 100, self.weight)
         if self._weight_ideal_valid:
             info += " IBW {:.1f} kg [{}],".format(self.weight_ideal, self._weight_ideal_method)
         else:
             info += " IBW can't be calculated for this height, enter weight manually."
 
-        if self.sex in ('male', 'female'):
+        if self.sex in (HumanSex.male, HumanSex.female):
             info += " BMI {:.1f} ({}),".format(self.bmi, bmi_describe(self.bmi))
         else:
             # Adult normal ranges cannot be applied to children
@@ -315,7 +278,7 @@ class HumanBodyModel(object):
         info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.".format(
             transfusion_prbc_response(self.weight))
 
-        if self.sex == 'child':
+        if self.sex == HumanSex.child:
             try:
                 br_code, br_age, br_weight = get_broselow_code(self.height)
                 info += "\nBROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
@@ -414,7 +377,7 @@ class HumanBodyModel(object):
     def _info_in_fluids(self):
         # Normal physiologic demand
         info = ""
-        if self.sex in ('male', 'female'):
+        if self.sex in (HumanSex.male, HumanSex.female):
             info += " * RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
                 30 * self.weight, 35 * self.weight)
 
@@ -439,7 +402,7 @@ class HumanBodyModel(object):
     def _info_in_food(self):
         """Daily electrolytes demand."""
         info = ""
-        if self.sex in ('male', 'female'):
+        if self.sex in (HumanSex.male, HumanSex.female):
             info += "Daily nutrition requirements for adults [ПосДеж]:\n"
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
@@ -517,7 +480,7 @@ class HumanBodyModel(object):
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
         """
         info = ''
-        if self.sex in ('male', 'female'):
+        if self.sex in (HumanSex.male, HumanSex.female):
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
             if self.age:
                 info += "Resting energy expenditure for healthy adults:\n"
@@ -538,11 +501,11 @@ class HumanBodyModel(object):
         У детей диурез значительно выше, у новорождённых 2.5 ml/kg/h.
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
         """
-        if self.sex in ('male', 'female'):
+        if self.sex in (HumanSex.male, HumanSex.female):
             info = "RBW adult urinary output:\n"
             info += " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
             info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(self.weight, self.weight * 24)
-        if self.sex == 'child':
+        if self.sex == HumanSex.child:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
             info = "RBW child urinary output:\n"
             info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(self.weight, self.weight * 24)
@@ -772,18 +735,18 @@ def ibw_hamilton(sex, height):
 
     Examples
     --------
-    >>> ibw_hamilton('male', 0.6)
+    >>> ibw_hamilton(HumanSex.male, 0.6)
     6.75
-    >>> ibw_hamilton('male', 1.0)
+    >>> ibw_hamilton(HumanSex.male, 1.0)
     15.440000000000001
-    >>> ibw_hamilton('male', 1.5)
+    >>> ibw_hamilton(HumanSex.male, 1.5)
     48.163
-    >>> ibw_hamilton('female', 1.5)
+    >>> ibw_hamilton(HumanSex.female, 1.5)
     43.72900000000001
 
     Parameters
     ----------
-    :param str sex: male, female. For height <129 doesn't matter which.
+    :param human.HumanSex sex: male, female. For height <129 doesn't matter which.
     :param float height: Height (0.3-2.5 m), meters.
     :return: Ideal body weight, kg
     :rtype: float
@@ -797,10 +760,10 @@ def ibw_hamilton(sex, height):
     elif height >= 129:  # This switch fits only for males. Notch for females
         # Looks like Devine formula from ARDSNET
         # Devine BJ.Gentamicin therapy.Drug Intell Clin Pharm. 1974;8: 650–655.
-        if sex == 'male':
+        if sex == HumanSex.male:
             # 50 + 0.91 * (height - 152.4)  # ARDSNET formula
             return 0.9079 * height - 88.022  # Adult male, negative value with height <97 cm
-        elif sex == 'female':
+        elif sex == HumanSex.female:
             # 45.5 + 0.91 * (height - 152.4)  # ARDSNET formula
             return 0.9049 * height - 92.006  # Adult female, negative value with height <101 cm
 
@@ -818,23 +781,23 @@ def ree_harris_benedict_revised(height, weight, sex, age):
 
     Examples
     --------
-    >>> ree_harris_benedict_revised(1.68, 59, 'male', 55)
+    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.male, 55)
     1372.7820000000002
-    >>> ree_harris_benedict_revised(1.68, 59, 'female', 55)
+    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.female, 55)
     1275.4799999999998
 
     :param float height: Height, meters
     :param float weight: Weight, kg
-    :param str sex: Choose 'male', 'female'.
+    :param human.HumanSex sex: Choose HumanSex.male, HumanSex.female
     :param float age: Age, years
     :return: Resting energy expenditure, kcal/24h
     :rtype: float
     """
-    if sex == 'male':
+    if sex == HumanSex.male:
         return 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
-    elif sex == 'female':
+    elif sex == HumanSex.female:
         return 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
-    elif sex == 'child':
+    elif sex == HumanSex.child:
         raise ValueError("Harris-Benedict equation REE calculation for children not supported")
 
 
@@ -854,14 +817,14 @@ def ree_mifflin(height, weight, sex, age):
 
     Examples
     --------
-    >>> ree_mifflin(1.68, 59, 'male', 55)
+    >>> ree_mifflin(1.68, 59, HumanSex.male, 55)
     1373.81
-    >>> ree_mifflin(1.68, 59, 'female', 55)
+    >>> ree_mifflin(1.68, 59, HumanSex.female, 55)
     1207.81
 
     :param float height: Height, meters
     :param float weight: Weight, kg
-    :param str sex: Choose 'male', 'female'.
+    :param human.HumanSex sex: Choose HumanSex.male, HumanSex.female
     :param float age: Age, years
     :return:
         REE, kcal/24h
@@ -870,12 +833,12 @@ def ree_mifflin(height, weight, sex, age):
     """
     # ree = 10 * weight + 6.25 * height * 100 - 5 * age  # Simplifyed
     ree = 9.99 * weight + 6.25 * height * 100 - 4.92 * age  # From paper
-    if sex == 'male':
+    if sex == HumanSex.male:
         ree += 5
-    elif sex == 'female':
+    elif sex == HumanSex.female:
         ree -= 161
-    elif sex == 'child':
-        raise ValueError("Mufflin ree calculation for children not supported")
+    elif sex == HumanSex.child:
+        raise ValueError("Mufflin REE calculation for children not supported")
     return ree
 
 
@@ -1045,14 +1008,14 @@ def total_blood_volume_nadler(sex, height, weight):
 
     :param float height: Human height, meters
     :param float weight: Human weight, kg
-    :param str sex: Choose 'male', 'female'.
+    :param human.HumanSex sex: Choose HumanSex.male, HumanSex.female
     :return: Total blood volume, ml
     :rtype: float
     """
     # Same as http://apheresisnurses.org/apheresis-calculators
-    if sex == 'male':
+    if sex == HumanSex.male:
         return ((0.3669 * height ** 3) + (0.03219 * weight) + 0.6041) * 1000
-    elif sex == 'female':
+    elif sex == HumanSex.female:
         return ((0.3561 * height ** 3) + (0.03308 * weight) + 0.1833) * 1000
     else:
         raise ValueError("Nadler formula isn't applicable to children")
@@ -1123,3 +1086,49 @@ def transfusion_prbc_response(weight, prbc_volume=350, prbc_hct=0.6):
     :return: Expected Hb increase, g/dL
     """
     return prbc_volume / (weight * 3 / prbc_hct)
+
+
+# https://news.tut.by/society/311809.html
+# Average Belorussian male in 2008 >=18 years old
+male_generic_by = {
+    'height': 1.77,
+    'weight': 69.,
+    'sex': HumanSex.male,
+    'body_temp': 36.6
+}
+
+# Average Belorussian female in 2008 >=18 years old
+female_generic_by = {
+    'height': 1.65,
+    'weight': 56.,
+    'sex': HumanSex.female,
+    'body_temp': 36.6
+}
+
+female_overweight_by = {
+    'height': 1.62,
+    'weight': 72.,
+    'sex': HumanSex.female,
+    'body_temp': 36.6
+}
+
+male_thin = {  # Me
+    'height': 1.86,
+    'weight': 55.,
+    'sex': HumanSex.male,
+    'body_temp': 36.6
+}
+
+child = {  # 3 year old kid
+    'height': 0.95,
+    'weight': 16.5,
+    'sex': HumanSex.child,
+    'body_temp': 36.6
+}
+
+newborn = {
+    'height': 0.5,
+    'weight': 3.6,
+    'sex': HumanSex.child,
+    'body_temp': 36.6
+}

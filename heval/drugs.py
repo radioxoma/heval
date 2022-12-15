@@ -5,6 +5,8 @@ Drug dosage calculator.
 Author: Eugene Dvoretsky
 """
 
+from heval import human
+
 press_nor16 = {
     'name': "Nor-16",
     'weight': 16,         # mg
@@ -25,7 +27,7 @@ press_epi = {
     'name': "Epi-10",
     'weight': 10,         # mg
     'volume': 50,         # ml
-    'speed_start': 0.1,  # mcg/kg/min 0.15?
+    'speed_start': 0.1,   # mcg/kg/min 0.15?
     'speed_max': 3,
 }
 
@@ -34,7 +36,7 @@ press_phenylephrine = {
     'weight': 50,         # mg
     'volume': 50,         # ml
     'speed_start': 0.1,   # mcg/kg/min
-    'speed_max': 3,      # mcg/kg/min
+    'speed_max': 3,       # mcg/kg/min
 }
 
 press_dopamine = {
@@ -206,13 +208,13 @@ class Pipecuronium(object):
 
     def __str__(self):
         info = ""
-        if self.parent.sex in ('male', 'female'):
+        if self.parent.sex in (human.HumanSex.male, human.HumanSex.female):
             info += "{} adult mono intubation {:.2f}-{:.2f} mg for 60-90 min; load after Sux {:.2f} mg for 30-60 min. Maintenance {:.2f}-{:.2f} mg every 30-60 min.".format(
                 self.name,
                 0.06 * self.parent.weight, 0.08 * self.parent.weight,
                 0.05 * self.parent.weight,
                 0.01 * self.parent.weight, 0.02 * self.parent.weight)
-        elif self.parent.sex == 'child':
+        elif self.parent.sex == human.HumanSex.child:
             info += "{} child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min).".format(
                 self.name,
                 0.04 * self.parent.weight,

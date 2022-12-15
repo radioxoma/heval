@@ -7,6 +7,7 @@ Author: Eugene Dvoretsky
 import textwrap
 from itertools import chain
 from heval import abg
+from heval import human
 
 M_C6H12O6 = 180
 M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
@@ -367,13 +368,13 @@ class HumanBloodModel(object):
         [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
         """
         # Top hct value for free water deficit calculation.
-        if self.parent.sex == 'male':
+        if self.parent.sex == human.HumanSex.male:
             hb_norm = hb_norm_male
             hct_norm = hct_norm_male
-        elif self.parent.sex == 'female':
+        elif self.parent.sex == human.HumanSex.female:
             hb_norm = hb_norm_female
             hct_norm = hct_norm_female
-        elif self.parent.sex == 'child':
+        elif self.parent.sex == human.HumanSex.child:
             hb_norm = hb_norm_child
             hct_norm = hct_norm_child
         hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
@@ -398,7 +399,7 @@ class HumanBloodModel(object):
         if self.hct_calc > hct_target + 0.01:  # Age-independent threshold
             info += ", free water deficit {:.0f} ml (limitations: valid if no hemorrhage occurred, osmolarity and Na⁺ are more specific).".format(vol_def)
 
-        if self.parent.sex == 'child':
+        if self.parent.sex == human.HumanSex.child:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 
@@ -900,12 +901,12 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
 
     Examples
     --------
-    >>> egfr_mdrd('male', 74.4, 27)
+    >>> egfr_mdrd(human.HumanSex.male, 74.4, 27)
     109.36590492087734
-    >>> egfr_mdrd('female', 100, 80, True)
+    >>> egfr_mdrd(human.HumanSex.female, 100, 80, True)
     55.98942027449337
 
-    :param str sex: Choose 'male', 'female'.
+    :param human.HumanSex sex: Choose 'male', 'female'.
     :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
@@ -919,9 +920,9 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     # creatinine assays over isotope dilution mass spectrometry (IDMS) SRM 967.
     # Equation being used by Radiometer devices
     egfr = 175 * (cCrea / M_Crea) ** -1.154 * age ** -0.203
-    if sex == 'female':
+    if sex == human.HumanSex.female:
         egfr *= 0.742
-    elif sex == 'child':
+    elif sex == human.HumanSex.child:
         raise ValueError("MDRD eGFR for children not supported")
     if black_skin:
         egfr *= 1.210
@@ -941,7 +942,7 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     [1] A new equation to estimate glomerular filtration rate. Ann Intern Med. 2009;150(9):604-12.
     [2] https://en.wikipedia.org/wiki/Renal_function#Glomerular_filtration_rate
 
-    :param str sex: Choose 'male', 'female'.
+    :param human.HumanSex sex: Choose 'male', 'female'.
     :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
     :param float age: Human age, years
     :param bool black_skin: True for people with black skin (african american)
@@ -949,17 +950,17 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     :rtype: float
     """
     cCrea /= M_Crea  # to mg/dl
-    if sex == 'male':
+    if sex == human.HumanSex.male:
         if cCrea <= 0.9:
             egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993 ** age
         else:
             egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993 ** age
-    elif sex == 'female':
+    elif sex == human.HumanSex.female:
         if cCrea <= 0.7:
             egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993 ** age * 1.018
         else:
             egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993 ** age * 1.018
-    elif sex == 'child':
+    elif sex == human.HumanSex.child:
         raise ValueError("CKD-EPI eGFR for children not supported")
 
     if black_skin:

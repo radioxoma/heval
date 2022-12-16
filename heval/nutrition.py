@@ -16,7 +16,6 @@ containing all required components in suitable proportions.
 End user shouldn't mess with protein/nonprotein caloric proportions,
 glucose/fat caloric proportions, add unsaturated fatty acids etc.
 """
-
 import textwrap
 from heval import human
 
@@ -51,18 +50,18 @@ from heval import human
 жиры         0,08 г/кг/ч
 """
 parenteral_nutriflex_48_150 = {
-    'name': "Nutriflex 48/150 lipid 1000, 1250, 1875, 2500 ml",
-    'type': 'parenteral',
-    'c_prt': 0.0384,        # g/ml proteins
-    'c_lip': 0.04,          # g/ml lipids
-    'c_glu': 0.12,          # g/ml glucose
-    'c_kcal': 1.012,        # kcal/ml total calories including proteins
-    'c_kcal_noprot': 0.86,  # kcal/ml nonprotein calories
-    'max_24h_volume': 40,   # ml/kg/24h
-    'max_1h_rate': 2,       # ml/kg/h rate limit (by glucose for this drug)
-    'osmolality': 1540,     # mOsm/kg Central vena only
-    'has_vitamins': False,
-    'comment': "Ratio 1:1:3",
+    "name": "Nutriflex 48/150 lipid 1000, 1250, 1875, 2500 ml",
+    "type": "parenteral",
+    "c_prt": 0.0384,  #       g/ml proteins
+    "c_lip": 0.04,  #         g/ml lipids
+    "c_glu": 0.12,  #         g/ml glucose
+    "c_kcal": 1.012,  #       kcal/ml total calories including proteins
+    "c_kcal_noprot": 0.86,  # kcal/ml nonprotein calories
+    "max_24h_volume": 40,  #  ml/kg/24h
+    "max_1h_rate": 2,  #      ml/kg/h rate limit (by glucose for this drug)
+    "osmolality": 1540,  #    mOsm/kg Central vena only
+    "has_vitamins": False,
+    "comment": "Ratio 1:1:3",
 }
 
 
@@ -103,81 +102,81 @@ parenteral_nutriflex_48_150 = {
     липидов     0,13 g/kg/h
 """
 parenteral_kabiven_perif = {
-    'name': "Kabiven peripheral 1440, 1920, 2400 ml",
-    'type': 'parenteral',
-    'c_prt': 0.0235,         # g/ml
-    'c_lip': 0.0354,         # g/ml
-    'c_glu': 0.0675,         # g/ml
-    'c_kcal': 0.7,           # kcal/ml total, including proteins
-    'c_kcal_noprot': 0.625,  # kcal/ml without proteins
-    'max_24h_volume': 40,    # ml/kg/24h
-    'max_1h_rate': 3.7,      # ml/kg/h rate limit (by glucose for this drug
-    'osmolality': 830,       # mOsm/kg Periferal or central vein
-    'has_vitamins': False,
-    'comment': "Ratio 1:1.5:3",
+    "name": "Kabiven peripheral 1440, 1920, 2400 ml",
+    "type": "parenteral",
+    "c_prt": 0.0235,  #        g/ml
+    "c_lip": 0.0354,  #        g/ml
+    "c_glu": 0.0675,  #        g/ml
+    "c_kcal": 0.7,  #          kcal/ml total, including proteins
+    "c_kcal_noprot": 0.625,  # kcal/ml without proteins
+    "max_24h_volume": 40,  #   ml/kg/24h
+    "max_1h_rate": 3.7,  #     ml/kg/h rate limit (by glucose for this drug
+    "osmolality": 830,  #      mOsm/kg Periferal or central vein
+    "has_vitamins": False,
+    "comment": "Ratio 1:1.5:3",
 }
 
 
 enteral_nutricomp_standard = {
-    'name': "Nutricomp standard 500, 1000 ml",
-    'type': 'enteral',
-    'c_prt': 3.8 / 100,     # g/ml proteins
-    'c_lip': 3.3 / 100,     # g/ml lipids
-    'c_glu': 14 / 100,     # g/ml glucose
-    'water': 0.84,          # H2O/ml
-    'c_kcal': 1,            # kcal/ml total calories including proteins
-    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
-    'max_1h_rate': 0,
-    'osmolality': 240,      # mOsm/kg
-    'has_vitamins': True,
-    'comment': "Caloric P:F:C - 15:30:55:0; 1500-2000 ml per day",
+    "name": "Nutricomp standard 500, 1000 ml",
+    "type": "enteral",
+    "c_prt": 3.8 / 100,  #    g/ml proteins
+    "c_lip": 3.3 / 100,  #    g/ml lipids
+    "c_glu": 14 / 100,  #     g/ml glucose
+    "water": 0.84,  #         H2O/ml
+    "c_kcal": 1,  #           kcal/ml total calories including proteins
+    "c_kcal_noprot": None,  # kcal/ml nonprotein calories
+    "max_1h_rate": 0,
+    "osmolality": 240,  #     mOsm/kg
+    "has_vitamins": True,
+    "comment": "Caloric P:F:C - 15:30:55:0; 1500-2000 ml per day",
 }
 
 
 enteral_nutricomp_energy = {
-    'name': "Nutricomp energy 500, 1000 ml",
-    'type': 'enteral',
-    'c_prt': 6.0 / 100,     # g/ml proteins
-    'c_lip': 5 / 100,       # g/ml lipids
-    'c_glu': 20 / 100,      # g/ml glucose
-    'water': 0.76,          # H2O/ml
-    'c_kcal': 1.5,          # kcal/ml total calories including proteins
-    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
-    'max_1h_rate': None,
-    'osmolality': 495,      # mOsm/kg
-    'has_vitamins': True,
-    'comment': "Caloric P:F:C - 20:30:50:0; 1000–1500 ml per day",
+    "name": "Nutricomp energy 500, 1000 ml",
+    "type": "enteral",
+    "c_prt": 6.0 / 100,  #    g/ml proteins
+    "c_lip": 5 / 100,  #      g/ml lipids
+    "c_glu": 20 / 100,  #     g/ml glucose
+    "water": 0.76,  #         H2O/ml
+    "c_kcal": 1.5,  #         kcal/ml total calories including proteins
+    "c_kcal_noprot": None,  # kcal/ml nonprotein calories
+    "max_1h_rate": None,
+    "osmolality": 495,  # mOsm/kg
+    "has_vitamins": True,
+    "comment": "Caloric P:F:C - 20:30:50:0; 1000–1500 ml per day",
 }
 
 # https://pharmland.by/product/nutrition/enterolin-500-ml-i-1000-ml.html
 enteral_enterolin_vanilla = {
-    'name': "Enterolin vanilla or Enterolin fiber 500, 1000 ml",
-    'type': 'enteral',
-    'c_prt': 4 / 100,     # g/ml proteins
-    'c_lip': 3.8 / 100,     # g/ml lipids
-    'c_glu': 12 / 100,     # g/ml glucose
-    'water': None,          # H2O/ml
-    'c_kcal': 1,            # kcal/ml total calories including proteins
-    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
-    'max_1h_rate': None,
-    'osmolality': 330,      # mOsm/kg
-    'has_vitamins': True,
-    'comment': "1500-2000 ml per day",
+    "name": "Enterolin vanilla or Enterolin fiber 500, 1000 ml",
+    "type": "enteral",
+    "c_prt": 4 / 100,  #      g/ml proteins
+    "c_lip": 3.8 / 100,  #    g/ml lipids
+    "c_glu": 12 / 100,  #     g/ml glucose
+    "water": None,  #         H2O/ml
+    "c_kcal": 1,  #           kcal/ml total calories including proteins
+    "c_kcal_noprot": None,  # kcal/ml nonprotein calories
+    "max_1h_rate": None,
+    "osmolality": 330,  # mOsm/kg
+    "has_vitamins": True,
+    "comment": "1500-2000 ml per day",
 }
 
 enteral_enterolin_caloric = {
-    'name': "Enterolin caloric cherry 500, 1000 ml",
-    'type': 'enteral',
-    'c_prt': 7.5 / 100,     # g/ml proteins
-    'c_lip': 5.6 / 100,     # g/ml lipids
-    'c_glu': 17.5 / 100,     # g/ml glucose
-    'water': None,          # H2O/ml
-    'c_kcal': 1.5,            # kcal/ml total calories including proteins
-    'c_kcal_noprot': None,     # kcal/ml nonprotein calories
-    'max_1h_rate': None,
-    'osmolality': 420,      # mOsm/kg
-    'has_vitamins': True,
-    'comment': "",
+    "name": "Enterolin caloric cherry 500, 1000 ml",
+    "type": "enteral",
+    "c_prt": 7.5 / 100,  #    g/ml proteins
+    "c_lip": 5.6 / 100,  #    g/ml lipids
+    "c_glu": 17.5 / 100,  #   g/ml glucose
+    "water": None,  #         H2O/ml
+    "c_kcal": 1.5,  #         kcal/ml total calories including proteins
+    "c_kcal_noprot": None,  # kcal/ml nonprotein calories
+    "max_1h_rate": None,
+    "osmolality": 420,  # mOsm/kg
+    "has_vitamins": True,
+    "comment": "",
 }
 
 
@@ -193,13 +192,19 @@ class HumanNutritionModel(object):
         # self.protein_24h = None  # 1.5 * self.human_model.weight
 
     def __str__(self):
-        return textwrap.dedent("""\
+        return textwrap.dedent(
+            """\
             Generic approximation by body mass
             ==================================
             Start point:
              * Fluid demand {:.0f} ml/24h ({:.0f} ml/kg/24h)
              * Energy demand {:.0f} kcal/24h ({:.0f} kcal/kg/24h)""".format(
-            self.fluid_24h, self.fluid_multiplier, self.kcal_24h, self.kcal_multiplier))
+                self.fluid_24h,
+                self.fluid_multiplier,
+                self.kcal_24h,
+                self.kcal_multiplier,
+            )
+        )
 
     @property
     def fluid_24h(self):
@@ -247,10 +252,11 @@ class HumanNutritionModel(object):
         else:
             full_enteral_nutrition = n_form.dose_by_kcal(self.kcal_24h)
         full_enteral_fluid = self.fluid_24h - full_enteral_nutrition
-        info += "Give {:.0f} ml + water {:.0f} ml. ".format(full_enteral_nutrition, full_enteral_fluid)
+        info += f"Give {full_enteral_nutrition:.0f} ml + water {full_enteral_fluid:.0f} ml. "
         # full_enteral_nutrition and self.fluid_24h in ml, so they reduce each other
         info += "Mixture osmolality is {:.0f} mOsm/kg\n".format(
-            (full_enteral_nutrition * n_form.osmolality) / self.fluid_24h)
+            (full_enteral_nutrition * n_form.osmolality) / self.fluid_24h
+        )
         info += "{}\n".format(n_form.describe_dose(full_enteral_nutrition))
 
         # Total parenteral nutrition
@@ -265,7 +271,7 @@ class HumanNutritionModel(object):
         else:
             full_parenteral_nutrition = n_form.dose_by_kcal(self.kcal_24h)
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
-        info += "Give {:.0f} ml + isotonic fluid {:.0f} ml\n".format(full_parenteral_nutrition, full_parenteral_fluid)
+        info += f"Give {full_parenteral_nutrition:.0f} ml + isotonic fluid {full_parenteral_fluid:.0f} ml\n"
         info += "{}\n".format(n_form.describe_dose(full_parenteral_nutrition))
         if full_parenteral_nutrition > n_form.dose_max_ml():
             info += "REACHED MAXIMAL RECOMMENDED DOSE, BUT DAILY NUTRITION REQUIREMENTS NOT SATISFIED. Consider enteral nutrition, whenever possible.\n"
@@ -283,7 +289,7 @@ class HumanNutritionModel(object):
         else:
             full_parenteral_nutrition = n_form.dose_by_kcal(self.kcal_24h)
         full_parenteral_fluid = self.fluid_24h - full_parenteral_nutrition
-        info += "Give {:.0f} ml + isotonic fluid {:.0f} ml.\n".format(full_parenteral_nutrition, full_parenteral_fluid)
+        info += f"Give {full_parenteral_nutrition:.0f} ml + isotonic fluid {full_parenteral_fluid:.0f} ml.\n"
         info += "{}\n".format(n_form.describe_dose(full_parenteral_nutrition))
         if full_parenteral_nutrition > n_form.dose_max_ml():
             info += "REACHED MAXIMAL RECOMMENDED DOSE, BUT DAILY NUTRITION REQUIREMENTS NOT SATISFIED. Consider enteral nutrition, whenever possible.\n"
@@ -314,12 +320,16 @@ class NutritionFormula(object):
         lip = 9
         glu = 4.1  # pure glucose
         # glu = 3.4  # glucose monohydrate
-        info = "Estimation of total calories {:.2f} kcal/ml, ".format(self.c_lip * lip + self.c_glu * glu + self.c_prt * prt)
-        info += "nonprotein calories {:.2f} kcal/ml. ".format(self.c_lip * lip + self.c_glu * glu)
-        if hasattr(self, 'c_kcal_noprot'):
-            info += "Manufacturer states: {:.1f} kcal/ml, {:.1f} kcal/ml nonprotein".format(self.c_kcal, self.c_kcal_noprot)
+        info = "Estimation of total calories {:.2f} kcal/ml, ".format(
+            self.c_lip * lip + self.c_glu * glu + self.c_prt * prt
+        )
+        info += "nonprotein calories {:.2f} kcal/ml. ".format(
+            self.c_lip * lip + self.c_glu * glu
+        )
+        if hasattr(self, "c_kcal_noprot"):
+            info += f"Manufacturer states: {self.c_kcal:.1f} kcal/ml, {self.c_kcal_noprot:.1f} kcal/ml nonprotein"
         else:
-            info += "Manufacturer states: {:.1f} kcal/ml".format(self.c_kcal)
+            info += f"Manufacturer states: {self.c_kcal:.1f} kcal/ml"
         return info
 
     # def theoretical_osmolality(self):
@@ -347,9 +357,11 @@ class NutritionFormula(object):
 
     def dose_max_ml(self):
         """Maximal recommended by manufacturer dose per 24 hours."""
-        if self.human_model.sex in (human.HumanSex.male, human.HumanSex.female):  # 2-5 years and adults,
+        if self.human_model.sex in (human.HumanSex.male, human.HumanSex.female):
+            # 2-5 years and adults
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.human_model.sex == human.HumanSex.child:  # 5-14 years
+        elif self.human_model.sex == human.HumanSex.child:
+            # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
         return self.human_model.weight * daily_volume
 
@@ -364,18 +376,39 @@ class NutritionFormula(object):
         """
         kcal_24h = vol_24h * self.c_kcal
         info = ""
-        if self.type == 'parenteral':
+        if self.type == "parenteral":
             rate_1h = vol_24h / 24
             top_rate_1h = self.max_1h_rate * self.human_model.weight
-            info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h) at rate {:.0f}-{:.0f} ml/h:\n".format(vol_24h, kcal_24h, rate_1h, top_rate_1h)
-            info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_model.weight, self.c_prt * rate_1h / self.human_model.weight, self.c_prt * top_rate_1h / self.human_model.weight)
-            info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_model.weight, self.c_lip * rate_1h / self.human_model.weight, self.c_lip * top_rate_1h / self.human_model.weight)
-            info += "  * Glucose  {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_model.weight, self.c_glu * rate_1h / self.human_model.weight, self.c_glu * top_rate_1h / self.human_model.weight)
+            info += f"Daily dose {vol_24h:.0f} ml/24h ({kcal_24h:.0f} kcal/24h) at rate {rate_1h:.0f}-{top_rate_1h:.0f} ml/h:\n"
+            info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(
+                self.c_prt * vol_24h,
+                self.c_prt * vol_24h / self.human_model.weight,
+                self.c_prt * rate_1h / self.human_model.weight,
+                self.c_prt * top_rate_1h / self.human_model.weight,
+            )
+            info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(
+                self.c_lip * vol_24h,
+                self.c_lip * vol_24h / self.human_model.weight,
+                self.c_lip * rate_1h / self.human_model.weight,
+                self.c_lip * top_rate_1h / self.human_model.weight,
+            )
+            info += "  * Glucose  {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(
+                self.c_glu * vol_24h,
+                self.c_glu * vol_24h / self.human_model.weight,
+                self.c_glu * rate_1h / self.human_model.weight,
+                self.c_glu * top_rate_1h / self.human_model.weight,
+            )
         else:
-            info += "Daily dose {:.0f} ml/24h ({:.0f} kcal/24h)\n".format(vol_24h, kcal_24h)
-            info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_model.weight)
-            info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_model.weight)
-            info += "  * Glucose  {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_model.weight)
+            info += f"Daily dose {vol_24h:.0f} ml/24h ({kcal_24h:.0f} kcal/24h)\n"
+            info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(
+                self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_model.weight
+            )
+            info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(
+                self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_model.weight
+            )
+            info += "  * Glucose  {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(
+                self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_model.weight
+            )
         return info
 
 
@@ -477,16 +510,17 @@ def nitrogen_balance(c_uurea, diuresis=1000, text=False):
     info += "cUUrea {:.1f} g/L ({:.0f} mg/dL), cUUN {:.0f} mg/dL\n".format(
         urea_mmoll2mgdl(c_uurea) * 0.01,  # g/L
         urea_mmoll2mgdl(c_uurea),
-        uun_mmoll2mgdl(c_uurea))
+        uun_mmoll2mgdl(c_uurea),
+    )
 
-    info += "UUN {:.1f} g/24h".format(uun)
+    info += f"UUN {uun:.1f} g/24h"
     # if uun > 30:  # Kostuchenko, p 45
     #     uun += 2
     uun += 4  # Add skin and gastrointestinal tract losses
     protein_req = uun * 6.25  # 1 g nitrogen = 6.25 g protein
 
-    info += "{}\n".format(" - protein requirement to maintain zero nitrogen balance {:.1f} g/24h".format(protein_req))
-    # info += "{}\n".format("Nonprotein energy requirement {:.0f} kcal/24h (as 150 kcal/g of nitrogen)".format(uun * 150))
+    info += f" - protein requirement to maintain zero nitrogen balance {protein_req:.1f} g/24h\n"
+    # info += f"Nonprotein energy requirement {uun * 150:.0f} kcal/24h (as 150 kcal/g of nitrogen)\n"
     if text:
         return info
     else:

@@ -23,20 +23,22 @@ norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
 
 # Minimal low value has been chosen (<280), as I believe it
 # corresponds to mOsm reference range without BUN
-norm_mOsm = (275, 295)  # mOsm/kg  https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
+# https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
+norm_mOsm = (275, 295)  # mOsm/kg
 
-norm_K = (3.5, 5.3)   # mmol/L, Radiometer, adult
+norm_K = (3.5, 5.3)  # mmol/L, Radiometer, adult
 
 # norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
 norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
-norm_Cl = (98, 115)   # mmol/L, Radiometer, adult
+norm_Cl = (98, 115)  # mmol/L, Radiometer, adult
 
 # Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
 # Used as initial value for mOsm calculation.
 norm_cGlu_mean = 5.5  # mmol/L
 norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
-norm_cGlu_target = (4.5, 10)  # ICU target range. 10 mmol/L stands for glucose renal threshold
+# 10 mmol/L stands for glucose renal threshold
+norm_cGlu_target = (4.5, 10)  # ICU target range
 # Note: gap between lower norm_cGlu and norm_cGlu_target
 
 # Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
@@ -55,26 +57,26 @@ class HumanBloodModel(object):
 
     def __init__(self, parent=None):
         self.parent = parent
-        self._int_prop = ('pH', 'pCO2', 'cK', 'cNa', 'cCl', 'cGlu', 'ctAlb', 'ctHb')
+        self._int_prop = ("pH", "pCO2", "cK", "cNa", "cCl", "cGlu", "ctAlb", "ctHb")
         self._txt_prop = ()
 
         self.pH = None
-        self.pCO2 = None        # kPa
+        self.pCO2 = None  # kPa
 
-        self.cK = None          # mmol/L
-        self.cNa = None         # mmol/L
-        self.cCl = None         # mmol/L
+        self.cK = None  # mmol/L
+        self.cNa = None  # mmol/L
+        self.cCl = None  # mmol/L
 
-        self.ctAlb = None       # g/dL albumin
-        self.cGlu = None        # mmol/L
-        self.ctHb = None        # g/dl, haemoglobin
+        self.ctAlb = None  # g/dL albumin
+        self.cGlu = None  # mmol/L
+        self.ctHb = None  # g/dl, haemoglobin
         # self.ctBun = None  # May be for osmolarity in future
 
     def __str__(self):
         int_prop = {}
         for attr in chain(self._int_prop, self._txt_prop):
             int_prop[attr] = getattr(self, attr)
-        return "HumanBlood: {}".format(str(int_prop))
+        return f"HumanBlood: {int_prop}"
 
     def populate(self, properties):
         """Populate model from data structure.
@@ -114,8 +116,12 @@ class HumanBloodModel(object):
         """Anion gap (K+), usually not used."""
         if self.cK is not None:
             return abg.calculate_anion_gap(
-                Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
-                K=self.cK, albumin=self.ctAlb)
+                Na=self.cNa,
+                Cl=self.cCl,
+                HCO3act=self.hco3p,
+                K=self.cK,
+                albumin=self.ctAlb,
+            )
         else:
             raise ValueError("No potassium specified")
 
@@ -123,8 +129,8 @@ class HumanBloodModel(object):
     def anion_gap(self):
         """Calculate anion gap without potassium. Preferred method."""
         return abg.calculate_anion_gap(
-            Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p,
-            albumin=self.ctAlb)
+            Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p, albumin=self.ctAlb
+        )
 
     @property
     def sid_abbr(self):
@@ -158,7 +164,7 @@ class HumanBloodModel(object):
             info += "low"
         else:
             info += "ok"
-        info += " {:.0f} ({:.0f}-{:.0f} mOsm/L)".format(self.osmolarity, norm_mOsm[0], norm_mOsm[1])
+        info += f" {self.osmolarity:.0f} ({norm_mOsm[0]:.0f}-{norm_mOsm[1]:.0f} mOsm/L)"
 
         # Hyperosmolarity flags
         # if self.osmolarity >=282: # mOsm/kg
@@ -182,41 +188,40 @@ class HumanBloodModel(object):
 
     def describe_abg(self):
         """Describe pH and pCO2 - an old implementation considered stable."""
-        info = textwrap.dedent("""\
-        pCO2    {:2.1f} kPa
-        HCO3(P) {:2.1f} mmol/L
-        Conclusion: {}\n""".format(
-            self.pCO2,
-            self.hco3p,
-            abg.abg_approach_stable(self.pH, self.pCO2)[0]))
+        info = textwrap.dedent(
+            f"""\
+            pCO2    {self.pCO2:2.1f} kPa
+            HCO3(P) {self.hco3p:2.1f} mmol/L
+            Conclusion: {abg.abg_approach_stable(self.pH, self.pCO2)[0]}\n"""
+        )
         if self.parent.debug:
             info += "\n-- Manual compensatory response check --------------\n"
             # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-            info += "{}".format(abg.abg_approach_research(self.pH, self.pCO2))
+            info += abg.abg_approach_research(self.pH, self.pCO2)
         return info
 
     def describe_anion_gap(self):
         info = "-- Anion gap ---------------------------------------\n"
-        desc = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.anion_gap, *norm_gap)
+        desc = f"{self.anion_gap:.1f} ({norm_gap[0]:.0f}-{norm_gap[1]:.0f} mEq/L)"
         if abg.abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
             if norm_gap[1] < self.anion_gap:
                 # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
-                info += "HAGMA {} (KULT?), ".format(desc)
-                info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+                info += f"HAGMA {desc} (KULT?), "
+                info += abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p)
             elif self.anion_gap < norm_gap[0]:
-                info += "Low AG {} - hypoalbuminemia or low Na?".format(desc)
+                info += f"Low AG {desc} - hypoalbuminemia or low Na?"
             else:
                 # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
-                info += "NAGMA {}. Diarrhea or renal tubular acidosis?".format(desc)
+                info += f"NAGMA {desc}. Diarrhea or renal tubular acidosis?"
         else:
             if norm_gap[1] < self.anion_gap:
-                info += "Unexpected high AG {} without main metabolic acidosis; ".format(desc)
+                info += f"Unexpected high AG {desc} without main metabolic acidosis; "
                 # Can catch COPD or concurrent metabolic alkalosis here
-                info += "{}".format(abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p))
+                info += abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p)
             elif self.anion_gap < norm_gap[0]:
-                info += "Unexpected low AG {}. Starved patient with low albumin? Check your input and enter ctAlb if known.".format(desc)
+                info += f"Unexpected low AG {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
             else:
-                info += "AG is ok {}".format(desc)
+                info += f"AG is ok {desc}"
 
         if self.parent.debug:
             """Strong ion difference.
@@ -226,15 +231,15 @@ class HumanBloodModel(object):
             Should help to choose better fluid for correction.
             """
             SIDabbr_norm = (-5, 5)  # Arbitrary threshold
-            ref_str = "{:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sid_abbr, SIDabbr_norm[0], SIDabbr_norm[1])
+            ref_str = f"{self.sid_abbr:.1f} ({SIDabbr_norm[0]:.0f}-{SIDabbr_norm[1]:.0f} mEq/L)"
             info += "\nSIDabbr [Na⁺-Cl⁻-38] "
             if self.sid_abbr > SIDabbr_norm[1]:
-                info += "is alkalotic {}, relative Na⁺ excess".format(ref_str)
+                info += f"is alkalotic {ref_str}, relative Na⁺ excess"
             elif self.sid_abbr < SIDabbr_norm[0]:
-                info += "is acidotic {}, relative Cl⁻ excess".format(ref_str)
+                info += f"is acidotic {ref_str}, relative Cl⁻ excess"
             else:
-                info += "is ok {}".format(ref_str)
-            info += ", BDE gap {:.01f} mEq/L".format(self.sbe - self.sid_abbr)  # Lactate?
+                info += f"is ok {ref_str}"
+            info += f", BDE gap {self.sbe - self.sid_abbr:.01f} mEq/L"  # Lactate?
         return info
 
     def describe_sbe(self):
@@ -272,25 +277,27 @@ class HumanBloodModel(object):
             # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
             # https://en.wikipedia.org/wiki/Contraction_alkalosis
             # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += "SBE is high {:.1f} ({:.0f}-{:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?".format(self.sbe, norm_sbe[0], norm_sbe[1])
+            info += f"SBE is high {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?"
         elif self.sbe < norm_sbe[0]:
             if self.sbe <= NaHCO3_threshold:
-                info += "SBE is drastically low {:.1f} ({:.0f}-{:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n".format(self.sbe, norm_sbe[0], norm_sbe[1])
+                info += f"SBE is drastically low {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
                 info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
                 NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
                 NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
                 NaHCO3_g = NaHCO3_mmol / 1000 * M_NaHCO3  # gram
                 NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * M_NaHCO3
-                info += "  * NaHCO₃ {:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {:.0f} mmol/24h (5 mmol/kg/24h):\n".format(NaHCO3_mmol, NaHCO3_mmol_24h)  # Курек 273, Рябов 73 for children and adult
+                # Курек 273, Рябов 73 for children and adult
+                info += f"  * NaHCO₃ {NaHCO3_mmol:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {NaHCO3_mmol_24h:.0f} mmol/24h (5 mmol/kg/24h):\n"
                 # info += "  * NaHCO₃ {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
                 #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
                 for dilution in (4, 8.4):
                     NaHCO3_ml = NaHCO3_g / dilution * 100
                     NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
-                    info += "    * NaHCO3 {:.1f}% {:.0f} ml, daily dose {:.0f} ml/24h\n".format(dilution, NaHCO3_ml, NaHCO3_ml_24h)
+                    info += f"    * NaHCO3 {dilution:.1f}% {NaHCO3_ml:.0f} ml, daily dose {NaHCO3_ml_24h:.0f} ml/24h\n"
                 if self.parent.debug:
-                    info += textwrap.dedent("""\
+                    info += textwrap.dedent(
+                        """\
                         Confirmed NaHCO₃ use cases:
                           * Metabolic acidosis correction leads to decreased 28 day mortality only in AKI patients (target pH 7.3) [BICAR-ICU 2018]
                           * TCA poisoning with prolonged QT interval (target pH 7.45-7.55 [Костюченко 204])
@@ -298,20 +305,25 @@ class HumanBloodModel(object):
                         Main concepts of usage:
                           * Must hyperventilate to make use of bicarbonate buffer
                           * Control ABG after each NaHCO₃ infusion or every 4 hours
-                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]""")
+                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]"""
+                    )
             else:
-                info += "SBE is low {:.1f} ({:.0f}-{:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {:.0f} mEq/L".format(self.sbe, norm_sbe[0], norm_sbe[1], NaHCO3_threshold)
+                info += f"SBE is low {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {NaHCO3_threshold:.0f} mEq/L"
         else:
-            info += "SBE is ok {:.1f} ({:.0f}-{:.0f} mEq/L)".format(self.sbe, norm_sbe[0], norm_sbe[1])
+            info += (
+                f"SBE is ok {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L)"
+            )
         return info
 
     def describe_electrolytes(self):
-        info = "-- Electrolyte and osmolar abnormalities -----------\n"
-        info += "{}\n\n".format(self.describe_osmolarity())
-        info += "{}\n\n".format(electrolyte_K(self.parent.weight, self.cK))
-        info += "{}\n\n".format(electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug))
-        info += "{}\n".format(electrolyte_Cl(self.cCl))
-        return info
+        info = [
+            "-- Electrolyte and osmolar abnormalities -----------",
+            self.describe_osmolarity(),
+            electrolyte_K(self.parent.weight, self.cK),
+            electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug),
+            electrolyte_Cl(self.cCl),
+        ]
+        return "\n".join(info) + "\n"
 
     def describe_glucose(self):
         """Assess glucose level.
@@ -322,41 +334,44 @@ class HumanBloodModel(object):
         info = ""
         if self.cGlu > norm_cGlu[1]:
             if self.cGlu <= norm_cGlu_target[1]:
-                info += "cGlu is above ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), but acceptable".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+                info += f"cGlu is above ideal {self.cGlu:.1f} (target {norm_cGlu_target[0]:.1f}-{norm_cGlu_target[1]:.1f} mmol/L), but acceptable"
             else:
-                info += "Hyperglycemia {:.1f} (target {:.1f}-{:.1f} mmol/L) causes glycosuria with osmotic diuresis".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+                info += f"Hyperglycemia {self.cGlu:.1f} (target {norm_cGlu_target[0]:.1f}-{norm_cGlu_target[1]:.1f} mmol/L) causes glycosuria with osmotic diuresis"
                 if self.cGlu <= 20:  # Arbitrary threshold
-                    info += ", consider insulin {:.0f} IU subcut for adult".format(insulin_by_glucose(self.cGlu))
+                    info += f", consider insulin {insulin_by_glucose(self.cGlu):.0f} IU subcut for adult"
                 else:
-                    info += ", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {:.1f} IU/h (0.1 IU/kg/h)".format(self.parent.weight * 0.1)
+                    info += f", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {self.parent.weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
 
         elif self.cGlu < norm_cGlu[0]:
             if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
-                info += "cGlu is below ideal {:.1f} (target {:.1f}-{:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state".format(self.cGlu, norm_cGlu_target[0], norm_cGlu_target[1])
+                info += f"cGlu is below ideal {self.cGlu:.1f} (target {norm_cGlu_target[0]:.1f}-{norm_cGlu_target[1]:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state"
             else:
                 info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS GLUCOSE 10 % 2.5 mL/kg:\n"
                 # https://litfl.com/glucose/
                 # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
-                info += solution_glucose(0.25 * self.parent.weight, self.parent.weight, add_insuline=False)
-                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory"
+                info += solution_glucose(
+                    0.25 * self.parent.weight, self.parent.weight, add_insuline=False
+                )
+                # High lactate + refractory low cGlu marks liver failure: expect death in 24-48 hours
+                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory. In case of sepsis, liver failure may be the cause."
 
         else:
-            info += "cGlu is ok {:.1f} ({:.1f}-{:.1f} mmol/L)".format(self.cGlu, norm_cGlu[0], norm_cGlu[1])
+            info += f"cGlu is ok {self.cGlu:.1f} ({norm_cGlu[0]:.1f}-{norm_cGlu[1]:.1f} mmol/L)"
         return info
 
     def describe_albumin(self):
         """Albumin as nutrition marker in adults."""
-        ctalb_range = "{} ({}-{} g/dL)".format(self.ctAlb, abg.norm_ctAlb[0], abg.norm_ctAlb[1])
+        ctalb_range = f"{self.ctAlb} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/dL)"
         if abg.norm_ctAlb[1] < self.ctAlb:
-            info = "ctAlb is high {}. Dehydration?".format(ctalb_range)
+            info = f"ctAlb is high {ctalb_range}. Dehydration?"
         elif abg.norm_ctAlb[0] <= self.ctAlb <= abg.norm_ctAlb[1]:
-            info = "ctAlb is ok {}".format(ctalb_range)
+            info = f"ctAlb is ok {ctalb_range}"
         elif 3 <= self.ctAlb < abg.norm_ctAlb[0]:
-            info = "ctAlb is low: light hypoalbuminemia {}".format(ctalb_range)
+            info = f"ctAlb is low: light hypoalbuminemia {ctalb_range}"
         elif 2.5 <= self.ctAlb < 3:
-            info = "ctAlb is low: medium hypoalbuminemia {}".format(ctalb_range)
+            info = f"ctAlb is low: medium hypoalbuminemia {ctalb_range}"
         elif self.ctAlb < 2.5:
-            info = "ctAlb is low: severe hypoalbuminemia {}. Expect oncotic edema".format(ctalb_range)
+            info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
         return info
 
     def describe_Hb(self):
@@ -380,24 +395,23 @@ class HumanBloodModel(object):
         hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
         vol_def = volume_deficit_hct(self.parent.weight, self.hct_calc, hct_target)
 
-        desc_hb = "{:.1f} ({:.1f}-{:.1f} g/dl)".format(self.ctHb, hb_norm[0], hb_norm[1])
-        desc_hct = "{:.3f} ({:.3f}-{:.3f})".format(self.hct_calc, hct_norm[0], hct_norm[1])
-
+        desc_hb = f"{self.ctHb:.1f} ({hb_norm[0]:.1f}-{hb_norm[1]:.1f} g/dl)"
+        desc_hct = f"{self.hct_calc:.3f} ({hct_norm[0]:.3f}-{hct_norm[1]:.3f})"
         info = ""
         if self.ctHb < 7:  # Generic threshold
-            info += "Hb is low {}, consider transfusion. ".format(desc_hb)
+            info += f"Hb is low {desc_hb}, consider transfusion. "
         else:
-            info += "Hb {}. ".format(desc_hb)
+            info += f"Hb {desc_hb}. "
 
         if self.hct_calc > hct_norm[1]:
-            info += "Hct is high {}".format(desc_hct)
+            info += f"Hct is high {desc_hct}"
         elif self.hct_calc < hct_norm[0]:
-            info += "Hct is low {}".format(desc_hct)
+            info += f"Hct is low {desc_hct}"
         else:
-            info += "Hct is ok {}".format(desc_hct)
+            info += f"Hct is ok {desc_hct}"
 
         if self.hct_calc > hct_target + 0.01:  # Age-independent threshold
-            info += ", free water deficit {:.0f} ml (limitations: valid if no hemorrhage occurred, osmolarity and Na⁺ are more specific).".format(vol_def)
+            info += f", free water deficit {vol_def:.0f} ml (limitations: valid if no anemia, osmolarity and Na⁺ are more specific)."
 
         if self.parent.sex == human.HumanSex.child:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
@@ -431,11 +445,11 @@ def solution_glucose(glu_mass, body_weight, add_insuline=True):
     # This rate correlates with normal liver glucose production rate
     # 5-8 mg/kg/min in an infant and about 3-5 mg/kg/min in an older child
     # https://emedicine.medscape.com/article/921936-treatment
-    info = "Glu {:.1f} g ({:.2f} mmol, {:.0f} kcal)".format(glu_mass, glu_mol, glu_mass * 4.1)
+    info = f"Glu {glu_mass:.1f} g ({glu_mol:.2f} mmol, {glu_mass * 4.1:.0f} kcal)"
     if add_insuline:
         ins_dosage = 0.25  # IU/g
         insulinum = glu_mass * ins_dosage
-        info += " + Ins {:.1f} IU ({:.2f} IU/g)".format(insulinum, ins_dosage)
+        info += f" + Ins {insulinum:.1f} IU ({ins_dosage:.2f} IU/g)"
     info += ":\n"
 
     for dilution in (5, 10, 40):
@@ -443,7 +457,7 @@ def solution_glucose(glu_mass, body_weight, add_insuline=True):
         speed_low = (g_low * body_weight) / dilution * 100
         speed_max = (g_max * body_weight) / dilution * 100
         vol = glu_mass / dilution * 100
-        info += " * Glu {:>2.0f}% {:>4.0f} ml ({:>3.0f}-{:>3.0f} ml/h = {:.3f}-{:.2f} g/kg/h)".format(dilution, vol, speed_low, speed_max, g_low, g_max)
+        info += f" * Glu {dilution:>2.0f}% {vol:>4.0f} ml ({speed_low:>3.0f}-{speed_max:>3.0f} ml/h = {g_low:.3f}-{g_max:.2f} g/kg/h)"
         if dilution == 5:
             info += " isotonic"
         info += "\n"
@@ -479,14 +493,16 @@ def solution_normal_saline(salt_mmol):
     for dilution in (0.9, 3, 5, 10):
         conc = 1000 * (dilution / 100) / M_NaCl  # mmol/ml
         vol = salt_mmol / conc  # ml
-        info += " * NaCl {:>4.1f}% {:>4.0f} ml".format(dilution, vol)
+        info += f" * NaCl {dilution:>4.1f}% {vol:>4.0f} ml"
         if dilution == 0.9:
             info += " isotonic"
         info += "\n"
     return info
 
 
-def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
+def electrolyte_Na_classic(
+    total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5
+):
     """Correct hyper- hyponatremia correction with two classic formulas.
 
     Calculates amount of pure water or Na.
@@ -511,21 +527,21 @@ def electrolyte_Na_classic(total_body_water, Na_serum, Na_target=140, Na_shift_r
         # Classic hypernatremia formula
         # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
         water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
-        info += "Free water deficit is {:.0f} ml, ".format(water_deficit)
-        info += "replace it with D5 at rate {:.1f} ml/h during {:.0f} hours. ".format(
-            water_deficit / Na_shift_hours, Na_shift_hours)
+        info += f"Free water deficit is {water_deficit:.0f} ml, "
+        info += f"replace it with D5 at rate {water_deficit / Na_shift_hours:.1f} ml/h during {Na_shift_hours:.0f} hours. "
     elif Na_serum < Na_target:
         # Classic hyponatremia formula
         Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
-        info += "Na⁺ deficit is {:.0f} mmol, which equals to:\n".format(Na_deficit)
+        info += f"Na⁺ deficit is {Na_deficit:.0f} mmol, which equals to:\n"
         info += solution_normal_saline(Na_deficit)
-        info += "Replace Na⁺ at rate {:.1f} mmol/L/h during {:.0f} hours:\n".format(
-            Na_shift_rate, Na_shift_hours)
+        info += f"Replace Na⁺ at rate {Na_shift_rate:.1f} mmol/L/h during {Na_shift_hours:.0f} hours:\n"
         info += solution_normal_saline(Na_deficit / Na_shift_hours)
     return info
 
 
-def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5):
+def electrolyte_Na_adrogue(
+    total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5
+):
     """Correct hyper- hyponatremia correction with Adrogue–Madias formula.
 
     Calculates amount of specific solution needed to correct Na.
@@ -554,27 +570,44 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
     """
     solutions = [
         # Hyper
-        {'name': "NaCl 5%         (Na⁺ 855 mmol/L)", 'K_inf': 0, 'Na_inf': 855},
-        {'name': "NaCl 3%         (Na⁺ 513 mmol/L)", 'K_inf': 0, 'Na_inf': 513},
-        {'name': "NaCl 0.9%       (Na⁺ 154 mmol/L)", 'K_inf': 0, 'Na_inf': 154},
+        {"name": "NaCl 5%         (Na⁺ 855 mmol/L)", "K_inf": 0, "Na_inf": 855},
+        {"name": "NaCl 3%         (Na⁺ 513 mmol/L)", "K_inf": 0, "Na_inf": 513},
+        {"name": "NaCl 0.9%       (Na⁺ 154 mmol/L)", "K_inf": 0, "Na_inf": 154},
         # Iso
-        {'name': "Sterofundin ISO (Na⁺ 145 mmol/L)", 'K_inf': 4, 'Na_inf': 145},  # BBraun
-        {'name': "Ionosteril      (Na⁺ 137 mmol/L)", 'K_inf': 4, 'Na_inf': 137},  # Fresenius Kabi
-        {'name': "Lactate Ringer  (Na⁺ 130 mmol/L)", 'K_inf': 4, 'Na_inf': 130},  # Hartmann's solution
+        {
+            "name": "Sterofundin ISO (Na⁺ 145 mmol/L)",
+            "K_inf": 4,
+            "Na_inf": 145,
+        },  # BBraun
+        {
+            "name": "Ionosteril      (Na⁺ 137 mmol/L)",
+            "K_inf": 4,
+            "Na_inf": 137,
+        },  # Fresenius Kabi
+        {
+            "name": "Lactate Ringer  (Na⁺ 130 mmol/L)",
+            "K_inf": 4,
+            "Na_inf": 130,
+        },  # Hartmann's solution
         # Hypo
-        {'name': "NaCl 0.45%      (Na⁺  77 mmol/L)", 'K_inf': 0, 'Na_inf': 77},
-        {'name': "NaCl 0.2%       (Na⁺  34 mmol/L)", 'K_inf': 0, 'Na_inf': 34},
-        {'name': "D5W or water    (Na⁺   0 mmol/L)", 'K_inf': 0, 'Na_inf': 0},
+        {"name": "NaCl 0.45%      (Na⁺  77 mmol/L)", "K_inf": 0, "Na_inf": 77},
+        {"name": "NaCl 0.2%       (Na⁺  34 mmol/L)", "K_inf": 0, "Na_inf": 34},
+        {"name": "D5W or water    (Na⁺   0 mmol/L)", "K_inf": 0, "Na_inf": 0},
     ]
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
     info = ""
     for sol in solutions:
-        Na_inf = sol['Na_inf']
-        K_inf = sol['K_inf']
+        Na_inf = sol["Na_inf"]
+        K_inf = sol["K_inf"]
         if Na_serum == Na_inf + K_inf:
             # Prevent zero division if solution same as the patient Na
             continue
-        vol = (Na_target - Na_serum) / (Na_inf + K_inf - Na_serum) * (total_body_water + 1) * 1000
+        vol = (
+            (Na_target - Na_serum)
+            / (Na_inf + K_inf - Na_serum)
+            * (total_body_water + 1)
+            * 1000
+        )
         if vol < 0:
             # Wrong solution, will only make patient worse
             continue
@@ -582,8 +615,7 @@ def electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=140, Na_shift_r
             # Will lead to volume overload, not an option
             # Using 50000 ml threshold to cut off unreal volumes
             continue
-        info += " * {:<15} {:>6.0f} ml, {:6.1f} ml/h during {:.0f} hours\n".format(
-            sol['name'], vol, vol / Na_shift_hours, Na_shift_hours)
+        info += f" * {sol['name']:<15} {vol:>6.0f} ml, {vol / Na_shift_hours:6.1f} ml/h during {Na_shift_hours:.0f} hours\n"
     return info
 
 
@@ -644,49 +676,50 @@ def electrolyte_K(weight, K_serum):
     if K_serum > norm_K[1]:
         if K_serum >= K_high:
             glu_mass = 0.5 * weight  # Child and adults
-            info += "K⁺ is dangerously high (>{:.1f} mmol/L)\n".format(K_high)
+            info += f"K⁺ is dangerously high (>{K_high:.1f} mmol/L)\n"
             info += "Inject bolus 0.5 g/kg "
             info += solution_glucose(glu_mass, weight)
             info += "Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
             # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-            info += "NaHCO₃ 8.4% {:.0f} ml (RBWx2={:.0f} mmol) [Курек 2013]\n".format(
-                2 * weight, 2 * weight)
+            info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml (RBWx2={2 * weight:.0f} mmol) [Курек 2013]\n"
             info += "Don't forget salbutamol, furesemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
         else:
-            info += "K⁺ on the upper acceptable border {:.1f} ({:.1f}-{:.1f} mmol/L)".format(K_serum, K_low, K_high)
+            info += f"K⁺ on the upper acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     elif K_serum < norm_K[0]:
         if K_serum < K_low:
-            info += "K⁺ is dangerously low (<{:.1f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n".format(K_low)
-
+            info += f"K⁺ is dangerously low (<{K_low:.1f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n"
             info += "NB! Potassium calculations considered inaccurate, so use standard K⁺ replacement rate "
             if weight < 40:
                 info += "{:.1f}-{:.1f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
-                    0.25 * weight, 0.5 * weight,
-                    solution_kcl4(0.25 * weight), solution_kcl4(0.5 * weight))
+                    0.25 * weight,
+                    0.5 * weight,
+                    solution_kcl4(0.25 * weight),
+                    solution_kcl4(0.5 * weight),
+                )
             else:
-                info += "{:.0f}-{:.0f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
-                    10, 20,
-                    solution_kcl4(10), solution_kcl4(20))
+                info += "{:.0f}-{:.0f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
+                    10, 20, solution_kcl4(10), solution_kcl4(20)
+                )
             info += " and check ABG every 2-4 hours.\n"
 
             # coefficient = 0.45  # новорождённые
             # coefficient = 0.4   # грудные
             # coefficient = 0.3   # < 5 лет
-            coefficient = 0.2   # >5 лет [Курек 2013]
+            coefficient = 0.2  # >5 лет [Курек 2013]
 
             K_deficit = (K_target - K_serum) * weight * coefficient
             # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement? https://nursemathmedblog.wordpress.com/2016/05/29/potassium-replacement-calculation/
 
-            info += "Estimated K⁺ deficit is {:.0f} mmol (KCl 4 % {:.1f} ml) + ".format(K_deficit, solution_kcl4(K_deficit))
+            info += f"Estimated K⁺ deficit is {K_deficit:.0f} mmol (KCl 4 % {solution_kcl4(K_deficit):.1f} ml) + "
             if K_deficit > 4 * weight:
                 info += "Too much potassium for 24 hours"
 
             glu_mass = K_deficit * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
             info += solution_glucose(glu_mass, weight)
         else:
-            info += "K⁺ on lower acceptable border {:.1f} ({:.1f}-{:.1f} mmol/L)".format(K_serum, K_low, K_high)
+            info += f"K⁺ on lower acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     else:
-        info += "K⁺ is ok ({:.1f}-{:.1f} mmol/L)]".format(norm_K[0], norm_K[1])
+        info += f"K⁺ is ok ({norm_K[0]:.1f}-{norm_K[1]:.1f} mmol/L)]"
     return info
 
 
@@ -758,28 +791,50 @@ def electrolyte_Na(weight, Na_serum, cGlu, verbose=True):
     total_body_water = weight * coef  # Liters
 
     info = ""
-    desc = "{:.0f} ({:.0f}-{:.0f} mmol/L)".format(Na_serum, norm_Na[0], norm_Na[1])
+    desc = f"{Na_serum:.0f} ({norm_Na[0]:.0f}-{norm_Na[1]:.0f} mmol/L)"
     if Na_serum > norm_Na[1]:
-        info += "Na⁺ is high {}, check osmolarity. Give enteral water if possible. ".format(desc)
-        info += "Warning: Na⁺ decrement faster than {:.1f} mmol/L/h can cause cerebral edema.\n".format(Na_shift_rate)
+        info += (
+            f"Na⁺ is high {desc}, check osmolarity. Give enteral water if possible. "
+        )
+        info += f"Warning: Na⁺ decrement faster than {Na_shift_rate:.1f} mmol/L/h can cause cerebral edema.\n"
         if verbose:
-            info += "Classic replacement calculation: {}\n".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
-        info += "Adrogue replacement calculation:\n{}".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+            info += "Classic replacement calculation:\n" + electrolyte_Na_classic(
+                total_body_water,
+                Na_serum,
+                Na_target=Na_target,
+                Na_shift_rate=Na_shift_rate,
+            )
+        info += "Adrogue replacement calculation:\n" + electrolyte_Na_adrogue(
+            total_body_water,
+            Na_serum,
+            Na_target=Na_target,
+            Na_shift_rate=Na_shift_rate,
+        )
     elif Na_serum < norm_Na[0]:
-        info += "Na⁺ is low {}, expect cerebral edema leading to seizures, coma and death. ".format(desc)
-        info += "Warning: Na⁺ replacement faster than {:.1f} mmol/L/h can cause osmotic central pontine myelinolysis.\n".format(Na_shift_rate)
+        info += f"Na⁺ is low {desc}, expect cerebral edema leading to seizures, coma and death. "
+        info += f"Warning: Na⁺ replacement faster than {Na_shift_rate:.1f} mmol/L/h can cause osmotic central pontine myelinolysis.\n"
         # N.B.! Hypervolemic patient has low Na because of diluted plasma,
         # so it needs furosemide, not extra Na administration.
         if verbose:
-            info += "Classic replacement calculation: {}".format(electrolyte_Na_classic(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
-        info += "Adrogue replacement calculation:\n{}".format(electrolyte_Na_adrogue(total_body_water, Na_serum, Na_target=Na_target, Na_shift_rate=Na_shift_rate))
+            info += "Classic replacement calculation: " + electrolyte_Na_classic(
+                total_body_water,
+                Na_serum,
+                Na_target=Na_target,
+                Na_shift_rate=Na_shift_rate,
+            )
+        info += "Adrogue replacement calculation:\n" + electrolyte_Na_adrogue(
+            total_body_water,
+            Na_serum,
+            Na_target=Na_target,
+            Na_shift_rate=Na_shift_rate,
+        )
     else:
-        info += "Na⁺ is ok {}".format(desc)
+        info += f"Na⁺ is ok {desc}"
 
     # Should corrected Na be used instead of Na_serum for replacement calculation?
     Na_corr = correct_Na_hyperosmolar(Na_serum, cGlu)
     if abs(Na_corr - Na_serum) > 5:  # Arbitrary threshold
-        info += "\nHigh cGlu causes high osmolarity and apparent hyponatremia. Corrected Na⁺ is {:.0f} mmol/L.".format(Na_corr)
+        info += f"\nHigh cGlu causes high osmolarity and apparent hyponatremia. Corrected Na⁺ is {Na_corr:.0f} mmol/L."
     return info
 
 
@@ -875,12 +930,12 @@ def electrolyte_Cl(Cl_serum):
     info = ""
     Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
     if Cl_serum > Cl_high:
-        info += "Cl⁻ is high (>{} mmol/L), excessive NaCl infusion or dehydration (check osmolarity).".format(Cl_high)
+        info += f"Cl⁻ is high (>{Cl_high} mmol/L), excessive NaCl infusion or dehydration (check osmolarity)."
     elif Cl_serum < Cl_low:
         # KCl replacement?
-        info += "Cl⁻ is low (<{} mmol/L). Vomiting? Diuretics abuse?".format(Cl_low)
+        info += f"Cl⁻ is low (<{Cl_low} mmol/L). Vomiting? Diuretics abuse?"
     else:
-        info += "Cl⁻ is ok ({:.0f}-{:.0f} mmol/L)".format(norm_Cl[0], norm_Cl[1])
+        info += f"Cl⁻ is ok ({norm_Cl[0]:.0f}-{norm_Cl[1]:.0f} mmol/L)"
     return info
 
 
@@ -919,7 +974,7 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     # Revised equation from 2005, to accommodate for standardization of
     # creatinine assays over isotope dilution mass spectrometry (IDMS) SRM 967.
     # Equation being used by Radiometer devices
-    egfr = 175 * (cCrea / M_Crea) ** -1.154 * age ** -0.203
+    egfr = 175 * (cCrea / M_Crea) ** -1.154 * age**-0.203
     if sex == human.HumanSex.female:
         egfr *= 0.742
     elif sex == human.HumanSex.child:
@@ -952,14 +1007,14 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     cCrea /= M_Crea  # to mg/dl
     if sex == human.HumanSex.male:
         if cCrea <= 0.9:
-            egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993 ** age
+            egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993**age
         else:
-            egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993 ** age
+            egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993**age
     elif sex == human.HumanSex.female:
         if cCrea <= 0.7:
-            egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993 ** age * 1.018
+            egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993**age * 1.018
         else:
-            egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993 ** age * 1.018
+            egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993**age * 1.018
     elif sex == human.HumanSex.child:
         raise ValueError("CKD-EPI eGFR for children not supported")
 
@@ -998,7 +1053,7 @@ def egfr_schwartz(cCrea, height):
     # k = 0.33  # First year of life, pre-term infants
     # k = 0.45  # First year of life, full-term infants
     # k = 0.55  # 1-12 years
-    k = 0.413   # 1 to 16 years. Updated in 2009
+    k = 0.413  # 1 to 16 years. Updated in 2009
     return k * height * 100 / cCrea
 
 
@@ -1013,7 +1068,9 @@ def gfr_describe(gfr):
     elif 30 <= gfr < 45:
         return "CKD3b, moderate to severe loss of kidney function (44-30 %). Evaluate progression"
     elif 15 <= gfr < 30:
-        return "CKD4, severe loss of kidney function (29-15 %). Be prepared for dialysis"
+        return (
+            "CKD4, severe loss of kidney function (29-15 %). Be prepared for dialysis"
+        )
     else:
         return "CKD5, kidney failure (<15 %). Needs dialysis or kidney transplant"
 

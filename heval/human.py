@@ -24,6 +24,7 @@ class HumanSex(IntEnum):
     Male/female integers comply EMIAS database
     and belarusian sick leave documents.
     """
+
     male = 1
     female = 2
     child = 3  # For <12 years old
@@ -37,8 +38,8 @@ class HumanBodyModel(object):
 
     def __init__(self):
         self.debug = False
-        self._int_prop = ('height', 'age', 'weight', 'body_temp')
-        self._txt_prop = ('sex', 'comment')
+        self._int_prop = ("height", "age", "weight", "body_temp")
+        self._txt_prop = ("sex", "comment")
         self._sex = None
         self._height = None
         self._age = None
@@ -250,42 +251,42 @@ class HumanBodyModel(object):
         info += "{}\n".format(self._info_in_energy())
         if self.debug:
             info += "\n{}\n".format(self._info_in_food())
-        info += "\n-- Diuresis ------------------------------------\n"  # Also CO2, feces
-        info += "{}\n".format(self._info_out_fluids())
+        # Estimate also CO2 production?
+        info += "\n-- Diuresis ------------------------------------\n"
+        info += f"{self._info_out_fluids()}\n"
         if self.comment:
-            info += "\nComments:\n{}\n".format(self.comment)
+            info += f"\nComments:\n{self.comment}\n"
         return info
 
     def _info_in_body(self):
-        info = "{} {:.0f}/{:.0f}:".format(self.sex.name.title(), self.height * 100, self.weight)
+        info = f"{self.sex.name.title()} {self.height * 100:.0f}/{self.weight:.0f}:"
         if self._weight_ideal_valid:
-            info += " IBW {:.1f} kg [{}],".format(self.weight_ideal, self._weight_ideal_method)
+            info += f" IBW {self.weight_ideal:.1f} kg [{self._weight_ideal_method}],"
         else:
             info += " IBW can't be calculated for this height, enter weight manually."
 
         if self.sex in (HumanSex.male, HumanSex.female):
-            info += " BMI {:.1f} ({}),".format(self.bmi, bmi_describe(self.bmi))
+            info += f" BMI {self.bmi:.1f} ({bmi_describe(self.bmi)}),"
         else:
             # Adult normal ranges cannot be applied to children
-            info += " BMI {:.1f},".format(self.bmi)
+            info += f" BMI {self.bmi:.1f},"
 
-        info += " BSA {:.3f} m².\n".format(self.bsa)
+        info += f" BSA {self.bsa:.3f} m².\n"
 
         # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
         # older than 3 month. ml/kg ratio more in neonates and underweight
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
-            self.weight * 70, self.total_blood_volume)
-        info += "Transfusion of one pRBC dose will increase Hb by {:+.2f} g/dL.".format(
-            transfusion_prbc_response(self.weight))
+            self.weight * 70, self.total_blood_volume
+        )
+        info += f"Transfusion of one pRBC dose will increase Hb by {transfusion_prbc_response(self.weight):+.2f} g/dL."
 
         if self.sex == HumanSex.child:
             try:
                 br_code, br_age, br_weight = get_broselow_code(self.height)
-                info += "\nBROSELOW TAPE: {}, {}, ~{:.1f} kg.\n".format(
-                    br_code.upper(), br_age.lower(), br_weight)
+                info += f"\nBROSELOW TAPE: {br_code.upper()}, {br_age.lower()}, ~{br_weight:.1f} kg.\n"
             except ValueError:
                 pass
-            info += "\n{}".format(mnemonic_wetflag(weight=self.weight))
+            info += f"\n{mnemonic_wetflag(weight=self.weight)}"
         return info
 
     def _info_in_respiration(self):
@@ -320,6 +321,7 @@ class HumanBodyModel(object):
         По дыхательным объёмам у детей TV одинаковый, F у новорождённых больше, MV разный.
         [Курек 2013 стр. 63, 71]
         """
+
         def normal_minute_ventilation(ibw):
             """Calculate normal minute ventilation for humans with IBW >=3 kg.
 
@@ -367,11 +369,21 @@ class HumanBodyModel(object):
         info = ""
         mv = normal_minute_ventilation(weight_chosen)
         Vd = mv * weight_chosen  # l/min
-        info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(weight_type, self.sex, weight_chosen)
-        info += "MV x{:.2f} L/kg/min={:.3f} L/min. ".format(mv, Vd)
-        info += "VDaw is {:.0f} ml, so TV must be >{:.0f} ml\n".format(VDaw, Tv_min)
-        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min\n".format(tv_mul_min, weight_chosen * tv_mul_min, Vd * 1000 / (weight_chosen * tv_mul_min))
-        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min".format(tv_mul_max, weight_chosen * tv_mul_max, Vd * 1000 / (weight_chosen * tv_mul_max))
+        info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(
+            weight_type, self.sex, weight_chosen
+        )
+        info += f"MV x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
+        info += f"VDaw is {VDaw:.0f} ml, so TV must be >{Tv_min:.0f} ml\n"
+        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min\n".format(
+            tv_mul_min,
+            weight_chosen * tv_mul_min,
+            Vd * 1000 / (weight_chosen * tv_mul_min),
+        )
+        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min".format(
+            tv_mul_max,
+            weight_chosen * tv_mul_max,
+            Vd * 1000 / (weight_chosen * tv_mul_max),
+        )
         return info
 
     def _info_in_fluids(self):
@@ -379,12 +391,17 @@ class HumanBodyModel(object):
         info = ""
         if self.sex in (HumanSex.male, HumanSex.female):
             info += " * RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
-                30 * self.weight, 35 * self.weight)
+                30 * self.weight, 35 * self.weight
+            )
 
         hs_fluid = fluid_holidaysegar_mod(self.weight)
-        info += " * RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(hs_fluid, hs_fluid / 24)
+        info += " * RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(
+            hs_fluid, hs_fluid / 24
+        )
 
-        info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(body_surface_area_dubois(height=self.height, weight=self.weight) * 1750)  # All ages
+        info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(
+            body_surface_area_dubois(height=self.height, weight=self.weight) * 1750
+        )  # All ages
 
         # Variable perspiration losses, which is not included in physiologic demand
         # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
@@ -395,8 +412,8 @@ class HumanBodyModel(object):
         if self.body_temp > 37:
             deg = self.body_temp - 37
             info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
-                5 * self.weight * deg,
-                7 * self.weight * deg)
+                5 * self.weight * deg, 7 * self.weight * deg
+            )
         return info
 
     def _info_in_food(self):
@@ -404,19 +421,24 @@ class HumanBodyModel(object):
         info = ""
         if self.sex in (HumanSex.male, HumanSex.female):
             info += "Daily nutrition requirements for adults [ПосДеж]:\n"
-            info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(1.2 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(1.0 * self.weight_ideal, 1.5 * self.weight_ideal)
-            info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(4.0 * self.weight_ideal, 5.0 * self.weight_ideal)
+            info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(
+                1.2 * self.weight_ideal, 1.5 * self.weight_ideal
+            )
+            info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(
+                1.0 * self.weight_ideal, 1.5 * self.weight_ideal
+            )
+            info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(
+                4.0 * self.weight_ideal, 5.0 * self.weight_ideal
+            )
 
             info += "Electrolytes daily requirements:\n"
             info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
             info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
 
             # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
-            info += " * Mg²⁺\t{:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n".format(self.weight * 0.04)
-
+            info += f" * Mg²⁺\t{self.weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n"
             # Parenteral (25% of enteral) 200 mg/24h, 5 mmol/24h [Kostuch, p 49]
-            info += " * Ca²⁺\t{:3.1f} mmol/24h [~0.11 mmol/kg/24h]".format(self.weight * 0.11)
+            info += f" * Ca²⁺\t{self.weight * 0.11:3.1f} mmol/24h [~0.11 mmol/kg/24h]"
             return info
         else:
             return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
@@ -479,16 +501,26 @@ class HumanBodyModel(object):
             Жиры         1.0-1.5 г/кг (30-40% от общей энергии)
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
         """
-        info = ''
+        info = ""
         if self.sex in (HumanSex.male, HumanSex.female):
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
             if self.age:
                 info += "Resting energy expenditure for healthy adults:\n"
-                info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(ree_harris_benedict_revised(self.height, self.weight, self.sex, self.age))
-                info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(ree_mifflin(self.height, self.weight, self.sex, self.age))
+                info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(
+                    ree_harris_benedict_revised(
+                        self.height, self.weight, self.sex, self.age
+                    )
+                )
+                info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(
+                    ree_mifflin(self.height, self.weight, self.sex, self.age)
+                )
             else:
                 info += "Enter age to calculate REE\n"
-            info += " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]".format(25 * self.weight_ideal, 30 * self.weight_ideal)
+            info += (
+                " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]".format(
+                    25 * self.weight_ideal, 30 * self.weight_ideal
+                )
+            )
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
@@ -503,22 +535,34 @@ class HumanBodyModel(object):
         """
         if self.sex in (HumanSex.male, HumanSex.female):
             info = "RBW adult urinary output:\n"
-            info += " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(0.5 * self.weight, 0.5 * self.weight * 24)
-            info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(self.weight, self.weight * 24)
+            info += (
+                " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(
+                    0.5 * self.weight, 0.5 * self.weight * 24
+                )
+            )
+            info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(
+                self.weight, self.weight * 24
+            )
         if self.sex == HumanSex.child:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
             info = "RBW child urinary output:\n"
-            info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(self.weight, self.weight * 24)
-            info += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(3.5 * self.weight, 3.5 * self.weight * 24)
+            info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(
+                self.weight, self.weight * 24
+            )
+            info += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(
+                3.5 * self.weight, 3.5 * self.weight * 24
+            )
         return info
 
     def describe_drugs(self):
-        info = "-- Drugs ---------------------------------------"
-        info += "\nPressors:\n"
-        info += "{}\n".format(self.drugs.describe_pressors())
-        info += "Anesthesiology:\n"
-        info += "{}\n".format(self.drugs.describe_anesthesiology())
-        return info
+        info = [
+            "-- Drugs ---------------------------------------",
+            "Pressors:",
+            self.drugs.describe_pressors(),
+            "Anesthesiology:",
+            self.drugs.describe_anesthesiology(),
+        ]
+        return "\n".join(info) + "\n"
 
 
 def body_mass_index(height, weight):
@@ -534,7 +578,7 @@ def body_mass_index(height, weight):
     :rtype: float
     """
     assert height < 10  # Fall if height in centimeters
-    return weight / height ** 2
+    return weight / height**2
 
 
 def bmi_describe(bmi):
@@ -591,7 +635,7 @@ def body_surface_area_dubois(height, weight):
         m2, square meters
     :rtype: float
     """
-    return 0.007184 * weight ** 0.425 * (height * 100) ** 0.725
+    return 0.007184 * weight**0.425 * (height * 100) ** 0.725
 
 
 def get_broselow_code(height):
@@ -702,7 +746,9 @@ def ibw_traub_kichen(height):
     :rtype: float
     """
     if not 0.74 <= height <= 1.524:
-        warnings.warn("Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {}".format(height))
+        warnings.warn(
+            f"Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {height}"
+        )
     # return 2.396 * 1.0188 ** (height * 100)  # First variant
     return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
 
@@ -762,10 +808,12 @@ def ibw_hamilton(sex, height):
         # Devine BJ.Gentamicin therapy.Drug Intell Clin Pharm. 1974;8: 650–655.
         if sex == HumanSex.male:
             # 50 + 0.91 * (height - 152.4)  # ARDSNET formula
-            return 0.9079 * height - 88.022  # Adult male, negative value with height <97 cm
+            # Adult male, negative value with height <97 cm
+            return 0.9079 * height - 88.022
         elif sex == HumanSex.female:
             # 45.5 + 0.91 * (height - 152.4)  # ARDSNET formula
-            return 0.9049 * height - 92.006  # Adult female, negative value with height <101 cm
+            # Adult female, negative value with height <101 cm
+            return 0.9049 * height - 92.006
 
 
 def ree_harris_benedict_revised(height, weight, sex, age):
@@ -798,7 +846,9 @@ def ree_harris_benedict_revised(height, weight, sex, age):
     elif sex == HumanSex.female:
         return 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
     elif sex == HumanSex.child:
-        raise ValueError("Harris-Benedict equation REE calculation for children not supported")
+        raise ValueError(
+            "Harris-Benedict equation REE calculation for children not supported"
+        )
 
 
 def ree_mifflin(height, weight, sex, age):
@@ -900,9 +950,14 @@ def fluid_parcland(weight, burned_surface):
         burned_surface = 50
     print("Warning: burn area set to 50 %")
     volume_ml = 4 * weight * burned_surface
-    print("Patient {} kg with burns {} % of body surface area: deliver {} ml of lactated Ringer's within 24 hours".format(
-        weight, burned_surface, volume_ml))
-    print("{0:.0f} ml within first 8 hours\n{0:.0f} ml within next 16 hours".format(volume_ml / 2.))
+    print(
+        "Patient {} kg with burns {} % of body surface area: deliver {} ml of lactated Ringer's within 24 hours".format(
+            weight, burned_surface, volume_ml
+        )
+    )
+    print(
+        f"{volume_ml / 2.0:.0f} ml within first 8 hours\n{volume_ml / 2.0:.0f} ml within next 16 hours"
+    )
     return volume_ml
 
 
@@ -976,20 +1031,22 @@ def mnemonic_wetflag(age=None, weight=None):
     if not 1 <= age <= 10:
         return "WETFLAG: Age must be in range 1-10 years"
 
-    w = (age + 4) * 2   # Weight, kg
-    e = 4 * w    # Energy, Joules. Mono or bifasic?
+    w = (age + 4) * 2  # Weight, kg
+    e = 4 * w  # Energy, Joules. Mono or bifasic?
     t = age / 4 + 4  # Tube (endotracheal), ID mm (uncuffed)
     fl = 20 * w  # Fluids (bolus), ml of isotonic fluid (caution in some cases)
-    a = 10 * w   # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
-    g = 2 * w    # 2 mL/kg Glucose 10 %
-    return textwrap.dedent("""\
-        WETFLAG tip for {:.1f} yo:
-          Weight           {:>4.1f} kg  = (age + 4) * 2
-          Energy for defib {:>4.0f} J   = 4 J/kg
-          Tube             {:>4.1f} mm  = age / 4 + 4
-          Fluid bolus      {:>4.0f} ml  = 20 ml/kg of isotonic fluid
-          Adrenaline       {:>4.0f} mcg = 10 mcg/kg
-          Glucose 10 %     {:>4.0f} ml  = 2 mL/kg""".format(age, w, e, t, fl, a, g))
+    a = 10 * w  # Adrenaline 10 mcg/kg (1:10000 solution = 0.1 mL/kg)
+    g = 2 * w  # 2 mL/kg Glucose 10 %
+    return textwrap.dedent(
+        f"""\
+        WETFLAG tip for {age:.1f} yo:
+          Weight           {w:>4.1f} kg  = (age + 4) * 2
+          Energy for defib {e:>4.0f} J   = 4 J/kg
+          Tube             {t:>4.1f} mm  = age / 4 + 4
+          Fluid bolus      {fl:>4.0f} ml  = 20 ml/kg of isotonic fluid
+          Adrenaline       {a:>4.0f} mcg = 10 mcg/kg
+          Glucose 10 %     {g:>4.0f} ml  = 2 mL/kg"""
+    )
 
 
 def total_blood_volume_nadler(sex, height, weight):
@@ -1014,9 +1071,9 @@ def total_blood_volume_nadler(sex, height, weight):
     """
     # Same as http://apheresisnurses.org/apheresis-calculators
     if sex == HumanSex.male:
-        return ((0.3669 * height ** 3) + (0.03219 * weight) + 0.6041) * 1000
+        return ((0.3669 * height**3) + (0.03219 * weight) + 0.6041) * 1000
     elif sex == HumanSex.female:
-        return ((0.3561 * height ** 3) + (0.03308 * weight) + 0.1833) * 1000
+        return ((0.3561 * height**3) + (0.03308 * weight) + 0.1833) * 1000
     else:
         raise ValueError("Nadler formula isn't applicable to children")
 
@@ -1091,44 +1148,39 @@ def transfusion_prbc_response(weight, prbc_volume=350, prbc_hct=0.6):
 # https://news.tut.by/society/311809.html
 # Average Belorussian male in 2008 >=18 years old
 male_generic_by = {
-    'height': 1.77,
-    'weight': 69.,
-    'sex': HumanSex.male,
-    'body_temp': 36.6
+    "height": 1.77,
+    "weight": 69.0,
+    "sex": HumanSex.male,
+    "body_temp": 36.6,
 }
 
 # Average Belorussian female in 2008 >=18 years old
 female_generic_by = {
-    'height': 1.65,
-    'weight': 56.,
-    'sex': HumanSex.female,
-    'body_temp': 36.6
+    "height": 1.65,
+    "weight": 56.0,
+    "sex": HumanSex.female,
+    "body_temp": 36.6,
 }
 
 female_overweight_by = {
-    'height': 1.62,
-    'weight': 72.,
-    'sex': HumanSex.female,
-    'body_temp': 36.6
+    "height": 1.62,
+    "weight": 72.0,
+    "sex": HumanSex.female,
+    "body_temp": 36.6,
 }
 
 male_thin = {  # Me
-    'height': 1.86,
-    'weight': 55.,
-    'sex': HumanSex.male,
-    'body_temp': 36.6
+    "height": 1.86,
+    "weight": 55.0,
+    "sex": HumanSex.male,
+    "body_temp": 36.6,
 }
 
 child = {  # 3 year old kid
-    'height': 0.95,
-    'weight': 16.5,
-    'sex': HumanSex.child,
-    'body_temp': 36.6
+    "height": 0.95,
+    "weight": 16.5,
+    "sex": HumanSex.child,
+    "body_temp": 36.6,
 }
 
-newborn = {
-    'height': 0.5,
-    'weight': 3.6,
-    'sex': HumanSex.child,
-    'body_temp': 36.6
-}
+newborn = {"height": 0.5, "weight": 3.6, "sex": HumanSex.child, "body_temp": 36.6}

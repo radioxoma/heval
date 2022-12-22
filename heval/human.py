@@ -12,6 +12,8 @@ import textwrap
 from itertools import chain
 from enum import IntEnum
 import warnings
+from numbers import Number
+from typing import Optional
 
 from heval import drugs
 from heval import electrolytes
@@ -910,7 +912,7 @@ def mean_arterial_pressure(SysP, DiasP):
     return (SysP + 2 * DiasP) / 3
 
 
-def fluid_parcland(weight, burned_surface):
+def fluid_parcland(weight: Number, burned_surface: Number) -> Number:
     """Calculate Ringer's lactate solution volume to support burned patient.
 
     Formula used to calculate volume of crystalloids (Ringer's lactate) to
@@ -960,7 +962,7 @@ def fluid_parcland(weight, burned_surface):
     return volume_ml
 
 
-def fluid_holidaysegar_mod(rbw):
+def fluid_holidaysegar_mod(rbw: Number) -> Number:
     """Daily fluid requirement for children.
 
     Looks like Holliday-Segar method, but modified for premature infants
@@ -1001,7 +1003,9 @@ def fluid_holidaysegar_mod(rbw):
         return 1500 + 20 * (rbw - 20)
 
 
-def mnemonic_wetflag(age=None, weight=None):
+def mnemonic_wetflag(
+    age: Optional[Number] = None, weight: Optional[Number] = None
+) -> str:
     """Fast and not very precise formulas for calculations in children.
 
     https://www.resus.org.uk/faqs/faqs-paediatric-life-support/
@@ -1048,7 +1052,7 @@ def mnemonic_wetflag(age=None, weight=None):
     )
 
 
-def total_blood_volume_nadler(sex, height, weight):
+def total_blood_volume_nadler(sex: HumanSex, height: Number, weight: Number) -> Number:
     """Calculate total blood volume (TBV) for adult by Nadler 1962 formula.
 
     This formula is widely known and popular.
@@ -1077,7 +1081,9 @@ def total_blood_volume_nadler(sex, height, weight):
         raise ValueError("Nadler formula isn't applicable to children")
 
 
-def transfusion_prbc_target(weight, target_hb_increment=1, prbc_hct=0.6):
+def transfusion_prbc_target(
+    weight: Number, target_hb_increment: Number = 1, prbc_hct: Number = 0.6
+) -> Number:
     """Estimate needed pRBC transfusion volume to reach target Hb.
 
     Applicable to adult and children.
@@ -1115,7 +1121,9 @@ def transfusion_prbc_target(weight, target_hb_increment=1, prbc_hct=0.6):
     return weight * target_hb_increment * 3 / prbc_hct
 
 
-def transfusion_prbc_response(weight, prbc_volume=350, prbc_hct=0.6):
+def transfusion_prbc_response(
+    weight: Number, prbc_volume: Number = 350, prbc_hct: Number = 0.6
+) -> Number:
     """Estimate Hb increase after one pRBC dose transfusion.
 
     Applicable to adult and children.

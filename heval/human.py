@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Calculations based on human height and weight.
 

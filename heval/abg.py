@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Arterial blood gas interpreter.
 

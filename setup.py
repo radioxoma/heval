@@ -15,7 +15,6 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/radioxoma/heval/",
     author="Eugene Dvoretsky",
-    # For a list of valid classifiers, see https://pypi.org/classifiers/
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Healthcare Industry",
@@ -25,7 +24,7 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
-    python_requires=">=3.4.*, <4",
+    python_requires=">=3.8.*, <4",
     entry_points={
         "gui_scripts": [
             "heval=heval.__main__:main",

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Calculate pre-made nutrition solution dose.
 

@@ -6,14 +6,13 @@ Author: Eugene Dvoretsky
 Function parameters tends to be in International System of Units.
 """
 
+from __future__ import annotations
 import copy
 import math
 import textwrap
 from itertools import chain
 from enum import IntEnum
 import warnings
-from numbers import Number
-from typing import Optional
 
 from heval import drugs
 from heval import electrolytes
@@ -912,7 +911,7 @@ def mean_arterial_pressure(SysP, DiasP):
     return (SysP + 2 * DiasP) / 3
 
 
-def fluid_parcland(weight: Number, burned_surface: Number) -> Number:
+def fluid_parcland(weight: float, burned_surface: float) -> float:
     """Calculate Ringer's lactate solution volume to support burned patient.
 
     Formula used to calculate volume of crystalloids (Ringer's lactate) to
@@ -962,7 +961,7 @@ def fluid_parcland(weight: Number, burned_surface: Number) -> Number:
     return volume_ml
 
 
-def fluid_holidaysegar_mod(rbw: Number) -> Number:
+def fluid_holidaysegar_mod(rbw: float) -> float:
     """Daily fluid requirement for children.
 
     Looks like Holliday-Segar method, but modified for premature infants
@@ -1003,9 +1002,7 @@ def fluid_holidaysegar_mod(rbw: Number) -> Number:
         return 1500 + 20 * (rbw - 20)
 
 
-def mnemonic_wetflag(
-    age: Optional[Number] = None, weight: Optional[Number] = None
-) -> str:
+def mnemonic_wetflag(age: float | None = None, weight: float | None = None) -> str:
     """Fast and not very precise formulas for calculations in children.
 
     https://www.resus.org.uk/faqs/faqs-paediatric-life-support/
@@ -1027,10 +1024,10 @@ def mnemonic_wetflag(
     :param float age: years, 1-10
     :param float weight: kg, just a fallback now
     """
-    if not any((age, weight)):
-        raise ValueError("Specify children's age or weight")
     if weight:  # Don't want to add age field now
         age = weight / 2 - 4
+    if not age:
+        raise ValueError("Specify children's age or weight")
     if not 1 <= age <= 10:
         return "WETFLAG: Age must be in range 1-10 years"
 
@@ -1052,7 +1049,7 @@ def mnemonic_wetflag(
     )
 
 
-def total_blood_volume_nadler(sex: HumanSex, height: Number, weight: Number) -> Number:
+def total_blood_volume_nadler(sex: HumanSex, height: float, weight: float) -> float:
     """Calculate total blood volume (TBV) for adult by Nadler 1962 formula.
 
     This formula is widely known and popular.
@@ -1066,11 +1063,13 @@ def total_blood_volume_nadler(sex: HumanSex, height: Number, weight: Number) -> 
 
     [1] Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
 
-    :param float height: Human height, meters
-    :param float weight: Human weight, kg
-    :param human.HumanSex sex: Choose HumanSex.male, HumanSex.female
-    :return: Total blood volume, ml
-    :rtype: float
+    Parameters:
+        height: Human height, meters
+        weight: Human weight, kg
+        sex: Choose HumanSex.male, HumanSex.female
+
+    Returns:
+        Total blood volume, ml
     """
     # Same as http://apheresisnurses.org/apheresis-calculators
     if sex == HumanSex.male:
@@ -1082,8 +1081,8 @@ def total_blood_volume_nadler(sex: HumanSex, height: Number, weight: Number) -> 
 
 
 def transfusion_prbc_target(
-    weight: Number, target_hb_increment: Number = 1, prbc_hct: Number = 0.6
-) -> Number:
+    weight: float, target_hb_increment: float = 1, prbc_hct: float = 0.6
+) -> float:
     """Estimate needed pRBC transfusion volume to reach target Hb.
 
     Applicable to adult and children.
@@ -1111,43 +1110,43 @@ def transfusion_prbc_target(
     >>> transfusion_prbc_target(70)
     350.0
 
-    Parameters
-    ----------
+    Parameters:
     :param float weight: Real body weight, kg
     :param float target_hb_increment: Desired Hb increment, g/dL
     :param float prbc_hct: Haematocrit of pRBC dose, fraction
-    :return: Required pRBC volume to reach target Hb, ml
+
+    Returns:
+        Required pRBC volume to reach target Hb, ml
     """
     return weight * target_hb_increment * 3 / prbc_hct
 
 
 def transfusion_prbc_response(
-    weight: Number, prbc_volume: Number = 350, prbc_hct: Number = 0.6
-) -> Number:
+    weight: float, prbc_volume: float = 350, prbc_hct: float = 0.6
+) -> float:
     """Estimate Hb increase after one pRBC dose transfusion.
 
     Applicable to adult and children.
 
-    References
-    ----------
-    See function `hb_prbc_dose` for complete reference.
+    References:
+        See function `hb_prbc_dose` for complete reference.
 
-    [1] https://www.ncbi.nlm.nih.gov/pubmed/17302766
-        10 mL/kg gives an increment of 2 g/dL
+        [1] https://www.ncbi.nlm.nih.gov/pubmed/17302766
+            10 mL/kg gives an increment of 2 g/dL
 
-    Examples
-    --------
-    >>> transfusion_prbc_response(70, 10 * 70)
-    2.0
-    >>> transfusion_prbc_response(70)
-    1.0
+    Examples:
+        >>> transfusion_prbc_response(70, 10 * 70)
+        2.0
+        >>> transfusion_prbc_response(70)
+        1.0
 
-    Parameters
-    ----------
-    :param float weight: Real body weight, kg
-    :param float prbc_volume: Volume of one pRBC package, ml
-    :param float prbc_hct: Haematocrit of pRBC dose, fraction. Value is
-    :return: Expected Hb increase, g/dL
+    Parameters:
+        weight: Real body weight, kg
+        prbc_volume: Volume of one pRBC package, ml
+        prbc_hct: Haematocrit of pRBC dose, fraction. Value is
+
+    Returns:
+        Expected Hb increase, g/dL
     """
     return prbc_volume / (weight * 3 / prbc_hct)
 

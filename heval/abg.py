@@ -52,7 +52,7 @@ Main approach:
 try:
     from uncertainties import umath as math
 except ImportError:
-    import math
+    import math  # type: ignore
 
 # Units conversion
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""
-Heval tkinter-based GUI.
+
+"""Heval tkinter-based GUI.
 
 Author: Eugene Dvoretsky
 """
@@ -1247,7 +1247,8 @@ class CreateToolTip(object):
 
 class MenuTooltip(tk.Menu):
     def __init__(self, parent, *args, **kwargs):
-        """
+        """Menu bar tooltip.
+
         :param parent: 'root' or 'Menubar'.
 
         https://stackoverflow.com/questions/55316791/how-can-i-add-a-tooltip-to-menu-item
@@ -1284,11 +1285,12 @@ class MenuTooltip(tk.Menu):
         super(MenuTooltip, self).add_checkbutton(*cnf, **kwargs)
         self.add_tooltip(len(self.tooltip), tooltip)
 
-    def add_tooltip(self, index, tooltip=None):
-        """
-        :param index: Index (0-based) of the Menu Item
-        :param tooltip: Text to show as Tooltip
-        :return: None
+    def add_tooltip(self, index: int, tooltip=None) -> None:
+        """Add menu tooltip.
+
+        Args:
+            index: Index (0-based) of the Menu Item
+            tooltip: Text to show as Tooltip
         """
         self.tooltip.append((self.yposition(index) + 2, tooltip))
 

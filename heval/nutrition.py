@@ -1,5 +1,4 @@
-"""
-Calculate pre-made nutrition solution dose.
+"""Calculate pre-made nutrition solution dose.
 
 Author: Eugene Dvoretsky
 
@@ -457,7 +456,9 @@ def urea_mmoll2mgdl(mmol):
     return mmol * 6.006  # Urea molar mass
 
 
-def nitrogen_balance(c_uurea, diuresis=1000, text=False):
+def nitrogen_balance(
+    c_uurea: float, diuresis: float = 1000, text: bool = False
+) -> float | str:
     """Calculate daily protein recquirement by daily Urine Urea Nitrogen (BUN) excretion.
 
     1. Wait 1-2 days before urine urea collection to acieve steady metabolic state
@@ -480,23 +481,23 @@ def nitrogen_balance(c_uurea, diuresis=1000, text=False):
         https://www.researchgate.net/profile/Roland_Dickerson/publication/237837800_Using_Nitrogen_Balance_in_Clinical_Practice/links/540daa0b0cf2d8daaacc6c84/Using-Nitrogen-Balance-in-Clinical-Practice.pdf
     [4] Нутритивная терапия. Костюченко 2016
 
-    Examples
-    --------
-    Urea 177 mmol/L (= 10.6 g / 60 * 1000) == Protein requirement 70 * 0.8 g/kg/24h
-    print("In healthy 70 kg person: protein requirement {:.1f} g/24h, UUN {:.1f} g/24h, Urea {:.1f} g/24h".format(
-        0.8 * 70,
-        ((0.8 * 70 / 6.25) - 4),
-        ((0.8 * 70 / 6.25) - 4) / 28 * 60))
-    print(nitrogen_balance(177, 1000))
+    Examples:
+        Urea 177 mmol/L (= 10.6 g / 60 * 1000) == Protein requirement 70 * 0.8 g/kg/24h
+        print("In healthy 70 kg person: protein requirement {:.1f} g/24h, UUN {:.1f} g/24h, Urea {:.1f} g/24h".format(
+            0.8 * 70,
+            ((0.8 * 70 / 6.25) - 4),
+            ((0.8 * 70 / 6.25) - 4) / 28 * 60))
+        print(nitrogen_balance(177, 1000))
 
-    Parameters
-    ----------
-    :param float c_uurea: Urea concentration in 24 hours urine, mmol/L.
-        If diuresis not given, total Urea mmol/24h.
-        May vary 430–720 mmol/24h for an adult.
-    :param float diuresis: Total diuresis, ml/24h
-    :param bool text: If true, return text message
-    :return float: Protein requirement per g/24h
+    Args:
+        c_uurea: Urea concentration in 24 hours urine, mmol/L.
+            If diuresis not given, total Urea mmol/24h.
+            May vary 430–720 mmol/24h for an adult.
+        diuresis: Total diuresis, ml/24h
+        text: If true, return text message
+
+    Returns:
+        Protein requirement per g/24h
     """
     # UUN - Urine Urea Nitrogen
     # M_UUN = (14 + 1 * 2) * 2 + 12  + 16  # 60 g/mol (NH_2)_2 CO

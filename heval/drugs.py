@@ -1,5 +1,4 @@
-"""
-Drug dosage calculator.
+"""Drug dosage calculator.
 
 Author: Eugene Dvoretsky
 """

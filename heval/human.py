@@ -1,5 +1,4 @@
-"""
-Calculations based on human height and weight.
+"""Calculations based on human height and weight.
 
 Author: Eugene Dvoretsky
 
@@ -20,9 +19,9 @@ from heval import nutrition
 
 
 class HumanSex(IntEnum):
-    """
-    Male/female integers comply EMIAS database
-    and belarusian sick leave documents.
+    """Human body constitution based on sex.
+
+    Male/female integers comply EMIAS database and belarusian sick leave documents.
     """
 
     male = 1
@@ -322,19 +321,21 @@ class HumanBodyModel(object):
         [Курек 2013 стр. 63, 71]
         """
 
-        def normal_minute_ventilation(ibw):
+        def normal_minute_ventilation(ibw: float) -> float:
             """Calculate normal minute ventilation for humans with IBW >=3 kg.
 
             Calculation accomplished according to ASV ventilation mode from
             Hamilton G5 Ventilator - Operators manual en v2.6x 2016-03-07 p 451 or C-11
 
-            Example
-            mv, l/kg * ibw, kg = Vd, l/min
-            0.2 l/kg * 15 kg = 3 l/min
+            Examples:
+                mv, l/kg * ibw, kg = Vd, l/min
+                0.2 l/kg * 15 kg = 3 l/min
 
-            :param float ibw: Ideal body mass for given adult or child >=3 kg.
-            :return: l/kg/min
-            :rtype: float
+            Args:
+                ibw: Ideal body mass for given adult or child >=3 kg.
+
+            Returns:
+                l/kg/min
             """
             # Approximation to Hamilton graph
             if ibw < 3:
@@ -638,7 +639,7 @@ def body_surface_area_dubois(height, weight):
     return 0.007184 * weight**0.425 * (height * 100) ** 0.725
 
 
-def get_broselow_code(height):
+def get_broselow_code(height: float) -> tuple[str, str, float]:
     """Get Brocelow-Luten color zone by height.
 
     Broselow tape https://www.ncbi.nlm.nih.gov/pubmed/3377285
@@ -681,19 +682,19 @@ def get_broselow_code(height):
         * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
         * Age-based estimates achieved a very low accuracy - use length-based
 
-    Parameters
-    ----------
-    :param float height: Child height in meters.
-    :return: Color code, approx age, approx weight (kg).
-    :rtype: tuple
+    Args:
+        height: Child height in meters.
+
+    Returns:
+        Typle of color code, approx age, approx weight (kg).
     """
     height *= 100
     if 46.8 <= height < 51.9:
-        return "Grey", "Newborn", 3
+        return "Grey", "Newborn", 3.0
     elif 51.9 <= height < 55.0:
-        return "Grey", "Newborn", 4
+        return "Grey", "Newborn", 4.0
     elif 55.0 <= height < 59.2:
-        return "Grey", "2 months", 5
+        return "Grey", "2 months", 5.0
     elif 59.2 <= height < 66.9:
         return "Pink", "4 months", 6.5  # 6-7
     elif 66.9 <= height < 74.2:
@@ -701,27 +702,27 @@ def get_broselow_code(height):
     elif 74.2 <= height < 83.8:
         return "Purple", "1 year", 10.5  # 10-11
     elif 83.8 <= height < 95.4:
-        return "Yellow", "2 years", 13  # 12-14
+        return "Yellow", "2 years", 13.0  # 12-14
     elif 95.4 <= height < 108.3:
         return "White", "4 years", 16.5  # 15-18
     elif 108.3 <= height < 121.5:
-        return "Blue", "6 years", 21  # 19-23
+        return "Blue", "6 years", 21.0  # 19-23
     elif 121.5 <= height < 130.7:
         return "Orange", "8 years", 26.5  # 24-29
     elif 130.7 <= height <= 143.3:
-        return "Green", "10 years", 33  # 30-36
+        return "Green", "10 years", 33.0  # 30-36
     else:
         raise ValueError("Out of Broselow height range")
 
 
-def ibw_broselow(height):
+def ibw_broselow(height: float) -> float:
     """Calculate ideal body weight by height (Broselow).
 
-    Parameters
-    ----------
-    :param float height: Child height in meters.
-    :return: Ideal body weight, approx weight (kg).
-    :rtype: float
+    Args:
+        height: Child height in meters.
+
+    Returns:
+        Ideal body weight, approx weight (kg).
     """
     return get_broselow_code(height)[2]
 
@@ -753,7 +754,7 @@ def ibw_traub_kichen(height):
     return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
 
 
-def ibw_hamilton(sex, height):
+def ibw_hamilton(sex: HumanSex, height: float) -> float:
     """Calculate ideal body weight by height (0.3-2.5 m) for adult and pediatric patients.
 
     Reverse-engineered Hamilton implementation. Main principles:
@@ -765,37 +766,36 @@ def ibw_hamilton(sex, height):
     3. Joint between formulas has a notch around 127 cm for females
         and no notch for males
 
-    References
-    ----------
-    Traub SL. Am J Hosp Pharm 1980 (pediatric patients):
+    References:
+        Traub SL. Am J Hosp Pharm 1980 (pediatric patients):
 
-        height ≤ 70 cm       IBW = 0.125 * height - 0.75
-        70 < height ≤ 128    IBW = (0.0037 * height - 0.4018) * height + 18.62
+            height ≤ 70 cm       IBW = 0.125 * height - 0.75
+            70 < height ≤ 128    IBW = (0.0037 * height - 0.4018) * height + 18.62
 
-    Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center.
-    Same line as ARDSNET predicted body weight.
+        Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center.
+        Same line as ARDSNET predicted body weight.
 
-        height ≥ 129
-            Male             IBW = 0.9079 * height - 88.022
-            Female           IBW = 0.9049 * height - 92.006
+            height ≥ 129
+                Male             IBW = 0.9079 * height - 88.022
+                Female           IBW = 0.9049 * height - 92.006
 
-    Examples
-    --------
-    >>> ibw_hamilton(HumanSex.male, 0.6)
-    6.75
-    >>> ibw_hamilton(HumanSex.male, 1.0)
-    15.440000000000001
-    >>> ibw_hamilton(HumanSex.male, 1.5)
-    48.163
-    >>> ibw_hamilton(HumanSex.female, 1.5)
-    43.72900000000001
+    Examples:
+        >>> ibw_hamilton(HumanSex.male, 0.6)
+        6.75
+        >>> ibw_hamilton(HumanSex.male, 1.0)
+        15.440000000000001
+        >>> ibw_hamilton(HumanSex.male, 1.5)
+        48.163
+        >>> ibw_hamilton(HumanSex.female, 1.5)
+        43.72900000000001
 
-    Parameters
-    ----------
-    :param human.HumanSex sex: male, female. For height <129 doesn't matter which.
-    :param float height: Height (0.3-2.5 m), meters.
-    :return: Ideal body weight, kg
-    :rtype: float
+    Args:
+        sex: male, female. For height <129 doesn't matter which.
+        height: Height (0.3-2.5 m), meters.
+
+    Returns:
+        Ideal body weight, kg
+
     """
     height *= 100  # to cm
     if height <= 70:
@@ -967,30 +967,30 @@ def fluid_holidaysegar_mod(rbw: float) -> float:
     Looks like Holliday-Segar method, but modified for premature infants
     with body weight <3 kg.
 
-    References
-    ----------
-    [1] The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
-        https://www.ncbi.nlm.nih.gov/pubmed/13431307
+    References:
+        [1] The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
+            https://www.ncbi.nlm.nih.gov/pubmed/13431307
 
-    [2] Курек 2013, стр. 121 или 418. По идее, дложен соответствовать
-    таблице с 121, но для >20 кг это не так.
+        [2] Курек 2013, стр. 121 или 418. По идее, дложен соответствовать
+        таблице с 121, но для >20 кг это не так.
 
-    Examples
-    --------
-    >>> fluid_holidaysegar_mod(1)
-    150
-    >>> fluid_holidaysegar_mod(5)
-    500
-    >>> fluid_holidaysegar_mod(15)
-    1250
-    >>> fluid_holidaysegar_mod(30)
-    1700
-    >>> fluid_holidaysegar_mod(90)
-    2900
+    Examples:
+        >>> fluid_holidaysegar_mod(1)
+        150
+        >>> fluid_holidaysegar_mod(5)
+        500
+        >>> fluid_holidaysegar_mod(15)
+        1250
+        >>> fluid_holidaysegar_mod(30)
+        1700
+        >>> fluid_holidaysegar_mod(90)
+        2900
 
-    Parameters
-    ----------
-    :param float rbw: Real body mass, kg
+    Args:
+        rbw: Real body mass, kg
+
+    Returns:
+        24 hour fluid demand.
     """
     if rbw < 2:  # Kurek modification?
         return 150 * rbw
@@ -1058,12 +1058,10 @@ def total_blood_volume_nadler(sex: HumanSex, height: float, weight: float) -> fl
 
         PV = TBV * (1 – hct)
 
-    Reference
-    ---------
+    References:
+        [1] Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
 
-    [1] Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
-
-    Parameters:
+    Args:
         height: Human height, meters
         weight: Human weight, kg
         sex: Choose HumanSex.male, HumanSex.female
@@ -1091,29 +1089,27 @@ def transfusion_prbc_target(
       * In an average adult (70 kg): one pRBC unit increases Hgb by 1 g/dL (Hct by 2–3%) [1]
       * Infant: 10-15 ml/kg to achieve the same response
 
-    References
-    ----------
-    [1] Calculating the required transfusion volume in children, 2007
-        https://www.ncbi.nlm.nih.gov/pubmed/17302766
-        * 10 mL/kg gives an increment of 2 g/dL
-        * Hb estimation 1 hour after transfusion is the same as 7 hours after transfusion.
-    [2] Ness PM, Kruskall MS. Principles of red blood cell transfusion. In: Hoffman K, editor.
-        Hematology: basic principles and practice. 4th ed. Orlando, FL: Churchill Livingstone; 2005.
-    [3] https://www.sciencedirect.com/topics/biochemistry-genetics-and-molecular-biology/hemoglobin-blood-level
-        One RBC unit:
-          * 300 ml, prbc_hct 0.7, so rbc_volume = 300 * 0.7
-          * 200 mg of iron
-    [4] https://www.omnicalculator.com/health/pediatric-transfusion
+    References:
+        [1] Calculating the required transfusion volume in children, 2007
+            https://www.ncbi.nlm.nih.gov/pubmed/17302766
+            * 10 mL/kg gives an increment of 2 g/dL
+            * Hb estimation 1 hour after transfusion is the same as 7 hours after transfusion.
+        [2] Ness PM, Kruskall MS. Principles of red blood cell transfusion. In: Hoffman K, editor.
+            Hematology: basic principles and practice. 4th ed. Orlando, FL: Churchill Livingstone; 2005.
+        [3] https://www.sciencedirect.com/topics/biochemistry-genetics-and-molecular-biology/hemoglobin-blood-level
+            One RBC unit:
+              * 300 ml, prbc_hct 0.7, so rbc_volume = 300 * 0.7
+              * 200 mg of iron
+        [4] https://www.omnicalculator.com/health/pediatric-transfusion
 
-    Examples
-    --------
-    >>> transfusion_prbc_target(70)
-    350.0
+    Examples:
+        >>> transfusion_prbc_target(70)
+        350.0
 
-    Parameters:
-    :param float weight: Real body weight, kg
-    :param float target_hb_increment: Desired Hb increment, g/dL
-    :param float prbc_hct: Haematocrit of pRBC dose, fraction
+    Args:
+        weight: Real body weight, kg
+        target_hb_increment: Desired Hb increment, g/dL
+        prbc_hct: Haematocrit of pRBC dose, fraction
 
     Returns:
         Required pRBC volume to reach target Hb, ml
@@ -1140,7 +1136,7 @@ def transfusion_prbc_response(
         >>> transfusion_prbc_response(70)
         1.0
 
-    Parameters:
+    Args:
         weight: Real body weight, kg
         prbc_volume: Volume of one pRBC package, ml
         prbc_hct: Haematocrit of pRBC dose, fraction. Value is

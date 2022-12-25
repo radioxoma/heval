@@ -1,5 +1,4 @@
-"""
-Electrolyte disturbances and correction.
+"""Electrolyte disturbances and correction.
 
 Author: Eugene Dvoretsky
 """
@@ -500,25 +499,27 @@ def solution_normal_saline(salt_mmol):
 
 
 def electrolyte_Na_classic(
-    total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5
-):
+    total_body_water: float,
+    Na_serum: float,
+    Na_target: float = 140,
+    Na_shift_rate: float = 0.5,
+) -> str:
     """Correct hyper- hyponatremia correction with two classic formulas.
 
     Calculates amount of pure water or Na.
 
-    References
-    ----------
-    Original paper is unknown. Plenty simplified calculations among the books.
-    [1] http://www.medcalc.com/sodium.html
+    References:
+        Original paper is unknown. Plenty simplified calculations among the books.
+        [1] http://www.medcalc.com/sodium.html
 
-    Parameters
-    ----------
-    :param float total_body_water: Liters
-    :param float Na_serum: Serum sodium level, mmol/L
-    :param float Na_target: 140 mmol/L by default
-    :param float Na_shift_rate: 0.5 mmol/L/h by default is safe
-    :return: Text describing Na deficit/excess and solutions dosage to correct.
-    :rtype: str
+    Args:
+        total_body_water: Liters
+        Na_serum: Serum sodium level, mmol/L
+        Na_target: 140 mmol/L by default
+        Na_shift_rate: 0.5 mmol/L/h by default is safe
+
+    Returns:
+        Text describing Na deficit/excess and solutions dosage to correct.
     """
     info = ""
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
@@ -539,8 +540,11 @@ def electrolyte_Na_classic(
 
 
 def electrolyte_Na_adrogue(
-    total_body_water, Na_serum, Na_target=140, Na_shift_rate=0.5
-):
+    total_body_water: float,
+    Na_serum: float,
+    Na_target: float = 140,
+    Na_shift_rate: float = 0.5,
+) -> str:
     """Correct hyper- hyponatremia correction with Adrogue–Madias formula.
 
     Calculates amount of specific solution needed to correct Na.
@@ -549,23 +553,22 @@ def electrolyte_Na_adrogue(
     If patient urinates during Na replacement, calculated dose may be excessive
     because total body water won't be increased as expected.
 
-    References
-    ----------
-    [1] Adrogue, HJ; and Madias, NE. Primary Care: Hypernatremia. New England Journal of Medicine 2000.
-        https://www.ncbi.nlm.nih.gov/pubmed/10824078
-        https://www.ncbi.nlm.nih.gov/pubmed/10816188
-    [2] Does the Adrogue–Madias formula accurately predict serum sodium levels in patients with dysnatremias?
-        https://www.nature.com/articles/ncpneph0335
-    [3] http://www.medcalc.com/sodium.html
+    References:
+        [1] Adrogue, HJ; and Madias, NE. Primary Care: Hypernatremia. New England Journal of Medicine 2000.
+            https://www.ncbi.nlm.nih.gov/pubmed/10824078
+            https://www.ncbi.nlm.nih.gov/pubmed/10816188
+        [2] Does the Adrogue–Madias formula accurately predict serum sodium levels in patients with dysnatremias?
+            https://www.nature.com/articles/ncpneph0335
+        [3] http://www.medcalc.com/sodium.html
 
-    Parameters
-    ----------
-    :param float total_body_water: Liters
-    :param float Na_serum: Serum sodium level, mmol/L
-    :param float Na_target: 140 mmol/L by default
-    :param float Na_shift_rate: 0.5 mmol/L/h by default is safe
-    :return: Text describing Na deficit/excess and solutions dosage to correct.
-    :rtupe: str
+    Args:
+        total_body_water: Liters
+        Na_serum: Serum sodium level, mmol/L
+        Na_target: 140 mmol/L by default
+        Na_shift_rate: 0.5 mmol/L/h by default is safe
+
+    Returns:
+            Text describing Na deficit/excess and solutions dosage to correct.
     """
     solutions = [
         # Hyper
@@ -722,7 +725,7 @@ def electrolyte_K(weight, K_serum):
     return info
 
 
-def electrolyte_Na(weight, Na_serum, cGlu, verbose=True):
+def electrolyte_Na(weight: float, Na_serum: float, cGlu: float, verbose: bool = True):
     """Assess blood serum sodium level.
 
     Current human body fluid model status in context of Na replacement:
@@ -765,17 +768,14 @@ def electrolyte_Na(weight, Na_serum, cGlu, verbose=True):
         * If Na<150 use enteral water (https://med.virginia.edu/ginutrition/wp-content/uploads/sites/199/2014/06/Parrish_Rosner-Dec-14.pdf)
         * Spironolactone 25 mg, Furosemide 10-20 mg
 
+    References:
+        [1] http://www.medcalc.com/sodium.html
 
-    References
-    ----------
-    [1] http://www.medcalc.com/sodium.html
-
-    Parameters
-    ----------
-    :param float weight: Real body weight, kg
-    :param float Na_serum: Serum sodium level, mmol/L
-    :param float cGlu: Serum glucose level, mmol/L
-    :param bool verbose: Return all possible text if True
+    Args:
+        weight: Real body weight, kg
+        Na_serum: Serum sodium level, mmol/L
+        cGlu: Serum glucose level, mmol/L
+        verbose: Return all possible text if True
     """
     Na_target = 140  # mmol/L just mean value, from Маневич и Плохой
 

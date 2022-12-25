@@ -1,5 +1,4 @@
-"""
-Arterial blood gas interpreter.
+"""Arterial blood gas interpreter.
 
 Author: Eugene Dvoretsky, 2015-05-20
 

@@ -15,6 +15,7 @@ End user shouldn't mess with protein/nonprotein caloric proportions,
 glucose/fat caloric proportions, add unsaturated fatty acids etc.
 """
 import textwrap
+
 from heval import human
 
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm

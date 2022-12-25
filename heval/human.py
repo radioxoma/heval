@@ -6,16 +6,15 @@ Function parameters tends to be in International System of Units.
 """
 
 from __future__ import annotations
+
 import copy
 import math
 import textwrap
-from itertools import chain
-from enum import IntEnum
 import warnings
+from enum import IntEnum
+from itertools import chain
 
-from heval import drugs
-from heval import electrolytes
-from heval import nutrition
+from heval import drugs, electrolytes, nutrition
 
 
 class HumanSex(IntEnum):

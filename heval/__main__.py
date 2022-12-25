@@ -7,16 +7,12 @@ Author: Eugene Dvoretsky
 
 import random
 import textwrap
-from datetime import datetime
 import tkinter as tk
-from tkinter import ttk
+from datetime import datetime
 from tkinter import font as tkfont
+from tkinter import ttk
 
-from heval import abg
-from heval import electrolytes
-from heval import human
-from heval import __version__
-
+from heval import __version__, abg, electrolytes, human
 
 __helptext__ = """\
   HUMAN BODY

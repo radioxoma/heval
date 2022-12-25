@@ -4,8 +4,8 @@ Author: Eugene Dvoretsky
 """
 import textwrap
 from itertools import chain
-from heval import abg
-from heval import human
+
+from heval import abg, human
 
 M_C6H12O6 = 180
 M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)

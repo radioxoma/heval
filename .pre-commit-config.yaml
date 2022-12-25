@@ -13,6 +13,13 @@ repos:
     -   id: black
         args: [--check, --quiet, --diff, --color]
 
+-   repo: https://github.com/pycqa/isort
+    rev: 5.11.4
+    hooks:
+      - id: isort
+        args: [--check-only, --diff, --color]
+        additional_dependencies: [colorama]
+
 -   repo: https://github.com/PyCQA/flake8/
     rev: 6.0.0
     hooks:

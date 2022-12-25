@@ -542,7 +542,7 @@ def electrolyte_Na_classic(
 def electrolyte_Na_adrogue(
     total_body_water: float,
     Na_serum: float,
-    Na_target: float = 140,
+    Na_target: float = 140.0,
     Na_shift_rate: float = 0.5,
 ) -> str:
     """Correct hyper- hyponatremia correction with Adrogue–Madias formula.
@@ -570,7 +570,7 @@ def electrolyte_Na_adrogue(
     Returns:
             Text describing Na deficit/excess and solutions dosage to correct.
     """
-    solutions = [
+    solutions: list[dict[str, str | float]] = [
         # Hyper
         {"name": "NaCl 5%         (Na⁺ 855 mmol/L)", "K_inf": 0, "Na_inf": 855},
         {"name": "NaCl 3%         (Na⁺ 513 mmol/L)", "K_inf": 0, "Na_inf": 513},
@@ -599,9 +599,9 @@ def electrolyte_Na_adrogue(
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
     info = ""
     for sol in solutions:
-        Na_inf = sol["Na_inf"]
-        K_inf = sol["K_inf"]
-        if Na_serum == Na_inf + K_inf:
+        Na_inf = float(sol["Na_inf"])
+        K_inf = float(sol["K_inf"])
+        if Na_serum == (Na_inf + K_inf):
             # Prevent zero division if solution same as the patient Na
             continue
         vol = (

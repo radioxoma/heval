@@ -340,7 +340,7 @@ class HumanBodyModel(object):
             # Approximation to Hamilton graph
             if ibw < 3:
                 print("WARNING: MV calculation for child <3 kg is not supported")
-                minute_volume = 0
+                minute_volume = 0.0
             elif 3 <= ibw < 5:
                 minute_volume = 0.3
             elif 5 <= ibw < 15:
@@ -803,7 +803,7 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
     elif 70 < height < 129:
         # Missing parentheses in Hamilton manual
         return (0.0037 * height - 0.4018) * height + 18.62
-    elif height >= 129:  # This switch fits only for males. Notch for females
+    else:  # height >= 129:  # This switch fits only for males. Notch for females
         # Looks like Devine formula from ARDSNET
         # Devine BJ.Gentamicin therapy.Drug Intell Clin Pharm. 1974;8: 650–655.
         if sex == HumanSex.male:
@@ -814,6 +814,8 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
             # 45.5 + 0.91 * (height - 152.4)  # ARDSNET formula
             # Adult female, negative value with height <101 cm
             return 0.9049 * height - 92.006
+        else:
+            raise NotImplementedError("IBW calculation in children not implemented")
 
 
 def ree_harris_benedict_revised(height, weight, sex, age):

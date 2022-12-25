@@ -75,7 +75,9 @@ norm_ctAlb_mean = 4.4  # g/dL
 norm_ctAlb = (3.5, 5)  # g/dL
 
 
-def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
+def calculate_anion_gap(
+    Na: float, Cl: float, HCO3act: float, K: float = 0, albumin: float = norm_ctAlb_mean
+) -> float:
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
     May be known as AG. Don't get confused with 'osmol gap'. Usually used
@@ -116,44 +118,44 @@ def calculate_anion_gap(Na, Cl, HCO3act, K=0, albumin=norm_ctAlb_mean):
     See also Delta Ratio - an derived calculation to asses acidosis cause and
     mixed disturbances.
 
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Anion_gap
-    [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
-        Acid base balance in critical care medicine
-    [4] Hypoalbuminemia correction: Anion gap and hypoalbuminemia Figge 1998 10.1097/00003246-199811000-00019 https://journals.lww.com/ccmjournal/Citation/2000/05000/Reliability_of_the_Anion_Gap.101.aspx
+    References:
+        [1] https://en.wikipedia.org/wiki/Anion_gap
+        [2] Patrick J Neligan MA MB FCARCSI, Clifford S Deutschman MS MD FCCM
+            Acid base balance in critical care medicine
+        [4] Hypoalbuminemia correction: Anion gap and hypoalbuminemia Figge 1998 10.1097/00003246-199811000-00019 https://journals.lww.com/ccmjournal/Citation/2000/05000/Reliability_of_the_Anion_Gap.101.aspx
 
-    Examples
-    --------
-    Typical usage, potassium usually not included:
-    >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
-    14.0
+    Examples:
+        Typical usage, potassium usually not included:
+        >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
+        14.0
 
-    With albumin:
-    >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=calculate_hco3p(pH=7.499, pCO2=4.77294), K=0, albumin=3.39)
-    3.9175115055719747
+        With albumin:
+        >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=calculate_hco3p(pH=7.499, pCO2=4.77294), K=0, albumin=3.39)
+        3.9175115055719747
 
-    To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
-    >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
-    93.07578958435911
+        To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
+        >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
+        93.07578958435911
 
-    :param float Na: Serum sodium, mmol/L.
-    :param float Cl: Serum chloride, mmol/L.
-    :param float HCO3act: Serum actual bicarbonate (HCO3(P)), mmol/L.
-    :param float K: Serum potassium, mmol/L.
-        If not given returns AG, otherwise AG(K). Serum potassium value
-        usually low and frequently omitted. Usually not used.
-    :param float albumin: Protein correction, g/dL. If not given,
-        hypoalbuminemia leads to lower anion gap.
-    :return: Anion gap or Anion gap (K+), mEq/L.
-    :rtype: float
+    Args:
+        Na: Serum sodium, mmol/L.
+        Cl: Serum chloride, mmol/L.
+        HCO3act: Serum actual bicarbonate (HCO3(P)), mmol/L.
+        K: Serum potassium, mmol/L.
+            If not given returns AG, otherwise AG(K). Serum potassium value
+            usually low and frequently omitted. Usually not used.
+        albumin: Protein correction, g/dL. If not given,
+            hypoalbuminemia leads to lower anion gap.
+
+    Rreturns:
+        Anion gap or Anion gap (K+), mEq/L.
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
     anion_gap += 2.5 * (norm_ctAlb_mean - albumin)
     return anion_gap
 
 
-def calculate_anion_gap_delta(AG, HCO3act):
+def calculate_anion_gap_delta(AG: float, HCO3act: float) -> str:
     """Delta gap, delta ratio, gap-gap to assess elevated anion gap metabolic acidosis.
 
     Formula "gg = (AG - 12) / (24 - HCO3act)" reveals combinations of
@@ -181,18 +183,18 @@ def calculate_anion_gap_delta(AG, HCO3act):
         Other causes are chronic respiratory acidosis (with compensating
         metabolic alkalosis), or a non-acidotic high anion gap state
 
+    References:
+        [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 63
+        [2] https://en.wikipedia.org/wiki/Delta_Ratio
+        [3] http://webcache.googleusercontent.com/search?q=cache:LVnXtJaMahkJ:www.emed.ie/Toxicology/ABG_Blood_Gases.php
+        [4] https://www.merckmanuals.com/medical-calculators/AnionGapDeltaGradient.htm
 
-    References
-    ----------
-    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 63
-    [2] https://en.wikipedia.org/wiki/Delta_Ratio
-    [3] http://webcache.googleusercontent.com/search?q=cache:LVnXtJaMahkJ:www.emed.ie/Toxicology/ABG_Blood_Gases.php
-    [4] https://www.merckmanuals.com/medical-calculators/AnionGapDeltaGradient.htm
+    Args:
+        AG: Anion gap without potassium, mEq/L.
+        HCO3act: Actual bicarbonate, mmol/L.
 
-    :param float AG: Anion gap without potassium, mEq/L.
-    :param float HCO3act: Actual bicarbonate, mmol/L.
-    :return: Opinion.
-    :rtype: str
+    Returns:
+        Opinion.
     """
     # 12 - normal anion gap without potassium
     # 24 - normal HCO3-, mmol/L
@@ -223,7 +225,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         # detect acetoacetate but not beta-hydroxybutyrate.
         # https://web.archive.org/web/20170831093311/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_2.html
         return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis"
-    elif 2 < gg:
+    else:  # 2 < gg
         # Suggests a pre-existing elevated [HCO3-] level so consider:
         #   * a concurrent metabolic alkalosis
         #   * a pre-existing compensated respiratory acidosis
@@ -232,7 +234,7 @@ def calculate_anion_gap_delta(AG, HCO3act):
         return info
 
 
-def calculate_sid_abbr(cNa, cCl, ctAlb):
+def calculate_sid_abbr(cNa: float, cCl: float, ctAlb: float) -> float:
     """Strong ion difference.
 
     Strong ion gap (SIG).
@@ -254,15 +256,17 @@ def calculate_sid_abbr(cNa, cCl, ctAlb):
     If SBE is normal but patient is acidotic must all be from CO2
     If SBE is abnormal must explain by SID, weak acids, or unmeasured strong ions
 
-    References
-    ----------
-    [1] https://litfl.com/strong-ion-difference/
-    [2] https://wikem.org/wiki/Acid-base_disorders
-    :param float cNa: Na concentration, mmol/L
-    :param float cCl: Cl concentration, mmol/L
-    :param float ctAlb: Albumin, g/dL for correction.
-    :return: Strong ion difference.
-    :rtype: float
+    References:
+        [1] https://litfl.com/strong-ion-difference/
+        [2] https://wikem.org/wiki/Acid-base_disorders
+
+    Args:
+        cNa: Na concentration, mmol/L
+        cCl: Cl concentration, mmol/L
+        ctAlb: Albumin, g/dL for correction.
+
+    Returns:
+        Strong ion difference.
     """
     sid = cNa - cCl - 38
     if ctAlb:
@@ -270,29 +274,29 @@ def calculate_sid_abbr(cNa, cCl, ctAlb):
     return sid
 
 
-def calculate_osmolarity(cNa, cGlu):
+def calculate_osmolarity(cNa: float, cGlu: float) -> float:
     """Calculate serum osmotic concentration (osmolarity, mOsm/L).
 
     NB! This is not an osmolality (mOsm/kg), measured by an osmometer.
 
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-41, p. 277, equation 48.
+        [2] https://en.wikipedia.org/wiki/Osmotic_concentration
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-41, p. 277, equation 48.
-    [2] https://en.wikipedia.org/wiki/Osmotic_concentration
+    Args:
+        cNa: Sodium, mmol/L
+        cGlu: Glucose, mmol/L
 
-    :param float cNa: Sodium, mmol/L
-    :param float cGlu: Glucose, mmol/L
-    :return: Serum osmolarity, mmol/L (mOsm/L).
-    :rtype: float
+    Returns:
+        Serum osmolarity, mmol/L (mOsm/L).
     """
     # Sometimes `2 * (cNa + cK) + cGlu + Urea` all in mmol/L
     # Also ethanol can cause https://en.wikipedia.org/wiki/Osmol_gap
     return 2 * cNa + cGlu
 
 
-def simple_hco3(pH, pCO2):
+def simple_hco3(pH: float, pCO2: float) -> float:
     """Calculate actual bicarbonate concentration in plasma.
 
     Also known as cHCO3(P), HCO3act.
@@ -300,22 +304,22 @@ def simple_hco3(pH, pCO2):
     Generic approximation of Henderson-Hasselbalch equation.
     Good for water solutions, lower precision in lipemia cases.
 
+    References:
+        [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
 
-    References
-    ----------
-    [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
+    Args:
+        pH: pH
+        pCO2: kPa
 
-    :param float pH:
-    :param float pCO2: kPa
-    :return: cHCO3(P), mmol/L.
-    :rtype: float
+    Returns:
+        cHCO3(P), mmol/L.
     """
     # 0.03 - CO2 solubility coefficient mmol/L/mmHg
     # 6.1 - dissociation constant for H2CO3
     return 0.03 * pCO2 / kPa * 10 ** (pH - 6.1)
 
 
-def calculate_hco3p(pH, pCO2):
+def calculate_hco3p(pH: float, pCO2: float) -> float:
     """Calculate actual bicarbonate aka cHCO3(P) concentration in plasma.
 
     Also known as cHCO3(P), HCO3act [1].
@@ -323,27 +327,27 @@ def calculate_hco3p(pH, pCO2):
     Sophisticated calculation by [1]. Good for water solutions,
     lower precision in lipemia cases.
 
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-28, p. 264, equation 4.
+        [2] Siggaard-Andersen O, Wimberley PD, Fogh-Andersen N, Gøthgen IH.
+            Measured and derived quantities with modern pH and blood gas equipment:
+            calculation algorithms with 54 equations. Scand J Clin Lab Invest 1988;
+            48, Suppl 189: 7-15. p. 11, equations 6, 7.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-28, p. 264, equation 4.
-    [2] Siggaard-Andersen O, Wimberley PD, Fogh-Andersen N, Gøthgen IH.
-        Measured and derived quantities with modern pH and blood gas equipment:
-        calculation algorithms with 54 equations. Scand J Clin Lab Invest 1988;
-        48, Suppl 189: 7-15. p. 11, equations 6, 7.
+    Args:
+        pH: pH
+        pCO2: kPa
 
-    :param float pH:
-    :param float pCO2: kPa
-    :return: cHCO3(P), mmol/L.
-    :rtype: float
+    Returns:
+        cHCO3(P), mmol/L.
     """
     pKp = 6.125 - math.log10(1 + 10 ** (pH - 8.7))  # Dissociation constant
     # aCO2(P) solubility coefficient for 37 °C = 0.230 mmol/L/kPa
     return 0.230 * pCO2 * 10 ** (pH - pKp)
 
 
-def calculate_hco3pst(pH, pCO2, ctHb, sO2):
+def calculate_hco3pst(pH: float, pCO2: float, ctHb: float, sO2: float) -> float:
     """Calculate standard bicarbonate aka cHCO3(P,st) concentration in plasma.
 
     Also known as cHCO3(P,st)) [1].
@@ -353,25 +357,25 @@ def calculate_hco3pst(pH, pCO2, ctHb, sO2):
     pCO2 = 5.33 kPa (40 mmHg) and pO2 >= 13.33 kPa (100 mmHg) at 37 °C.
     (Normal pCO2 and pO2 level enough to saturate Hb.)
 
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-29, p. 265, equation 9.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-29, p. 265, equation 9.
+    Args:
+        pH: pH
+        pCO2: CO2 partial pressure, kPa
+        ctHb: Concentration of total hemoglobin in blood, mmol/L
+        sO2: Fraction of saturated hemoglobin, fraction.
 
-    :param float pH:
-    :param float pCO2: CO2 partial pressure, kPa
-    :param float ctHb: Concentration of total hemoglobin in blood, mmol/L
-    :param float sO2: Fraction of saturated hemoglobin, fraction.
-    :return: cHCO3(P,st), mmol/L.
-    :rtype: float
+    Returns:
+        cHCO3(P,st), mmol/L.
     """
     a = 4.04 * 10**-3 + 4.25 * 10**-4 * ctHb
     Z = calculate_cbase(pH, pCO2, ctHb=ctHb) - 0.3062 * ctHb * (1 - sO2)
     return 24.47 + 0.919 * Z + Z * a * (Z - 8)
 
 
-def simple_be(pH, HCO3act):
+def simple_be(pH: float, HCO3act: float) -> float:
     """Calculate base excess (BE), Siggaard Andersen approximation.
 
     Synonym for cBase(Ecf) and SBE?
@@ -379,42 +383,42 @@ def simple_be(pH, HCO3act):
     To reproduce original [1] calculations:
     simple_be(simple_hco3(pH, pCO2))
 
+    References:
+        [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
+        [2] http://www.acid-base.com/computing.php
 
-    References
-    ----------
-    [1] http://www-users.med.cornell.edu/~spon/picu/calc/basecalc.htm
-    [2] http://www.acid-base.com/computing.php
+    Args:
+        pH: pH
+        HCO3act: mmol/L
 
-    :param float pH:
-    :param float HCO3act: mmol/L
-    :return: Base excess, mEq/L.
-    :rtype: float
+    Returns:
+        Base excess, mEq/L.
     """
     return 0.9287 * HCO3act + 13.77 * pH - 124.58
 
 
-def calculate_cbase(pH, pCO2, ctHb=3):
+def calculate_cbase(pH: float, pCO2: float, ctHb: float = 3) -> float:
     """Calculate base excess.
 
     Calculate standard base excess, known as SBE, cBase(Ecf) or
     actual base excess, known as ABE, cBase(B) if ctHb is given.
 
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-29, p. 265, equation 5.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-29, p. 265, equation 5.
+        [2] Siggaard-Andersen O. The acid-base status of the blood.
+            4th revised ed. Copenhagen: Munksgaard, 1976.
+            http://www.cabdirect.org/abstracts/19751427824.html
 
-    [2] Siggaard-Andersen O. The acid-base status of the blood.
-        4th revised ed. Copenhagen: Munksgaard, 1976.
-        http://www.cabdirect.org/abstracts/19751427824.html
+    Args:
+        pH: pH
+        pCO2: kPa
+        ctHb: Concentration of total hemoglobin in blood, mmol/L
+            If given, calculates ABE, if not - SBE.
 
-    :param float pH:
-    :param float pCO2: kPa
-    :param float ctHb: Concentration of total hemoglobin in blood, mmol/L
-        If given, calculates ABE, if not - SBE.
-    :return: Standard base excess (SBE) or actual base excess (ABE), mEq/L.
-    :rtype: float
+    Returns:
+        Standard base excess (SBE) or actual base excess (ABE), mEq/L.
     """
     a = 4.04 * 10**-3 + 4.25 * 10**-4 * ctHb
     pHHb = 4.06 * 10**-2 * ctHb + 5.98 - 1.92 * 10 ** (-0.16169 * ctHb)
@@ -430,96 +434,98 @@ def calculate_cbase(pH, pCO2, ctHb=3):
     return cBase
 
 
-def calculate_hct(ctHb):
+def calculate_hct(ctHb: float) -> float:
     """Calculate haematocrit.
 
     The ratio between the volume of erythrocytes and the volume of whole blood.
     See [4] for interpretating caveats.
 
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-30, p. 266, equation 13.
-    [2] http://www.derangedphysiology.com/php/Arterial-blood-gases/
-        Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
-    [3] http://www.ncbi.nlm.nih.gov/pubmed/2128562
-    [4] http://www.derangedphysiology.com/php/Arterial-blood-gases/
-        Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-30, p. 266, equation 13.
+        [2] http://www.derangedphysiology.com/php/Arterial-blood-gases/
+            Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
+        [3] http://www.ncbi.nlm.nih.gov/pubmed/2128562
+        [4] http://www.derangedphysiology.com/php/Arterial-blood-gases/
+            Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
 
-    Examples
-    --------
-    >>> calculate_hct(171 / 10 / 1.61140)
-    0.5229766786645154
+    Examples:
+        >>> calculate_hct(171 / 10 / 1.61140)
+        0.5229766786645154
 
-    :param float ctHb: Concentration of total hemoglobin in blood, mmol/L.
-    :return: Haematocrit, fraction (not %).
-    :rtype: float
+    Args:
+        ctHb: Concentration of total hemoglobin in blood, mmol/L.
+
+    Returns:
+        Haematocrit, fraction (not %).
     """
     # ctHb(mmol/L) == ctHb(g/dL) / 1.61140 == ctHb(g/dL) * 0.62058
     # By [1] p. 6-14 or 6-49.
     return 0.0485 * ctHb + 8.3 * 10**-3
 
 
-def calculate_pHT(pH, t):
+def calculate_pHT(pH: float, t: float) -> float:
     """Calculate pH of blood at patient body temperature.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-28, p. 264, equation 1.
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-28, p. 264, equation 1.
 
-    Examples
-    --------
-    >>> calculate_pHT(6.919, 39.6)
-    6.8891689
-    >>> calculate_pHT(7.509, 38.6)
-    7.4845064
+    Examples:
+        >>> calculate_pHT(6.919, 39.6)
+        6.8891689
+        >>> calculate_pHT(7.509, 38.6)
+        7.4845064
 
-    :param float pH:
-    :param float t: Body temperature, °C.
-    :return: pH of blood at given temperature.
-    :rtype: float
+    Args:
+        pH: pH
+        t: Body temperature, °C.
+
+    Returns:
+        pH of blood at given temperature.
     """
     # 37 °C is temperature of measurement in device
     return pH - (0.0146 + 0.0065 * (pH - 7.40)) * (t - 37)
 
 
-def calculate_pCO2T(pCO2, t):
+def calculate_pCO2T(pCO2: float, t: float) -> float:
     """Partial pressure of CO2 in blood at patient temperature.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-28, p. 264, equation 3.
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-28, p. 264, equation 3.
 
-    :param float pCO2: kPa
-    :param float t: Body temperature, °C.
-    :return:
+    Args:
+        pCO2: kPa
+        t: Body temperature, °C.
+
+    Returns:
         Partial pressure of CO2 at given temperature, kPa
-    :rtype: float
     """
     return pCO2 * 10 ** (0.021 * (t - 37))
 
 
-def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
+def calculate_ctO2(
+    pO2: float, sO2: float, FCOHb: float, FMetHb: float, ctHb: float
+) -> float:
     """Total oxygen concentration of blood (O2 content).
 
     Also known as ctO2(B).
 
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-35, p. 271, equation 27.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-35, p. 271, equation 27.
+    Args:
+        pO2: kPa
+        sO2: fraction
+        FCOHb: fraction
+        FMetHb: fraction
+        ctHb: mmol/L
 
-    :param float pO2: kPa
-    :param float sO2: fraction
-    :param float FCOHb: fraction
-    :param float FMetHb: fraction
-    :param float ctHb: mmol/L
-    :return: O2 content, mmol/L.
-    :rtype: float
+    Returns:
+        O2 content, mmol/L.
     """
     # May be negative FMetHb replased with zero?
     # if FMetHb < 0:
@@ -533,29 +539,30 @@ def calculate_ctO2(pO2, sO2, FCOHb, FMetHb, ctHb):
     return alphaO2 * pO2 + sO2 * (1 - FCOHb - FMetHb) * ctHb
 
 
-def calculate_pO2_FO2_fraction(pO2, FiO2):
+def calculate_pO2_FO2_fraction(pO2: float, FiO2: float) -> float:
     """pO2(a)/FO2(I) - the ratio of pO2 and fraction of inspired oxygen measured at PEEP 5 mbar.
 
     Simplest calculation to diagnose ARDS. Known as:
         * PaO2/FiO2 ratio
         * p/f ratio
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-32, p. 268, equation 17.
-    [2] https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2/FiO2_ratio
-    [3] https://litfl.com/pao2-fio2-ratio
-    [4] https://litfl.com/acute-respiratory-distress-syndrome-definitions/
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-32, p. 268, equation 17.
+        [2] https://en.wikipedia.org/wiki/Fraction_of_inspired_oxygen#PaO2/FiO2_ratio
+        [3] https://litfl.com/pao2-fio2-ratio
+        [4] https://litfl.com/acute-respiratory-distress-syndrome-definitions/
 
-    Examples
-    --------
-    >>> calculate_pO2_FO2_fraction(15, 0.21)
-    535.7583464807003
+    Examples:
+        >>> calculate_pO2_FO2_fraction(15, 0.21)
+        535.7583464807003
 
-    :param float pO2: kPa
-    :param float FiO2: Fraction of oxygen in dry inspired air, fraction.
-    :return: pO2(a)/FO2(I), dimensionless quantity - no units
+    Args:
+        pO2: kPa
+        FiO2: Fraction of oxygen in dry inspired air, fraction.
+
+    Returns:
+        pO2(a)/FO2(I), dimensionless quantity - no units
         if pf < 100:
             return "Severe, 45% mortality"
         elif 100 <= pf <= 200:
@@ -564,12 +571,11 @@ def calculate_pO2_FO2_fraction(pO2, FiO2):
             return "Mild, 27% mortality"
         else:
             return "All well, no ARDS"
-    :rtype: float
     """
     return pO2 / kPa / FiO2
 
 
-def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
+def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
     """Calculate Alveolar–arterial gradient.
 
     Determine source of hypoxemia: low air pO2 or damaged alveolar wall.
@@ -581,31 +587,34 @@ def calculate_Aa_gradient(pCO2, pO2, FiO2=0.21):
         * Expected PAO2, kPa = (age + 10) / 4 * kPa [https://www.ncbi.nlm.nih.gov/books/NBK545153/]
             ((40 / 4) + 4) * kPa == 1.866513152
 
-    :param float pCO2: CO2 partial pressure, kPa
-    :param float pO2: O2 partial pressure, kPa
-    :param float FiO2: FiO2 fraction, uses 0.21 (atmosphere air), if not given
-    :return: Alveolar–arterial gradient.
-    :rtype: float
+    Args:
+        pCO2: CO2 partial pressure, kPa
+        pO2: O2 partial pressure, kPa
+        FiO2: FiO2 fraction, uses 0.21 (atmosphere air), if not given
+
+    Returns:
+        Alveolar–arterial gradient.
     """
     # Also PAO2 = (20 - 5 / 4 * pCO2) - pO2 [1]
     PAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
     return PAO2 - pO2
 
 
-def calculate_Ca74(pH, Ca):
+def calculate_Ca74(pH: float, Ca: float) -> float:
     """Ionized calcium at pH 7.4.
 
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-41, p. 277, equation 45.
+    References:
+        [1] Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-41, p. 277, equation 45.
 
-    :param float pH: Due to biological variations this function can only be
-        used for a pH value in the range 7.2-7.6 [1].
-        Radiometer device returns '?' with pH=6.928, Ca=1.62.
-    :param float Ca: mmol/L
-    :return: cCa2+(7.4), mmol/L.
-    :rtype: float
+    Args:
+        pH: Due to biological variations this function can only be
+            used for a pH value in the range 7.2-7.6 [1].
+            Radiometer device returns '?' with pH=6.928, Ca=1.62.
+        Ca: mmol/L
+
+    Returns:
+        cCa2+(7.4), mmol/L.
     """
     if not 7.2 <= pH <= 7.4:
         raise ValueError(
@@ -614,7 +623,7 @@ def calculate_Ca74(pH, Ca):
     return Ca * (1 - 0.53 * (7.4 - pH))
 
 
-def resp_acidosis_pH(pCO2, status="acute"):
+def resp_acidosis_pH(pCO2: float, status: str = "acute") -> float:
     """Calculate expected pH by pCO2 for simple respiratory acidosis.
 
     Metabolic acidosis compensated by respiratory alkalosis
@@ -671,20 +680,19 @@ def resp_acidosis_pH(pCO2, status="acute"):
 
         pH = 6.1 + math.log10(HCO3act / (0.03 * pCO2))
 
+    References:
+        [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
+        [2] Рябов 1994, p 67 - related to USA Cardiology association
+        [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
+        [4] https://web.archive.org/web/20170904175146/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_summary.html
 
-    References
-    ----------
-    [1] Kostuchenko S.S., ABB in the ICU, 2009, p. 55.
-    [2] Рябов 1994, p 67 - related to USA Cardiology association
-    [3] Winters' formula https://en.wikipedia.org/wiki/Winters%27_formula
-    [4] https://web.archive.org/web/20170904175146/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Compensatory_responses_summary.html
+    Args:
+        pCO2: kPa
+        status: 'acute' (no renal compensation) or 'chronic'
+            (renal compensation turns on after 3-5 days).
 
-    :param float pCO2: kPa
-    :param str status: 'acute' (no renal compensation) or 'chronic'
-        (renal compensation turns on after 3-5 days).
-    :return:
+    Returns:
         Expected pH.
-    :rtype: float
     """
     if status == "acute":
         return 7.4 + 0.008 * (40.0 - pCO2 / kPa)  # Acute
@@ -692,15 +700,17 @@ def resp_acidosis_pH(pCO2, status="acute"):
         return 7.4 + 0.003 * (40.0 - pCO2 / kPa)  # Chronic
 
 
-def abg_approach_stable(pH, pCO2):
+def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, str | None]:
     """Evaluate arterial blood gas status for complex acid-base disorders.
 
     http://en.wikipedia.org/wiki/Arterial_blood_gas
 
-    :param float pH:
-    :param float pCO2: kPa
-    :return: Two strings: verbose opinion and main disorder.
-    :rtype: tuple
+    Args:
+        pH: pH
+        pCO2: kPa
+
+    Returns:
+        Two strings: verbose opinion and main disorder.
     """
     # Inspired by https://abg.ninja/abg
 
@@ -708,7 +718,7 @@ def abg_approach_stable(pH, pCO2):
     # The answer to that is that if you need more than 3 levels of
     # indentation, you're screwed anyway, and should fix your program.
 
-    def check_metabolic(pH, pCO2):
+    def check_metabolic(pH: float, pCO2: float) -> str:
         """Check metabolic status by expected pH level.
 
         Does this pH and pCO2 means hidden metabolic process?
@@ -725,7 +735,7 @@ def abg_approach_stable(pH, pCO2):
         return "{}expected pH {:.2f}".format(guess, ex_pH)
 
     if norm_pH[0] <= pH <= norm_pH[1]:  # pH is normal or compensated
-        # Don't calculating expected CO2/pH values because both values are
+        # Don't calculate expected CO2/pH values because both values are
         # normal or represent two opposed processes (no need for searching
         # hidden one)
         # pCO2 is abnormal, checking slight pH shifts
@@ -796,9 +806,10 @@ def abg_approach_stable(pH, pCO2):
                     "Metabolic alkalosis, no respiratory comp.",
                     "metabolic_alkalosis",
                 )
+    return "Impossible to evaluate", None
 
 
-def abg_approach_ryabov(pH, pCO2):
+def abg_approach_ryabov(pH: float, pCO2: float) -> str:
     """Describe ABG by Ryabov algorithm.
 
     1. Calculate how measured pCO2 will change normal pH 7.4
@@ -809,21 +820,19 @@ def abg_approach_ryabov(pH, pCO2):
     4. If extracellular fluid (HCO3- distribution volume) represents 25 % of
        real body weight (RBW), global base excess will be near "BE * 0.25 * RBW"
 
+    Examples:
+        >>> abg_approach_ryabov(7.36, 55*kPa)
+        'pH, calculated by pCO2, is 7.28, estimated SBE (7.36-7.28)/0.015=+5.33 mEq/L'
 
-    Examples
-    --------
-    >>> abg_approach_ryabov(7.36, 55*kPa)
-    'pH, calculated by pCO2, is 7.28, estimated SBE (7.36-7.28)/0.015=+5.33 mEq/L'
+    References:
+        [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США (AHA?)
 
+    Args:
+        pH: pH
+        pCO2: kPa
 
-    References
-    ----------
-    [1] Рябов 1994, p 67 - три правила Ассоциации кардиологов США (AHA?)
-
-    :param float pH:
-    :param float pCO2: kPa
-    :return: Opinion.
-    :rtype: str
+    Return:
+        Opinion.
     """
     # Same as `pH_expected = resp_acidosis_pH(pCO2, status='acute')`
     pH_expected = 7.4 + 0.008 * (40 - pCO2 / kPa)  # What is the original paper?
@@ -836,17 +845,18 @@ def abg_approach_ryabov(pH, pCO2):
     return info
 
 
-def abg_approach_research(pH, pCO2):
+def abg_approach_research(pH: float, pCO2: float) -> str:
     """Calculate expected ABG values.
 
-    References
-    ----------
-    [1] Kostuchenko S.S., ABB in the ICU, 2009
+    References:
+        [1] Kostuchenko S.S., ABB in the ICU, 2009
 
-    :param float pH:
-    :param float pCO2: kPa
-    :return: Opinion.
-    :rtype: str
+    Args:
+        pH:
+        pCO2: kPa
+
+    Returns:
+        Opinion.
     """
     info = ""
     HCO3act = calculate_hco3p(pH, pCO2)

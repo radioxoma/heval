@@ -50,14 +50,14 @@ from heval import human
 parenteral_nutriflex_48_150 = {
     "name": "Nutriflex 48/150 lipid 1000, 1250, 1875, 2500 ml",
     "type": "parenteral",
-    "c_prt": 0.0384,  #       g/ml proteins
-    "c_lip": 0.04,  #         g/ml lipids
-    "c_glu": 0.12,  #         g/ml glucose
-    "c_kcal": 1.012,  #       kcal/ml total calories including proteins
+    "c_prt": 0.0384,  # g/ml proteins
+    "c_lip": 0.04,  # g/ml lipids
+    "c_glu": 0.12,  # g/ml glucose
+    "c_kcal": 1.012,  # kcal/ml total calories including proteins
     "c_kcal_noprot": 0.86,  # kcal/ml nonprotein calories
-    "max_24h_volume": 40,  #  ml/kg/24h
-    "max_1h_rate": 2,  #      ml/kg/h rate limit (by glucose for this drug)
-    "osmolality": 1540,  #    mOsm/kg Central vena only
+    "max_24h_volume": 40,  # ml/kg/24h
+    "max_1h_rate": 2,  # ml/kg/h rate limit (by glucose for this drug)
+    "osmolality": 1540,  # mOsm/kg Central vena only
     "has_vitamins": False,
     "comment": "Ratio 1:1:3",
 }
@@ -102,14 +102,14 @@ parenteral_nutriflex_48_150 = {
 parenteral_kabiven_perif = {
     "name": "Kabiven peripheral 1440, 1920, 2400 ml",
     "type": "parenteral",
-    "c_prt": 0.0235,  #        g/ml
-    "c_lip": 0.0354,  #        g/ml
-    "c_glu": 0.0675,  #        g/ml
-    "c_kcal": 0.7,  #          kcal/ml total, including proteins
+    "c_prt": 0.0235,  # g/ml
+    "c_lip": 0.0354,  # g/ml
+    "c_glu": 0.0675,  # g/ml
+    "c_kcal": 0.7,  # kcal/ml total, including proteins
     "c_kcal_noprot": 0.625,  # kcal/ml without proteins
-    "max_24h_volume": 40,  #   ml/kg/24h
-    "max_1h_rate": 3.7,  #     ml/kg/h rate limit (by glucose for this drug
-    "osmolality": 830,  #      mOsm/kg Periferal or central vein
+    "max_24h_volume": 40,  # ml/kg/24h
+    "max_1h_rate": 3.7,  # ml/kg/h rate limit (by glucose for this drug
+    "osmolality": 830,  # mOsm/kg Periferal or central vein
     "has_vitamins": False,
     "comment": "Ratio 1:1.5:3",
 }
@@ -118,14 +118,14 @@ parenteral_kabiven_perif = {
 enteral_nutricomp_standard = {
     "name": "Nutricomp standard 500, 1000 ml",
     "type": "enteral",
-    "c_prt": 3.8 / 100,  #    g/ml proteins
-    "c_lip": 3.3 / 100,  #    g/ml lipids
-    "c_glu": 14 / 100,  #     g/ml glucose
-    "water": 0.84,  #         H2O/ml
-    "c_kcal": 1,  #           kcal/ml total calories including proteins
+    "c_prt": 3.8 / 100,  # g/ml proteins
+    "c_lip": 3.3 / 100,  # g/ml lipids
+    "c_glu": 14 / 100,  # g/ml glucose
+    "water": 0.84,  # H2O/ml
+    "c_kcal": 1,  # kcal/ml total calories including proteins
     "c_kcal_noprot": None,  # kcal/ml nonprotein calories
     "max_1h_rate": 0,
-    "osmolality": 240,  #     mOsm/kg
+    "osmolality": 240,  # mOsm/kg
     "has_vitamins": True,
     "comment": "Caloric P:F:C - 15:30:55:0; 1500-2000 ml per day",
 }
@@ -134,11 +134,11 @@ enteral_nutricomp_standard = {
 enteral_nutricomp_energy = {
     "name": "Nutricomp energy 500, 1000 ml",
     "type": "enteral",
-    "c_prt": 6.0 / 100,  #    g/ml proteins
-    "c_lip": 5 / 100,  #      g/ml lipids
-    "c_glu": 20 / 100,  #     g/ml glucose
-    "water": 0.76,  #         H2O/ml
-    "c_kcal": 1.5,  #         kcal/ml total calories including proteins
+    "c_prt": 6.0 / 100,  # g/ml proteins
+    "c_lip": 5 / 100,  # g/ml lipids
+    "c_glu": 20 / 100,  # g/ml glucose
+    "water": 0.76,  # H2O/ml
+    "c_kcal": 1.5,  # kcal/ml total calories including proteins
     "c_kcal_noprot": None,  # kcal/ml nonprotein calories
     "max_1h_rate": None,
     "osmolality": 495,  # mOsm/kg
@@ -150,11 +150,11 @@ enteral_nutricomp_energy = {
 enteral_enterolin_vanilla = {
     "name": "Enterolin vanilla or Enterolin fiber 500, 1000 ml",
     "type": "enteral",
-    "c_prt": 4 / 100,  #      g/ml proteins
-    "c_lip": 3.8 / 100,  #    g/ml lipids
-    "c_glu": 12 / 100,  #     g/ml glucose
-    "water": None,  #         H2O/ml
-    "c_kcal": 1,  #           kcal/ml total calories including proteins
+    "c_prt": 4 / 100,  # g/ml proteins
+    "c_lip": 3.8 / 100,  # g/ml lipids
+    "c_glu": 12 / 100,  # g/ml glucose
+    "water": None,  # H2O/ml
+    "c_kcal": 1,  # kcal/ml total calories including proteins
     "c_kcal_noprot": None,  # kcal/ml nonprotein calories
     "max_1h_rate": None,
     "osmolality": 330,  # mOsm/kg
@@ -165,11 +165,11 @@ enteral_enterolin_vanilla = {
 enteral_enterolin_caloric = {
     "name": "Enterolin caloric cherry 500, 1000 ml",
     "type": "enteral",
-    "c_prt": 7.5 / 100,  #    g/ml proteins
-    "c_lip": 5.6 / 100,  #    g/ml lipids
-    "c_glu": 17.5 / 100,  #   g/ml glucose
-    "water": None,  #         H2O/ml
-    "c_kcal": 1.5,  #         kcal/ml total calories including proteins
+    "c_prt": 7.5 / 100,  # g/ml proteins
+    "c_lip": 5.6 / 100,  # g/ml lipids
+    "c_glu": 17.5 / 100,  # g/ml glucose
+    "water": None,  # H2O/ml
+    "c_kcal": 1.5,  # kcal/ml total calories including proteins
     "c_kcal_noprot": None,  # kcal/ml nonprotein calories
     "max_1h_rate": None,
     "osmolality": 420,  # mOsm/kg

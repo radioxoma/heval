@@ -1249,8 +1249,10 @@ class MenuTooltip(tk.Menu):
     def __init__(self, parent, *args, **kwargs):
         """Menu bar tooltip.
 
-        :param parent: 'root' or 'Menubar'.
+        Args:
+            parent: 'root' or 'Menubar'
 
+        https://stackoverflow.com/questions/3929355/making-menu-options-with-checkbutton-in-tkinter
         https://stackoverflow.com/questions/55316791/how-can-i-add-a-tooltip-to-menu-item
         """
         super(MenuTooltip, self).__init__(parent, *args, **kwargs)
@@ -1263,14 +1265,15 @@ class MenuTooltip(tk.Menu):
         self.id = None
         self.tw = None
 
-        # self.bind('<<MenuSelect>>', self.leave)  # https://stackoverflow.com/questions/4220441/python-tkinter-bind-to-event-related-to-currently-selected-menu-item
+        # https://stackoverflow.com/questions/4220441/python-tkinter-bind-to-event-related-to-currently-selected-menu-item
+        # self.bind('<<MenuSelect>>', self.leave)
         self.bind("<Motion>", self.schedule)
         self.bind("<ButtonPress>", self.leave)
         self.parent.bind("<Leave>", self.leave)
         self.parent.bind("<FocusOut>", self.leave)
 
     def add_command(self, *cnf, **kwargs):
-        """Wrapper."""
+        """Wrap function."""
         tooltip = kwargs.get("tooltip")
         if tooltip:
             del kwargs["tooltip"]
@@ -1278,7 +1281,7 @@ class MenuTooltip(tk.Menu):
         self.add_tooltip(len(self.tooltip), tooltip)
 
     def add_checkbutton(self, *cnf, **kwargs):
-        """Wrapper."""
+        """Wrap function."""
         tooltip = kwargs.get("tooltip")
         if tooltip:
             del kwargs["tooltip"]

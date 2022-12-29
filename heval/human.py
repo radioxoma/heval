@@ -28,7 +28,7 @@ class HumanSex(IntEnum):
     child = 3  # For <12 years old
 
 
-class HumanBodyModel(object):
+class HumanBodyModel:
     """Must set 'sex' and 'height' to make it work. See `is_init()`.
 
     Note that 'use_ibw == False' by default.

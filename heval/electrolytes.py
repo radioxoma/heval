@@ -50,7 +50,7 @@ hb_norm_female = (12.0, 15.5)  # g/dl, 120-140 g/L
 hb_norm_child = (11, 16)  # g/dl
 
 
-class HumanBloodModel(object):
+class HumanBloodModel:
     """Represents an human blood ABG status."""
 
     def __init__(self, parent=None):

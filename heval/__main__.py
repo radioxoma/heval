@@ -94,7 +94,7 @@ class ScrolledText(tk.Text):
         self.vbar = ttk.Scrollbar(self.frame)
         self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
         kw.update({"yscrollcommand": self.vbar.set})
-        super(ScrolledText, self).__init__(self.frame, **kw)
+        super().__init__(self.frame, **kw)
 
         self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.vbar["command"] = self.yview
@@ -117,7 +117,7 @@ class TextView(ScrolledText):
     """Read only text widget with hotkeys."""
 
     def __init__(self, *args, **kwargs):
-        super(TextView, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.config(font="TkFixedFont", wrap=tk.WORD)
         self.popup_menu = tk.Menu(self, tearoff=False)
         self.popup_menu.add_command(
@@ -163,7 +163,7 @@ class TextView(ScrolledText):
 
 class TextViewCustom(ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
-        super(TextViewCustom, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.parent = parent
 
         frm_txt = ttk.Frame(self, width=450, height=300)
@@ -213,7 +213,7 @@ class TextViewCustom(ttk.Frame):
 
 class MainWindow(ttk.Frame):
     def __init__(self, parent=None, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.parent = parent
         self.parent.title("Heval: the human evaluator — v" + __version__)
         self.parent.geometry("650x590")
@@ -486,7 +486,7 @@ class MainWindow(ttk.Frame):
 
 class HelpWindow(tk.Toplevel):
     def __init__(self, parent):
-        super(HelpWindow, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
@@ -526,7 +526,7 @@ class HelpWindow(tk.Toplevel):
 
 class AboutWindow(tk.Toplevel):
     def __init__(self, parent=None):
-        super(AboutWindow, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
@@ -554,7 +554,7 @@ class AboutWindow(tk.Toplevel):
 
 class MainText(ttk.Frame):
     def __init__(self, parent, human_model):
-        super(MainText, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
@@ -579,7 +579,7 @@ class MainText(ttk.Frame):
 
 class CalcNutrition(ttk.Frame):
     def __init__(self, parent, human_model):
-        super(CalcNutrition, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
@@ -813,7 +813,7 @@ class CalcNutrition(ttk.Frame):
 
 class CalcElectrolytes(ttk.Frame):
     def __init__(self, parent, human_model):
-        super(CalcElectrolytes, self).__init__(parent)
+        super().__init__(parent)
         self.__form_ready = False
         self.parent = parent
         self.human_model = human_model
@@ -1080,7 +1080,7 @@ class CalcGFR(ttk.Frame):
     """Estimate glomerular filtration rate (eGFR)."""
 
     def __init__(self, parent, human_model):
-        super(CalcGFR, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.human_model = human_model
 
@@ -1184,7 +1184,7 @@ class CalcGFR(ttk.Frame):
         self.TxtView.set_text(textwrap.dedent(info))
 
 
-class CreateToolTip(object):
+class CreateToolTip:
     """Create a tooltip for a given widget."""
 
     def __init__(self, parent, text="", delay=500, wraplength=180):
@@ -1251,7 +1251,7 @@ class MenuTooltip(tk.Menu):
         https://stackoverflow.com/questions/3929355/making-menu-options-with-checkbutton-in-tkinter
         https://stackoverflow.com/questions/55316791/how-can-i-add-a-tooltip-to-menu-item
         """
-        super(MenuTooltip, self).__init__(parent, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
         self.parent = parent
         self.tooltip = list()
         self.tooltip_active = None
@@ -1273,7 +1273,7 @@ class MenuTooltip(tk.Menu):
         tooltip = kwargs.get("tooltip")
         if tooltip:
             del kwargs["tooltip"]
-        super(MenuTooltip, self).add_command(*cnf, **kwargs)
+        super().add_command(*cnf, **kwargs)
         self.add_tooltip(len(self.tooltip), tooltip)
 
     def add_checkbutton(self, *cnf, **kwargs):
@@ -1281,7 +1281,7 @@ class MenuTooltip(tk.Menu):
         tooltip = kwargs.get("tooltip")
         if tooltip:
             del kwargs["tooltip"]
-        super(MenuTooltip, self).add_checkbutton(*cnf, **kwargs)
+        super().add_checkbutton(*cnf, **kwargs)
         self.add_tooltip(len(self.tooltip), tooltip)
 
     def add_tooltip(self, index: int, tooltip=None) -> None:

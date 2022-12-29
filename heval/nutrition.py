@@ -179,11 +179,11 @@ enteral_enterolin_caloric = {
 }
 
 
-class HumanNutritionModel(object):
+class HumanNutritionModel:
     """ESPEN https://www.ncbi.nlm.nih.gov/pubmed/19464090."""
 
     def __init__(self, human_model):
-        super(HumanNutritionModel, self).__init__()
+        super().__init__()
         self.human_model = human_model
         self.fluid_multiplier = 30  # ml/kg RBW
         self.kcal_multiplier = 25  # ml/kg RBW
@@ -299,7 +299,7 @@ class HumanNutritionModel(object):
         return nitrogen_balance(self.uurea, text=True)
 
 
-class NutritionFormula(object):
+class NutritionFormula:
     def __init__(self, preparation, human_model):
         """Calculate pre-made mixture volume by protein or caloric demand.
 

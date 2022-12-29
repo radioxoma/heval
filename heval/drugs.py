@@ -54,11 +54,11 @@ press_dobutamine = {
 }
 
 
-class HumanDrugsModel(object):
+class HumanDrugsModel:
     """Human drugs list."""
 
     def __init__(self, parent):
-        super(HumanDrugsModel, self).__init__()
+        super().__init__()
         self.parent = parent
 
         # English names
@@ -111,7 +111,7 @@ class HumanDrugsModel(object):
         return "\n".join(info) + "\n"
 
 
-class Suxamethonium(object):
+class Suxamethonium:
     """According to RUE Belmedpreparaty instruction.
 
     Dithylin, succinylcholine.
@@ -134,7 +134,7 @@ class Suxamethonium(object):
         return info
 
 
-class Propofol(object):
+class Propofol:
     """Propofol Fresenius Kabi 1 %."""
 
     def __init__(self, parent=None):
@@ -157,7 +157,7 @@ class Propofol(object):
         return info
 
 
-class Fentanyl(object):
+class Fentanyl:
     """According to RUE Belmedpreparaty instruction."""
 
     def __init__(self, parent=None):
@@ -176,7 +176,7 @@ class Fentanyl(object):
         return info
 
 
-class Atracurium(object):
+class Atracurium:
     """Atracurium besilate (tracrium).
 
     According to GlaxoSmithKline.
@@ -212,7 +212,7 @@ class Atracurium(object):
         return info
 
 
-class Pipecuronium(object):
+class Pipecuronium:
     """https://www.rlsnet.ru/tn_index_id_358.htm."""
 
     def __init__(self, parent=None):
@@ -240,7 +240,7 @@ class Pipecuronium(object):
         return info
 
 
-class Rocuronium(object):
+class Rocuronium:
     """According to http://www.rceth.by/NDfiles/instr/8675_08_13_i.pdf."""
 
     def __init__(self, parent=None):

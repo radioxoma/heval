@@ -1,10 +1,10 @@
 [project]
 name = "heval"
-# version = ""
+dynamic = ["version"]
 description = "Medical calculator for intensive care unit"
 readme = "README.md"
 requires-python = ">=3.8.10"
-license = "GPL-3.0-or-later"
+license = {file = "LICENSE"}
 authors = [
     { name = "Eugene Dvoretsky", email = "radioxoma@gmail.com" },
 ]
@@ -12,24 +12,21 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
-    "Topic :: Scientific/Engineering :: Medical Science Apps",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python :: 3",
 ]
 
-[gui-scripts]
-heval = "heval.__main__:main"
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "package.__version__"}
 
 [project.urls]
 Homepage = "https://github.com/radioxoma/heval"
 
-[project.optional-dependencies]
-test = [
-    "mypy",
-    "black",
-    "isort",
-]
-
-dev = [
-    "pre-commit",
-]
+[project.gui-scripts]
+heval = "heval.__main__:main"

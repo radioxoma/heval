@@ -5,6 +5,8 @@
 Author: Eugene Dvoretsky
 """
 
+from __future__ import annotations
+
 import random
 import textwrap
 import tkinter as tk

@@ -49,6 +49,8 @@ Main approach:
     * If AG is high, calculate Delta gap
 """
 
+from __future__ import annotations
+
 try:
     from uncertainties import umath as math
 except ImportError:

@@ -14,6 +14,9 @@ containing all required components in suitable proportions.
 End user shouldn't mess with protein/nonprotein caloric proportions,
 glucose/fat caloric proportions, add unsaturated fatty acids etc.
 """
+
+from __future__ import annotations
+
 import textwrap
 
 from heval import human

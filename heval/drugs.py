@@ -3,6 +3,8 @@
 Author: Eugene Dvoretsky
 """
 
+from __future__ import annotations
+
 from heval import human
 
 press_nor16 = {

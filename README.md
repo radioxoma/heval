@@ -85,7 +85,8 @@ An web or Android application is planned, but implementation deferred until calc
 
 Download *exe* file from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required.
 
-Builds are compatible with Windows XP SP3 32 bit and based on python 3.4 (see `build.bat`). Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`.
+* [v0.1.5](https://github.com/radioxoma/heval/releases/tag/v0.1.5) is last compatible with Windows XP SP3 x86 and python 3.4.3.
+* Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`. You may need to upgrade pip.
 
 ### Mac OS X
 

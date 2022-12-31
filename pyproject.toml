@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "package.__version__"}
+version = {attr = "heval.__version__"}
 
 [project.urls]
 Homepage = "https://github.com/radioxoma/heval"

@@ -132,7 +132,7 @@ class HumanBodyModel:
         """
         self._use_ibw = value
 
-    def _set_weight_ideal(self):
+    def _set_weight_ideal(self) -> None:
         """Evaluate ideal body weight (IBW) for all ages.
 
           * https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
@@ -232,11 +232,11 @@ class HumanBodyModel:
         """
         return 70 / math.sqrt(self.bmi / 22) * self.weight
 
-    def is_init(self):
+    def is_init(self) -> bool:
         """Is class got all necessary data for calculations."""
         return all((self.height, self.weight, self.sex))
 
-    def describe(self):
+    def describe(self) -> str:
         info = ""
         if not self.is_init():
             return "Empty human model (set sex, height, weight)"
@@ -256,7 +256,7 @@ class HumanBodyModel:
             info += f"\nComments:\n{self.comment}\n"
         return info
 
-    def _info_in_body(self):
+    def _info_in_body(self) -> str:
         info = f"{self.sex.name.title()} {self.height * 100:.0f}/{self.weight:.0f}:"
         if self._weight_ideal_valid:
             info += f" IBW {self.weight_ideal:.1f} kg [{self._weight_ideal_method}],"
@@ -287,7 +287,7 @@ class HumanBodyModel:
             info += f"\n{mnemonic_wetflag(weight=self.weight)}"
         return info
 
-    def _info_in_respiration(self):
+    def _info_in_respiration(self) -> str:
         """Calulate optimal Tidal Volume for given patient (any gas mixture).
 
         IBW - ideal body weight
@@ -386,7 +386,7 @@ class HumanBodyModel:
         )
         return info
 
-    def _info_in_fluids(self):
+    def _info_in_fluids(self) -> str:
         # Normal physiologic demand
         info = ""
         if self.sex in (HumanSex.male, HumanSex.female):
@@ -416,7 +416,7 @@ class HumanBodyModel:
             )
         return info
 
-    def _info_in_food(self):
+    def _info_in_food(self) -> str:
         """Daily electrolytes demand."""
         info = ""
         if self.sex in (HumanSex.male, HumanSex.female):
@@ -443,7 +443,7 @@ class HumanBodyModel:
         else:
             return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
 
-    def _info_in_energy(self):
+    def _info_in_energy(self) -> str:
         """Attempt to calculate energy requirements for an human.
 
         There are ESPEN and ASPEN recommendations. See:
@@ -527,7 +527,7 @@ class HumanBodyModel:
             info += "Energy calculations for children not implemented. Refer to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
         return info
 
-    def _info_out_fluids(self):
+    def _info_out_fluids(self) -> str:
         """Minimal required urinary output 0.5-1 ml/kg/h.
 
         У детей диурез значительно выше, у новорождённых 2.5 ml/kg/h.
@@ -554,7 +554,7 @@ class HumanBodyModel:
             )
         return info
 
-    def describe_drugs(self):
+    def describe_drugs(self) -> str:
         info = [
             "-- Drugs ---------------------------------------",
             "Pressors:",
@@ -565,7 +565,7 @@ class HumanBodyModel:
         return "\n".join(info) + "\n"
 
 
-def body_mass_index(height, weight):
+def body_mass_index(height: float, weight: float) -> float:
     """Body mass index and description.
 
     NB! Normal ranges in children differ from adults.
@@ -581,7 +581,7 @@ def body_mass_index(height, weight):
     return weight / height**2
 
 
-def bmi_describe(bmi):
+def bmi_describe(bmi: float) -> str:
     """Describe Body Mass Index for adults.
 
     :param float bmi: Body Mass Index.
@@ -611,7 +611,7 @@ def bmi_describe(bmi):
     return info
 
 
-def body_surface_area_dubois(height, weight):
+def body_surface_area_dubois(height: float, weight: float) -> float:
     """Human body surface area (Du Bois formula).
 
     Suitable for newborn, adult, fat.
@@ -726,7 +726,7 @@ def ibw_broselow(height: float) -> float:
     return get_broselow_code(height)[2]
 
 
-def ibw_traub_kichen(height):
+def ibw_traub_kichen(height: float) -> float:
     """Calculate ideal body weight by height (child 0.74-1.524 m).
 
     Can predict IBW for children aged 1 to 17 years and height 0.74-1.524 m
@@ -817,7 +817,9 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
             raise NotImplementedError("IBW calculation in children not implemented")
 
 
-def ree_harris_benedict_revised(height, weight, sex, age):
+def ree_harris_benedict_revised(
+    height: float, weight: float, sex: HumanSex, age: float
+) -> float:
     """Resting energy expenditure, revised Harris-Benedict equation (revised 1984).
 
     References
@@ -846,13 +848,13 @@ def ree_harris_benedict_revised(height, weight, sex, age):
         return 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
     elif sex == HumanSex.female:
         return 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
-    elif sex == HumanSex.child:
+    else:
         raise ValueError(
             "Harris-Benedict equation REE calculation for children not supported"
         )
 
 
-def ree_mifflin(height, weight, sex, age):
+def ree_mifflin(height: float, weight: float, sex: HumanSex, age: float) -> float:
     """Resting energy expenditure in healthy individuals, Mifflin St Jeor Equation (1990).
 
     Considered as more accurate than revised Harris-Benedict equation.
@@ -893,7 +895,7 @@ def ree_mifflin(height, weight, sex, age):
     return ree
 
 
-def mean_arterial_pressure(SysP, DiasP):
+def mean_arterial_pressure(SysP: float, DiasP: float) -> float:
     """Calculate mean arterial pressure (MAP).
 
     Examples

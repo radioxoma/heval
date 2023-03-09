@@ -84,7 +84,7 @@ class HumanDrugsModel:
             :param float weight: Human weight, kg.
             """
             dilution = pressor["weight"] / pressor["volume"]
-            out_str = "{} ({:3.0f} mg / {:.0f} ml, {:.2f} mg/ml) rate {:.2f}-{:>5.2f} mkg/kg/h".format(
+            out_str = "{} ({:3.0f} mg / {:.0f} ml, {:.2f} mg/ml) rate {:.2f}-{:>5.2f} mсg/kg/min".format(
                 pressor["name"],
                 pressor["weight"],
                 pressor["volume"],

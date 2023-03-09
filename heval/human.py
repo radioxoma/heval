@@ -370,7 +370,7 @@ class HumanBodyModel:
         mv = normal_minute_ventilation(weight_chosen)
         Vd = mv * weight_chosen  # l/min
         info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(
-            weight_type, self.sex, weight_chosen
+            weight_type, self.sex.name, weight_chosen
         )
         info += f"MV x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
         info += f"VDaw is {VDaw:.0f} ml, so TV must be >{Tv_min:.0f} ml\n"

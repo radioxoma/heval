@@ -75,7 +75,7 @@ Heval — экспериментальное программное обеспе
 действия и не предоставляет никаких гарантий.
 
 Heval is an experimental medical software intended for healthcare \
-specialists. Software is provided ​"as is". Developer makes no warranties, \
+specialists. Software is provided "as is". Developer makes no warranties, \
 express or implied.
 
 Written by Eugene Dvoretsky 2015-2020. Check source code for references and \
@@ -88,11 +88,36 @@ GNU General Public License version 3."""
 __easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
 
 
+class SpinboxFloat(ttk.Spinbox):
+    """Spinbox widget with float (dot separator) or empty input allowed.
+
+    https://stackoverflow.com/questions/4140437/interactively-validating-entry-widget-content-in-tkinter
+    """
+
+    def __init__(self, parent=None, **kw):
+        super().__init__(parent, **kw)
+        self.parent = parent
+        ctl_sbx_validator = self.register(self.is_empty_or_float)
+        self["validate"] = "key"
+        self["validatecommand"] = (ctl_sbx_validator, "%P")
+
+    def is_empty_or_float(self, value: str) -> bool:
+        """Allow empty value or someting castable to float."""
+        if value == "":
+            return True
+        try:
+            float(value)
+            return True
+        except ValueError:
+            self.bell()
+            return False
+
+
 class ScrolledText(tk.Text):
     """Clone of the standard `tkinter.scrolledtext` built with ttk widgets."""
 
-    def __init__(self, master=None, **kw):
-        self.frame = ttk.Frame(master)
+    def __init__(self, parent=None, **kw):
+        self.frame = ttk.Frame(parent)
         self.vbar = ttk.Scrollbar(self.frame)
         self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
         kw.update({"yscrollcommand": self.vbar.set})
@@ -297,7 +322,7 @@ class MainWindow(ttk.Frame):
         )
 
         ttk.Label(fr_entry, text="Height, cm").pack(side=tk.LEFT)
-        self.ctl_height = ttk.Spinbox(
+        self.ctl_height = SpinboxFloat(
             fr_entry, width=3, from_=1, to=500, command=self.set_model_height
         )
         self.ctl_height.bind("<KeyRelease>", self.set_model_height)
@@ -325,7 +350,7 @@ class MainWindow(ttk.Frame):
 
         self.lbl_weight = ttk.Label(fr_entry, text="Weight, kg")
         self.lbl_weight.pack(side=tk.LEFT)
-        self.ctl_weight = ttk.Spinbox(
+        self.ctl_weight = SpinboxFloat(
             fr_entry,
             width=4,
             from_=1,
@@ -339,7 +364,7 @@ class MainWindow(ttk.Frame):
         CreateToolTip(self.ctl_weight, "Real body weight")
 
         ttk.Label(fr_entry, text="Body temp, °C").pack(side=tk.LEFT)
-        self.ctl_sbx_temp = ttk.Spinbox(
+        self.ctl_sbx_temp = SpinboxFloat(
             fr_entry,
             width=4,
             from_=0.0,
@@ -602,7 +627,7 @@ class CalcNutrition(ttk.Frame):
         ctl_btn_fluid.grid(row=0, column=0)
 
         ttk.Label(fr_fluid_entry, text="ml/kg/24h").grid(row=1, column=0)
-        self.ctl_sbx_fluid_mul = ttk.Spinbox(
+        self.ctl_sbx_fluid_mul = SpinboxFloat(
             fr_fluid_entry,
             width=3,
             from_=0.0,
@@ -646,7 +671,7 @@ class CalcNutrition(ttk.Frame):
         )
 
         ttk.Label(self.fr_kcal_entry, text="kcal/kg/24h").grid(row=1, column=0)
-        self.ctl_sbx_kcal_mul = ttk.Spinbox(
+        self.ctl_sbx_kcal_mul = SpinboxFloat(
             self.fr_kcal_entry,
             width=2,
             from_=0.0,
@@ -695,7 +720,7 @@ class CalcNutrition(ttk.Frame):
         ttk.Label(self.fr_nitrogen_entry, text="Urine urea, mmol/24h").grid(
             row=1, column=0
         )
-        self.ctl_sbx_uurea = ttk.Spinbox(
+        self.ctl_sbx_uurea = SpinboxFloat(
             self.fr_nitrogen_entry,
             width=4,
             from_=0.0,
@@ -722,7 +747,7 @@ class CalcNutrition(ttk.Frame):
         ttk.Label(self.fr_nitrogen_entry, text="Protein, g/kg/24h").grid(
             row=3, column=0
         )
-        # self.ctl_sbx_prot_g_kg_24h = Spinbox(
+        # self.ctl_sbx_prot_g_kg_24h = SpinboxFloat(
         #     self.fr_nitrogen_entry, width=4, from_=0.0, to=10.0,
         #     format='%.2f', increment=0.1, command=self.increment_uurea_widget)
         # self.ctl_sbx_prot_g_kg_24h.bind("<KeyRelease>", self.eval)
@@ -835,7 +860,7 @@ class CalcElectrolytes(ttk.Frame):
         ctl_btn_abg.grid(row=1, column=0)
 
         ttk.Label(fr_abg_entry, text="pH").grid(row=2, column=0)
-        self.ctl_sbx_pH = ttk.Spinbox(
+        self.ctl_sbx_pH = SpinboxFloat(
             fr_abg_entry,
             width=4,
             from_=0,
@@ -848,7 +873,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_pH.grid(row=2, column=1)
 
         ttk.Label(fr_abg_entry, text="pCO₂, mmHg").grid(row=3, column=0)
-        self.ctl_sbx_pCO2 = ttk.Spinbox(
+        self.ctl_sbx_pCO2 = SpinboxFloat(
             fr_abg_entry,
             width=4,
             from_=0.0,
@@ -879,7 +904,7 @@ class CalcElectrolytes(ttk.Frame):
         ctl_btn_elec.grid(row=1, column=0)
 
         ttk.Label(fr_elec_entry, text="K⁺, mmol/L").grid(row=2, column=0)
-        self.ctl_sbx_K = ttk.Spinbox(
+        self.ctl_sbx_K = SpinboxFloat(
             fr_elec_entry,
             width=3,
             from_=0,
@@ -892,7 +917,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_K.grid(row=2, column=1)
 
         ttk.Label(fr_elec_entry, text="Na⁺, mmol/L").grid(row=3, column=0)
-        self.ctl_sbx_Na = ttk.Spinbox(
+        self.ctl_sbx_Na = SpinboxFloat(
             fr_elec_entry,
             width=3,
             from_=0.0,
@@ -908,7 +933,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_Na.grid(row=3, column=1)
 
         ttk.Label(fr_elec_entry, text="Cl⁻, mmol/L").grid(row=4, column=0)
-        self.ctl_sbx_Cl = ttk.Spinbox(
+        self.ctl_sbx_Cl = SpinboxFloat(
             fr_elec_entry,
             width=3,
             from_=0.0,
@@ -931,7 +956,7 @@ class CalcElectrolytes(ttk.Frame):
         ctl_btn_elec.grid(row=1, column=0)
 
         ttk.Label(fr_extra_entry, text="cGlu, mmol/L").grid(row=2, column=0)
-        self.ctl_sbx_cGlu = ttk.Spinbox(
+        self.ctl_sbx_cGlu = SpinboxFloat(
             fr_extra_entry,
             width=4,
             from_=0,
@@ -948,7 +973,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_cGlu.grid(row=2, column=1)
 
         ttk.Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
-        self.ctl_sbx_ctAlb = ttk.Spinbox(
+        self.ctl_sbx_ctAlb = SpinboxFloat(
             fr_extra_entry,
             width=4,
             from_=0,
@@ -965,7 +990,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
         ttk.Label(fr_extra_entry, text="ctHb, g/dL").grid(row=4, column=0)
-        self.ctl_sbx_ctHb = ttk.Spinbox(
+        self.ctl_sbx_ctHb = SpinboxFloat(
             fr_extra_entry,
             width=4,
             from_=0,
@@ -1090,7 +1115,7 @@ class CalcGFR(ttk.Frame):
         fr_entry.pack(anchor=tk.W)
 
         ttk.Label(fr_entry, text="cCrea, μmol/L").pack(side=tk.LEFT)
-        self.ctl_sbx_ccrea = ttk.Spinbox(
+        self.ctl_sbx_ccrea = SpinboxFloat(
             fr_entry,
             width=4,
             from_=0.0,
@@ -1104,7 +1129,7 @@ class CalcGFR(ttk.Frame):
         CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
 
         ttk.Label(fr_entry, text="Age, years").pack(side=tk.LEFT)
-        self.ctl_sbx_age = ttk.Spinbox(
+        self.ctl_sbx_age = SpinboxFloat(
             fr_entry,
             width=3,
             from_=0.0,

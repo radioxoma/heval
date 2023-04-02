@@ -114,6 +114,5 @@ Instead of executing `python3 -m heval` it's possible to double-click 'heval.des
 
 ## Screenshots
 
-![2020-02-19_v0 0 10_1](https://user-images.githubusercontent.com/4701641/74849673-0e404600-534a-11ea-83e2-75a03a67a07f.png)
-![2020-02-19_v0 0 10_2](https://user-images.githubusercontent.com/4701641/74849686-1304fa00-534a-11ea-9373-7bfd30e39271.png)
-![2020-02-19_v0 0 10_3](https://user-images.githubusercontent.com/4701641/74849895-56f7ff00-534a-11ea-94ca-3d6b609b3832.png)
+![2023-04-02_17-39-38](https://user-images.githubusercontent.com/4701641/229360354-9b64cf87-eee7-415f-b536-650ed7f0294b.png)
+![2023-04-02_17-46-04](https://user-images.githubusercontent.com/4701641/229360360-f9b12a49-7ffa-4bd9-b309-e4b94f00e57c.png)

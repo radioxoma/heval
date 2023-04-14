@@ -26,7 +26,7 @@ dev = [
 version = {attr = "heval.__version__"}
 
 [project.urls]
-Homepage = "https://github.com/radioxoma/heval"
+homepage = "https://github.com/radioxoma/heval"
 
 [project.gui-scripts]
 heval = "heval.__main__:main"

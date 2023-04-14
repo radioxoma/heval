@@ -1,0 +1,26 @@
+name: Unittests
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+
+    runs-on: ubuntu-20.04  # Versions =< 3.8.11 not awailable for ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8.10", "3"]  # 3.8.10 for Windows 7
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - run: python -m unittest -v

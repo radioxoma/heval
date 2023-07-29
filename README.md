@@ -79,7 +79,7 @@ An web or Android application is planned, but implementation deferred until calc
 | eGFR | **Good** | Straightforward implementation for adults and children |
 
 
-## Installation [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![Build Status](https://travis-ci.org/radioxoma/heval.svg?branch=master)](https://travis-ci.org/radioxoma/heval)
+## Installation [![semver](https://img.shields.io/github/v/release/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/) [![semver](https://img.shields.io/github/release-date/radioxoma/heval)](https://github.com/radioxoma/heval/releases/latest/)
 
 ### Windows
 
@@ -100,16 +100,16 @@ Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [release
 
 > Tip: Archlinux [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository) package [`heval-git`](https://aur.archlinux.org/packages/heval-git/) available.
 
-Heval is written in pure python3 and uses tkinter for GUI. Install dependencies and run python code directly:
+Heval is written in pure python3 and uses tkinter for GUI. Install dependencies and run code directly:
 
     $ sudo apt install git python3-tk  # Debian / Ubuntu
     $ sudo pacman -S git python tk  # Archlinux
 
     $ git clone https://github.com/radioxoma/heval.git
     $ cd heval
-    $ python3 -m heval
+    $ python -m heval
 
-Instead of executing `python3 -m heval` it's possible to double-click 'heval.desktop'.
+Instead of executing `python -m heval` it's possible to double-click 'heval.desktop'.
 
 
 ## Screenshots

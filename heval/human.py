@@ -228,6 +228,10 @@ class HumanBodyModel:
            * Thin man has higher TBV (95-105 ml/kg) than fat (45 ml/kg)
            * Men: 72.6 ml/kg, 2566 ml/m2; women: 66.3 ml/kg, 2245 ml/m2
 
+        According to review, all children (though neonates has been stated
+        as 80–90 ml/kg early) has the same mean blood volume 70 ml/kg RBW.
+        [Dr K Morris et all, 2005 https://adc.bmj.com/content/90/7/724]
+
         :return: Total blood volume, ml
         """
         return 70 / math.sqrt(self.bmi / 22) * self.weight
@@ -276,7 +280,7 @@ class HumanBodyModel:
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
             self.weight * 70, self.total_blood_volume
         )
-        info += f"Transfusion of one pRBC dose will increase Hb by {transfusion_prbc_response(self.weight):+.2f} g/dL."
+        info += f"Transfusion of one pRBC dose will increase Hb by {estimate_prbc_transfusion_response(self.weight):+.2f} g/dL."
 
         if self.sex == HumanSex.child:
             try:
@@ -1120,8 +1124,8 @@ def transfusion_prbc_target(
     return weight * target_hb_increment * 3 / prbc_hct
 
 
-def transfusion_prbc_response(
-    weight: float, prbc_volume: float = 350, prbc_hct: float = 0.6
+def estimate_prbc_transfusion_response(
+    real_body_weight: float, prbc_volume: float = 350, prbc_hct: float = 0.6
 ) -> float:
     """Estimate Hb increase after one pRBC dose transfusion.
 
@@ -1134,20 +1138,56 @@ def transfusion_prbc_response(
             10 mL/kg gives an increment of 2 g/dL
 
     Examples:
-        >>> transfusion_prbc_response(70, 10 * 70)
+        >>> estimate_prbc_transfusion_response(70, 10 * 70)
         2.0
-        >>> transfusion_prbc_response(70)
+        >>> estimate_prbc_transfusion_response(real_body_weight=70)
         1.0
 
     Args:
-        weight: Real body weight, kg
+        real_body_weight: Real body weight, kg
         prbc_volume: Volume of one pRBC package, ml
         prbc_hct: Haematocrit of pRBC dose, fraction. Value is
 
     Returns:
         Expected Hb increase, g/dL
     """
-    return prbc_volume / (weight * 3 / prbc_hct)
+    return prbc_volume / (real_body_weight * 3 / prbc_hct)
+
+
+def estimate_prbc_transfusion_volume(
+    real_body_weight: float, hb: float, target_hb: float = 75
+) -> float:
+    """Estimate required RBC volume to reach target recipient Hb level.
+
+    For 0-16 years old, based on recipient Hb.
+
+    Examples:
+        >>> estimate_prbc_transfusion_volume(real_body_weight=70, hb=70, target_hb=75)
+        168.0
+        >>> estimate_prbc_transfusion_volume(70, 65)
+        336.0
+        >>> estimate_prbc_transfusion_volume(70, 50)
+        840.0
+        >>> estimate_prbc_transfusion_volume(90, 30)
+        1944.0
+
+    Args:
+        real_body_weight: recipient real body weight, kg
+        hb: Recipient hemoglobin, g/L
+        target_hb: Target recipient hemoglobin, g/L
+
+    Returns:
+        Estimated pRBC volume (formula valid for pRBC HCT 0.64-0.72), ml
+
+    References:
+        Dr K Morris et all, 2005 https://adc.bmj.com/content/90/7/724
+
+        Old unvalidated formula (for reference)
+        donor_rbc_vol = real_body_weight * (target_hb - hb) / donor_rbc_hb
+        donor_rbc_vol = 3 × real_body_weight * (target_hb - hb)
+    """
+    # return 1.6 * real_body_weight * (target_hct - hct)
+    return 4.8 * real_body_weight * (target_hb - hb) / 10
 
 
 # https://news.tut.by/society/311809.html

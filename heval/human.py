@@ -1190,6 +1190,65 @@ def estimate_prbc_transfusion_volume(
     return 4.8 * real_body_weight * (target_hb - hb) / 10
 
 
+def check_anemia(hb: float, mcv: float) -> str:
+    """Check for anemia and guess it's cause.
+
+    Args:
+        hb: Hemoglobin, g/L
+        mcv: Mean corpuscular volume, fl
+
+
+    References
+    ----------
+    Universal anemia threshold is <110 g/L, based on [WHO VMNIS 2011]:
+        * Minimal Hb registered in humans during lifetime (at age 6 months - 5 years)
+        * Minimal Hb in pregnant women
+        * Simpler to implement, than thresholds for each sex, age,
+            condition (120 for females, 130 males, etc)
+
+
+    https://medvisor.ru/services/kalkulyator-anemii/
+    MCV low
+        Ferritin coefficient
+            Normal/high
+                Total iron binding capacity
+                    High/Normal -> Plumbum; Perform Hemoglobin electrophoresis for abnormal Hb like Sickle cell disease B-thalassemia); bone marrow smear (e.g. sideroblastic anemia)
+                    Low -> Anemia of Chronic Disease (ACD)
+            Low -> Iron deficiency
+
+    MCV high
+        B9 low -> Folate deficiency anemia
+        B12 low
+             Schilling test for intrinsic factor
+                Low -> B12 deficiency;
+                Normal -> gastrointestinal pathology.
+        Both normal -> Liver; Drug induced anemia; Reticulocytosis.
+
+    MCV normal
+        Reticulocyte
+            High -> blood loss; hemolysis; platelet sequestration in spleen
+            Low
+                LEY, PLT
+                    Low -> Myelodysplastic syndrome; Aplastic anemia; Leukemia.
+                    Normal/High -> Chronic infection; Malignancy; Chronic kidney disease.
+    """
+    msg = ""
+    if hb >= 110:
+        return msg
+
+    # Normal MCV range 80-100 fL
+    if mcv < 80:  # As low as 60-70
+        # MCHC hypochromic
+        msg = f"""<abbr title="MCV {mcv:.0f} fL: Fe deficiency, chronic disease, thalassemia. Check ferritin, total iron binding capacity">Microcytic</abbr> anemia"""
+    elif 100 < mcv:  # Up to 150
+        msg = f"""<abbr title="MCV {mcv:.0f} fL: B12 and/or B9-folic acid deficiency or gastrointestinal issues; chronic alcohol abuse (check AST)">Macrocytic</abbr> anemia"""
+    else:
+        # Reticulocytes aren't measured routinely as it requires
+        # manual blood count or expensive analyzer
+        msg = f"""<abbr title="Normal MCV {mcv:.0f} fL: blood loss, hemolysis, chronic disease (suppressed production, B2, B6 deficiency).\n\nCheck reticulocyte count: it raises in 12-24 hours after hemorrhage and stays low if problem in the bone marrow.">Normocytic</abbr> anemia"""
+    return msg
+
+
 # https://news.tut.by/society/311809.html
 # Average Belorussian male in 2008 >=18 years old
 male_generic_by = {

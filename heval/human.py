@@ -1195,7 +1195,7 @@ def check_anemia(hb: float, mcv: float) -> str:
 
     Args:
         hb: Hemoglobin, g/L
-        mcv: Mean corpuscular volume, fl
+        mcv: Mean corpuscular volume, fL
 
 
     References
@@ -1221,12 +1221,12 @@ def check_anemia(hb: float, mcv: float) -> str:
         B12 low
              Schilling test for intrinsic factor
                 Low -> B12 deficiency;
-                Normal -> gastrointestinal pathology.
+                Normal -> Gastrointestinal condition;
         Both normal -> Liver; Drug induced anemia; Reticulocytosis.
 
     MCV normal
         Reticulocyte
-            High -> blood loss; hemolysis; platelet sequestration in spleen
+            High -> blood loss; hemolysis; platelet sequestration in spleen;
             Low
                 LEY, PLT
                     Low -> Myelodysplastic syndrome; Aplastic anemia; Leukemia.
@@ -1241,7 +1241,7 @@ def check_anemia(hb: float, mcv: float) -> str:
         # MCHC hypochromic
         msg = f"""<abbr title="MCV {mcv:.0f} fL: Fe deficiency, chronic disease, thalassemia. Check ferritin, total iron binding capacity">Microcytic</abbr> anemia"""
     elif 100 < mcv:  # Up to 150
-        msg = f"""<abbr title="MCV {mcv:.0f} fL: B12 and/or B9-folic acid deficiency or gastrointestinal issues; chronic alcohol abuse (check AST)">Macrocytic</abbr> anemia"""
+        msg = f"""<abbr title="MCV {mcv:.0f} fL: B12 and/or B9-folic acid deficiency or gastrointestinal condition; chronic alcohol abuse (check AST)">Macrocytic</abbr> anemia"""
     else:
         # Reticulocytes aren't measured routinely as it requires
         # manual blood count or expensive analyzer

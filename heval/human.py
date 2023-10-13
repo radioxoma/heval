@@ -1239,9 +1239,9 @@ def check_anemia(hb: float, mcv: float) -> str:
     # Normal MCV range 80-100 fL
     if mcv < 80:  # As low as 60-70
         # MCHC hypochromic
-        msg = f"""<abbr title="MCV {mcv:.0f} fL: Fe deficiency, chronic disease, thalassemia. Check ferritin, total iron binding capacity">Microcytic</abbr> anemia"""
+        msg = f"""<abbr title="MCV {mcv:.0f} fL: Fe deficiency, chronic disease, thalassemia. Check Fe, ferritin, total iron binding capacity">Microcytic</abbr> anemia"""
     elif 100 < mcv:  # Up to 150
-        msg = f"""<abbr title="MCV {mcv:.0f} fL: B12 and/or B9-folic acid deficiency or gastrointestinal condition; chronic alcohol abuse (check AST)">Macrocytic</abbr> anemia"""
+        msg = f"""<abbr title="MCV {mcv:.0f} fL: B12 and/or B9 (folic acid) deficiency or gastrointestinal condition; chronic alcohol abuse (check AST)">Macrocytic</abbr> anemia"""
     else:
         # Reticulocytes aren't measured routinely as it requires
         # manual blood count or expensive analyzer

@@ -419,12 +419,10 @@ class HumanBloodModel:
         return info
 
 
-def solution_glucose(glu_mass, body_weight, add_insuline=True):
+def solution_glucose(
+    glu_mass: float, body_weight: float, add_insuline: bool = True
+) -> str:
     """Glucose and insulin solution calculation.
-
-    :param float glu_mass: glucose mass, grams
-    :param float body_weight: patient body weight, kg
-    :param bool add_insuline: Set False if bolus intended for hypoglycemic state
 
     Probably such glucose/insulin ratio can be used for both nutrition
     and as hyperkalemia bolus.
@@ -432,6 +430,11 @@ def solution_glucose(glu_mass, body_weight, add_insuline=True):
     * 1 ЕД на 3-5 г сухой глюкозы, скорость инфузии <= 0.5 г/кг/ч чтобы избежать глюкозурии [Мартов, Карманный справочник врача; RLSNET, Крылов Нейрореаниматология] (Ins 0.33-0.2 UI/г)
     * 1 ЕД на 4 г сухой глюкозы (если глюкозурия, то добавить инсулин или снизить скорость введения) [Курек, с 143; калькулятор BBraun; другие источники]
         * 0.25 IU/g
+
+    Args:
+        glu_mass: glucose mass, grams
+        body_weight: patient body weight, kg
+        add_insuline: Set False if bolus intended for hypoglycemic state
     """
     glu_mol = glu_mass / M_C6H12O6  # mmol/L
     # Glucose nutrition
@@ -465,17 +468,19 @@ def solution_glucose(glu_mass, body_weight, add_insuline=True):
     return info
 
 
-def solution_kcl4(salt_mmol):
+def solution_kcl4(salt_mmol: float) -> float:
     """Convert mmol of KCl to volume of saline solution.
 
-    :param float salt_mmol: KCl, amount of substance, mmol
-    :return: KCl 4 % ml solution, ml
-    :rtype: float
+    Args:
+        salt_mmol: KCl, amount of substance, mmol
+
+    Returns:
+        KCl 4 % ml solution, ml
     """
     return salt_mmol / 1000 * M_KCl / 4 * 100
 
 
-def solution_normal_saline(salt_mmol):
+def solution_normal_saline(salt_mmol: float, hours: float | None = None) -> str:
     """Convert mmol of NaCl to volume of saline solution (several dilutions).
 
     Administration rate limiting:
@@ -487,14 +492,20 @@ def solution_normal_saline(salt_mmol):
     NaCl 3%  , 0.51282 mmol/ml
     NaCl 10% , 1.70940 mmol/ml
 
-    :param float salt_mmol: Amount of substance (NaCl or single ion equivalent), mmol
-    :return: Info string
+    Args:
+        salt_mmol: Amount of substance (NaCl or single ion equivalent), mmol
+        hours: Replacement time. If given, return flow speed, otherwise just volume
+    Returns:
+        Info string
     """
     info = ""
     for dilution in (0.9, 3, 5, 10):
         conc = 1000 * (dilution / 100) / M_NaCl  # mmol/ml
         vol = salt_mmol / conc  # ml
-        info += f" * NaCl {dilution:>4.1f}% {vol:>4.0f} ml"
+        if hours is None:
+            info += f" * NaCl {dilution:>4.1f}% {vol:>4.0f} ml"
+        else:
+            info += f" * NaCl {dilution:>4.1f}% {vol / hours:>4.0f} ml/h"
         if dilution == 0.9:
             info += " isotonic"
         info += "\n"
@@ -538,7 +549,7 @@ def electrolyte_Na_classic(
         info += f"Na⁺ deficit is {Na_deficit:.0f} mmol, which equals to:\n"
         info += solution_normal_saline(Na_deficit)
         info += f"Replace Na⁺ at rate {Na_shift_rate:.1f} mmol/L/h during {Na_shift_hours:.0f} hours:\n"
-        info += solution_normal_saline(Na_deficit / Na_shift_hours)
+        info += solution_normal_saline(Na_deficit, Na_shift_hours)
     return info
 
 
@@ -624,7 +635,7 @@ def electrolyte_Na_adrogue(
     return info
 
 
-def electrolyte_K(weight, K_serum):
+def electrolyte_K(weight: float, K_serum: float) -> str:
     """Assess blood serum potassium level.
 
     :param float weight: Real body weight, kg
@@ -728,7 +739,9 @@ def electrolyte_K(weight, K_serum):
     return info
 
 
-def electrolyte_Na(weight: float, Na_serum: float, cGlu: float, verbose: bool = True):
+def electrolyte_Na(
+    weight: float, Na_serum: float, cGlu: float, verbose: bool = True
+) -> str:
     """Assess blood serum sodium level.
 
     Current human body fluid model status in context of Na replacement:
@@ -840,7 +853,7 @@ def electrolyte_Na(weight: float, Na_serum: float, cGlu: float, verbose: bool = 
     return info
 
 
-def correct_Na_hyperosmolar(cNa, cGlu):
+def correct_Na_hyperosmolar(cNa: float, cGlu: float) -> float:
     """Sodium correction for high osmolarity (hyperglycemia).
 
     Elevated glucose (or mannitol) raise plasma tonicity which draws
@@ -888,7 +901,7 @@ def correct_Na_hyperosmolar(cNa, cGlu):
     return cNa + Na_shift
 
 
-def volume_deficit_hct(weight, hct, hct_target=0.4):
+def volume_deficit_hct(weight: float, hct: float, hct_target: float = 0.4) -> float:
     """Estimate intravascular volume deficit by hematocrit (hct).
 
     Use if Hct reliable: no bleeding or blood diseases, polycythemia etc.
@@ -913,21 +926,23 @@ def volume_deficit_hct(weight, hct, hct_target=0.4):
     >>> volume_deficit_hct(70, 0.55)  # 79 kg, hct 0.55
     3818.181818181818
 
-    :param float weight: Real body weight, kg
-    :param float hct: Hematocrit fraction, e.g 0.5
-    :param float hct_target: Target hematocrit fraction, default 0.4
-        for simplicity. May be 0.407–0.503 for men and 0.361-0.443 for women.
-    :return: Volume deficiency, ml
-    :rtype: float
+    Args:
+        weight: Real body weight, kg
+        hct: Hematocrit fraction, e.g 0.5
+        hct_target: Target hematocrit fraction, default 0.4 for both men
+            and women. May be 0.407–0.503 for men and 0.361-0.443 for women.
+
+    Returns:
+        Volume deficiency, ml
     """
-    # 40 % - mean hematocrit for adult women and men
     return (1 - hct_target / hct) * 0.2 * weight * 1000
 
 
-def electrolyte_Cl(Cl_serum):
+def electrolyte_Cl(Cl_serum: float) -> str:
     """Assess blood serum chloride level.
 
-    :param float Cl_serum: mmol/L
+    Args:
+        Cl_serum: mmol/L
     """
     info = ""
     Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
@@ -941,7 +956,9 @@ def electrolyte_Cl(Cl_serum):
     return info
 
 
-def egfr_mdrd(sex, cCrea, age, black_skin=False):
+def egfr_mdrd(
+    sex: human.HumanSex, cCrea: float, age: float, black_skin: bool = False
+) -> float:
     """Estimated glomerular filtration rate (MDRD 2005 revised study equation).
 
     For patients >18 years, can't be used for acute renal failure.
@@ -963,12 +980,14 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     >>> egfr_mdrd(human.HumanSex.female, 100, 80, True)
     55.98942027449337
 
-    :param human.HumanSex sex: Choose 'male', 'female'.
-    :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
-    :param float age: Human age, years
-    :param bool black_skin: True for people with black skin (african american)
-    :return: eGFR, mL/min/1.73 m2
-    :rtype: float
+    Args:
+        sex: Choose 'male', 'female'.
+        cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+        age: Human age, years
+        black_skin: True for people with black skin (african american)
+
+    Returns:
+        eGFR, mL/min/1.73 m2
     """
     # Original equation from 1999 (non IDMS)
     # egfr = 186 * (cCrea / m_Crea) ** -1.154 * age ** -0.203
@@ -986,7 +1005,9 @@ def egfr_mdrd(sex, cCrea, age, black_skin=False):
     return egfr
 
 
-def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
+def egfr_ckd_epi(
+    sex: human.HumanSex, cCrea: float, age: float, black_skin: bool = False
+) -> float:
     """Estimated glomerular filtration rate (CKD-EPI 2009 formula).
 
     For patients >18 years. Appears as more accurate than MDRD, especially
@@ -999,12 +1020,14 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     [1] A new equation to estimate glomerular filtration rate. Ann Intern Med. 2009;150(9):604-12.
     [2] https://en.wikipedia.org/wiki/Renal_function#Glomerular_filtration_rate
 
-    :param human.HumanSex sex: Choose 'male', 'female'.
-    :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
-    :param float age: Human age, years
-    :param bool black_skin: True for people with black skin (african american)
-    :return: eGFR, mL/min/1.73 m2
-    :rtype: float
+    Args:
+        sex: Choose 'male', 'female'.
+        cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+        age: Human age, years
+        black_skin: True for people with black skin (african american)
+
+    Returns:
+        eGFR, mL/min/1.73 m2
     """
     cCrea /= M_Crea  # to mg/dl
     if sex == human.HumanSex.male:
@@ -1025,7 +1048,7 @@ def egfr_ckd_epi(sex, cCrea, age, black_skin=False):
     return egfr
 
 
-def egfr_schwartz(cCrea, height):
+def egfr_schwartz(cCrea: float, height: float) -> float:
     """Estimated glomerular filtration rate (revised Schwartz formula for children).
 
     * Not for adults.
@@ -1046,10 +1069,12 @@ def egfr_schwartz(cCrea, height):
     [2] Creatinine Clearance: Revised Schwartz Estimate
         http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
 
-    :param float cCrea: Serum creatinine (IDMS-calibrated), μmol/L
-    :param float height: Children height, meters
-    :return: eGFR, mL/min/1.73 m2.
-    :rtype: float
+    Args:
+        cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+        height: Children height, meters
+
+    Returns:
+        eGFR, mL/min/1.73 m2.
     """
     cCrea /= M_Crea  # to mg/dl
     # k = 0.33  # First year of life, pre-term infants
@@ -1059,7 +1084,7 @@ def egfr_schwartz(cCrea, height):
     return k * height * 100 / cCrea
 
 
-def gfr_describe(gfr):
+def gfr_describe(gfr: float) -> str:
     """Describe GFR value meaning and stage of Chronic Kidney Disease."""
     if 90 <= gfr:
         return "Normal kidney function if no proteinuria, otherwise CKD1 (90-100 %)"
@@ -1077,7 +1102,7 @@ def gfr_describe(gfr):
         return "CKD5, kidney failure (<15 %). Needs dialysis or kidney transplant"
 
 
-def insulin_by_glucose(cGlu):
+def insulin_by_glucose(cGlu: float) -> float:
     """Monoinsulin subcutaneous dose for a given serum glycemia level.
 
     Insulin sesnitivity at morning lower, then at evening.
@@ -1087,9 +1112,10 @@ def insulin_by_glucose(cGlu):
     [1] Oleskevitch uses target 5 mmol/L: `(cGlu - 5) * 2`
     [2] Lipman, T. Let's abandon urine fractionals in TPN. Nutrition Support Services. 4:38-40, 1984.
 
-    :param float cGlu: Serum glucose mmol/L
-    :return: Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
-    :rtype: float
+    Args:
+        cGlu: Serum glucose mmol/L
+    Returns:
+        Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
     """
     # cGlu mg/dl * 0.0555 = mmol/L
     # 0.55 = (100 / daily_iu) may be considered as sensetivity to ins

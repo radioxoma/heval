@@ -542,10 +542,10 @@ def electrolyte_Na_classic(
         # water_deficit = total_body_water * (Na_serum - Na_target) / Na_target * 1000  # Equal
         water_deficit = total_body_water * (Na_serum / Na_target - 1) * 1000  # ml
         info += f"Free water deficit is {water_deficit:.0f} ml, "
-        info += f"replace it with D5 at rate {water_deficit / Na_shift_hours:.1f} ml/h during {Na_shift_hours:.0f} hours. "
+        info += f"replace it with D5 at rate {water_deficit / Na_shift_hours:.1f} ml/h during {Na_shift_hours:.0f} hours.\n"
     elif Na_serum < Na_target:
         # Classic hyponatremia formula
-        Na_deficit = (Na_target - Na_serum) * total_body_water  # mmol
+        Na_deficit = total_body_water * (Na_target - Na_serum)  # mmol
         info += f"Na⁺ deficit is {Na_deficit:.0f} mmol, which equals to:\n"
         info += solution_normal_saline(Na_deficit)
         info += f"Replace Na⁺ at rate {Na_shift_rate:.1f} mmol/L/h during {Na_shift_hours:.0f} hours:\n"
@@ -813,7 +813,7 @@ def electrolyte_Na(
         )
         info += f"Warning: Na⁺ decrement faster than {Na_shift_rate:.1f} mmol/L/h can cause cerebral edema.\n"
         if verbose:
-            info += "Classic replacement calculation:\n" + electrolyte_Na_classic(
+            info += "Classic replacement calculation: " + electrolyte_Na_classic(
                 total_body_water,
                 Na_serum,
                 Na_target=Na_target,

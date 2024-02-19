@@ -588,6 +588,7 @@ def electrolyte_Na_adrogue(
         # Hyper
         {"name": "NaCl 5%         (Na⁺ 855 mmol/L)", "K_inf": 0, "Na_inf": 855},
         {"name": "NaCl 3%         (Na⁺ 513 mmol/L)", "K_inf": 0, "Na_inf": 513},
+        {"name": "NaHCO3 4%       (Na⁺ 476 mmol/L)", "K_inf": 0, "Na_inf": 476},
         {"name": "NaCl 0.9%       (Na⁺ 154 mmol/L)", "K_inf": 0, "Na_inf": 154},
         # Iso
         {

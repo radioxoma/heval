@@ -158,6 +158,16 @@ class HumanBloodModel:
             dehydration (osmotic diuresis)
             cGlu >30, mOsm >320, no acidosis and ketone bodies)
         """
+        info = ""
+        if not all(
+            v is not None
+            for v in (
+                self.cNa,
+                self.cGlu,
+            )
+        ):
+            return info
+
         info = "Osmolarity is "
         if self.osmolarity > norm_mOsm[1]:
             info += "high"
@@ -180,6 +190,16 @@ class HumanBloodModel:
             # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
             info += ", coma (>330 mOsm/kg)"
 
+        # Implies cNa, pCO2 available
+        if not all(
+            v is not None
+            for v in (
+                self.pH,
+                self.pCO2,
+            )
+        ):
+            return info
+
         # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
         if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
             # https://www.aafp.org/afp/2005/0501/p1723.html
@@ -187,8 +207,10 @@ class HumanBloodModel:
             info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
         return info
 
-    def describe_abg(self):
+    def describe_abg(self) -> str:
         """Describe pH and pCO2 - an old implementation considered stable."""
+        if not all(v is not None for v in (self.pH, self.pCO2)):
+            return ""
         info = textwrap.dedent(
             f"""\
             pCO2    {self.pCO2:2.1f} kPa
@@ -202,6 +224,10 @@ class HumanBloodModel:
         return info
 
     def describe_anion_gap(self):
+        if not all(
+            v is not None for v in (self.pH, self.pCO2, self.cNa, self.cCl, self.ctAlb)
+        ):
+            return "pH, pCO2, cNa, cCl, albumin required"
         info = "-- Anion gap ---------------------------------------\n"
         desc = f"{self.anion_gap:.1f} ({norm_gap[0]:.0f}-{norm_gap[1]:.0f} mEq/L)"
         if abg.abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
@@ -271,6 +297,8 @@ class HumanBloodModel:
           * https://pubmed.ncbi.nlm.nih.gov/29910040/
           * https://en.wikipedia.org/wiki/Metabolic_acidosis
         """
+        if not all(v is not None for v in (self.pH, self.pCO2)):
+            return ""
         NaHCO3_threshold = -15  # was -9 mEq/L
         info = ""
         if self.sbe > norm_sbe[1]:
@@ -317,6 +345,17 @@ class HumanBloodModel:
         return info
 
     def describe_electrolytes(self):
+        if not all(
+            v is not None
+            for v in (
+                self.parent.weight,
+                self.cK,
+                self.cNa,
+                self.cCl,
+                self.cGlu,
+            )
+        ):
+            return ""
         info = [
             "-- Electrolyte and osmolar abnormalities -----------",
             self.describe_osmolarity(),
@@ -324,6 +363,7 @@ class HumanBloodModel:
             electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug),
             electrolyte_Cl(self.cCl),
         ]
+
         return "\n".join(info) + "\n"
 
     def describe_glucose(self):
@@ -333,6 +373,14 @@ class HumanBloodModel:
         https://en.wikipedia.org/wiki/Glycosuria
         """
         info = ""
+        if not all(
+            v is not None
+            for v in (
+                self.parent.weight,
+                self.cGlu,
+            )
+        ):
+            return info
         if self.cGlu > norm_cGlu[1]:
             if self.cGlu <= norm_cGlu_target[1]:
                 info += f"cGlu is above ideal {self.cGlu:.1f} (target {norm_cGlu_target[0]:.1f}-{norm_cGlu_target[1]:.1f} mmol/L), but acceptable"
@@ -362,7 +410,11 @@ class HumanBloodModel:
 
     def describe_albumin(self):
         """Albumin as nutrition marker in adults."""
-        ctalb_range = f"{self.ctAlb} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/dL)"
+        if self.ctAlb is None:
+            return ""
+        ctalb_range = (
+            f"{self.ctAlb:0.1f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/dL)"
+        )
         if abg.norm_ctAlb[1] < self.ctAlb:
             info = f"ctAlb is high {ctalb_range}. Dehydration?"
         elif abg.norm_ctAlb[0] <= self.ctAlb <= abg.norm_ctAlb[1]:
@@ -383,6 +435,16 @@ class HumanBloodModel:
         [1] https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
         [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
         """
+        info = ""
+        if not all(
+            v is not None
+            for v in (
+                self.parent.weight,
+                self.parent.sex,
+                self.ctHb,
+            )
+        ):
+            return info
         # Top hct value for free water deficit calculation.
         if self.parent.sex == human.HumanSex.male:
             hb_norm = hb_norm_male
@@ -416,6 +478,23 @@ class HumanBloodModel:
 
         if self.parent.sex == human.HumanSex.child:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
+        return info
+
+    def describe_all(self) -> str:
+        info = ""
+        info += "Basic ABG assessment\n"
+        info += "====================\n"
+        info += "{}\n".format(self.describe_abg())
+        info += "{}\n\n\n".format(self.describe_sbe())
+
+        info += "Complex electrolyte assessment\n"
+        info += "==============================\n"
+        info += "{}\n\n".format(self.describe_anion_gap())
+        info += "{}\n".format(self.describe_electrolytes())
+
+        info += "{}\n\n".format(self.describe_glucose())
+        info += "{}\n\n".format(self.describe_albumin())
+        info += "{}\n".format(self.describe_Hb())
         return info
 
 
@@ -736,7 +815,7 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
         else:
             info += f"K⁺ on lower acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     else:
-        info += f"K⁺ is ok ({norm_K[0]:.1f}-{norm_K[1]:.1f} mmol/L)]"
+        info += f"K⁺ is ok {K_serum:.1f} ({norm_K[0]:.1f}-{norm_K[1]:.1f} mmol/L)]"
     return info
 
 
@@ -948,12 +1027,14 @@ def electrolyte_Cl(Cl_serum: float) -> str:
     info = ""
     Cl_low, Cl_high = norm_Cl[0], norm_Cl[1]
     if Cl_serum > Cl_high:
-        info += f"Cl⁻ is high (>{Cl_high} mmol/L), excessive NaCl infusion or dehydration (check osmolarity)."
+        info += f"Cl⁻ is high {Cl_serum:.0f} (>{Cl_high} mmol/L), excessive NaCl infusion or dehydration (check osmolarity)."
     elif Cl_serum < Cl_low:
         # KCl replacement?
-        info += f"Cl⁻ is low (<{Cl_low} mmol/L). Vomiting? Diuretics abuse?"
+        info += (
+            f"Cl⁻ is low {Cl_serum:.0f} (<{Cl_low} mmol/L). Vomiting? Diuretics abuse?"
+        )
     else:
-        info += f"Cl⁻ is ok ({norm_Cl[0]:.0f}-{norm_Cl[1]:.0f} mmol/L)"
+        info += f"Cl⁻ is ok {Cl_serum:.0f} ({norm_Cl[0]:.0f}-{norm_Cl[1]:.0f} mmol/L)"
     return info
 
 

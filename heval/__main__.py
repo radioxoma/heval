@@ -517,7 +517,7 @@ class HelpWindow(tk.Toplevel):
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
-        self.geometry(f"+{x+50:.0f}+{y+100:.0f}")
+        self.geometry(f"+{x + 50:.0f}+{y + 100:.0f}")
         self.title("Help")
 
         # Mimic Label colors
@@ -557,7 +557,7 @@ class AboutWindow(tk.Toplevel):
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
-        self.geometry(f"+{x+50:.0f}+{y+100:.0f}")
+        self.geometry(f"+{x + 50:.0f}+{y + 100:.0f}")
         self.title("About v" + __version__)
 
         abouttext = __about__ + " And remember: " + random.choice(__easter_text__)
@@ -825,9 +825,9 @@ class CalcNutrition(ttk.Frame):
         self.lbl_fluid_24h["text"] = round(self.human_model.nutrition.fluid_24h)
         self.lbl_kcal_24h["text"] = round(self.human_model.nutrition.kcal_24h)
         self.lbl_prot_24h["text"] = f"{self.human_model.nutrition.uurea_prot_24h:.1f}"
-        self.lbl_sbx_prot_g_kg_24h[
-            "text"
-        ] = f"{self.human_model.nutrition.uures_prot_g_kg_24h:.2f}"
+        self.lbl_sbx_prot_g_kg_24h["text"] = (
+            f"{self.human_model.nutrition.uures_prot_g_kg_24h:.2f}"
+        )
         # self.ctl_sbx_prot_g_kg_24h.delete(0, END)
         # self.ctl_sbx_prot_g_kg_24h.insert(0, round(self.human_model.nutrition.uures_prot_g_kg_24h, 2))  # g/kg/24h
         info = list()
@@ -1088,19 +1088,7 @@ class CalcElectrolytes(ttk.Frame):
 
     def eval(self, event=None):
         self.lbl_hco3["text"] = round(self.human_model.blood.hco3p, 1)
-        info = ""
-        info += "Basic ABG assessment\n"
-        info += "====================\n"
-        info += "{}\n".format(self.human_model.blood.describe_abg())
-        info += "{}\n\n\n".format(self.human_model.blood.describe_sbe())
-        info += "Complex electrolyte assessment\n"
-        info += "==============================\n"
-        info += "{}\n\n".format(self.human_model.blood.describe_anion_gap())
-        info += "{}\n".format(self.human_model.blood.describe_electrolytes())
-        info += "{}\n\n".format(self.human_model.blood.describe_glucose())
-        info += "{}\n\n".format(self.human_model.blood.describe_albumin())
-        info += "{}\n".format(self.human_model.blood.describe_Hb())
-        self.TxtView.set_text(info)
+        self.TxtView.set_text(self.human_model.blood.describe_all())
 
 
 class CalcGFR(ttk.Frame):

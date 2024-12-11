@@ -236,7 +236,7 @@ class HumanBloodModel:
                 info += f"HAGMA {desc} (KULT?), "
                 info += abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p)
             elif self.anion_gap < norm_gap[0]:
-                info += f"Low AG {desc} - hypoalbuminemia or low Na?"
+                info += f"Low AG {desc} - hypoalbuminemia or low Na⁺?"
             else:
                 # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
                 info += f"NAGMA {desc}. Diarrhea or renal tubular acidosis?"
@@ -306,7 +306,7 @@ class HumanBloodModel:
             # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
             # https://en.wikipedia.org/wiki/Contraction_alkalosis
             # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += f"SBE is high {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L). Check Cl⁻. Hypoalbuminemia? NaHCO₃ overdose?"
+            info += f"SBE is high {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L). Low Cl⁻, hypoalbuminemia? NaHCO₃ overdose?"
         elif self.sbe < norm_sbe[0]:
             if self.sbe <= NaHCO3_threshold:
                 info += f"SBE is drastically low {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
@@ -420,7 +420,7 @@ class HumanBloodModel:
         elif abg.norm_ctAlb[0] <= self.ctAlb <= abg.norm_ctAlb[1]:
             info = f"ctAlb is ok {ctalb_range}"
         elif 3 <= self.ctAlb < abg.norm_ctAlb[0]:
-            info = f"ctAlb is low: light hypoalbuminemia {ctalb_range}"
+            info = f"ctAlb is low: mild hypoalbuminemia {ctalb_range}"
         elif 2.5 <= self.ctAlb < 3:
             info = f"ctAlb is low: medium hypoalbuminemia {ctalb_range}"
         elif self.ctAlb < 2.5:
@@ -783,7 +783,7 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
             info += f"K⁺ on the upper acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     elif K_serum < norm_K[0]:
         if K_serum < K_low:
-            info += f"K⁺ is dangerously low (<{K_low:.1f} mmol/L). Often associated with low Mg²⁺ (Mg²⁺ should be at least 1 mmol/L) and low Cl⁻.\n"
+            info += f"K⁺ is dangerously low (<{K_low:.1f} mmol/L). Often associated with low Mg²⁺ (should be at least 1 mmol/L) and low Cl⁻.\n"
             info += "NB! Potassium calculations considered inaccurate, so use standard K⁺ replacement rate "
             if weight < 40:
                 info += "{:.1f}-{:.1f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(

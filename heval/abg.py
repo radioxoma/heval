@@ -226,7 +226,7 @@ def calculate_anion_gap_delta(AG: float, HCO3act: float) -> str:
         # predominance of beta-hydroxybutyrate. The dipstick test for ketones
         # detect acetoacetate but not beta-hydroxybutyrate.
         # https://web.archive.org/web/20170831093311/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Case_2.html
-        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis"
+        return info + "(1 ≤ gg ≤ 2): classic high anion gap acidosis. Check lactate."
     else:  # 2 < gg
         # Suggests a pre-existing elevated [HCO3-] level so consider:
         #   * a concurrent metabolic alkalosis

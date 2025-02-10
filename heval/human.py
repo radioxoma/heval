@@ -1033,7 +1033,7 @@ def mnemonic_wetflag(age: float | None = None, weight: float | None = None) -> s
     """
     if weight:  # Don't want to add age field now
         age = weight / 2 - 4
-    if not age:
+    if age is None:
         raise ValueError("Specify children's age or weight")
     if not 1 <= age <= 10:
         return "WETFLAG: Age must be in range 1-10 years"

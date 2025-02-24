@@ -19,7 +19,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit",
+    "pre-commit", "ruff",
 ]
 
 [tool.setuptools.dynamic]

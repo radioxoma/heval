@@ -14,6 +14,8 @@ from datetime import datetime
 from tkinter import font as tkfont
 from tkinter import ttk
 
+import tkinterweb
+
 from heval import __version__, abg, electrolytes, human
 
 __helptext__ = """\
@@ -180,12 +182,21 @@ class TextView(ScrolledText):
     def copy(self, event=None):
         if self.tag_ranges("sel"):
             self.clipboard_clear()
-            self.clipboard_append(self.get("sel.first", "sel.last"))
+            self.clipboard_append(self.get(tk.SEL_FIRST, tk.SEL_LAST))
             self.update()  # Force copy on Windows
 
     def copy_all(self, event=None):
         self.clipboard_clear()
         self.clipboard_append(self.get(1.0, tk.END))
+
+
+class TextHtmlView(tkinterweb.HtmlFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(messages_enabled=False, *args, **kwargs)
+        # self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    def set_text(self, text):
+        self.load_html(f"""<code>{text.replace("\n", "&nbsp;<br>")}</code>""")
 
 
 class TextViewCustom(ttk.Frame):
@@ -389,7 +400,7 @@ class MainWindow(ttk.Frame):
         # END INPUT SECTION
         self.set_input_defaults()
 
-        nb = ttk.Notebook(self)
+        nb = tkinterweb.Notebook(self)
         self.MText = MainText(nb, self.HBody)
         self.CNutrition = CalcNutrition(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
@@ -587,7 +598,7 @@ class MainText(ttk.Frame):
         self.parent = parent
         self.human_model = human_model
 
-        self.TxtView = TextView(self)
+        self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.TxtView.set_text(
             textwrap.dedent(
@@ -758,7 +769,7 @@ class CalcNutrition(ttk.Frame):
         self.lbl_sbx_prot_g_kg_24h = ttk.Label(self.fr_nitrogen_entry)
         self.lbl_sbx_prot_g_kg_24h.grid(row=3, column=1)
 
-        self.TxtView = TextView(self)
+        self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_fluid_defaults()
         self.set_input_kcal_defaults()
@@ -1008,7 +1019,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctHb.bind("<KeyRelease>", self.set_model_ctHb)
         self.ctl_sbx_ctHb.grid(row=4, column=1)
 
-        self.TxtView = TextView(self)
+        self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
@@ -1149,7 +1160,7 @@ class CalcGFR(ttk.Frame):
         self.reset.pack(side=tk.LEFT)
         CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
 
-        self.TxtView = TextView(self)
+        self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_defaults()
         self.TxtView.set_text(

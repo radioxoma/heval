@@ -102,7 +102,7 @@ class SpinboxFloat(ttk.Spinbox):
         self["validatecommand"] = (ctl_sbx_validator, "%P")
 
     def is_empty_or_float(self, value: str) -> bool:
-        """Allow empty value or someting castable to float."""
+        """Allow empty value or something castable to float."""
         if value == "":
             return True
         try:
@@ -189,6 +189,8 @@ class TextView(ScrolledText):
 
 
 class TextViewCustom(ttk.Frame):
+    """Alternate realisation of ScrolledText."""
+
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.parent = parent

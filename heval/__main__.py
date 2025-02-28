@@ -191,12 +191,24 @@ class TextView(ScrolledText):
 
 
 class TextHtmlView(tkinterweb.HtmlFrame):
-    def __init__(self, *args, **kwargs):
-        super().__init__(messages_enabled=False, *args, **kwargs)
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args, messages_enabled=False, **kwargs)
+        self.parent = parent
+        self.bind("<Button-3>", self._show_tooltip)
         # self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     def set_text(self, text):
         self.load_html(f"""<code>{text.replace("\n", "&nbsp;<br>")}</code>""")
+
+    def _show_tooltip(self, event=None):
+        # API is about to change
+        # element = self.get_currently_hovered_element()
+        # title = element.getAttribute("title")
+        title = self.get_currently_hovered_node_attribute("title")
+        if title:
+            menu = tk.Menu(self.parent, tearoff=False)
+            menu.add_command(label=title)
+            menu.tk_popup(event.x_root, event.y_root, 0)
 
 
 class TextViewCustom(ttk.Frame):

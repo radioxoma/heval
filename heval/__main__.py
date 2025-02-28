@@ -18,56 +18,63 @@ import tkinterweb
 
 from heval import __version__, abg, electrolytes, human
 
-__helptext__ = """\
-  HUMAN BODY
-Введите пол и рост — этого достаточно для большей части антропометрических \
-расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически. \
-Снимите галочку "Use IBW" и введите реальный вес, если знаете его.
+__css__ = """
+<style>
+  abbr { border-bottom: 1px dotted; }
+</style>
+"""
 
-Мгновенно доступны: IBW, BSA, BMI, объёмы вентиляции, суточная потребность \
-в энергии и жидкости, диурез, дозировки ЛС etc.
+__helptext__ = """
+<h3>HUMAN BODY</h3>
+Введите пол и рост — этого достаточно для большей части антропометрических
+расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически.
+Снимите галочку "Use IBW" и введите реальный вес, если знаете его.<br>
 
-  ABG & ELECTROLYTES
-Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае \
-метаболического ацидоза необходимо ввести концентрации K⁺, Na⁺, Cl⁻, чтобы \
-программа смогла рассчитать анионный промежуток и попыталась найти скрытые \
-метаболические процессы при помощи Delta ratio.
-Пол и вес влияют на рассчитанную инфузионную терапию.
+Мгновенно доступны: <abbr title="Ideal body weight">IBW</abbr>, <abbr title="Body surface area">BSA</abbr>, <abbr title="Body mass index">BMI</abbr>, объёмы вентиляции, суточная потребность
+в энергии и жидкости, диурез, дозировки <abbr title="Лекарственные средства">ЛС</abbr> etc.
 
-При наведении курсора на поле ввода появляется всплывающая подсказка.
+<h3>ABG & ELECTROLYTES</h3>
+<p>Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае
+метаболического ацидоза необходимо ввести концентрации K⁺, Na⁺, Cl⁻, чтобы
+программа смогла рассчитать анионный промежуток и попыталась найти скрытые
+метаболические процессы при помощи Delta ratio.<br>
+Пол и вес влияют на рассчитанную инфузионную терапию.</p>
 
-  ABBREVIATIONS
-ABG - arterial blood gas test
-AG - anion gap
-AKI - acute kidney injury
-BMI - body mass index
-BMR - basal metabolic rate
-BSA - body surface area, m²
-CKD - chronic kidney disease
-D5, D5W - dextrose 5%
-DKE - diabetic ketoacidosis
-eGFR - estimated glomerular filtration rate
-GA - general anesthesia
-gg - gap-gap, delta gap
-HAGMA - high anion gap metabolic acidosis
-HHS - hyperosmolar hyperglycemic state
-IBW - ideal body weight, kg
-IV, I/V - intravenous
-KULT - Ketones, Uremia, Lactate, Toxins
-MV - minute volume
-NAGMA - normal anion gap metabolic acidosis
-NMT - neuromuscular monitoring
-pRBC - packed red blood cells
-RBW - real body weight, kg
-RR - respiratory rate
-SBE - standard base excess
-TIVA - total intravenous anesthesia
-TOF - train of four
-TV - tidal volume
-UUN - Urine Urea Nitrogen
-VDaw - dead space airway volume
+<p>При наведении курсора на поле ввода появляется всплывающая подсказка.</p>
 
-ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г
+<h3>ABBREVIATIONS</h3>
+<ul>
+<li>ABG - arterial blood gas test</li>
+<li>AG - anion gap</li>
+<li>AKI - acute kidney injury</li>
+<li>BMI - body mass index</li>
+<li>BMR - basal metabolic rate</li>
+<li>BSA - body surface area, m²</li>
+<li>CKD - chronic kidney disease</li>
+<li>D5, D5W - dextrose 5%</li>
+<li>DKE - diabetic ketoacidosis</li>
+<li>eGFR - estimated glomerular filtration rate</li>
+<li>GA - general anesthesia</li>
+<li>gg - gap-gap, delta gap</li>
+<li>HAGMA - high anion gap metabolic acidosis</li>
+<li>HHS - hyperosmolar hyperglycemic state</li>
+<li>IBW - ideal body weight, kg</li>
+<li>IV, I/V - intravenous</li>
+<li>KULT - Ketones, Uremia, Lactate, Toxins</li>
+<li>MV - minute volume</li>
+<li>NAGMA - normal anion gap metabolic acidosis</li>
+<li>NMT - neuromuscular monitoring</li>
+<li>pRBC - packed red blood cells</li>
+<li>RBW - real body weight, kg</li>
+<li>RR - respiratory rate</li>
+<li>SBE - standard base excess</li>
+<li>TIVA - total intravenous anesthesia</li>
+<li>TOF - train of four</li>
+<li>TV - tidal volume</li>
+<li>UUN - Urine Urea Nitrogen</li>
+<li>VDaw - dead space airway volume</li>
+<li>ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г</li>
+</ul>
 """
 
 __about__ = """\
@@ -194,17 +201,20 @@ class TextHtmlView(tkinterweb.HtmlFrame):
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent, *args, messages_enabled=False, **kwargs)
         self.parent = parent
-        self.bind("<Button-3>", self._show_tooltip)
+        self.bind("<Button-1>", self._show_tooltip)
         # self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    def set_text(self, text):
-        self.load_html(f"""<code>{text.replace("\n", "&nbsp;<br>")}</code>""")
+    def set_text(self, text: str):
+        """Set preformatted text to show it as <code> block."""
+        self.load_html(__css__ + f"""<code>{text.replace("\n", "&nbsp;<br>")}</code>""")
+
+    def set_html(self, html: str):
+        """Set HTML code as is."""
+        self.load_html(__css__ + html)
 
     def _show_tooltip(self, event=None):
-        # API is about to change
-        # element = self.get_currently_hovered_element()
-        # title = element.getAttribute("title")
-        title = self.get_currently_hovered_node_attribute("title")
+        element = self.get_currently_hovered_element()
+        title = element.getAttribute("title")
         if title:
             menu = tk.Menu(self.parent, tearoff=False)
             menu.add_command(label=title)
@@ -547,13 +557,11 @@ class HelpWindow(tk.Toplevel):
 
         # Mimic Label colors
         lbl_bg = ttk.Style().lookup("TLabel", "background")
-        lbl_font = ttk.Style().lookup("TLabel", "font")  # TkDefaultFont
+        # lbl_font = ttk.Style().lookup("TLabel", "font")  # TkDefaultFont
         self.configure(bg=lbl_bg)
 
-        self.text = TextView(self, wrap=tk.WORD)
-        self.text.set_text(__helptext__)
-        # relief=tk.FLAT for Linux
-        self.text.configure(bg=lbl_bg, font=lbl_font, relief=tk.FLAT)
+        self.text = TextHtmlView(self)
+        self.text.set_html(__helptext__)
         self.text.pack(expand=True, fill=tk.BOTH)
 
         self.ctl_frame = ttk.Frame(self, padding=8)
@@ -573,7 +581,7 @@ class HelpWindow(tk.Toplevel):
             self.ctl_btn_close_tip.text = info
             # self.ctl_btn_close['text'] = info
         else:
-            self.ctl_btn_close_tip = CreateToolTip(self.ctl_btn_close, info, delay=2000)
+            self.ctl_btn_close_tip = CreateToolTip(self.ctl_btn_close, info, delay=1500)
 
 
 class AboutWindow(tk.Toplevel):
@@ -1250,10 +1258,14 @@ class CreateToolTip:
         self.id = self.parent.after(self.delay, self.showtip)
 
     def unschedule(self):
-        _id = self.id
-        self.id = None
+        _id, self.id = self.id, None
         if _id:
             self.parent.after_cancel(_id)
+
+    def hidetip(self):
+        tw, self.tw = self.tw, None
+        if tw:
+            tw.destroy()
 
     def showtip(self, event=None):
         x, y, cx, cy = self.parent.bbox(tk.INSERT)
@@ -1274,11 +1286,6 @@ class CreateToolTip:
             wraplength=self.wraplength,
         )
         label.pack(ipadx=1)
-
-    def hidetip(self):
-        tw, self.tw = self.tw, None
-        if tw:
-            tw.destroy()
 
 
 class MenuTooltip(tk.Menu):

@@ -51,7 +51,7 @@ class HumanBodyModel:
         self.blood = electrolytes.HumanBloodModel(self)
         self.drugs = drugs.HumanDrugsModel(self)
         self.nutrition = nutrition.HumanNutritionModel(self)
-        self.body_temp = 36.6
+        self.body_temp = 36.6  # Celsius
         self.comment = dict()  # For warnings
 
     def __str__(self):
@@ -60,14 +60,15 @@ class HumanBodyModel:
             int_prop[attr] = getattr(self, attr)
         return "HumanBody: {}".format(str(int_prop))
 
-    def populate(self, properties):
+    def populate(self, properties: dict) -> dict:
         """Populate model from data structure.
 
-        :param dict properties: Dictionary with model properties to set.
+        Args:
+            properties: Dictionary with model properties to set.
             Key names must be equal to class properties names.
-        :return:
+
+        Returns:
             Not applied properties (including nested models)
-        :rtype: dict
         """
         prop = copy.deepcopy(properties)  # Avoid changing passed object
         for item in self._int_prop:
@@ -86,7 +87,7 @@ class HumanBodyModel:
         return self._sex
 
     @sex.setter
-    def sex(self, value):
+    def sex(self, value: HumanSex):
         """Set HumanSex."""
         self._sex = value
         if all((self.height, self.sex)):  # optimization
@@ -97,7 +98,7 @@ class HumanBodyModel:
         return self._height
 
     @height.setter
-    def height(self, value):
+    def height(self, value: float):
         """Human height in meters."""
         self._height = value
         if all((self.height, self.sex)):  # optimization
@@ -112,7 +113,7 @@ class HumanBodyModel:
             return self._weight
 
     @weight.setter
-    def weight(self, value):
+    def weight(self, value: float):
         """Human weight in kilograms.
 
         You always can set real body weight, but not get it.
@@ -125,10 +126,11 @@ class HumanBodyModel:
         return self._use_ibw
 
     @use_ibw.setter
-    def use_ibw(self, value):
+    def use_ibw(self, value: bool):
         """Set flag to use calculated IBW instead real weight.
 
-        :param bool value: Use or not IBW, bool
+        Args:
+            value: Use or not IBW, bool
         """
         self._use_ibw = value
 
@@ -689,7 +691,7 @@ def get_broselow_code(height: float) -> tuple[str, str, float]:
         height: Child height in meters.
 
     Returns:
-        Typle of color code, approx age, approx weight (kg).
+        Tuple of color code, approx age, approx weight (kg).
     """
     height *= 100
     if 46.8 <= height < 51.9:

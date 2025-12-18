@@ -22,10 +22,10 @@ version = {attr = "heval.__version__"}
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.0.1",
-    "ruff>=0.14.7",
+    "pre-commit==4.5.0",
+    "ruff==0.14.9",
 ]
-gui = ["tkinterweb>=4.0.3",]
+gui = ["tkinterweb==4.0.3",]
 
 [project.urls]
 homepage = "https://github.com/radioxoma/heval"

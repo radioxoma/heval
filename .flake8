@@ -1,3 +1,0 @@
-[flake8]
-# See https://github.com/psf/black/blob/main/.flake8
-ignore = E501,W503

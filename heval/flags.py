@@ -67,6 +67,7 @@ def render_flags(flags: list[Flag]) -> str:
         items = list()
         for flag in sorted(flags, key=operator.attrgetter("severity")):
             items.append(flag.html)
-        return f"""<ul>\n<li>{"</li>\n<li>".join(items)}</li>\n</ul>"""
+        text = "</li>\n<li>".join(items)
+        return f"<ul>\n<li>{text}</li>\n</ul>"
     else:
         return ""

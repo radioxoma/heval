@@ -206,7 +206,8 @@ class TextHtmlView(tkinterweb.HtmlFrame):
 
     def set_text(self, text: str):
         """Set preformatted text to show it as <code> block."""
-        self.load_html(__css__ + f"""<code>{text.replace("\n", "&nbsp;<br>")}</code>""")
+        text = text.replace("\n", "&nbsp;<br>")
+        self.load_html(__css__ + f"<code>{text}</code>")
 
     def set_html(self, html: str):
         """Set HTML code as is."""

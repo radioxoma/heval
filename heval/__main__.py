@@ -275,18 +275,16 @@ class TextViewCustom(ttk.Frame):
 
 
 class MainWindow(ttk.Frame):
-    def __init__(self, parent=None, *args, **kwargs):
+    def __init__(self, parent: tk.Tk, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.parent = parent
         self.parent.title("Heval: the human evaluator — v" + __version__)
         self.parent.geometry("650x590")
 
-        self.parent.style = ttk.Style()
-        self.parent.style.theme_use("clam")  # ('clam', 'alt', 'default', 'classic')
-        self.parent.style.configure("TButton", padding=2)
-        self.parent.style.configure(
-            "TMenubutton", padding=2, width=6
-        )  # Otherwise too big on Linux
+        style = ttk.Style()
+        style.theme_use("clam")  # ('clam', 'alt', 'default', 'classic')
+        style.configure("TButton", padding=2)
+        style.configure("TMenubutton", padding=2, width=6)  # Otherwise too big on Linux
         self.adjust_font_size()
 
         self.HBody = human.HumanBodyModel()

@@ -51,10 +51,7 @@ Main approach:
 
 from __future__ import annotations
 
-try:
-    from uncertainties import umath as math
-except ImportError:
-    import math  # type: ignore
+import math
 
 # Units conversion
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa

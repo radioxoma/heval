@@ -42,7 +42,7 @@ class HumanBodyModel:
         self._height = None
         self._age = None
 
-        self.weight = None
+        self._weight = None
         self._use_ibw = False
         self._weight_ideal_valid = False
         self._weight_ideal_method = ""

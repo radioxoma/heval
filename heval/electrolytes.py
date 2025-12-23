@@ -56,8 +56,8 @@ hb_norm_child = (11, 16)  # g/dl
 class HumanBloodModel:
     """Represents an human blood ABG status."""
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self._int_prop = ("pH", "pCO2", "cK", "cNa", "cCl", "cGlu", "ctAlb", "ctHb")
         self._txt_prop = ()
 
@@ -209,18 +209,18 @@ class HumanBloodModel:
 
     def describe_abg(self) -> str:
         """Describe pH and pCO2 - an old implementation considered stable."""
-        if not all(v is not None for v in (self.pH, self.pCO2)):
-            return ""
-        info = textwrap.dedent(
-            f"""\
-            pCO2    {self.pCO2:2.1f} kPa
-            HCO3(P) {self.hco3p:2.1f} mmol/L
-            Conclusion: {abg.abg_approach_stable(self.pH, self.pCO2)[0]}\n"""
-        )
-        if self.parent.debug:
-            info += "\n-- Manual compensatory response check --------------\n"
-            # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-            info += abg.abg_approach_research(self.pH, self.pCO2)
+        info = ""
+        if self.pH is not None and self.pCO2 is not None:
+            info += textwrap.dedent(
+                f"""\
+                pCO2    {self.pCO2:2.1f} kPa
+                HCO3(P) {self.hco3p:2.1f} mmol/L
+                Conclusion: {abg.abg_approach_stable(self.pH, self.pCO2)[0]}\n"""
+            )
+            if self.human_body.debug:
+                info += "\n-- Manual compensatory response check --------------\n"
+                # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+                info += abg.abg_approach_research(self.pH, self.pCO2)
         return info
 
     def describe_anion_gap(self):
@@ -250,7 +250,7 @@ class HumanBloodModel:
             else:
                 info += f"AG is ok {desc}"
 
-        if self.parent.debug:
+        if self.human_body.debug:
             """Strong ion difference.
 
             Sometimes Na and Cl don't changes simultaneously.
@@ -312,8 +312,8 @@ class HumanBloodModel:
                 info += f"SBE is drastically low {self.sbe:.1f} ({norm_sbe[0]:.0f}-{norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
                 info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
-                NaHCO3_mmol = -0.3 * self.sbe * self.parent.weight  # mmol/L
-                NaHCO3_mmol_24h = self.parent.weight * 5  # mmol/L
+                NaHCO3_mmol = -0.3 * self.sbe * self.human_body.weight  # mmol/L
+                NaHCO3_mmol_24h = self.human_body.weight * 5  # mmol/L
                 NaHCO3_g = NaHCO3_mmol / 1000 * M_NaHCO3  # gram
                 NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * M_NaHCO3
                 # Курек 273, Рябов 73 for children and adult
@@ -324,7 +324,7 @@ class HumanBloodModel:
                     NaHCO3_ml = NaHCO3_g / dilution * 100
                     NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
                     info += f"    * NaHCO3 {dilution:.1f}% {NaHCO3_ml:.0f} ml, daily dose {NaHCO3_ml_24h:.0f} ml/24h\n"
-                if self.parent.debug:
+                if self.human_body.debug:
                     info += textwrap.dedent(
                         """\
                         Confirmed NaHCO₃ use cases:
@@ -348,7 +348,7 @@ class HumanBloodModel:
         if not all(
             v is not None
             for v in (
-                self.parent.weight,
+                self.human_body.weight,
                 self.cK,
                 self.cNa,
                 self.cCl,
@@ -359,8 +359,10 @@ class HumanBloodModel:
         info = [
             "-- Electrolyte and osmolar abnormalities -----------",
             self.describe_osmolarity(),
-            electrolyte_K(self.parent.weight, self.cK),
-            electrolyte_Na(self.parent.weight, self.cNa, self.cGlu, self.parent.debug),
+            electrolyte_K(self.human_body.weight, self.cK),
+            electrolyte_Na(
+                self.human_body.weight, self.cNa, self.cGlu, self.human_body.debug
+            ),
             electrolyte_Cl(self.cCl),
         ]
 
@@ -376,7 +378,7 @@ class HumanBloodModel:
         if not all(
             v is not None
             for v in (
-                self.parent.weight,
+                self.human_body.weight,
                 self.cGlu,
             )
         ):
@@ -389,7 +391,7 @@ class HumanBloodModel:
                 if self.cGlu <= 20:  # Arbitrary threshold
                     info += f", consider insulin {insulin_by_glucose(self.cGlu):.0f} IU subcut for adult"
                 else:
-                    info += f", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {self.parent.weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
+                    info += f", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {self.human_body.weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
 
         elif self.cGlu < norm_cGlu[0]:
             if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
@@ -399,7 +401,9 @@ class HumanBloodModel:
                 # https://litfl.com/glucose/
                 # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
                 info += solution_glucose(
-                    0.25 * self.parent.weight, self.parent.weight, add_insuline=False
+                    0.25 * self.human_body.weight,
+                    self.human_body.weight,
+                    add_insuline=False,
                 )
                 # High lactate + refractory low cGlu marks liver failure: expect death in 24-48 hours
                 info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory. In case of sepsis, liver failure may be the cause."
@@ -439,24 +443,24 @@ class HumanBloodModel:
         if not all(
             v is not None
             for v in (
-                self.parent.weight,
-                self.parent.sex,
+                self.human_body.weight,
+                self.human_body.sex,
                 self.ctHb,
             )
         ):
             return info
         # Top hct value for free water deficit calculation.
-        if self.parent.sex == human.HumanSex.male:
+        if self.human_body.sex == human.HumanSex.male:
             hb_norm = hb_norm_male
             hct_norm = hct_norm_male
-        elif self.parent.sex == human.HumanSex.female:
+        elif self.human_body.sex == human.HumanSex.female:
             hb_norm = hb_norm_female
             hct_norm = hct_norm_female
-        elif self.parent.sex == human.HumanSex.child:
+        elif self.human_body.sex == human.HumanSex.child:
             hb_norm = hb_norm_child
             hct_norm = hct_norm_child
         hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
-        vol_def = volume_deficit_hct(self.parent.weight, self.hct_calc, hct_target)
+        vol_def = volume_deficit_hct(self.human_body.weight, self.hct_calc, hct_target)
 
         desc_hb = f"{self.ctHb:.1f} ({hb_norm[0]:.1f}-{hb_norm[1]:.1f} g/dl)"
         desc_hct = f"{self.hct_calc:.3f} ({hct_norm[0]:.3f}-{hct_norm[1]:.3f})"
@@ -476,7 +480,7 @@ class HumanBloodModel:
         if self.hct_calc > hct_target + 0.01:  # Age-independent threshold
             info += f", free water deficit {vol_def:.0f} ml (limitations: valid if no anemia, osmolarity and Na⁺ are more specific)."
 
-        if self.parent.sex == human.HumanSex.child:
+        if self.human_body.sex == human.HumanSex.child:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 

@@ -820,7 +820,7 @@ class CalcNutrition(ttk.Frame):
 
     def set_input_protein_defaults(self, event=None):
         self.ctl_sbx_uurea.delete(0, tk.END)
-        self.ctl_sbx_uurea.insert(0, 190)  # Corresponds to 0.8 g/kg/h
+        self.ctl_sbx_uurea.insert(0, 190)  # Corresponds to 0.8 g/kg/24h
         self.set_model_uurea()
 
     def set_nutr_gui_state(self, event=None):

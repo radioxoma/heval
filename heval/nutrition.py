@@ -185,13 +185,12 @@ enteral_enterolin_caloric = {
 class HumanNutritionModel:
     """ESPEN https://www.ncbi.nlm.nih.gov/pubmed/19464090."""
 
-    def __init__(self, human_model):
-        super().__init__()
-        self.human_model = human_model
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.fluid_multiplier = 30  # ml/kg RBW
         self.kcal_multiplier = 25  # ml/kg RBW
-        self.uurea = None  # Total urine urea, mmol
-        # self.protein_24h = None  # 1.5 * self.human_model.weight
+        self.uurea = 190  # Total urine urea, mmol (190 for 0.8 g/kg/24h)
+        # self.protein_24h = None  # 1.5 * self.human_body.weight
 
     def __str__(self):
         return textwrap.dedent(
@@ -210,7 +209,7 @@ class HumanNutritionModel:
 
     @property
     def fluid_24h(self):
-        return self.fluid_multiplier * self.human_model.weight
+        return self.fluid_multiplier * self.human_body.weight
 
     @property
     def fluid_1h(self):
@@ -218,7 +217,7 @@ class HumanNutritionModel:
 
     @property
     def kcal_24h(self):
-        return self.kcal_multiplier * self.human_model.weight
+        return self.kcal_multiplier * self.human_body.weight
 
     @property
     def uurea_prot_24h(self):
@@ -226,7 +225,7 @@ class HumanNutritionModel:
 
     @property
     def uures_prot_g_kg_24h(self):
-        return self.uurea_prot_24h / self.human_model.weight
+        return self.uurea_prot_24h / self.human_body.weight
 
     def uurea_prot_24h_reverse(self, protein_req):
         """Get Urea by protein_req.
@@ -234,20 +233,20 @@ class HumanNutritionModel:
         :param float protein_req: g/kg/24h
         :return: Urea, mmol
         """
-        return ((protein_req * self.human_model.weight / 6.25) - 4) / 28 * 1000
+        return ((protein_req * self.human_body.weight / 6.25) - 4) / 28 * 1000
 
     def describe_nutrition(self, by_protein=False):
         """Find a compromise between fluids, electrolytes and energy."""
         info = ""
-        if self.human_model.debug:
+        if self.human_body.debug:
             info += "{}\n".format(self.describe_nitrogen_balance())
 
         # Total enteral nutrition
         info += "Enteral nutrition\n"
         info += "-----------------\n"
-        if self.human_model.debug:
+        if self.human_body.debug:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
-        n_form = NutritionFormula(enteral_nutricomp_standard, self.human_model)
+        n_form = NutritionFormula(enteral_nutricomp_standard, self.human_body)
         info += "{}\n".format(str(n_form))
         if by_protein:
             full_enteral_nutrition = n_form.dose_by_protein(self.uurea_prot_24h)
@@ -264,9 +263,9 @@ class HumanNutritionModel:
         # Total parenteral nutrition
         info += "Total parenteral nutrition\n"
         info += "--------------------------\n"
-        if self.human_model.debug:
+        if self.human_body.debug:
             info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirements (total parenteral nutrition criteria).\n"
-        n_form = NutritionFormula(parenteral_nutriflex_48_150, self.human_model)
+        n_form = NutritionFormula(parenteral_nutriflex_48_150, self.human_body)
         info += "{}\n".format(str(n_form))
         if by_protein:
             full_parenteral_nutrition = n_form.dose_by_protein(self.uurea_prot_24h)
@@ -282,9 +281,9 @@ class HumanNutritionModel:
         # Mixed parenteral with enteral
         info += "Total parenteral peripheral nutrition\n"
         info += "-------------------------------------\n"
-        if self.human_model.debug:
+        if self.human_body.debug:
             info += "Using peripheral vein is possible for <900 mOsm/kg mixtures, but needs simultaneous enteral feeding to meet daily requirements. Peripheral nutrition diluted, so additional fluid not required.\n"
-        n_form = NutritionFormula(parenteral_kabiven_perif, self.human_model)
+        n_form = NutritionFormula(parenteral_kabiven_perif, self.human_body)
         info += "{}\n".format(str(n_form))
         if by_protein:
             full_parenteral_nutrition = n_form.dose_by_protein(self.uurea_prot_24h)
@@ -303,15 +302,25 @@ class HumanNutritionModel:
 
 
 class NutritionFormula:
-    def __init__(self, preparation, human_model):
+    def __init__(self, preparation, human_body):
         """Calculate pre-made mixture volume by protein or caloric demand.
 
         :param dict preparation: Specific dict with an nutrition preparation.
-        :param class human_model: HumanModel class instance.
+        :param class human_body: HumanModel class instance.
         """
-        self.human_model = human_model
-        for k, v in preparation.items():
-            setattr(self, k, v)
+        self.human_body = human_body
+        self.name: str = preparation["name"]
+        self.type: str = preparation["type"]
+        self.c_prt: float = preparation["c_prt"]
+        self.c_lip: float = preparation["c_lip"]
+        self.c_glu: float = preparation["c_glu"]
+        self.c_kcal: float = preparation["c_kcal"]
+        self.c_kcal_noprot: float = preparation["c_kcal_noprot"]
+        self.max_24h_volume: float | None = preparation.get("max_24h_volume")
+        self.max_1h_rate: str = preparation["max_1h_rate"]
+        self.osmolality: str = preparation["osmolality"]
+        self.has_vitamins: bool = preparation["has_vitamins"]
+        self.comment: str = preparation["comment"]
 
     def __str__(self):
         return self.name
@@ -359,13 +368,13 @@ class NutritionFormula:
 
     def dose_max_ml(self):
         """Maximal recommended by manufacturer dose per 24 hours."""
-        if self.human_model.sex in (human.HumanSex.male, human.HumanSex.female):
+        if self.human_body.sex in (human.HumanSex.male, human.HumanSex.female):
             # 2-5 years and adults
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.human_model.sex == human.HumanSex.child:
+        elif self.human_body.sex == human.HumanSex.child:
             # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
-        return self.human_model.weight * daily_volume
+        return self.human_body.weight * daily_volume
 
     def dose_max_kcal(self):
         """Maximal recommended by manufacturer dose per 24 hours."""
@@ -380,36 +389,36 @@ class NutritionFormula:
         info = ""
         if self.type == "parenteral":
             rate_1h = vol_24h / 24
-            top_rate_1h = self.max_1h_rate * self.human_model.weight
+            top_rate_1h = self.max_1h_rate * self.human_body.weight
             info += f"Daily dose {vol_24h:.0f} ml/24h ({kcal_24h:.0f} kcal/24h) at rate {rate_1h:.0f}-{top_rate_1h:.0f} ml/h:\n"
             info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(
                 self.c_prt * vol_24h,
-                self.c_prt * vol_24h / self.human_model.weight,
-                self.c_prt * rate_1h / self.human_model.weight,
-                self.c_prt * top_rate_1h / self.human_model.weight,
+                self.c_prt * vol_24h / self.human_body.weight,
+                self.c_prt * rate_1h / self.human_body.weight,
+                self.c_prt * top_rate_1h / self.human_body.weight,
             )
             info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(
                 self.c_lip * vol_24h,
-                self.c_lip * vol_24h / self.human_model.weight,
-                self.c_lip * rate_1h / self.human_model.weight,
-                self.c_lip * top_rate_1h / self.human_model.weight,
+                self.c_lip * vol_24h / self.human_body.weight,
+                self.c_lip * rate_1h / self.human_body.weight,
+                self.c_lip * top_rate_1h / self.human_body.weight,
             )
             info += "  * Glucose  {:>5.1f} g/24h, {:.1f} g/kg/24h ({:>4.2f}-{:>4.2f} g/kg/h)\n".format(
                 self.c_glu * vol_24h,
-                self.c_glu * vol_24h / self.human_model.weight,
-                self.c_glu * rate_1h / self.human_model.weight,
-                self.c_glu * top_rate_1h / self.human_model.weight,
+                self.c_glu * vol_24h / self.human_body.weight,
+                self.c_glu * rate_1h / self.human_body.weight,
+                self.c_glu * top_rate_1h / self.human_body.weight,
             )
         else:
             info += f"Daily dose {vol_24h:.0f} ml/24h ({kcal_24h:.0f} kcal/24h)\n"
             info += "  * Proteins {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(
-                self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_model.weight
+                self.c_prt * vol_24h, self.c_prt * vol_24h / self.human_body.weight
             )
             info += "  * Lipids   {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(
-                self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_model.weight
+                self.c_lip * vol_24h, self.c_lip * vol_24h / self.human_body.weight
             )
             info += "  * Glucose  {:>5.1f} g/24h, {:.1f} g/kg/24h\n".format(
-                self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_model.weight
+                self.c_glu * vol_24h, self.c_glu * vol_24h / self.human_body.weight
             )
         return info
 

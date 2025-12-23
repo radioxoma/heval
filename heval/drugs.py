@@ -59,18 +59,18 @@ press_dobutamine = {
 class HumanDrugsModel:
     """Human drugs list."""
 
-    def __init__(self, parent):
+    def __init__(self, human_body: human.HumanBodyModel):
         super().__init__()
-        self.parent = parent
+        self.human_body = human_body
 
         # English names
         self.drug_list = [
-            Fentanyl(parent),
-            Propofol(parent),
-            Suxamethonium(parent),
-            Atracurium(parent),
-            Pipecuronium(parent),
-            Rocuronium(parent),
+            Fentanyl(self.human_body),
+            Propofol(self.human_body),
+            Suxamethonium(self.human_body),
+            Atracurium(self.human_body),
+            Pipecuronium(self.human_body),
+            Rocuronium(self.human_body),
         ]
 
     def describe_anesthesiology(self):
@@ -109,7 +109,7 @@ class HumanDrugsModel:
             press_dopamine,
             press_dobutamine,
         ):
-            info.append(describe_pressor(p, self.parent.weight))
+            info.append(describe_pressor(p, self.human_body.weight))
         return "\n".join(info) + "\n"
 
 
@@ -119,8 +119,8 @@ class Suxamethonium:
     Dithylin, succinylcholine.
     """
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.name = "Suxamethonium"
         self.concentration = 20  # mg/ml
         # self.volume = 5  # ml
@@ -128,19 +128,19 @@ class Suxamethonium:
 
     def __str__(self):
         # print("%s for intubation %.0f mg (5-10 mins).".format(
-        #    self.name, 1.5 * self.parent.weight))
+        #    self.name, 1.5 * self.human_body.weight))
         info = "{} IBW intubation 5-10 mins relaxation: {:.0f} mg adult, {:.0f} mg child.".format(
-            self.name, 1.5 * self.parent.weight_ideal, self.parent.weight_ideal
+            self.name, 1.5 * self.human_body.weight_ideal, self.human_body.weight_ideal
         )
-        info += f" Max maintenance dose {self.parent.weight_ideal:.0f} mg every 5 mins (all ages)."
+        info += f" Max maintenance dose {self.human_body.weight_ideal:.0f} mg every 5 mins (all ages)."
         return info
 
 
 class Propofol:
     """Propofol Fresenius Kabi 1 %."""
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.name = "Propofol"
         self.concentration = 10  # mg/ml
         self.maintenance_dosage = 10  # mg/kg/h
@@ -150,11 +150,11 @@ class Propofol:
 
     def delay(self, bolus=50):
         """Delay in minutes between boluses. Typical bolus is 25-50 mg."""
-        per_hour = self.maintenance_dosage * self.parent.weight
+        per_hour = self.maintenance_dosage * self.human_body.weight
         return 60 / (per_hour / bolus)
 
     def __str__(self):
-        info = f"{self.name} induction 20-40 mg every 10 secs, up to {2.5 * self.parent.weight:.0f} mg (2.5 mg/kg for adult & children)."
+        info = f"{self.name} induction 20-40 mg every 10 secs, up to {2.5 * self.human_body.weight:.0f} mg (2.5 mg/kg for adult & children)."
         info += f" Maintenance 50 mg every {self.delay():.0f} min ({self.maintenance_dosage:.0f} mg/kg/h)."
         return info
 
@@ -162,8 +162,8 @@ class Propofol:
 class Fentanyl:
     """According to RUE Belmedpreparaty instruction."""
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.name = "Fentanyl"
         self.concentration = 0.05  # mg/ml
         self.maintenance_dosage = 0.0001 * 60  # mg/kg/h
@@ -171,7 +171,7 @@ class Fentanyl:
         # self.volume =  # ml
 
     def __str__(self):
-        ml_h = self.maintenance_dosage * self.parent.weight / self.concentration
+        ml_h = self.maintenance_dosage * self.human_body.weight / self.concentration
         delay = 2 / (ml_h / 60)  # Delay for 3 ml bolus
         info = f"{self.name} 2 ml (0.1 mg) every {delay:.0f} mins ({ml_h:.1f} ml/h). Children?"
         info += " Typically in adults 2 ml every 20 mins or 6 ml/h."
@@ -187,8 +187,8 @@ class Atracurium:
     No cumulation, block recovery not dependent from kidney/liver metabolism.
     """
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.name = "Atracurium"
         # self.concentration =   # mg/ml
         # self.maintenance_dosage =   # mg/kg/h
@@ -199,16 +199,16 @@ class Atracurium:
     def __str__(self):
         info = "{} load {:.0f}-{:.0f} mg ({:.0f}-{:.0f} mg -30% for isoflurane) for 15-35 mins of full block + 35 extra mins for recovery.".format(
             self.name,
-            0.3 * self.parent.weight,
-            0.6 * self.parent.weight,
-            percent_corr(0.3 * self.parent.weight, -30),
-            percent_corr(0.6 * self.parent.weight, -30),
+            0.3 * self.human_body.weight,
+            0.6 * self.human_body.weight,
+            percent_corr(0.3 * self.human_body.weight, -30),
+            percent_corr(0.6 * self.human_body.weight, -30),
         )
         info += " {:.0f}-{:.0f} mg ({:.0f}-{:.0f} mg -30% for isoflurane) to prolong full block.".format(
-            0.1 * self.parent.weight,
-            0.2 * self.parent.weight,
-            percent_corr(0.1 * self.parent.weight, -30),
-            percent_corr(0.2 * self.parent.weight, -30),
+            0.1 * self.human_body.weight,
+            0.2 * self.human_body.weight,
+            percent_corr(0.1 * self.human_body.weight, -30),
+            percent_corr(0.2 * self.human_body.weight, -30),
         )
         info += " Same dosage for all ages."
         return info
@@ -217,27 +217,27 @@ class Atracurium:
 class Pipecuronium:
     """https://www.rlsnet.ru/tn_index_id_358.htm."""
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.name = "Pipecuronium"
 
     def __str__(self):
         info = ""
-        if self.parent.sex in (human.HumanSex.male, human.HumanSex.female):
+        if self.human_body.sex in (human.HumanSex.male, human.HumanSex.female):
             info += "{} adult mono intubation {:.2f}-{:.2f} mg for 60-90 min; load after Sux {:.2f} mg for 30-60 min. Maintenance {:.2f}-{:.2f} mg every 30-60 min.".format(
                 self.name,
-                0.06 * self.parent.weight,
-                0.08 * self.parent.weight,
-                0.05 * self.parent.weight,
-                0.01 * self.parent.weight,
-                0.02 * self.parent.weight,
+                0.06 * self.human_body.weight,
+                0.08 * self.human_body.weight,
+                0.05 * self.human_body.weight,
+                0.01 * self.human_body.weight,
+                0.02 * self.human_body.weight,
             )
-        elif self.parent.sex == human.HumanSex.child:
+        elif self.human_body.sex == human.HumanSex.child:
             info += "{} child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min).".format(
                 self.name,
-                0.04 * self.parent.weight,
-                0.05 * self.parent.weight,
-                0.06 * self.parent.weight,
+                0.04 * self.human_body.weight,
+                0.05 * self.human_body.weight,
+                0.06 * self.human_body.weight,
             )
         return info
 
@@ -245,8 +245,8 @@ class Pipecuronium:
 class Rocuronium:
     """According to http://www.rceth.by/NDfiles/instr/8675_08_13_i.pdf."""
 
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, human_body: human.HumanBodyModel):
+        self.human_body = human_body
         self.name = "Rocuronium"
         self.concentration = 10  # mg/ml
         # self.maintenance_dosage =   # mg/kg/h
@@ -255,20 +255,20 @@ class Rocuronium:
 
     def __str__(self):
         info = "{} intubation {:.0f} mg (30-40 mins before <25% recovery). NMT maintenance:\n".format(
-            self.name, 0.6 * self.parent.weight
+            self.name, 0.6 * self.human_body.weight
         )
         info += (
             " * bolus: <1h {:.0f} mg; >1h {:.0f}-{:.0f} mg [2-3 TOF, <25%]\n".format(
-                self.parent.weight * 0.15,
-                self.parent.weight * 0.075,
-                self.parent.weight * 0.1,
+                self.human_body.weight * 0.15,
+                self.human_body.weight * 0.075,
+                self.human_body.weight * 0.1,
             )
         )
         info += " * pump: TIVA {:.0f}-{:.0f} mg/h; GA {:.0f}-{:.0f} mg/h [1-2 TOF, <10%]\n".format(
-            self.parent.weight * 0.3,
-            self.parent.weight * 0.6,
-            self.parent.weight * 0.3,
-            self.parent.weight * 0.4,
+            self.human_body.weight * 0.3,
+            self.human_body.weight * 0.6,
+            self.human_body.weight * 0.3,
+            self.human_body.weight * 0.4,
         )
         info += "   Same dosage for all ages."
         return info

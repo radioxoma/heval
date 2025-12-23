@@ -7,12 +7,10 @@ Function parameters tends to be in International System of Units.
 
 from __future__ import annotations
 
-import copy
 import math
 import textwrap
 import warnings
 from enum import IntEnum
-from itertools import chain
 
 from heval import drugs, electrolytes, nutrition
 
@@ -36,8 +34,8 @@ class HumanBodyModel:
 
     def __init__(self):
         self.debug = False
-        self._int_prop = ("height", "age", "weight", "body_temp")
-        self._txt_prop = ("sex", "comment")
+        # self._int_prop = ("height", "age", "weight", "body_temp")
+        # self._txt_prop = ("sex", "comment")
         self._sex: HumanSex | None = None
         self._height: float | None = None
 
@@ -51,34 +49,6 @@ class HumanBodyModel:
         self.blood = electrolytes.HumanBloodModel(self)
         self.drugs = drugs.HumanDrugsModel(self)
         self.nutrition = nutrition.HumanNutritionModel(self)
-
-    def __str__(self):
-        int_prop = {}
-        for attr in chain(self._int_prop, self._txt_prop):
-            int_prop[attr] = getattr(self, attr)
-        return "HumanBody: {}".format(str(int_prop))
-
-    def populate(self, properties: dict) -> dict:
-        """Populate model from data structure.
-
-        Args:
-            properties: Dictionary with model properties to set.
-            Key names must be equal to class properties names.
-
-        Returns:
-            Not applied properties (including nested models)
-        """
-        prop = copy.deepcopy(properties)  # Avoid changing passed object
-        for item in self._int_prop:
-            if item in prop:
-                setattr(self, item, float(prop.pop(item)))
-        for item in self._txt_prop:
-            if item in prop:
-                setattr(self, item, prop.pop(item))
-
-        # Push the rest of the dict deeper
-        self.blood.populate(prop)
-        return prop
 
     @property
     def sex(self):

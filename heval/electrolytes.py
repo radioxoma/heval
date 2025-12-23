@@ -4,9 +4,8 @@ Author: Eugene Dvoretsky
 """
 
 from __future__ import annotations
-
+from dataclasses import dataclass
 import textwrap
-from itertools import chain
 
 from heval import abg, human
 
@@ -53,56 +52,24 @@ hb_norm_female = (12.0, 15.5)  # g/dl, 120-140 g/L
 hb_norm_child = (11, 16)  # g/dl
 
 
+@dataclass
 class HumanBloodModel:
     """Represents an human blood ABG status."""
 
-    def __init__(self, human_body: human.HumanBodyModel):
-        self.human_body = human_body
-        self._int_prop = ("pH", "pCO2", "cK", "cNa", "cCl", "cGlu", "ctAlb", "ctHb")
-        self._txt_prop = ()
+    human_body: human.HumanBodyModel
+    # self._int_prop = ("pH", "pCO2", "cK", "cNa", "cCl", "cGlu", "ctAlb", "ctHb")
+    # self._txt_prop = ()
+    pH: float | None = None
+    pCO2: float | None = None  # kPa
 
-        self.pH = None
-        self.pCO2 = None  # kPa
+    cK: float | None = None  # mmol/L
+    cNa: float | None = None  # mmol/L
+    cCl: float | None = None  # mmol/L
 
-        self.cK = None  # mmol/L
-        self.cNa = None  # mmol/L
-        self.cCl = None  # mmol/L
-
-        self.ctAlb = None  # g/dL albumin
-        self.cGlu = None  # mmol/L
-        self.ctHb = None  # g/dl, haemoglobin
-        # self.ctBun = None  # May be for osmolarity in future
-
-    def __str__(self):
-        int_prop = {}
-        for attr in chain(self._int_prop, self._txt_prop):
-            int_prop[attr] = getattr(self, attr)
-        return f"HumanBlood: {int_prop}"
-
-    def populate(self, properties):
-        """Populate model from data structure.
-
-        NB! Function changes passed property dictionary.
-
-        :param dict properties: Dictionary with model properties to set.
-            Key names must be equal to class properties names.
-        :return:
-            Not applied properties
-        :rtype: dict
-        """
-        for item in self._int_prop:
-            if item in properties:
-                setattr(self, item, float(properties.pop(item)))
-        for item in self._txt_prop:
-            if item in properties:
-                setattr(self, item, properties.pop(item))
-        return properties
-
-    # def __str__(self):
-    #     pass
-
-    # def is_init(self):
-    #     pass
+    ctAlb: float | None = None  # g/dL albumin
+    cGlu: float | None = None  # mmol/L
+    ctHb: float | None = None  # g/dl, haemoglobin
+    ctBun: float | None = None  # May be for osmolarity in future
 
     @property
     def sbe(self):
@@ -159,13 +126,7 @@ class HumanBloodModel:
             cGlu >30, mOsm >320, no acidosis and ketone bodies)
         """
         info = ""
-        if not all(
-            v is not None
-            for v in (
-                self.cNa,
-                self.cGlu,
-            )
-        ):
+        if self.cNa is None or self.cGlu is None:
             return info
 
         info = "Osmolarity is "
@@ -191,13 +152,7 @@ class HumanBloodModel:
             info += ", coma (>330 mOsm/kg)"
 
         # Implies cNa, pCO2 available
-        if not all(
-            v is not None
-            for v in (
-                self.pH,
-                self.pCO2,
-            )
-        ):
+        if self.pH is None or self.pCO2 is None:
             return info
 
         # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
@@ -375,13 +330,7 @@ class HumanBloodModel:
         https://en.wikipedia.org/wiki/Glycosuria
         """
         info = ""
-        if not all(
-            v is not None
-            for v in (
-                self.human_body.weight,
-                self.cGlu,
-            )
-        ):
+        if self.human_body.weight is None or self.cGlu is None:
             return info
         if self.cGlu > norm_cGlu[1]:
             if self.cGlu <= norm_cGlu_target[1]:
@@ -440,13 +389,10 @@ class HumanBloodModel:
         [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
         """
         info = ""
-        if not all(
-            v is not None
-            for v in (
-                self.human_body.weight,
-                self.human_body.sex,
-                self.ctHb,
-            )
+        if (
+            self.human_body.weight is None
+            or self.human_body.sex is None
+            or self.ctHb is None
         ):
             return info
         # Top hct value for free water deficit calculation.

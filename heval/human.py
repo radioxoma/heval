@@ -38,21 +38,19 @@ class HumanBodyModel:
         self.debug = False
         self._int_prop = ("height", "age", "weight", "body_temp")
         self._txt_prop = ("sex", "comment")
-        self._sex = None
-        self._height = None
-        self._age = None
+        self._sex: HumanSex | None = None
+        self._height: float | None = None
 
-        self._weight = None
-        self._use_ibw = False
-        self._weight_ideal_valid = False
-        self._weight_ideal_method = ""
-        self.weight_ideal = None  # Changes only at sex/weight change
+        self._age: float
+        self._weight: float | None = None
+        self._use_ibw: bool = False
+        self._weight_ideal_method: str = ""
+        self.body_temp = 36.6  # Celsius
+        self.comment = dict()  # For warnings
 
         self.blood = electrolytes.HumanBloodModel(self)
         self.drugs = drugs.HumanDrugsModel(self)
         self.nutrition = nutrition.HumanNutritionModel(self)
-        self.body_temp = 36.6  # Celsius
-        self.comment = dict()  # For warnings
 
     def __str__(self):
         int_prop = {}
@@ -90,8 +88,6 @@ class HumanBodyModel:
     def sex(self, value: HumanSex):
         """Set HumanSex."""
         self._sex = value
-        if all((self.height, self.sex)):  # optimization
-            self._set_weight_ideal()
 
     @property
     def height(self):
@@ -101,24 +97,23 @@ class HumanBodyModel:
     def height(self, value: float):
         """Human height in meters."""
         self._height = value
-        if all((self.height, self.sex)):  # optimization
-            self._set_weight_ideal()
 
     @property
-    def weight(self):
-        """Set 'use_ibw = True' to return 'weight_ideal' instead 'weight'."""
+    def weight(self) -> float:
+        """Return human body weight, kg.
+
+        Must calculate weight, without it class is useless.
+        return RBW, then IBW
+        return IBW, then RBW if 'use_ibw = True'
+        """
         if self._use_ibw:
             return self.weight_ideal
         else:
-            return self._weight
+            return self._weight or self.weight_ideal
 
     @weight.setter
     def weight(self, value: float):
-        """Human weight in kilograms.
-
-        You always can set real body weight, but not get it.
-        Never use 'self._weight' directly beyond setter/getter code.
-        """
+        """Human body weight, kg."""
         self._weight = value
 
     @property
@@ -134,7 +129,8 @@ class HumanBodyModel:
         """
         self._use_ibw = value
 
-    def _set_weight_ideal(self) -> None:
+    @property
+    def weight_ideal(self) -> float:
         """Evaluate ideal body weight (IBW) for all ages.
 
           * https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
@@ -177,21 +173,20 @@ class HumanBodyModel:
         """
         # IBW estimation formulas cover not all ranges. This flag helps prevent
         # misuse of explicitly invalid IBW e.g. in respiratory calculations
-        self._weight_ideal_valid = True
         if self.sex in (HumanSex.male, HumanSex.female):
             self._weight_ideal_method = "Hamilton"
-            self.weight_ideal = ibw_hamilton(self.sex, self.height)
-        elif self.sex == HumanSex.child:
+            return ibw_hamilton(self.sex, self.height)
+
+        if 0.74 <= self.height <= 1.524:
+            self._weight_ideal_method = "Traub-Kichen 1983"
+            return ibw_traub_kichen(self.height)
+        elif 0.468 <= self.height < 0.74:
             # Broselow tape range. Temporary and only for low height
-            if 0.468 <= self.height < 0.74:
-                self._weight_ideal_method = "Broselow"
-                self.weight_ideal = ibw_broselow(self.height)
-            elif 0.74 <= self.height <= 1.524:
-                self._weight_ideal_method = "Traub-Kichen 1983"
-                self.weight_ideal = ibw_traub_kichen(self.height)
-            else:
-                warnings.warn("IBW cannot be calculated for children with this height")
-                self._weight_ideal_valid = False
+            self._weight_ideal_method = "Broselow"
+            return ibw_broselow(self.height)
+        else:
+            self._weight_ideal_method = "Default for neonates"
+            return 3.3  # Default for all neonates
 
     @property
     def bmi(self):
@@ -204,11 +199,11 @@ class HumanBodyModel:
         return body_surface_area_dubois(height=self.height, weight=self.weight)
 
     @property
-    def age(self):
+    def age(self) -> float:
         return self._age
 
     @age.setter
-    def age(self, value):
+    def age(self, value: float):
         """Human age in years."""
         self._age = value
 
@@ -240,7 +235,7 @@ class HumanBodyModel:
 
     def is_init(self) -> bool:
         """Is class got all necessary data for calculations."""
-        return all((self.height, self.weight, self.sex))
+        return None not in (self.height, self.sex)
 
     def describe(self) -> str:
         info = ""
@@ -264,11 +259,7 @@ class HumanBodyModel:
 
     def _info_in_body(self) -> str:
         info = f"{self.sex.name.title()} {self.height * 100:.0f}/{self.weight:.0f}:"
-        if self._weight_ideal_valid:
-            info += f" IBW {self.weight_ideal:.1f} kg [{self._weight_ideal_method}],"
-        else:
-            info += " IBW can't be calculated for this height, enter weight manually."
-
+        info += f" IBW {self.weight_ideal:.1f} kg [{self._weight_ideal_method}],"
         if self.sex in (HumanSex.male, HumanSex.female):
             info += f" BMI {self.bmi:.1f} ({bmi_describe(self.bmi)}),"
         else:
@@ -360,7 +351,7 @@ class HumanBodyModel:
         #    * I don't know how to calculate IBW for neonates
         #    * Neonate's weight must be known in advance
         #    * They RBW must be near IBW
-        if self._weight_ideal_valid:
+        if self.use_ibw:
             weight_type = "IBW"
             weight_chosen = self.weight_ideal
         else:
@@ -405,9 +396,10 @@ class HumanBodyModel:
             hs_fluid, hs_fluid / 24
         )
 
-        info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(
-            body_surface_area_dubois(height=self.height, weight=self.weight) * 1750
-        )  # All ages
+        if self.height is not None:
+            info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(
+                body_surface_area_dubois(height=self.height, weight=self.weight) * 1750
+            )  # All ages
 
         # Variable perspiration losses, which is not included in physiologic demand
         # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
@@ -539,8 +531,9 @@ class HumanBodyModel:
         У детей диурез значительно выше, у новорождённых 2.5 ml/kg/h.
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
         """
+        info = ""
         if self.sex in (HumanSex.male, HumanSex.female):
-            info = "RBW adult urinary output:\n"
+            info += "RBW adult urinary output:\n"
             info += (
                 " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(
                     0.5 * self.weight, 0.5 * self.weight * 24
@@ -551,7 +544,7 @@ class HumanBodyModel:
             )
         if self.sex == HumanSex.child:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
-            info = "RBW child urinary output:\n"
+            info += "RBW child urinary output:\n"
             info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(
                 self.weight, self.weight * 24
             )
@@ -594,8 +587,9 @@ def bmi_describe(bmi: float) -> str:
     :return: Opinion
     :rtype: str
     """
+    info = ""
     if bmi < 18.5:
-        info = "underweight: "
+        info += "underweight: "
         if bmi < 16:
             info += "severe thinness"
         elif 16 <= bmi < 17:

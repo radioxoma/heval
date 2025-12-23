@@ -197,7 +197,7 @@ class TextView(ScrolledText):
         self.clipboard_append(self.get(1.0, tk.END))
 
 
-class TextHtmlView(tkinterweb.HtmlFrame):
+class TextHtmlView(tkinterweb.HtmlFrame):  # ty:ignore[possibly-missing-attribute]
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent, *args, messages_enabled=False, **kwargs)
         self.parent = parent
@@ -213,7 +213,7 @@ class TextHtmlView(tkinterweb.HtmlFrame):
         """Set HTML code as is."""
         self.load_html(__css__ + html)
 
-    def _show_tooltip(self, event=None):
+    def _show_tooltip(self, event):
         element = self.get_currently_hovered_element()
         title = element.getAttribute("title")
         if title:
@@ -421,7 +421,7 @@ class MainWindow(ttk.Frame):
         # END INPUT SECTION
         self.set_input_defaults()
 
-        nb = tkinterweb.Notebook(self)
+        nb = tkinterweb.Notebook(self)  # ty:ignore[possibly-missing-attribute]
         self.MText = MainText(nb, self.HBody)
         self.CNutrition = CalcNutrition(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
@@ -584,7 +584,7 @@ class HelpWindow(tk.Toplevel):
 
 
 class AboutWindow(tk.Toplevel):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
         x = self.parent.winfo_x()

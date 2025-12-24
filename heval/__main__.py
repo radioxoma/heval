@@ -463,13 +463,13 @@ class MainWindow(ttk.Frame):
         self.set_model_sex()
 
         self.ctl_height.delete(0, tk.END)
-        self.ctl_height.insert(0, 177)  # cm
+        self.ctl_height.insert(0, "177")  # cm
         self.set_model_height()
 
         # Can't change widget value while it being disabled, so here is a trick
         self.ctl_weight["state"] = tk.NORMAL
         self.ctl_weight.delete(0, tk.END)
-        self.ctl_weight.insert(0, 69.0)  # kg
+        self.ctl_weight.insert(0, "69.0")  # kg
         self.ctl_weight["state"] = self.lbl_weight["state"]
         self.set_model_weight()
 
@@ -477,7 +477,7 @@ class MainWindow(ttk.Frame):
         self.set_model_use_ibw()
 
         self.ctl_sbx_temp.delete(0, tk.END)
-        self.ctl_sbx_temp.insert(0, 36.6)  # celsus degrees
+        self.ctl_sbx_temp.insert(0, "36.6")  # celsus degrees
         self.set_model_body_temp()
 
     def adjust_font_size(self, event=None):
@@ -691,7 +691,7 @@ class CalcNutrition(ttk.Frame):
 
         ctl_rbtn0_method = ttk.Radiobutton(
             self.fr_kcal_entry,
-            text=None,
+            text="",
             variable=self.var_rbtm_calc_method,
             value=0,
             command=self.set_nutr_gui_state,
@@ -738,7 +738,7 @@ class CalcNutrition(ttk.Frame):
 
         ctl_rbtn1_method = ttk.Radiobutton(
             self.fr_nitrogen_entry,
-            text=None,
+            text="",
             variable=self.var_rbtm_calc_method,
             value=1,
             command=self.set_nutr_gui_state,
@@ -810,17 +810,17 @@ class CalcNutrition(ttk.Frame):
 
     def set_input_fluid_defaults(self, event=None):
         self.ctl_sbx_fluid_mul.delete(0, tk.END)
-        self.ctl_sbx_fluid_mul.insert(0, 30)  # ml/kg/24h
+        self.ctl_sbx_fluid_mul.insert(0, "30")  # ml/kg/24h
         self.set_model_fluid_multiplier()
 
     def set_input_kcal_defaults(self, event=None):
         self.ctl_sbx_kcal_mul.delete(0, tk.END)
-        self.ctl_sbx_kcal_mul.insert(0, 25)  # kcal/kg/24h
+        self.ctl_sbx_kcal_mul.insert(0, "25")  # kcal/kg/24h
         self.set_model_kcal_multiplier()
 
     def set_input_protein_defaults(self, event=None):
         self.ctl_sbx_uurea.delete(0, tk.END)
-        self.ctl_sbx_uurea.insert(0, 190)  # Corresponds to 0.8 g/kg/24h
+        self.ctl_sbx_uurea.insert(0, "190")  # Corresponds to 0.8 g/kg/24h
         self.set_model_uurea()
 
     def set_nutr_gui_state(self, event=None):
@@ -1058,32 +1058,32 @@ class CalcElectrolytes(ttk.Frame):
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, tk.END)
-        self.ctl_sbx_pH.insert(0, abg.norm_pH_mean)
+        self.ctl_sbx_pH.insert(0, str(abg.norm_pH_mean))
         self.set_model_pH()
         self.ctl_sbx_pCO2.delete(0, tk.END)
-        self.ctl_sbx_pCO2.insert(0, abg.norm_pCO2mmHg_mean)  # kg
+        self.ctl_sbx_pCO2.insert(0, str(abg.norm_pCO2mmHg_mean))  # kg
         self.set_model_pCO2()
 
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, tk.END)
-        self.ctl_sbx_K.insert(0, 4.3)  # May be set to 4.0
+        self.ctl_sbx_K.insert(0, "4.0")
         self.set_model_K()
         self.ctl_sbx_Na.delete(0, tk.END)
-        self.ctl_sbx_Na.insert(0, 140)
+        self.ctl_sbx_Na.insert(0, "140")
         self.set_model_Na()
         self.ctl_sbx_Cl.delete(0, tk.END)
-        self.ctl_sbx_Cl.insert(0, 105)
+        self.ctl_sbx_Cl.insert(0, "105")
         self.set_model_Cl()
 
     def set_input_extra_defaults(self, event=None):
         self.ctl_sbx_cGlu.delete(0, tk.END)
-        self.ctl_sbx_cGlu.insert(0, electrolytes.norm_cGlu_mean)
+        self.ctl_sbx_cGlu.insert(0, str(electrolytes.norm_cGlu_mean))
         self.set_model_cGlu()
         self.ctl_sbx_ctAlb.delete(0, tk.END)
-        self.ctl_sbx_ctAlb.insert(0, abg.norm_ctAlb_mean)
+        self.ctl_sbx_ctAlb.insert(0, str(abg.norm_ctAlb_mean))
         self.set_model_ctAlb()
         self.ctl_sbx_ctHb.delete(0, tk.END)
-        self.ctl_sbx_ctHb.insert(0, 14.0)  # g/dl, mean value for both sexes
+        self.ctl_sbx_ctHb.insert(0, "14.0")  # g/dl, mean value for both sexes
         self.set_model_ctHb()
 
     def set_model_pH(self, event=None):
@@ -1189,10 +1189,10 @@ class CalcGFR(ttk.Frame):
 
     def set_input_defaults(self, event=None):
         self.ctl_sbx_ccrea.delete(0, tk.END)
-        self.ctl_sbx_ccrea.insert(0, 75.0)
+        self.ctl_sbx_ccrea.insert(0, "75.0")
 
         self.ctl_sbx_age.delete(0, tk.END)
-        self.ctl_sbx_age.insert(0, 40)
+        self.ctl_sbx_age.insert(0, "40")
         self.set_model_age()
 
         self.var_isblack.set(0)

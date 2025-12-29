@@ -179,9 +179,7 @@ class HumanBloodModel:
         return info
 
     def describe_anion_gap(self):
-        if not all(
-            v is not None for v in (self.pH, self.pCO2, self.cNa, self.cCl, self.ctAlb)
-        ):
+        if None in (self.pH, self.pCO2, self.cNa, self.cCl, self.ctAlb):
             return "pH, pCO2, cNa, cCl, albumin required"
         info = "-- Anion gap ---------------------------------------\n"
         desc = f"{self.anion_gap:.1f} ({norm_gap[0]:.0f}-{norm_gap[1]:.0f} mEq/L)"
@@ -252,7 +250,7 @@ class HumanBloodModel:
           * https://pubmed.ncbi.nlm.nih.gov/29910040/
           * https://en.wikipedia.org/wiki/Metabolic_acidosis
         """
-        if not all(v is not None for v in (self.pH, self.pCO2)):
+        if None in (self.pH, self.pCO2):
             return ""
         NaHCO3_threshold = -15  # was -9 mEq/L
         info = ""
@@ -300,15 +298,12 @@ class HumanBloodModel:
         return info
 
     def describe_electrolytes(self):
-        if not all(
-            v is not None
-            for v in (
-                self.human_body.weight,
-                self.cK,
-                self.cNa,
-                self.cCl,
-                self.cGlu,
-            )
+        if None in (
+            self.human_body.weight,
+            self.cK,
+            self.cNa,
+            self.cCl,
+            self.cGlu,
         ):
             return ""
         info = [

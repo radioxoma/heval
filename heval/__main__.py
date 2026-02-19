@@ -122,6 +122,34 @@ class SpinboxFloat(ttk.Spinbox):
             return False
 
 
+class TextHtmlView(tkinterweb.HtmlFrame):  # ty:ignore[possibly-missing-attribute]
+    """Default HTML widget to show formatted text with tooltips."""
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args, messages_enabled=False, **kwargs)
+        self.parent = parent
+        # Tooltips on click, not hover
+        self.bind("<Button-1>", self._show_tooltip)
+        # self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    def set_text(self, text: str):
+        """Set preformatted text to show it as <code> block."""
+        text = text.replace("\n", "&nbsp;<br>")
+        self.load_html(__css__ + f"<code>{text}</code>")
+
+    def set_html(self, html: str):
+        """Set HTML code as is."""
+        self.load_html(__css__ + html)
+
+    def _show_tooltip(self, event):
+        element = self.get_currently_hovered_element()
+        title = element.getAttribute("title")
+        if title:
+            menu = tk.Menu(self.parent, tearoff=False)
+            menu.add_command(label=title)
+            menu.tk_popup(event.x_root, event.y_root, 0)
+
+
 class ScrolledText(tk.Text):
     """Clone of the standard `tkinter.scrolledtext` built with ttk widgets."""
 
@@ -197,33 +225,8 @@ class TextView(ScrolledText):
         self.clipboard_append(self.get(1.0, tk.END))
 
 
-class TextHtmlView(tkinterweb.HtmlFrame):  # ty:ignore[possibly-missing-attribute]
-    def __init__(self, parent=None, *args, **kwargs):
-        super().__init__(parent, *args, messages_enabled=False, **kwargs)
-        self.parent = parent
-        self.bind("<Button-1>", self._show_tooltip)
-        # self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-    def set_text(self, text: str):
-        """Set preformatted text to show it as <code> block."""
-        text = text.replace("\n", "&nbsp;<br>")
-        self.load_html(__css__ + f"<code>{text}</code>")
-
-    def set_html(self, html: str):
-        """Set HTML code as is."""
-        self.load_html(__css__ + html)
-
-    def _show_tooltip(self, event):
-        element = self.get_currently_hovered_element()
-        title = element.getAttribute("title")
-        if title:
-            menu = tk.Menu(self.parent, tearoff=False)
-            menu.add_command(label=title)
-            menu.tk_popup(event.x_root, event.y_root, 0)
-
-
 class TextViewCustom(ttk.Frame):
-    """Alternate realisation of ScrolledText."""
+    """Alternate implementation of ScrolledText."""
 
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -422,11 +425,11 @@ class MainWindow(ttk.Frame):
         self.set_input_defaults()
 
         nb = tkinterweb.Notebook(self)  # ty:ignore[possibly-missing-attribute]
-        self.MText = MainText(nb, self.HBody)
+        self.CMain = CalcMain(nb, self.HBody)
         self.CNutrition = CalcNutrition(nb, self.HBody)
         self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
         self.CGFR = CalcGFR(nb, self.HBody)
-        nb.add(self.MText, text="Human body")
+        nb.add(self.CMain, text="Human body")
         nb.add(self.CNutrition, text="Nutrition")
         nb.add(self.CElectrolytes, text="ABG & Electrolytes")
         nb.add(self.CGFR, text="eGFR")
@@ -448,7 +451,7 @@ class MainWindow(ttk.Frame):
         self.parent.bind("<Alt-KeyPress-3>", lambda e: nb.select(2))
         self.parent.bind("<Alt-KeyPress-4>", lambda e: nb.select(3))
         self.bind_all("<<HumanModelChanged>>", self.eval)
-        self.bind_all("<<HumanModelChanged>>", self.MText.eval, add="+")
+        self.bind_all("<<HumanModelChanged>>", self.CMain.eval, add="+")
         self.bind_all("<<HumanModelChanged>>", self.CNutrition.eval, add="+")
         self.bind_all("<<HumanModelChanged>>", self.CElectrolytes.eval, add="+")
         self.bind_all("<<HumanModelChanged>>", self.CGFR.eval, add="+")
@@ -611,7 +614,7 @@ class AboutWindow(tk.Toplevel):
         self.focus_set()
 
 
-class MainText(ttk.Frame):
+class CalcMain(ttk.Frame):
     def __init__(self, parent, human_model):
         super().__init__(parent)
         self.parent = parent
@@ -1392,18 +1395,15 @@ def visit_website(event=None):
     webbrowser.open_new_tab("https://github.com/radioxoma/heval")
 
 
-def magic8ball():
+def magic8ball() -> str:
     """Well-known superior mind popularized by the movie "Interstate 60".
+
+    Provides answers for any yes/no question.
 
     References
     ----------
     [1] https://en.wikipedia.org/wiki/Magic_8-Ball
     [2] https://en.wikipedia.org/wiki/Interstate_60
-
-    Parameters
-    ----------
-    :return: Provides answers for any yes/no question.
-    :rtype: str
     """
     answers = (
         "It is certain",

@@ -16,7 +16,7 @@ from tkinter import ttk
 
 import tkinterweb
 
-from heval import __version__, abg, electrolytes, human
+from heval import __version__, abg, human, common
 
 __css__ = """
 <style>
@@ -344,7 +344,7 @@ class MainWindow(ttk.Frame):
         fr_entry.pack(anchor=tk.W)
         ttk.Label(fr_entry, text="Sex").pack(side=tk.LEFT)
         self.var_sex = tk.StringVar()
-        self.sex_list = [sex.title() for sex in human.HumanSex.__members__.keys()]
+        self.sex_list = [sex.title() for sex in common.HumanSex.__members__.keys()]
         self.ctl_sex = ttk.OptionMenu(
             fr_entry,
             self.var_sex,
@@ -505,7 +505,7 @@ class MainWindow(ttk.Frame):
                 font_obj["size"] = 9
 
     def set_model_sex(self, event=None):
-        self.HBody.sex = human.HumanSex[self.var_sex.get().lower()]
+        self.HBody.sex = common.HumanSex[self.var_sex.get().lower()]
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
@@ -634,9 +634,7 @@ class CalcMain(ttk.Frame):
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text(
-            f"{self.human_model.describe()}\n{self.human_model.describe_drugs()}\n"
-        )
+        self.TxtView.set_text(self.human_model.describe())
 
 
 class CalcNutrition(ttk.Frame):
@@ -1080,7 +1078,7 @@ class CalcElectrolytes(ttk.Frame):
 
     def set_input_extra_defaults(self, event=None):
         self.ctl_sbx_cGlu.delete(0, tk.END)
-        self.ctl_sbx_cGlu.insert(0, str(electrolytes.norm_cGlu_mean))
+        self.ctl_sbx_cGlu.insert(0, str(abg.norm_cGlu_mean))
         self.set_model_cGlu()
         self.ctl_sbx_ctAlb.delete(0, tk.END)
         self.ctl_sbx_ctAlb.insert(0, str(abg.norm_ctAlb_mean))
@@ -1208,28 +1206,28 @@ class CalcGFR(ttk.Frame):
     def eval(self, event=None):
         sex = self.human_model.sex
         cCrea = float(self.ctl_sbx_ccrea.get())
-        cCrea_mgdl = cCrea / electrolytes.M_Crea
+        cCrea_mgdl = cCrea / abg.M_Crea
         info = ""
-        if sex in (human.HumanSex.male, human.HumanSex.female):
+        if sex in (common.HumanSex.male, common.HumanSex.female):
             age = self.human_model.age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = self.var_isblack.get() == 1
-            mdrd = electrolytes.egfr_mdrd(sex, cCrea, age, black_skin)
-            epi = electrolytes.egfr_ckd_epi(sex, cCrea, age, black_skin)
+            mdrd = human.egfr_mdrd(sex, cCrea, age, black_skin)
+            epi = human.egfr_ckd_epi(sex, cCrea, age, black_skin)
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL
             Year of birth: {dob:.0f}
             MDRD\t{mdrd:3.0f} mL/min/1.73 m² (considered obsolete)
             CKD-EPI\t{epi:3.0f} mL/min/1.73 m²
 
-            Conclusion: {electrolytes.gfr_describe(epi)}
+            Conclusion: {human.gfr_describe(epi)}
             """
-        elif sex == human.HumanSex.child:
-            schwartz = electrolytes.egfr_schwartz(cCrea, self.human_model.height)
+        elif sex == common.HumanSex.child:
+            schwartz = human.egfr_schwartz(cCrea, self.human_model.height)
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL
             {schwartz:.0f} mL/min/1.73 m² [Schwartz revised 2009]
-            {electrolytes.gfr_describe(schwartz)}
+            {human.gfr_describe(schwartz)}
             """
         self.TxtView.set_text(textwrap.dedent(info))
 

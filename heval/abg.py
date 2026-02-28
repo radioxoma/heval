@@ -56,6 +56,13 @@ import math
 # Units conversion
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
+M_C6H12O6 = 180
+M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
+M_KCl = 74.5
+M_NaCl = 58.5
+M_NaHCO3 = 84  # g/mol or mg/mmol
+M_Hb = 16.1140  # g/mol
+
 # Reference blood test ranges
 norm_pH = (7.35, 7.45)
 norm_pH_mean = 7.40
@@ -66,12 +73,45 @@ norm_pCO2 = (4.666, 6)  # kPa
 norm_pCO2mmHg_mean = 40.0  # mmHg
 
 norm_HCO3 = (22, 26)  # mEq/L
+norm_sbe = (-2, 2)  # mEq/L
+
+norm_K = (3.5, 5.3)  # mmol/L, Radiometer, adult
+# norm_Na = (130, 155)  # mmol/L, Radiometer, adult
+# norm_Na = (130, 150)  # Курек 2013 c 133, children
+norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
+norm_Cl = (98, 115)  # mmol/L, Radiometer, adult
+
+# Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
+# Used as initial value for mOsm calculation.
+norm_cGlu_mean = 5.5  # mmol/L
+norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
+# 10 mmol/L stands for glucose renal threshold
+norm_cGlu_target = (4.5, 10)  # ICU target range
+# Note: gap between lower norm_cGlu and norm_cGlu_target
+# NB! Changing 'norm_gap' will affect Gap-Gap calculation
+norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
+
+# Minimal low value has been chosen (<280), as I believe it
+# corresponds to mOsm reference range without BUN
+# https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
+norm_mOsm = (275, 295)  # mOsm/kg
+
 norm_pO2 = (80, 100)  # mmHg
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
 norm_ctAlb_mean = 4.4  # g/dL
 norm_ctAlb = (3.5, 5)  # g/dL
+
+# https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
+hb_norm_male = (13.5, 17.5)  # g/dl, 130-160 g/L
+hb_norm_female = (12.0, 15.5)  # g/dl, 120-140 g/L
+hb_norm_child = (11, 16)  # g/dl
+
+# Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
+hct_norm_male = (0.407, 0.503)
+hct_norm_female = (0.361, 0.443)
+hct_norm_child = (0.31, 0.41)
 
 
 def calculate_anion_gap(

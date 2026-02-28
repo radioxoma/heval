@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import textwrap
 
-from heval import human
+from heval import human, common
 
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
@@ -368,10 +368,10 @@ class NutritionFormula:
 
     def dose_max_ml(self):
         """Maximal recommended by manufacturer dose per 24 hours."""
-        if self.human_body.sex in (human.HumanSex.male, human.HumanSex.female):
+        if self.human_body.sex in (common.HumanSex.male, common.HumanSex.female):
             # 2-5 years and adults
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.human_body.sex == human.HumanSex.child:
+        elif self.human_body.sex == common.HumanSex.child:
             # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
         return self.human_body.weight * daily_volume

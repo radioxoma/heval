@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 import enum
 import functools
@@ -71,3 +73,14 @@ def render_flags(flags: list[Flag]) -> str:
         return f"<ul>\n<li>{text}</li>\n</ul>"
     else:
         return ""
+
+
+class HumanSex(enum.IntEnum):
+    """Human body constitution based on sex.
+
+    Male/female integers comply EMIAS database and belarusian sick leave documents.
+    """
+
+    male = 1
+    female = 2
+    child = 3  # For <12 years old

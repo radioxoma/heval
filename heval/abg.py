@@ -17,14 +17,14 @@ Main statements:
         * Use simple and validated formula. REPRODUCIBILITY IS CRUCIAL
         * Don't use formula improvements and sophistications from single
             authors: it may be a solution for their systematic error
-    * All voodoo calculations shell be outside class and documented
+    * All voodoo calculations shall be outside class and documented
     * Heuristic can be anywhere - it complicated anyway.
         At least class can gather all parameters in one place.
 
 Main pitfalls:
   * Multiple "slightly" different formulas for the same parameter
     * E.g. AG must be calculated without potassium to use it's value in
-      Delta Gap calculation. Also specific reference 7-16 mEq/L shall be used.
+      Delta Gap calculation. Also, specific reference 7-16 mEq/L shall be used.
 
   * Authors are humans and mix formulas, coefficients and reference ranges
     * Constants vary from one source to another
@@ -44,7 +44,7 @@ Main approach:
 2. Calculate HCO3act, BE
 3. *Always* calculate and check anion gap, even if no primary metabolic acidosis
     * You must use AG without potassium, as Anion Gap (K+) is incompatible
-        with Delta gap. Also K is tricky to measure.
+        with Delta gap. Also, K is tricky to measure.
     * Use albumin correction if AG is low
     * If AG is high, calculate Delta gap
 """
@@ -76,9 +76,9 @@ norm_HCO3 = (22, 26)  # mEq/L
 norm_sbe = (-2, 2)  # mEq/L
 
 norm_K = (3.5, 5.3)  # mmol/L, Radiometer, adult
+norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
 # norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
-norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
 norm_Cl = (98, 115)  # mmol/L, Radiometer, adult
 
 # Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level

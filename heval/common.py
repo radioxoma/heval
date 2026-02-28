@@ -1,9 +1,20 @@
 from __future__ import annotations
 
-import dataclasses
+from dataclasses import dataclass
 import enum
 import functools
 import operator
+
+
+class HumanSex(enum.IntEnum):
+    """Human body constitution based on sex.
+
+    Male/female integers comply EMIAS database and belarusian sick leave documents.
+    """
+
+    male = 1
+    female = 2
+    child = 3  # For <12 years old
 
 
 class FlagSeverity(enum.IntEnum):
@@ -20,7 +31,7 @@ class FlagSeverity(enum.IntEnum):
     green = 3  # No color highlight
 
 
-@dataclasses.dataclass
+@dataclass
 class Flag:
     """An issue with a given human.
 
@@ -73,14 +84,3 @@ def render_flags(flags: list[Flag]) -> str:
         return f"<ul>\n<li>{text}</li>\n</ul>"
     else:
         return ""
-
-
-class HumanSex(enum.IntEnum):
-    """Human body constitution based on sex.
-
-    Male/female integers comply EMIAS database and belarusian sick leave documents.
-    """
-
-    male = 1
-    female = 2
-    child = 3  # For <12 years old

@@ -290,7 +290,7 @@ class MainWindow(ttk.Frame):
         style.configure("TMenubutton", padding=2, width=6)  # Otherwise too big on Linux
         self.adjust_font_size()
 
-        self.HBody = human.HumanBodyModel()
+        self.HBody = human.HumanModel()
 
         menubar = tk.Menu(self.parent)  # Conventional name
         menu_file = tk.Menu(menubar, tearoff=False)
@@ -505,15 +505,15 @@ class MainWindow(ttk.Frame):
                 font_obj["size"] = 9
 
     def set_model_sex(self, event=None):
-        self.HBody.sex = common.HumanSex[self.var_sex.get().lower()]
+        self.HBody.body_sex = common.HumanSex[self.var_sex.get().lower()]
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
-        self.HBody.height = float(self.ctl_height.get()) / 100
+        self.HBody.body_height = float(self.ctl_height.get()) / 100
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_weight(self, event=None):
-        self.HBody.weight = float(self.ctl_weight.get())
+        self.HBody.body_weight = float(self.ctl_weight.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_body_temp(self, event=None):
@@ -522,13 +522,13 @@ class MainWindow(ttk.Frame):
 
     def set_model_use_ibw(self, event=None):
         if self.var_use_ibw.get() == 0:
-            self.HBody.use_ibw = False
+            self.HBody.body_use_ibw = False
             self.lbl_weight["state"] = tk.NORMAL
             self.ctl_weight["state"] = tk.NORMAL
         else:
-            self.HBody.use_ibw = True
+            self.HBody.body_use_ibw = True
             self.ctl_weight.delete(0, tk.END)
-            self.ctl_weight.insert(0, round(self.HBody.weight, 1))
+            self.ctl_weight.insert(0, round(self.HBody.body_weight, 1))
             self.ctl_weight["state"] = tk.DISABLED
             self.lbl_weight["state"] = tk.DISABLED
         self.event_generate("<<HumanModelChanged>>")
@@ -541,10 +541,10 @@ class MainWindow(ttk.Frame):
 
     def eval(self, event=None):
         """Update GUI."""
-        if self.HBody.use_ibw:
+        if self.HBody.body_use_ibw:
             self.ctl_weight["state"] = tk.NORMAL
             self.ctl_weight.delete(0, tk.END)
-            self.ctl_weight.insert(0, round(self.HBody.weight, 1))
+            self.ctl_weight.insert(0, round(self.HBody.body_weight, 1))
             self.ctl_weight["state"] = self.lbl_weight["state"]
 
 
@@ -634,7 +634,7 @@ class CalcMain(ttk.Frame):
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text(self.human_model.describe())
+        self.TxtView.set_text(self.human_model.describe_body())
 
 
 class CalcNutrition(ttk.Frame):
@@ -1088,40 +1088,40 @@ class CalcElectrolytes(ttk.Frame):
         self.set_model_ctHb()
 
     def set_model_pH(self, event=None):
-        self.human_model.blood.pH = float(self.ctl_sbx_pH.get())
+        self.human_model.blood_abg_pH = float(self.ctl_sbx_pH.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_pCO2(self, event=None):
-        self.human_model.blood.pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
+        self.human_model.blood_abg_pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_K(self, event=None):
-        self.human_model.blood.cK = float(self.ctl_sbx_K.get())
+        self.human_model.blood_abg_cK = float(self.ctl_sbx_K.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Na(self, event=None):
-        self.human_model.blood.cNa = float(self.ctl_sbx_Na.get())
+        self.human_model.blood_abg_cNa = float(self.ctl_sbx_Na.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Cl(self, event=None):
-        self.human_model.blood.cCl = float(self.ctl_sbx_Cl.get())
+        self.human_model.blood_abg_cCl = float(self.ctl_sbx_Cl.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctAlb(self, event=None):
-        self.human_model.blood.ctAlb = float(self.ctl_sbx_ctAlb.get())
+        self.human_model.blood_abg_ctAlb = float(self.ctl_sbx_ctAlb.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_cGlu(self, event=None):
-        self.human_model.blood.cGlu = float(self.ctl_sbx_cGlu.get())
+        self.human_model.blood_abg_cGlu = float(self.ctl_sbx_cGlu.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctHb(self, event=None):
-        self.human_model.blood.ctHb = float(self.ctl_sbx_ctHb.get())
+        self.human_model.blood_abg_ctHb = float(self.ctl_sbx_ctHb.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
-        self.lbl_hco3["text"] = round(self.human_model.blood.hco3p, 1)
-        self.TxtView.set_text(self.human_model.blood.describe_all())
+        self.lbl_hco3["text"] = round(self.human_model.blood_abg_hco3p, 1)
+        self.TxtView.set_text(self.human_model.describe_blood_abg())
 
 
 class CalcGFR(ttk.Frame):
@@ -1200,16 +1200,16 @@ class CalcGFR(ttk.Frame):
         self.eval()
 
     def set_model_age(self, event=None):
-        self.human_model.age = float(self.ctl_sbx_age.get())
+        self.human_model.body_age = float(self.ctl_sbx_age.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
-        sex = self.human_model.sex
+        sex = self.human_model.body_sex
         cCrea = float(self.ctl_sbx_ccrea.get())
         cCrea_mgdl = cCrea / abg.M_Crea
         info = ""
         if sex in (common.HumanSex.male, common.HumanSex.female):
-            age = self.human_model.age
+            age = self.human_model.body_age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = self.var_isblack.get() == 1
             mdrd = human.egfr_mdrd(sex, cCrea, age, black_skin)
@@ -1223,7 +1223,7 @@ class CalcGFR(ttk.Frame):
             Conclusion: {human.gfr_describe(epi)}
             """
         elif sex == common.HumanSex.child:
-            schwartz = human.egfr_schwartz(cCrea, self.human_model.height)
+            schwartz = human.egfr_schwartz(cCrea, self.human_model.body_height)
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL
             {schwartz:.0f} mL/min/1.73 m² [Schwartz revised 2009]

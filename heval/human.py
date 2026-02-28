@@ -57,49 +57,41 @@ child = {  # 3 year old kid
 newborn = {"height": 0.5, "weight": 3.6, "sex": HumanSex.child, "body_temp": 36.6}
 
 
-class HumanBodyModel:
+@dataclass
+class HumanModel:
     """Must set 'sex' and 'height' to make it work. See `is_init()`.
 
     Note that 'use_ibw == False' by default.
     """
 
+    body_sex: HumanSex
+    body_height: float  # Human height in meters
+    body_age: float | None = None  # Human age in years
+    body_temp: float = 36.6  # Celsius
+
+    # Represents an human blood ABG status
+    blood_abg_pH: float | None = None
+    blood_abg_pCO2: float | None = None  # kPa
+
+    blood_abg_cK: float | None = None  # mmol/L
+    blood_abg_cNa: float | None = None  # mmol/L
+    blood_abg_cCl: float | None = None  # mmol/L
+
+    blood_abg_ctAlb: float | None = None  # g/dL albumin
+    blood_abg_cGlu: float | None = None  # mmol/L
+    blood_abg_ctHb: float | None = None  # g/dl, haemoglobin
+    blood_abg_ctBun: float | None = None  # May be for osmolarity in future
+
     def __init__(self):
         self.debug = False
-        # self._int_prop = ("height", "age", "weight", "body_temp")
-        # self._txt_prop = ("sex", "comment")
-        self._sex: HumanSex | None = None
-        self._height: float | None = None
-
-        self._age: float
         self._weight: float | None = None
         self._use_ibw: bool = False
         self._weight_ideal_method: str = ""
-        self.body_temp = 36.6  # Celsius
         self.comment = dict()  # For warnings
-
-        self.blood = HumanBloodModel(self)
         self.nutrition = nutrition.HumanNutritionModel(self)
 
     @property
-    def sex(self):
-        return self._sex
-
-    @sex.setter
-    def sex(self, value: HumanSex):
-        """Set HumanSex."""
-        self._sex = value
-
-    @property
-    def height(self):
-        return self._height
-
-    @height.setter
-    def height(self, value: float):
-        """Human height in meters."""
-        self._height = value
-
-    @property
-    def weight(self) -> float:
+    def body_weight(self) -> float:
         """Return human body weight, kg.
 
         Must calculate weight, without it class is useless.
@@ -107,21 +99,21 @@ class HumanBodyModel:
         return IBW, then RBW if 'use_ibw = True'
         """
         if self._use_ibw:
-            return self.weight_ideal
+            return self.body_weight_ideal
         else:
-            return self._weight or self.weight_ideal
+            return self._weight or self.body_weight_ideal
 
-    @weight.setter
-    def weight(self, value: float):
+    @body_weight.setter
+    def body_weight(self, value: float):
         """Human body weight, kg."""
         self._weight = value
 
     @property
-    def use_ibw(self):
+    def body_use_ibw(self):
         return self._use_ibw
 
-    @use_ibw.setter
-    def use_ibw(self, value: bool):
+    @body_use_ibw.setter
+    def body_use_ibw(self, value: bool):
         """Set flag to use calculated IBW instead real weight.
 
         Args:
@@ -130,7 +122,7 @@ class HumanBodyModel:
         self._use_ibw = value
 
     @property
-    def weight_ideal(self) -> float:
+    def body_weight_ideal(self) -> float:
         """Evaluate ideal body weight (IBW) for all ages.
 
           * https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight
@@ -173,42 +165,35 @@ class HumanBodyModel:
         """
         # IBW estimation formulas cover not all ranges. This flag helps prevent
         # misuse of explicitly invalid IBW e.g. in respiratory calculations
-        if self.sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.male, HumanSex.female):
             self._weight_ideal_method = "Hamilton"
-            return ibw_hamilton(self.sex, self.height)
+            return ibw_hamilton(self.body_sex, self.body_height)
 
-        if 0.74 <= self.height <= 1.524:
+        if 0.74 <= self.body_height <= 1.524:
             self._weight_ideal_method = "Traub-Kichen 1983"
-            return ibw_traub_kichen(self.height)
-        elif 0.468 <= self.height < 0.74:
+            return ibw_traub_kichen(self.body_height)
+        elif 0.468 <= self.body_height < 0.74:
             # Broselow tape range. Temporary and only for low height
             self._weight_ideal_method = "Broselow"
-            return ibw_broselow(self.height)
+            return ibw_broselow(self.body_height)
         else:
             self._weight_ideal_method = "Default for neonates"
             return 3.3  # Default for all neonates
 
     @property
-    def bmi(self):
+    def body_bmi(self):
         """Body mass index."""
-        return body_mass_index(self.height, self.weight)
+        return body_mass_index(self.body_height, self.body_weight)
 
     @property
-    def bsa(self):
+    def body_bsa(self):
         """Body surface area, m2, square meters."""
-        return body_surface_area_dubois(height=self.height, weight=self.weight)
+        return body_surface_area_dubois(
+            height=self.body_height, weight=self.body_weight
+        )
 
     @property
-    def age(self) -> float:
-        return self._age
-
-    @age.setter
-    def age(self, value: float):
-        """Human age in years."""
-        self._age = value
-
-    @property
-    def total_blood_volume(self):
+    def body_total_blood_volume(self):
         """Calculate total blood volume (TBV) by Lemmens-Bernstein-Brodsky.
 
         Considered as more accurate, than Nadler 1962 method.
@@ -231,57 +216,85 @@ class HumanBodyModel:
 
         :return: Total blood volume, ml
         """
-        return 70 / math.sqrt(self.bmi / 22) * self.weight
+        return 70 / math.sqrt(self.body_bmi / 22) * self.body_weight
+
+    @property
+    def blood_abg_sbe(self):
+        return abg.calculate_cbase(self.blood_abg_pH, self.blood_abg_pCO2)
+
+    @property
+    def blood_abg_hco3p(self):
+        return abg.calculate_hco3p(self.blood_abg_pH, self.blood_abg_pCO2)
+
+    @property
+    def blood_abg_anion_gapk(self):
+        """Anion gap (K+), usually not used."""
+        if self.blood_abg_cK is not None:
+            return abg.calculate_anion_gap(
+                Na=self.blood_abg_cNa,
+                Cl=self.blood_abg_cCl,
+                HCO3act=self.blood_abg_hco3p,
+                K=self.blood_abg_cK,
+                albumin=self.blood_abg_ctAlb,
+            )
+        else:
+            raise ValueError("No potassium specified")
+
+    @property
+    def blood_abg_anion_gap(self):
+        """Calculate anion gap without potassium. Preferred method."""
+        return abg.calculate_anion_gap(
+            Na=self.blood_abg_cNa,
+            Cl=self.blood_abg_cCl,
+            HCO3act=self.blood_abg_hco3p,
+            albumin=self.blood_abg_ctAlb,
+        )
+
+    @property
+    def blood_abg_sid_abbr(self):
+        """Strong ion difference."""
+        return abg.calculate_sid_abbr(
+            self.blood_abg_cNa, self.blood_abg_cCl, self.blood_abg_ctAlb
+        )
+
+    @property
+    def blood_abg_osmolarity(self):
+        return abg.calculate_osmolarity(self.blood_abg_cNa, self.blood_abg_cGlu)
+
+    @property
+    def blood_abg_hct_calc(self):
+        """Haematocrit."""
+        return abg.calculate_hct(self.blood_abg_ctHb * 10 / abg.M_Hb)
 
     def is_init(self) -> bool:
         """Is class got all necessary data for calculations."""
-        return None not in (self.height, self.sex)
-
-    def describe(self) -> str:
-        info = ""
-        if not self.is_init():
-            return "Empty human model (set sex, height, weight)"
-        info += "{}\n".format(self._info_in_body())
-        info += "\n-- Respiration ---------------------------------\n"
-        info += "{}\n".format(self._info_in_respiration())
-        info += "\n-- Fluids --------------------------------------\n"
-        info += "{}\n".format(self._info_in_fluids())
-        info += "\n-- Metabolic -----------------------------------\n"
-        info += "{}\n".format(self._info_in_energy())
-        if self.debug:
-            info += "\n{}\n".format(self._info_in_food())
-        # Estimate also CO2 production?
-        info += "\n-- Diuresis ------------------------------------\n"
-        info += f"{self._info_out_fluids()}\n"
-        if self.comment:
-            info += f"\nComments:\n{self.comment}\n"
-        return info
+        return None not in (self.body_height, self.body_sex)
 
     def _info_in_body(self) -> str:
-        info = f"{self.sex.name.title()} {self.height * 100:.0f}/{self.weight:.0f}:"
-        info += f" IBW {self.weight_ideal:.1f} kg [{self._weight_ideal_method}],"
-        if self.sex in (HumanSex.male, HumanSex.female):
-            info += f" BMI {self.bmi:.1f} ({bmi_describe(self.bmi)}),"
+        info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.0f}:"
+        info += f" IBW {self.body_weight_ideal:.1f} kg [{self._weight_ideal_method}],"
+        if self.body_sex in (HumanSex.male, HumanSex.female):
+            info += f" BMI {self.body_bmi:.1f} ({bmi_describe(self.body_bmi)}),"
         else:
             # Adult normal ranges cannot be applied to children
-            info += f" BMI {self.bmi:.1f},"
+            info += f" BMI {self.body_bmi:.1f},"
 
-        info += f" BSA {self.bsa:.3f} m².\n"
+        info += f" BSA {self.body_bsa:.3f} m².\n"
 
         # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
         # older than 3 month. ml/kg ratio more in neonates and underweight
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
-            self.weight * 70, self.total_blood_volume
+            self.body_weight * 70, self.body_total_blood_volume
         )
-        info += f"Transfusion of one pRBC dose will increase Hb by {estimate_prbc_transfusion_response(self.weight):+.2f} g/dL."
+        info += f"Transfusion of one pRBC dose will increase Hb by {estimate_prbc_transfusion_response(self.body_weight):+.2f} g/dL."
 
-        if self.sex == HumanSex.child:
+        if self.body_sex == HumanSex.child:
             try:
-                br_code, br_age, br_weight = get_broselow_code(self.height)
+                br_code, br_age, br_weight = get_broselow_code(self.body_height)
                 info += f"\nBROSELOW TAPE: {br_code.upper()}, {br_age.lower()}, ~{br_weight:.1f} kg.\n"
             except ValueError:
                 pass
-            info += f"\n{mnemonic_wetflag(weight=self.weight)}"
+            info += f"\n{mnemonic_wetflag(weight=self.body_weight)}"
         return info
 
     def _info_in_respiration(self) -> str:
@@ -351,12 +364,12 @@ class HumanBodyModel:
         #    * I don't know how to calculate IBW for neonates
         #    * Neonate's weight must be known in advance
         #    * They RBW must be near IBW
-        if self.use_ibw:
+        if self.body_use_ibw:
             weight_type = "IBW"
-            weight_chosen = self.weight_ideal
+            weight_chosen = self.body_weight_ideal
         else:
             weight_type = "RBW"
-            weight_chosen = self.weight
+            weight_chosen = self.body_weight
 
         # Dead space https://www.openanesthesia.org/aba_respiratory_function_-_dead_space
         VDaw = 2.2 * weight_chosen
@@ -367,7 +380,7 @@ class HumanBodyModel:
         mv = normal_minute_ventilation(weight_chosen)
         Vd = mv * weight_chosen  # l/min
         info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(
-            weight_type, self.sex.name, weight_chosen
+            weight_type, self.body_sex.name, weight_chosen
         )
         info += f"MV x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
         info += f"VDaw is {VDaw:.0f} ml, so TV must be >{Tv_min:.0f} ml\n"
@@ -386,19 +399,22 @@ class HumanBodyModel:
     def _info_in_fluids(self) -> str:
         # Normal physiologic demand
         info = ""
-        if self.sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.male, HumanSex.female):
             info += " * RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
-                30 * self.weight, 35 * self.weight
+                30 * self.body_weight, 35 * self.body_weight
             )
 
-        hs_fluid = fluid_holidaysegar_mod(self.weight)
+        hs_fluid = fluid_holidaysegar_mod(self.body_weight)
         info += " * RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(
             hs_fluid, hs_fluid / 24
         )
 
-        if self.height is not None:
+        if self.body_height is not None:
             info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(
-                body_surface_area_dubois(height=self.height, weight=self.weight) * 1750
+                body_surface_area_dubois(
+                    height=self.body_height, weight=self.body_weight
+                )
+                * 1750
             )  # All ages
 
         # Variable perspiration losses, which is not included in physiologic demand
@@ -410,33 +426,39 @@ class HumanBodyModel:
         if self.body_temp > 37:
             deg = self.body_temp - 37
             info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
-                5 * self.weight * deg, 7 * self.weight * deg
+                5 * self.body_weight * deg, 7 * self.body_weight * deg
             )
         return info
 
     def _info_in_food(self) -> str:
         """Daily electrolytes demand."""
         info = ""
-        if self.sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.male, HumanSex.female):
             info += "Daily nutrition requirements for adults [ПосДеж]:\n"
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(
-                1.2 * self.weight_ideal, 1.5 * self.weight_ideal
+                1.2 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
             )
             info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(
-                1.0 * self.weight_ideal, 1.5 * self.weight_ideal
+                1.0 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
             )
             info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(
-                4.0 * self.weight_ideal, 5.0 * self.weight_ideal
+                4.0 * self.body_weight_ideal, 5.0 * self.body_weight_ideal
             )
 
             info += "Electrolytes daily requirements:\n"
-            info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
-            info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(self.weight)
+            info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(
+                self.body_weight
+            )
+            info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(
+                self.body_weight
+            )
 
             # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
-            info += f" * Mg²⁺\t{self.weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n"
+            info += f" * Mg²⁺\t{self.body_weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n"
             # Parenteral (25% of enteral) 200 mg/24h, 5 mmol/24h [Kostuch, p 49]
-            info += f" * Ca²⁺\t{self.weight * 0.11:3.1f} mmol/24h [~0.11 mmol/kg/24h]"
+            info += (
+                f" * Ca²⁺\t{self.body_weight * 0.11:3.1f} mmol/24h [~0.11 mmol/kg/24h]"
+            )
             return info
         else:
             return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
@@ -500,23 +522,25 @@ class HumanBodyModel:
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
         """
         info = ""
-        if self.sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.male, HumanSex.female):
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
-            if self.age:
+            if self.body_age:
                 info += "Resting energy expenditure for healthy adults:\n"
                 info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(
                     ree_harris_benedict_revised(
-                        self.height, self.weight, self.sex, self.age
+                        self.body_height, self.body_weight, self.body_sex, self.body_age
                     )
                 )
                 info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(
-                    ree_mifflin(self.height, self.weight, self.sex, self.age)
+                    ree_mifflin(
+                        self.body_height, self.body_weight, self.body_sex, self.body_age
+                    )
                 )
             else:
                 info += "Enter age to calculate REE\n"
             info += (
                 " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]".format(
-                    25 * self.weight_ideal, 30 * self.weight_ideal
+                    25 * self.body_weight_ideal, 30 * self.body_weight_ideal
                 )
             )
         else:
@@ -532,25 +556,394 @@ class HumanBodyModel:
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
         """
         info = ""
-        if self.sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.male, HumanSex.female):
             info += "RBW adult urinary output:\n"
             info += (
                 " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(
-                    0.5 * self.weight, 0.5 * self.weight * 24
+                    0.5 * self.body_weight, 0.5 * self.body_weight * 24
                 )
             )
             info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(
-                self.weight, self.weight * 24
+                self.body_weight, self.body_weight * 24
             )
-        if self.sex == HumanSex.child:
+        if self.body_sex == HumanSex.child:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
             info += "RBW child urinary output:\n"
             info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(
-                self.weight, self.weight * 24
+                self.body_weight, self.body_weight * 24
             )
             info += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(
-                3.5 * self.weight, 3.5 * self.weight * 24
+                3.5 * self.body_weight, 3.5 * self.body_weight * 24
             )
+        return info
+
+    def describe_osmolarity(self):
+        """Verbally describe osmolarity impact on human.
+
+        Diabetes mellitus decompensation:
+          1 type - DKA (no insulin enables ketogenesis).
+            dehydration (osmotic diuresis and vomiting)
+            cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
+          2 type - HHNS (cells not sensitive to Ins)
+            dehydration (osmotic diuresis)
+            cGlu >30, mOsm >320, no acidosis and ketone bodies)
+        """
+        info = ""
+        if self.blood_abg_cNa is None or self.blood_abg_cGlu is None:
+            return info
+
+        info = "Osmolarity is "
+        if self.blood_abg_osmolarity > abg.norm_mOsm[1]:
+            info += "high"
+        elif self.blood_abg_osmolarity < abg.norm_mOsm[0]:
+            info += "low"
+        else:
+            info += "ok"
+        info += f" {self.blood_abg_osmolarity:.0f} ({abg.norm_mOsm[0]:.0f}-{abg.norm_mOsm[1]:.0f} mOsm/L)"
+
+        # Hyperosmolarity flags
+        # if self.osmolarity >=282: # mOsm/kg
+        #     info += " vasopressin released"
+        if self.blood_abg_osmolarity > 290:  # mOsm/kg
+            # plasma thirst point reached
+            info += ", human is thirsty (>290 mOsm/kg)"
+        if self.blood_abg_osmolarity > 320:  # mOsm/kg
+            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", acute kidney injury risk (>320 mOsm/kg)"
+        if self.blood_abg_osmolarity > 330:  # mOsm/kg
+            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", coma (>330 mOsm/kg)"
+
+        # Implies cNa, pCO2 available
+        if self.blood_abg_pH is None or self.blood_abg_pCO2 is None:
+            return info
+
+        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
+        if all(
+            (
+                self.blood_abg_osmolarity > 320,
+                self.blood_abg_cGlu > 30,
+                self.blood_abg_sbe > -18.4,
+            )
+        ):
+            # https://www.aafp.org/afp/2005/0501/p1723.html
+            # IV insulin drip and crystalloids
+            info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
+        return info
+
+    def describe_abg(self) -> str:
+        """Describe pH and pCO2 - an old implementation considered stable."""
+        info = ""
+        if self.blood_abg_pH is not None and self.blood_abg_pCO2 is not None:
+            info += textwrap.dedent(
+                f"""\
+                pCO2    {self.blood_abg_pCO2:2.1f} kPa
+                HCO3(P) {self.blood_abg_hco3p:2.1f} mmol/L
+                Conclusion: {abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[0]}\n"""
+            )
+            if self.debug:
+                info += "\n-- Manual compensatory response check --------------\n"
+                # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
+                info += abg.abg_approach_research(
+                    self.blood_abg_pH, self.blood_abg_pCO2
+                )
+        return info
+
+    def describe_anion_gap(self):
+        if None in (
+            self.blood_abg_pH,
+            self.blood_abg_pCO2,
+            self.blood_abg_cNa,
+            self.blood_abg_cCl,
+            self.blood_abg_ctAlb,
+        ):
+            return "pH, pCO2, cNa, cCl, albumin required"
+        info = "-- Anion gap ---------------------------------------\n"
+        desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
+        if (
+            abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[1]
+            == "metabolic_acidosis"
+        ):
+            if abg.norm_gap[1] < self.blood_abg_anion_gap:
+                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
+                info += f"HAGMA {desc} (KULT?), "
+                info += abg.calculate_anion_gap_delta(
+                    self.blood_abg_anion_gap, self.blood_abg_hco3p
+                )
+            elif self.blood_abg_anion_gap < abg.norm_gap[0]:
+                info += f"Low AG {desc} - hypoalbuminemia or low Na⁺?"
+            else:
+                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
+                info += f"NAGMA {desc}. Diarrhea or renal tubular acidosis?"
+        else:
+            if abg.norm_gap[1] < self.blood_abg_anion_gap:
+                info += f"Unexpected high AG {desc} without main metabolic acidosis; "
+                # Can catch COPD or concurrent metabolic alkalosis here
+                info += abg.calculate_anion_gap_delta(
+                    self.blood_abg_anion_gap, self.blood_abg_hco3p
+                )
+            elif self.blood_abg_anion_gap < abg.norm_gap[0]:
+                info += f"Unexpected low AG {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
+            else:
+                info += f"AG is ok {desc}"
+
+        if self.debug:
+            """Strong ion difference.
+
+            Sometimes Na and Cl don't changes simultaneously.
+            Try distinguish Na-Cl balance in case high/low osmolarity.
+            Should help to choose better fluid for correction.
+            """
+            SIDabbr_norm = (-5, 5)  # Arbitrary threshold
+            ref_str = f"{self.blood_abg_sid_abbr:.1f} ({SIDabbr_norm[0]:.0f}-{SIDabbr_norm[1]:.0f} mEq/L)"
+            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
+            if self.blood_abg_sid_abbr > SIDabbr_norm[1]:
+                info += f"is alkalotic {ref_str}, relative Na⁺ excess"
+            elif self.blood_abg_sid_abbr < SIDabbr_norm[0]:
+                info += f"is acidotic {ref_str}, relative Cl⁻ excess"
+            else:
+                info += f"is ok {ref_str}"
+            info += f", BDE gap {self.blood_abg_sbe - self.blood_abg_sid_abbr:.01f} mEq/L"  # Lactate?
+        return info
+
+    def describe_sbe(self):
+        """Calculate needed NaHCO3 for metabolic acidosis correction.
+
+        Using SBE (not pH) as threshold point guaranties that bicarbonate
+        administration won't be suggested in case of respiratory acidosis.
+        https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
+
+        * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
+        * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
+
+
+        First approach
+        --------------
+        "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
+        but both values pretty close to BE -9 meq/L, so I use it as threshold.
+
+        Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
+
+
+        Second approach
+        ---------------
+        According to BICAR-ICU 2018:
+          * Using more restrictive threshold pH 7.11, which is
+              correspondent to BE -15 mEq/L.
+          * Tip only for AKI patients
+          * https://pubmed.ncbi.nlm.nih.gov/29910040/
+          * https://en.wikipedia.org/wiki/Metabolic_acidosis
+        """
+        if None in (self.blood_abg_pH, self.blood_abg_pCO2):
+            return ""
+        NaHCO3_threshold = -15  # was -9 mEq/L
+        info = ""
+        if self.blood_abg_sbe > abg.norm_sbe[1]:
+            # FIXME: can be high if chloride is low. Calculate SID?
+            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
+            # https://en.wikipedia.org/wiki/Contraction_alkalosis
+            # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
+            info += f"SBE is high {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L). Low Cl⁻, hypoalbuminemia? NaHCO₃ overdose?"
+        elif self.blood_abg_sbe < abg.norm_sbe[0]:
+            if self.blood_abg_sbe <= NaHCO3_threshold:
+                info += f"SBE is drastically low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
+                info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
+                # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
+                NaHCO3_mmol = -0.3 * self.blood_abg_sbe * self.body_weight  # mmol/L
+                NaHCO3_mmol_24h = self.body_weight * 5  # mmol/L
+                NaHCO3_g = NaHCO3_mmol / 1000 * abg.M_NaHCO3  # gram
+                NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * abg.M_NaHCO3
+                # Курек 273, Рябов 73 for children and adult
+                info += f"  * NaHCO₃ {NaHCO3_mmol:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {NaHCO3_mmol_24h:.0f} mmol/24h (5 mmol/kg/24h):\n"
+                # info += "  * NaHCO₃ {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
+                #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
+                for dilution in (4, 8.4):
+                    NaHCO3_ml = NaHCO3_g / dilution * 100
+                    NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
+                    info += f"    * NaHCO3 {dilution:.1f}% {NaHCO3_ml:.0f} ml, daily dose {NaHCO3_ml_24h:.0f} ml/24h\n"
+                if self.debug:
+                    info += textwrap.dedent(
+                        """\
+                        Confirmed NaHCO₃ use cases:
+                          * Metabolic acidosis correction leads to decreased 28 day mortality only in AKI patients (target pH 7.3) [BICAR-ICU 2018]
+                          * TCA poisoning with prolonged QT interval (target pH 7.45-7.55 [Костюченко 204])
+                          * In hyperkalemia (when pH increases, K⁺ level decreases)
+                        Main concepts of usage:
+                          * Must hyperventilate to make use of bicarbonate buffer
+                          * Control ABG after each NaHCO₃ infusion or every 4 hours
+                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]"""
+                    )
+            else:
+                info += f"SBE is low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {NaHCO3_threshold:.0f} mEq/L"
+        else:
+            info += f"SBE is ok {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
+        return info
+
+    def describe_electrolytes(self):
+        if None in (
+            self.body_weight,
+            self.blood_abg_cK,
+            self.blood_abg_cNa,
+            self.blood_abg_cCl,
+            self.blood_abg_cGlu,
+        ):
+            return ""
+        info = [
+            "-- Electrolyte and osmolar abnormalities -----------",
+            self.describe_osmolarity(),
+            electrolyte_K(self.body_weight, self.blood_abg_cK),
+            electrolyte_Na(
+                self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.debug
+            ),
+            electrolyte_Cl(self.blood_abg_cCl),
+        ]
+
+        return "\n".join(info) + "\n"
+
+    def describe_glucose(self):
+        """Assess glucose level.
+
+        https://en.wikipedia.org/wiki/Renal_threshold
+        https://en.wikipedia.org/wiki/Glycosuria
+        """
+        info = ""
+        if self.body_weight is None or self.blood_abg_cGlu is None:
+            return info
+        if self.blood_abg_cGlu > abg.norm_cGlu[1]:
+            if self.blood_abg_cGlu <= abg.norm_cGlu_target[1]:
+                info += f"cGlu is above ideal {self.blood_abg_cGlu:.1f} (target {abg.norm_cGlu_target[0]:.1f}-{abg.norm_cGlu_target[1]:.1f} mmol/L), but acceptable"
+            else:
+                info += f"Hyperglycemia {self.blood_abg_cGlu:.1f} (target {abg.norm_cGlu_target[0]:.1f}-{abg.norm_cGlu_target[1]:.1f} mmol/L) causes glycosuria with osmotic diuresis"
+                if self.blood_abg_cGlu <= 20:  # Arbitrary threshold
+                    info += f", consider insulin {insulin_by_glucose(self.blood_abg_cGlu):.0f} IU subcut for adult"
+                else:
+                    info += f", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {self.body_weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
+
+        elif self.blood_abg_cGlu < abg.norm_cGlu[0]:
+            if self.blood_abg_cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
+                info += f"cGlu is below ideal {self.blood_abg_cGlu:.1f} (target {abg.norm_cGlu_target[0]:.1f}-{abg.norm_cGlu_target[1]:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state"
+            else:
+                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS GLUCOSE 10 % 2.5 mL/kg:\n"
+                # https://litfl.com/glucose/
+                # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
+                info += solution_glucose(
+                    0.25 * self.body_weight,
+                    self.body_weight,
+                    add_insuline=False,
+                )
+                # High lactate + refractory low cGlu marks liver failure: expect death in 24-48 hours
+                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory. In case of sepsis, liver failure may be the cause."
+
+        else:
+            info += f"cGlu is ok {self.blood_abg_cGlu:.1f} ({abg.norm_cGlu[0]:.1f}-{abg.norm_cGlu[1]:.1f} mmol/L)"
+        return info
+
+    def describe_albumin(self):
+        """Albumin as nutrition marker in adults."""
+        if self.blood_abg_ctAlb is None:
+            return ""
+        ctalb_range = f"{self.blood_abg_ctAlb:0.1f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/dL)"
+        if abg.norm_ctAlb[1] < self.blood_abg_ctAlb:
+            info = f"ctAlb is high {ctalb_range}. Dehydration?"
+        elif abg.norm_ctAlb[0] <= self.blood_abg_ctAlb <= abg.norm_ctAlb[1]:
+            info = f"ctAlb is ok {ctalb_range}"
+        elif 3 <= self.blood_abg_ctAlb < abg.norm_ctAlb[0]:
+            info = f"ctAlb is low: mild hypoalbuminemia {ctalb_range}"
+        elif 2.5 <= self.blood_abg_ctAlb < 3:
+            info = f"ctAlb is low: medium hypoalbuminemia {ctalb_range}"
+        elif self.blood_abg_ctAlb < 2.5:
+            info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
+        return info
+
+    def describe_hb(self):
+        """Describe Hb and hct_calc.
+
+        References
+        ----------
+        [1] https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
+        [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
+        """
+        info = ""
+        if (
+            self.body_weight is None
+            or self.body_sex is None
+            or self.blood_abg_ctHb is None
+        ):
+            return info
+        # Top hct value for free water deficit calculation.
+        if self.body_sex == HumanSex.male:
+            hb_norm = abg.hb_norm_male
+            hct_norm = abg.hct_norm_male
+        elif self.body_sex == HumanSex.female:
+            hb_norm = abg.hb_norm_female
+            hct_norm = abg.hct_norm_female
+        elif self.body_sex == HumanSex.child:
+            hb_norm = abg.hb_norm_child
+            hct_norm = abg.hct_norm_child
+        hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
+        vol_def = volume_deficit_hct(
+            self.body_weight, self.blood_abg_hct_calc, hct_target
+        )
+
+        desc_hb = f"{self.blood_abg_ctHb:.1f} ({hb_norm[0]:.1f}-{hb_norm[1]:.1f} g/dl)"
+        desc_hct = (
+            f"{self.blood_abg_hct_calc:.3f} ({hct_norm[0]:.3f}-{hct_norm[1]:.3f})"
+        )
+        info = ""
+        if self.blood_abg_ctHb < 7:  # Generic threshold
+            info += f"Hb is low {desc_hb}, consider transfusion. "
+        else:
+            info += f"Hb {desc_hb}. "
+
+        if self.blood_abg_hct_calc > hct_norm[1]:
+            info += f"Hct is high {desc_hct}"
+        elif self.blood_abg_hct_calc < hct_norm[0]:
+            info += f"Hct is low {desc_hct}"
+        else:
+            info += f"Hct is ok {desc_hct}"
+
+        if self.blood_abg_hct_calc > hct_target + 0.01:  # Age-independent threshold
+            info += f", free water deficit {vol_def:.0f} ml (limitations: valid if no anemia, osmolarity and Na⁺ are more specific)."
+
+        if self.body_sex == HumanSex.child:
+            info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
+        return info
+
+    def describe_body(self) -> str:
+        info = ""
+        if not self.is_init():
+            return "Empty human model (set sex, height, weight)"
+        info += "{}\n".format(self._info_in_body())
+        info += "\n-- Respiration ---------------------------------\n"
+        info += "{}\n".format(self._info_in_respiration())
+        info += "\n-- Fluids --------------------------------------\n"
+        info += "{}\n".format(self._info_in_fluids())
+        info += "\n-- Metabolic -----------------------------------\n"
+        info += "{}\n".format(self._info_in_energy())
+        if self.debug:
+            info += "\n{}\n".format(self._info_in_food())
+        # Estimate also CO2 production?
+        info += "\n-- Diuresis ------------------------------------\n"
+        info += f"{self._info_out_fluids()}\n"
+        if self.comment:
+            info += f"\nComments:\n{self.comment}\n"
+        return info
+
+    def describe_blood_abg(self) -> str:
+        info = ""
+        info += "Basic ABG assessment\n"
+        info += "====================\n"
+        info += "{}\n".format(self.describe_abg())
+        info += "{}\n\n\n".format(self.describe_sbe())
+
+        info += "Complex electrolyte assessment\n"
+        info += "==============================\n"
+        info += "{}\n\n".format(self.describe_anion_gap())
+        info += "{}\n".format(self.describe_electrolytes())
+
+        info += "{}\n\n".format(self.describe_glucose())
+        info += "{}\n\n".format(self.describe_albumin())
+        info += "{}\n".format(self.describe_hb())
         return info
 
 
@@ -1235,395 +1628,7 @@ def check_anemia(hb: float, mcv: float) -> str:
     return msg
 
 
-@dataclass
-class HumanBloodModel:
-    """Represents an human blood ABG status."""
-
-    human_body: HumanBodyModel
-    # self._int_prop = ("pH", "pCO2", "cK", "cNa", "cCl", "cGlu", "ctAlb", "ctHb")
-    # self._txt_prop = ()
-    pH: float | None = None
-    pCO2: float | None = None  # kPa
-
-    cK: float | None = None  # mmol/L
-    cNa: float | None = None  # mmol/L
-    cCl: float | None = None  # mmol/L
-
-    ctAlb: float | None = None  # g/dL albumin
-    cGlu: float | None = None  # mmol/L
-    ctHb: float | None = None  # g/dl, haemoglobin
-    ctBun: float | None = None  # May be for osmolarity in future
-
-    @property
-    def sbe(self):
-        return abg.calculate_cbase(self.pH, self.pCO2)
-
-    @property
-    def hco3p(self):
-        return abg.calculate_hco3p(self.pH, self.pCO2)
-
-    @property
-    def anion_gapk(self):
-        """Anion gap (K+), usually not used."""
-        if self.cK is not None:
-            return abg.calculate_anion_gap(
-                Na=self.cNa,
-                Cl=self.cCl,
-                HCO3act=self.hco3p,
-                K=self.cK,
-                albumin=self.ctAlb,
-            )
-        else:
-            raise ValueError("No potassium specified")
-
-    @property
-    def anion_gap(self):
-        """Calculate anion gap without potassium. Preferred method."""
-        return abg.calculate_anion_gap(
-            Na=self.cNa, Cl=self.cCl, HCO3act=self.hco3p, albumin=self.ctAlb
-        )
-
-    @property
-    def sid_abbr(self):
-        """Strong ion difference."""
-        return abg.calculate_sid_abbr(self.cNa, self.cCl, self.ctAlb)
-
-    @property
-    def osmolarity(self):
-        return abg.calculate_osmolarity(self.cNa, self.cGlu)
-
-    @property
-    def hct_calc(self):
-        """Haematocrit."""
-        return abg.calculate_hct(self.ctHb * 10 / abg.M_Hb)
-
-    def describe_osmolarity(self):
-        """Verbally describe osmolarity impact on human.
-
-        Diabetes mellitus decompensation:
-          1 type - DKA (no insulin enables ketogenesis).
-            dehydration (osmotic diuresis and vomiting)
-            cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
-          2 type - HHNS (cells not sensitive to Ins)
-            dehydration (osmotic diuresis)
-            cGlu >30, mOsm >320, no acidosis and ketone bodies)
-        """
-        info = ""
-        if self.cNa is None or self.cGlu is None:
-            return info
-
-        info = "Osmolarity is "
-        if self.osmolarity > abg.norm_mOsm[1]:
-            info += "high"
-        elif self.osmolarity < abg.norm_mOsm[0]:
-            info += "low"
-        else:
-            info += "ok"
-        info += f" {self.osmolarity:.0f} ({abg.norm_mOsm[0]:.0f}-{abg.norm_mOsm[1]:.0f} mOsm/L)"
-
-        # Hyperosmolarity flags
-        # if self.osmolarity >=282: # mOsm/kg
-        #     info += " vasopressin released"
-        if self.osmolarity > 290:  # mOsm/kg
-            # plasma thirst point reached
-            info += ", human is thirsty (>290 mOsm/kg)"
-        if self.osmolarity > 320:  # mOsm/kg
-            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
-            info += ", acute kidney injury risk (>320 mOsm/kg)"
-        if self.osmolarity > 330:  # mOsm/kg
-            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
-            info += ", coma (>330 mOsm/kg)"
-
-        # Implies cNa, pCO2 available
-        if self.pH is None or self.pCO2 is None:
-            return info
-
-        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
-        if all((self.osmolarity > 320, self.cGlu > 30, self.sbe > -18.4)):
-            # https://www.aafp.org/afp/2005/0501/p1723.html
-            # IV insulin drip and crystalloids
-            info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
-        return info
-
-    def describe_abg(self) -> str:
-        """Describe pH and pCO2 - an old implementation considered stable."""
-        info = ""
-        if self.pH is not None and self.pCO2 is not None:
-            info += textwrap.dedent(
-                f"""\
-                pCO2    {self.pCO2:2.1f} kPa
-                HCO3(P) {self.hco3p:2.1f} mmol/L
-                Conclusion: {abg.abg_approach_stable(self.pH, self.pCO2)[0]}\n"""
-            )
-            if self.human_body.debug:
-                info += "\n-- Manual compensatory response check --------------\n"
-                # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
-                info += abg.abg_approach_research(self.pH, self.pCO2)
-        return info
-
-    def describe_anion_gap(self):
-        if None in (self.pH, self.pCO2, self.cNa, self.cCl, self.ctAlb):
-            return "pH, pCO2, cNa, cCl, albumin required"
-        info = "-- Anion gap ---------------------------------------\n"
-        desc = (
-            f"{self.anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
-        )
-        if abg.abg_approach_stable(self.pH, self.pCO2)[1] == "metabolic_acidosis":
-            if abg.norm_gap[1] < self.anion_gap:
-                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
-                info += f"HAGMA {desc} (KULT?), "
-                info += abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p)
-            elif self.anion_gap < abg.norm_gap[0]:
-                info += f"Low AG {desc} - hypoalbuminemia or low Na⁺?"
-            else:
-                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
-                info += f"NAGMA {desc}. Diarrhea or renal tubular acidosis?"
-        else:
-            if abg.norm_gap[1] < self.anion_gap:
-                info += f"Unexpected high AG {desc} without main metabolic acidosis; "
-                # Can catch COPD or concurrent metabolic alkalosis here
-                info += abg.calculate_anion_gap_delta(self.anion_gap, self.hco3p)
-            elif self.anion_gap < abg.norm_gap[0]:
-                info += f"Unexpected low AG {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
-            else:
-                info += f"AG is ok {desc}"
-
-        if self.human_body.debug:
-            """Strong ion difference.
-
-            Sometimes Na and Cl don't changes simultaneously.
-            Try distinguish Na-Cl balance in case high/low osmolarity.
-            Should help to choose better fluid for correction.
-            """
-            SIDabbr_norm = (-5, 5)  # Arbitrary threshold
-            ref_str = f"{self.sid_abbr:.1f} ({SIDabbr_norm[0]:.0f}-{SIDabbr_norm[1]:.0f} mEq/L)"
-            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
-            if self.sid_abbr > SIDabbr_norm[1]:
-                info += f"is alkalotic {ref_str}, relative Na⁺ excess"
-            elif self.sid_abbr < SIDabbr_norm[0]:
-                info += f"is acidotic {ref_str}, relative Cl⁻ excess"
-            else:
-                info += f"is ok {ref_str}"
-            info += f", BDE gap {self.sbe - self.sid_abbr:.01f} mEq/L"  # Lactate?
-        return info
-
-    def describe_sbe(self):
-        """Calculate needed NaHCO3 for metabolic acidosis correction.
-
-        Using SBE (not pH) as threshold point guaranties that bicarbonate
-        administration won't be suggested in case of respiratory acidosis.
-        https://en.wikipedia.org/wiki/Intravenous_sodium_bicarbonate
-
-        * Acid poisoning for adults: NaHCO3 4% 5-15 ml/kg [МЗ РБ 2004-08-12 приказ 200 приложение 2 КП отравления, с 53]
-        * В книге Рябова вводили 600 mmol/24h на метаболический ацидоз, пациент перенёс без особенностей
-
-
-        First approach
-        --------------
-        "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
-        but both values pretty close to BE -9 meq/L, so I use it as threshold.
-
-        Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
-
-
-        Second approach
-        ---------------
-        According to BICAR-ICU 2018:
-          * Using more restrictive threshold pH 7.11, which is
-              correspondent to BE -15 mEq/L.
-          * Tip only for AKI patients
-          * https://pubmed.ncbi.nlm.nih.gov/29910040/
-          * https://en.wikipedia.org/wiki/Metabolic_acidosis
-        """
-        if None in (self.pH, self.pCO2):
-            return ""
-        NaHCO3_threshold = -15  # was -9 mEq/L
-        info = ""
-        if self.sbe > abg.norm_sbe[1]:
-            # FIXME: can be high if chloride is low. Calculate SID?
-            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
-            # https://en.wikipedia.org/wiki/Contraction_alkalosis
-            # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += f"SBE is high {self.sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L). Low Cl⁻, hypoalbuminemia? NaHCO₃ overdose?"
-        elif self.sbe < abg.norm_sbe[0]:
-            if self.sbe <= NaHCO3_threshold:
-                info += f"SBE is drastically low {self.sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
-                info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
-                # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
-                NaHCO3_mmol = -0.3 * self.sbe * self.human_body.weight  # mmol/L
-                NaHCO3_mmol_24h = self.human_body.weight * 5  # mmol/L
-                NaHCO3_g = NaHCO3_mmol / 1000 * abg.M_NaHCO3  # gram
-                NaHCO3_g_24h = NaHCO3_mmol_24h / 1000 * abg.M_NaHCO3
-                # Курек 273, Рябов 73 for children and adult
-                info += f"  * NaHCO₃ {NaHCO3_mmol:.0f} mmol (-0.3*SBE/kg) during 30-60 min, daily dose {NaHCO3_mmol_24h:.0f} mmol/24h (5 mmol/kg/24h):\n"
-                # info += "  * NaHCO₃ {:.0f} mmol (-(SBE - 8)/kg/4)\n".format(
-                #     -(self.sbe - 8) * self.parent.weight / 4, NaHCO3_mmol_24h)  # Плохой 152
-                for dilution in (4, 8.4):
-                    NaHCO3_ml = NaHCO3_g / dilution * 100
-                    NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
-                    info += f"    * NaHCO3 {dilution:.1f}% {NaHCO3_ml:.0f} ml, daily dose {NaHCO3_ml_24h:.0f} ml/24h\n"
-                if self.human_body.debug:
-                    info += textwrap.dedent(
-                        """\
-                        Confirmed NaHCO₃ use cases:
-                          * Metabolic acidosis correction leads to decreased 28 day mortality only in AKI patients (target pH 7.3) [BICAR-ICU 2018]
-                          * TCA poisoning with prolonged QT interval (target pH 7.45-7.55 [Костюченко 204])
-                          * In hyperkalemia (when pH increases, K⁺ level decreases)
-                        Main concepts of usage:
-                          * Must hyperventilate to make use of bicarbonate buffer
-                          * Control ABG after each NaHCO₃ infusion or every 4 hours
-                          * Target urine pH 8, serum 7.34 [ПосДеж, с 379]"""
-                    )
-            else:
-                info += f"SBE is low {self.sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {NaHCO3_threshold:.0f} mEq/L"
-        else:
-            info += f"SBE is ok {self.sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
-        return info
-
-    def describe_electrolytes(self):
-        if None in (
-            self.human_body.weight,
-            self.cK,
-            self.cNa,
-            self.cCl,
-            self.cGlu,
-        ):
-            return ""
-        info = [
-            "-- Electrolyte and osmolar abnormalities -----------",
-            self.describe_osmolarity(),
-            electrolyte_K(self.human_body.weight, self.cK),
-            electrolyte_Na(
-                self.human_body.weight, self.cNa, self.cGlu, self.human_body.debug
-            ),
-            electrolyte_Cl(self.cCl),
-        ]
-
-        return "\n".join(info) + "\n"
-
-    def describe_glucose(self):
-        """Assess glucose level.
-
-        https://en.wikipedia.org/wiki/Renal_threshold
-        https://en.wikipedia.org/wiki/Glycosuria
-        """
-        info = ""
-        if self.human_body.weight is None or self.cGlu is None:
-            return info
-        if self.cGlu > abg.norm_cGlu[1]:
-            if self.cGlu <= abg.norm_cGlu_target[1]:
-                info += f"cGlu is above ideal {self.cGlu:.1f} (target {abg.norm_cGlu_target[0]:.1f}-{abg.norm_cGlu_target[1]:.1f} mmol/L), but acceptable"
-            else:
-                info += f"Hyperglycemia {self.cGlu:.1f} (target {abg.norm_cGlu_target[0]:.1f}-{abg.norm_cGlu_target[1]:.1f} mmol/L) causes glycosuria with osmotic diuresis"
-                if self.cGlu <= 20:  # Arbitrary threshold
-                    info += f", consider insulin {insulin_by_glucose(self.cGlu):.0f} IU subcut for adult"
-                else:
-                    info += f", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {self.human_body.weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
-
-        elif self.cGlu < abg.norm_cGlu[0]:
-            if self.cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
-                info += f"cGlu is below ideal {self.cGlu:.1f} (target {abg.norm_cGlu_target[0]:.1f}-{abg.norm_cGlu_target[1]:.1f} mmol/L), repeat blood work, don't miss hypoglycemic state"
-            else:
-                info += "Severe hypoglycemia, IMMEDIATELY INJECT BOLUS GLUCOSE 10 % 2.5 mL/kg:\n"
-                # https://litfl.com/glucose/
-                # For all ages: dextrose 10% bolus 2.5 mL/kg (0.25 g/kg) [mistake Курек, с 302]
-                info += solution_glucose(
-                    0.25 * self.human_body.weight,
-                    self.human_body.weight,
-                    add_insuline=False,
-                )
-                # High lactate + refractory low cGlu marks liver failure: expect death in 24-48 hours
-                info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory. In case of sepsis, liver failure may be the cause."
-
-        else:
-            info += f"cGlu is ok {self.cGlu:.1f} ({abg.norm_cGlu[0]:.1f}-{abg.norm_cGlu[1]:.1f} mmol/L)"
-        return info
-
-    def describe_albumin(self):
-        """Albumin as nutrition marker in adults."""
-        if self.ctAlb is None:
-            return ""
-        ctalb_range = (
-            f"{self.ctAlb:0.1f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/dL)"
-        )
-        if abg.norm_ctAlb[1] < self.ctAlb:
-            info = f"ctAlb is high {ctalb_range}. Dehydration?"
-        elif abg.norm_ctAlb[0] <= self.ctAlb <= abg.norm_ctAlb[1]:
-            info = f"ctAlb is ok {ctalb_range}"
-        elif 3 <= self.ctAlb < abg.norm_ctAlb[0]:
-            info = f"ctAlb is low: mild hypoalbuminemia {ctalb_range}"
-        elif 2.5 <= self.ctAlb < 3:
-            info = f"ctAlb is low: medium hypoalbuminemia {ctalb_range}"
-        elif self.ctAlb < 2.5:
-            info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
-        return info
-
-    def describe_Hb(self):
-        """Describe Hb and hct_calc.
-
-        References
-        ----------
-        [1] https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
-        [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
-        """
-        info = ""
-        if (
-            self.human_body.weight is None
-            or self.human_body.sex is None
-            or self.ctHb is None
-        ):
-            return info
-        # Top hct value for free water deficit calculation.
-        if self.human_body.sex == HumanSex.male:
-            hb_norm = abg.hb_norm_male
-            hct_norm = abg.hct_norm_male
-        elif self.human_body.sex == HumanSex.female:
-            hb_norm = abg.hb_norm_female
-            hct_norm = abg.hct_norm_female
-        elif self.human_body.sex == HumanSex.child:
-            hb_norm = abg.hb_norm_child
-            hct_norm = abg.hct_norm_child
-        hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
-        vol_def = volume_deficit_hct(self.human_body.weight, self.hct_calc, hct_target)
-
-        desc_hb = f"{self.ctHb:.1f} ({hb_norm[0]:.1f}-{hb_norm[1]:.1f} g/dl)"
-        desc_hct = f"{self.hct_calc:.3f} ({hct_norm[0]:.3f}-{hct_norm[1]:.3f})"
-        info = ""
-        if self.ctHb < 7:  # Generic threshold
-            info += f"Hb is low {desc_hb}, consider transfusion. "
-        else:
-            info += f"Hb {desc_hb}. "
-
-        if self.hct_calc > hct_norm[1]:
-            info += f"Hct is high {desc_hct}"
-        elif self.hct_calc < hct_norm[0]:
-            info += f"Hct is low {desc_hct}"
-        else:
-            info += f"Hct is ok {desc_hct}"
-
-        if self.hct_calc > hct_target + 0.01:  # Age-independent threshold
-            info += f", free water deficit {vol_def:.0f} ml (limitations: valid if no anemia, osmolarity and Na⁺ are more specific)."
-
-        if self.human_body.sex == HumanSex.child:
-            info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
-        return info
-
-    def describe_all(self) -> str:
-        info = ""
-        info += "Basic ABG assessment\n"
-        info += "====================\n"
-        info += "{}\n".format(self.describe_abg())
-        info += "{}\n\n\n".format(self.describe_sbe())
-
-        info += "Complex electrolyte assessment\n"
-        info += "==============================\n"
-        info += "{}\n\n".format(self.describe_anion_gap())
-        info += "{}\n".format(self.describe_electrolytes())
-
-        info += "{}\n\n".format(self.describe_glucose())
-        info += "{}\n\n".format(self.describe_albumin())
-        info += "{}\n".format(self.describe_Hb())
-        return info
+###
 
 
 def solution_glucose(

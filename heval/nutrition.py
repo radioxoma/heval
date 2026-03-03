@@ -368,10 +368,10 @@ class NutritionFormula:
 
     def dose_max_ml(self):
         """Maximal recommended by manufacturer dose per 24 hours."""
-        if self.human_body.body_sex in (common.HumanSex.male, common.HumanSex.female):
+        if self.human_body.body_sex in (common.HumanSex.MALE, common.HumanSex.FEMALE):
             # 2-5 years and adults
             daily_volume = 40  # Top ml/kg/24h, same as 40 kcal/kg/24h
-        elif self.human_body.body_sex == common.HumanSex.child:
+        elif self.human_body.body_sex == common.HumanSex.CHILD:
             # 5-14 years
             daily_volume = 25  # Top ml/kg/24h
         return self.human_body.body_weight * daily_volume

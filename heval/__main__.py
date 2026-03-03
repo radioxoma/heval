@@ -505,7 +505,7 @@ class MainWindow(ttk.Frame):
                 font_obj["size"] = 9
 
     def set_model_sex(self, event=None):
-        self.HBody.body_sex = common.HumanSex[self.var_sex.get().lower()]
+        self.HBody.body_sex = common.HumanSex[self.var_sex.get().upper()]
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
@@ -1208,7 +1208,7 @@ class CalcGFR(ttk.Frame):
         cCrea = float(self.ctl_sbx_ccrea.get())
         cCrea_mgdl = cCrea / abg.M_Crea
         info = ""
-        if sex in (common.HumanSex.male, common.HumanSex.female):
+        if sex in (common.HumanSex.MALE, common.HumanSex.FEMALE):
             age = self.human_model.body_age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = self.var_isblack.get() == 1
@@ -1222,7 +1222,7 @@ class CalcGFR(ttk.Frame):
 
             Conclusion: {human.gfr_describe(epi)}
             """
-        elif sex == common.HumanSex.child:
+        elif sex == common.HumanSex.CHILD:
             schwartz = human.egfr_schwartz(cCrea, self.human_model.body_height)
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL

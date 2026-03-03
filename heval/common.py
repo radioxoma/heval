@@ -12,12 +12,12 @@ class HumanSex(enum.IntEnum):
     Male/female integers comply EMIAS database and belarusian sick leave documents.
     """
 
-    male = 1
-    female = 2
-    child = 3  # For <12 years old
+    MALE = 1
+    FEMALE = 2
+    CHILD = 3  # For <12 years old
 
 
-class FlagSeverity(enum.Enum):
+class FlagSeverity(enum.IntEnum):
     """Severity color codes.
 
     https://en.wikipedia.org/wiki/Triage_tag
@@ -25,7 +25,7 @@ class FlagSeverity(enum.Enum):
     """
 
     # Numbers according to METTAG
-    BLACK = 0  # Do not resuscitate, immediate death,
+    BLACK = 0  # Do not resuscitate, immediate death
     RED = 1  # Life-threatening
     YELLOW = 2  # Non-life-threatening
     GREEN = 3  # No color highlight
@@ -47,7 +47,7 @@ class Flag:
         )
     """
 
-    reason: str
+    reason: str  # Unique, used as dict key
     severity: FlagSeverity = FlagSeverity.GREEN
     description: str = ""
     solution: str = ""
@@ -61,12 +61,12 @@ class Flag:
         style = list()
 
         if self.severity == FlagSeverity.BLACK:
-            style.append("color:white")
-            style.append("background-color:black")
+            style.append("color:white;")
+            style.append("background-color:black;")
         elif self.severity == FlagSeverity.RED:
-            style.append("color:red")
+            style.append("color:red;")
         elif self.severity == FlagSeverity.YELLOW:
-            style.append("background-color:yellow")
+            style.append("background-color:lightyellow;")
         elif self.severity == FlagSeverity.GREEN:
             pass  # No color highlight
         else:
@@ -74,13 +74,21 @@ class Flag:
         return f"""<span style="{";".join(style)}">{self.reason}</span>: {self.description} {self.solution}"""
 
 
-def render_flags(flags: list[Flag]) -> str:
-    """Render flags in triage order."""
-    if flags:
-        items = list()
-        for flag in sorted(flags, key=operator.attrgetter("severity")):
-            items.append(flag.html)
-        text = "</li>\n<li>".join(items)
-        return f"<ul>\n<li>{text}</li>\n</ul>"
-    else:
-        return ""
+class FlagWarnings:
+    """Autodiscovered clinical data that should be considered."""
+
+    def __init__(self):
+        self._flags: dict[str, Flag] = dict()
+
+    def add(self, flag: Flag):
+        self._flags[flag.reason] = flag
+
+    def render(self) -> str:
+        """Render flags in triage order."""
+        if self._flags:
+            items = list()
+            for f in sorted(self._flags.values(), key=operator.attrgetter("severity")):
+                items.append(f.html)
+            return "Flags:<ul><li>" + "</li><li>".join(items) + "</li></ul>"
+        else:
+            return ""

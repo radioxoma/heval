@@ -12,7 +12,7 @@ import textwrap
 import warnings
 from dataclasses import dataclass
 
-from heval import abg, nutrition
+from heval import abg, nutrition, common
 from heval.common import HumanSex
 
 
@@ -21,7 +21,7 @@ from heval.common import HumanSex
 male_generic_by = {
     "height": 1.77,
     "weight": 69.0,
-    "sex": HumanSex.male,
+    "sex": HumanSex.MALE,
     "body_temp": 36.6,
 }
 
@@ -29,32 +29,32 @@ male_generic_by = {
 female_generic_by = {
     "height": 1.65,
     "weight": 56.0,
-    "sex": HumanSex.female,
+    "sex": HumanSex.FEMALE,
     "body_temp": 36.6,
 }
 
 female_overweight_by = {
     "height": 1.62,
     "weight": 72.0,
-    "sex": HumanSex.female,
+    "sex": HumanSex.FEMALE,
     "body_temp": 36.6,
 }
 
 male_thin = {  # Me
     "height": 1.86,
     "weight": 55.0,
-    "sex": HumanSex.male,
+    "sex": HumanSex.MALE,
     "body_temp": 36.6,
 }
 
 child = {  # 3 year old kid
     "height": 0.95,
     "weight": 16.5,
-    "sex": HumanSex.child,
+    "sex": HumanSex.CHILD,
     "body_temp": 36.6,
 }
 
-newborn = {"height": 0.5, "weight": 3.6, "sex": HumanSex.child, "body_temp": 36.6}
+newborn = {"height": 0.5, "weight": 3.6, "sex": HumanSex.CHILD, "body_temp": 36.6}
 
 
 class FloatAttr:
@@ -119,7 +119,7 @@ class HumanModel:
         self._weight: float | None = None
         self._use_ibw: bool = False
         self._weight_ideal_method: str = ""
-        self.comment = dict()  # For warnings
+        self.flags = common.FlagWarnings()
         self.nutrition = nutrition.HumanNutritionModel(self)
 
     @property
@@ -197,7 +197,7 @@ class HumanModel:
         """
         # IBW estimation formulas cover not all ranges. This flag helps prevent
         # misuse of explicitly invalid IBW e.g. in respiratory calculations
-        if self.body_sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             self._weight_ideal_method = "Hamilton"
             return ibw_hamilton(self.body_sex, self.body_height)
 
@@ -305,7 +305,7 @@ class HumanModel:
     def _info_in_body(self) -> str:
         info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.0f}:"
         info += f" IBW {self.body_weight_ideal:.1f} kg [{self._weight_ideal_method}],"
-        if self.body_sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += f" BMI {self.body_bmi:.1f} ({bmi_describe(self.body_bmi)}),"
         else:
             # Adult normal ranges cannot be applied to children
@@ -320,7 +320,7 @@ class HumanModel:
         )
         info += f"Transfusion of one pRBC dose will increase Hb by {estimate_prbc_transfusion_response(self.body_weight):+.2f} g/dL."
 
-        if self.body_sex == HumanSex.child:
+        if self.body_sex == HumanSex.CHILD:
             try:
                 br_code, br_age, br_weight = get_broselow_code(self.body_height)
                 info += f"\nBROSELOW TAPE: {br_code.upper()}, {br_age.lower()}, ~{br_weight:.1f} kg.\n"
@@ -431,7 +431,7 @@ class HumanModel:
     def _info_in_fluids(self) -> str:
         # Normal physiologic demand
         info = ""
-        if self.body_sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += " * RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
                 30 * self.body_weight, 35 * self.body_weight
             )
@@ -465,7 +465,7 @@ class HumanModel:
     def _info_in_food(self) -> str:
         """Daily electrolytes demand."""
         info = ""
-        if self.body_sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += "Daily nutrition requirements for adults [ПосДеж]:\n"
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(
                 1.2 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
@@ -554,7 +554,7 @@ class HumanModel:
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
         """
         info = ""
-        if self.body_sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
             if self.body_age:
                 info += "Resting energy expenditure for healthy adults:\n"
@@ -588,7 +588,7 @@ class HumanModel:
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
         """
         info = ""
-        if self.body_sex in (HumanSex.male, HumanSex.female):
+        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += "RBW adult urinary output:\n"
             info += (
                 " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(
@@ -598,7 +598,7 @@ class HumanModel:
             info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(
                 self.body_weight, self.body_weight * 24
             )
-        if self.body_sex == HumanSex.child:
+        if self.body_sex == HumanSex.CHILD:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
             info += "RBW child urinary output:\n"
             info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(
@@ -903,13 +903,13 @@ class HumanModel:
         ):
             return info
         # Top hct value for free water deficit calculation.
-        if self.body_sex == HumanSex.male:
+        if self.body_sex == HumanSex.MALE:
             hb_norm = abg.hb_norm_male
             hct_norm = abg.hct_norm_male
-        elif self.body_sex == HumanSex.female:
+        elif self.body_sex == HumanSex.FEMALE:
             hb_norm = abg.hb_norm_female
             hct_norm = abg.hct_norm_female
-        elif self.body_sex == HumanSex.child:
+        elif self.body_sex == HumanSex.CHILD:
             hb_norm = abg.hb_norm_child
             hct_norm = abg.hct_norm_child
         hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
@@ -924,6 +924,13 @@ class HumanModel:
         info = ""
         if self.blood_abg_ctHb < 7:  # Generic threshold
             info += f"Hb is low {desc_hb}, consider transfusion. "
+            self.flags.add(
+                common.Flag(
+                    reason="Low Hb",
+                    severity=common.FlagSeverity.RED,
+                    description=f"Hb is low {desc_hb}, consider transfusion.",
+                )
+            )
         else:
             info += f"Hb {desc_hb}. "
 
@@ -937,7 +944,7 @@ class HumanModel:
         if self.blood_abg_hct_calc > hct_target + 0.01:  # Age-independent threshold
             info += f", free water deficit {vol_def:.0f} ml (limitations: valid if no anemia, osmolarity and Na⁺ are more specific)."
 
-        if self.body_sex == HumanSex.child:
+        if self.body_sex == HumanSex.CHILD:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 
@@ -957,8 +964,6 @@ class HumanModel:
         # Estimate also CO2 production?
         info += "\n-- Diuresis ------------------------------------\n"
         info += f"{self._info_out_fluids()}\n"
-        if self.comment:
-            info += f"\nComments:\n{self.comment}\n"
         return info
 
     def describe_blood_abg(self) -> str:
@@ -976,6 +981,8 @@ class HumanModel:
         info += "{}\n\n".format(self.describe_glucose())
         info += "{}\n\n".format(self.describe_albumin())
         info += "{}\n".format(self.describe_hb())
+        if self.flags:
+            info += f"\n{self.flags.render()}\n"
         return info
 
 
@@ -1194,13 +1201,13 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
                 Female           IBW = 0.9049 * height - 92.006
 
     Examples:
-        >>> ibw_hamilton(HumanSex.male, 0.6)
+        >>> ibw_hamilton(HumanSex.MALE, 0.6)
         6.75
-        >>> ibw_hamilton(HumanSex.male, 1.0)
+        >>> ibw_hamilton(HumanSex.MALE, 1.0)
         15.440000000000001
-        >>> ibw_hamilton(HumanSex.male, 1.5)
+        >>> ibw_hamilton(HumanSex.MALE, 1.5)
         48.163
-        >>> ibw_hamilton(HumanSex.female, 1.5)
+        >>> ibw_hamilton(HumanSex.FEMALE, 1.5)
         43.72900000000001
 
     Args:
@@ -1220,11 +1227,11 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
     else:  # height >= 129:  # This switch fits only for males. Notch for females
         # Looks like Devine formula from ARDSNET
         # Devine BJ.Gentamicin therapy.Drug Intell Clin Pharm. 1974;8: 650–655.
-        if sex == HumanSex.male:
+        if sex == HumanSex.MALE:
             # 50 + 0.91 * (height - 152.4)  # ARDSNET formula
             # Adult male, negative value with height <97 cm
             return 0.9079 * height - 88.022
-        elif sex == HumanSex.female:
+        elif sex == HumanSex.FEMALE:
             # 45.5 + 0.91 * (height - 152.4)  # ARDSNET formula
             # Adult female, negative value with height <101 cm
             return 0.9049 * height - 92.006
@@ -1247,9 +1254,9 @@ def ree_harris_benedict_revised(
 
     Examples
     --------
-    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.male, 55)
+    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.MALE, 55)
     1372.7820000000002
-    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.female, 55)
+    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.FEMALE, 55)
     1275.4799999999998
 
     :param float height: Height, meters
@@ -1259,9 +1266,9 @@ def ree_harris_benedict_revised(
     :return: Resting energy expenditure, kcal/24h
     :rtype: float
     """
-    if sex == HumanSex.male:
+    if sex == HumanSex.MALE:
         return 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
-    elif sex == HumanSex.female:
+    elif sex == HumanSex.FEMALE:
         return 9.247 * weight + 3.098 * height * 100 - 4.330 * age + 447.593
     else:
         raise ValueError(
@@ -1285,9 +1292,9 @@ def ree_mifflin(height: float, weight: float, sex: HumanSex, age: float) -> floa
 
     Examples
     --------
-    >>> ree_mifflin(1.68, 59, HumanSex.male, 55)
+    >>> ree_mifflin(1.68, 59, HumanSex.MALE, 55)
     1373.81
-    >>> ree_mifflin(1.68, 59, HumanSex.female, 55)
+    >>> ree_mifflin(1.68, 59, HumanSex.FEMALE, 55)
     1207.81
 
     :param float height: Height, meters
@@ -1301,11 +1308,11 @@ def ree_mifflin(height: float, weight: float, sex: HumanSex, age: float) -> floa
     """
     # ree = 10 * weight + 6.25 * height * 100 - 5 * age  # Simplifyed
     ree = 9.99 * weight + 6.25 * height * 100 - 4.92 * age  # From paper
-    if sex == HumanSex.male:
+    if sex == HumanSex.MALE:
         ree += 5
-    elif sex == HumanSex.female:
+    elif sex == HumanSex.FEMALE:
         ree -= 161
-    elif sex == HumanSex.child:
+    elif sex == HumanSex.CHILD:
         raise ValueError("Mufflin REE calculation for children not supported")
     return ree
 
@@ -1488,9 +1495,9 @@ def total_blood_volume_nadler(sex: HumanSex, height: float, weight: float) -> fl
         Total blood volume, ml
     """
     # Same as http://apheresisnurses.org/apheresis-calculators
-    if sex == HumanSex.male:
+    if sex == HumanSex.MALE:
         return ((0.3669 * height**3) + (0.03219 * weight) + 0.6041) * 1000
-    elif sex == HumanSex.female:
+    elif sex == HumanSex.FEMALE:
         return ((0.3561 * height**3) + (0.03308 * weight) + 0.1833) * 1000
     else:
         raise ValueError("Nadler formula isn't applicable to children")
@@ -2225,9 +2232,9 @@ def egfr_mdrd(
     Examples
     --------
     >>> from heval import common
-    >>> egfr_mdrd(common.HumanSex.male, 74.4, 27)
+    >>> egfr_mdrd(common.HumanSex.MALE, 74.4, 27)
     109.36590492087734
-    >>> egfr_mdrd(common.HumanSex.female, 100, 80, True)
+    >>> egfr_mdrd(common.HumanSex.FEMALE, 100, 80, True)
     55.98942027449337
 
     Args:
@@ -2246,9 +2253,9 @@ def egfr_mdrd(
     # creatinine assays over isotope dilution mass spectrometry (IDMS) SRM 967.
     # Equation being used by Radiometer devices
     egfr = 175 * (cCrea / abg.M_Crea) ** -1.154 * age**-0.203
-    if sex == HumanSex.female:
+    if sex == HumanSex.FEMALE:
         egfr *= 0.742
-    elif sex == HumanSex.child:
+    elif sex == HumanSex.CHILD:
         raise ValueError("MDRD eGFR for children not supported")
     if black_skin:
         egfr *= 1.210
@@ -2280,17 +2287,17 @@ def egfr_ckd_epi(
         eGFR, mL/min/1.73 m2
     """
     cCrea /= abg.M_Crea  # to mg/dl
-    if sex == HumanSex.male:
+    if sex == HumanSex.MALE:
         if cCrea <= 0.9:
             egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993**age
         else:
             egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993**age
-    elif sex == HumanSex.female:
+    elif sex == HumanSex.FEMALE:
         if cCrea <= 0.7:
             egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993**age * 1.018
         else:
             egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993**age * 1.018
-    elif sex == HumanSex.child:
+    elif sex == HumanSex.CHILD:
         raise ValueError("CKD-EPI eGFR for children not supported")
 
     if black_skin:

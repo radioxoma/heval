@@ -227,7 +227,7 @@ class Pipecuronium:
 
     def __str__(self):
         info = ""
-        if self.human_body.body_sex in (common.HumanSex.male, common.HumanSex.female):
+        if self.human_body.body_sex in (common.HumanSex.MALE, common.HumanSex.FEMALE):
             info += "{} adult mono intubation {:.2f}-{:.2f} mg for 60-90 min; load after Sux {:.2f} mg for 30-60 min. Maintenance {:.2f}-{:.2f} mg every 30-60 min.".format(
                 self.name,
                 0.06 * self.human_body.body_weight,
@@ -236,7 +236,7 @@ class Pipecuronium:
                 0.01 * self.human_body.body_weight,
                 0.02 * self.human_body.body_weight,
             )
-        elif self.human_body.body_sex == common.HumanSex.child:
+        elif self.human_body.body_sex == common.HumanSex.CHILD:
             info += "{} child 3-12 mos {:.2f} mg (10-44 min), 1-14 yo {:.2f}-{:.2f} mg (18-52 min).".format(
                 self.name,
                 0.04 * self.human_body.body_weight,

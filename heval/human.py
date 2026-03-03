@@ -96,16 +96,16 @@ class HumanModel:
     blood_abg_cNa = FloatAttr()  # mmol/L
     blood_abg_cCl = FloatAttr()  # mmol/L
 
-    blood_abg_ctHb = FloatAttr()  # g/dl, haemoglobin
     blood_abg_cGlu = FloatAttr()  # mmol/L
     blood_abg_ctAlb = FloatAttr()  # g/dL albumin
     blood_abg_cCrea = FloatAttr()
-    blood_abg_ctBun = FloatAttr()  # May be for osmolarity in future
 
     blood_bchem_ctBil = FloatAttr()
     blood_bchem_ctBil_indirect = FloatAttr()
 
+    blood_abg_ctHb = FloatAttr()  # g/dl, haemoglobin
     blood_cbc_hb = FloatAttr()
+
     blood_cbc_plt = FloatAttr()
     blood_cbc_mcv = FloatAttr()
     blood_cbc_ret_fraq = FloatAttr()
@@ -948,6 +948,15 @@ class HumanModel:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 
+    def flag_anemia_type(self):
+        info = ""
+        if self.blood_cbc_hb is not None and self.blood_cbc_mcv is not None:
+            info += check_anemia(
+                hb=self.blood_cbc_hb,
+                mcv=self.blood_cbc_mcv,
+            )
+        return info
+
     def describe_body(self) -> str:
         info = ""
         if not self.is_init():
@@ -981,6 +990,11 @@ class HumanModel:
         info += "{}\n\n".format(self.describe_glucose())
         info += "{}\n\n".format(self.describe_albumin())
         info += "{}\n".format(self.describe_hb())
+
+        self.flags.add(
+            common.Flag(reason="Anemia type", description=self.flag_anemia_type())
+        )
+
         if self.flags:
             info += f"\n{self.flags.render()}\n"
         return info

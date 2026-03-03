@@ -1021,6 +1021,52 @@ class HumanModel:
                 """
         return msg
 
+    def flag_dic(self) -> str:
+        """Flag >=5 ISTH disseminated intravascular coagulation score.
+
+        Value >=5 means high probability of DIC.
+        Not requires all lab data to be available.
+
+        Ranges are ambiguous
+        INR     0 < 1.3 <= 1 <= 1.7 < 2   # Fraction
+        Fib     1 < 1 <= 0                # g/L
+        D-dimer 0 < 400 <= 2 <= 4000 < 3  # ng/ml
+        PLT     2 < 50 <= 1 <= 100 < 0    # 10^9/L
+
+        References
+        ----------
+        https://doi.org/10.1111/jth.12155
+        https://pubmed.ncbi.nlm.nih.gov/27708553/
+        https://www.mdcalc.com/calc/10203/isth-criteria-disseminated-intravascular-coagulation-dic
+        """
+        score = 0
+        if self.blood_cbc_plt is not None:
+            if 50 <= self.blood_cbc_plt <= 100:  # 10^9/L
+                score += 1
+            elif self.blood_cbc_plt < 50:
+                score += 2
+
+        if self.blood_coag_ddimer is not None:
+            if 400 <= self.blood_coag_ddimer <= 4000:  # ng/ml
+                score += 2
+            elif self.blood_coag_ddimer > 4000:
+                score += 3
+
+        if self.blood_coag_inr is not None:
+            if 1.3 <= self.blood_coag_inr <= 1.7:  # Fraction
+                score += 1
+            elif self.blood_coag_inr > 1.7:
+                score += 2
+
+        if self.blood_coag_fib is not None:
+            if self.blood_coag_fib < 1:  # g/L
+                score += 1
+
+        if score >= 5:
+            return f"""Probable <abbr title="Disseminated intravascular coagulation: consider blood components and coagulation factors replacement">DIC syndrome</abbr> ({score} <abbr title="International Society on Thrombosis and Haemostasis">ISTH</abbr> points)"""
+        else:
+            return ""
+
     def describe_body(self) -> str:
         info = ""
         if not self.is_init():
@@ -1076,6 +1122,12 @@ class HumanModel:
             common.Flag(
                 reason="High INR",
                 description=self.flag_inr(),
+            )
+        )
+        self.flags.add(
+            common.Flag(
+                reason="DIC probability",
+                description=self.flag_dic(),
             )
         )
 

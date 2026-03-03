@@ -948,6 +948,22 @@ class HumanModel:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 
+    def flag_hb(self) -> str:
+        """Flag low hemoglobin, calculate required pRBC replacement.
+
+        Chronic anemia with Hb <30 g/L causes syncope.
+        """
+        if self.body_weight is not None and self.blood_cbc_hb is not None:
+            if self.blood_cbc_hb < 75:
+                prbc_volume = estimate_prbc_transfusion_volume(
+                    real_body_weight=self.body_weight, hb=self.blood_cbc_hb
+                )
+                msg = f"""<span style="color:red"><abbr title="Hemoglobin">Hb</abbr> {self.blood_cbc_hb:.0f} g/L:</span>"""
+                if self.blood_cbc_hb < 50:
+                    msg = f"""<strong>{msg}</strong>"""
+                return f"""{msg} {math.ceil(prbc_volume / 350)} units of <abbr title="Packed red blood cells">pRBC</abbr> ({prbc_volume:.0f} ml) is required to reach 75 g/L"""
+        return ""
+
     def flag_anemia_type(self):
         info = ""
         if self.blood_cbc_hb is not None and self.blood_cbc_mcv is not None:
@@ -990,7 +1006,13 @@ class HumanModel:
         info += "{}\n\n".format(self.describe_glucose())
         info += "{}\n\n".format(self.describe_albumin())
         info += "{}\n".format(self.describe_hb())
-
+        self.flags.add(
+            common.Flag(
+                reason="Low Hb",
+                description=self.flag_hb(),
+                severity=common.FlagSeverity.RED,
+            )
+        )
         self.flags.add(
             common.Flag(reason="Anemia type", description=self.flag_anemia_type())
         )

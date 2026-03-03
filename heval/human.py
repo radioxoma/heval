@@ -100,7 +100,7 @@ class HumanModel:
     blood_abg_ctAlb = FloatAttr()  # g/dL albumin
     blood_abg_cCrea = FloatAttr()
 
-    blood_bchem_ctBil = FloatAttr()
+    # blood_bchem_ctBil = FloatAttr()
     blood_bchem_ctBil_indirect = FloatAttr()
 
     blood_abg_ctHb = FloatAttr()  # g/dl, haemoglobin
@@ -297,10 +297,6 @@ class HumanModel:
     def blood_abg_hct_calc(self):
         """Haematocrit."""
         return abg.calculate_hct(self.blood_abg_ctHb * 10 / abg.M_Hb)
-
-    def is_init(self) -> bool:
-        """Is class got all necessary data for calculations."""
-        return None not in (self.body_height, self.body_sex)
 
     def _info_in_body(self) -> str:
         info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.0f}:"
@@ -680,6 +676,32 @@ class HumanModel:
                     self.blood_abg_pH, self.blood_abg_pCO2
                 )
         return info
+
+    def flag_abg(self) -> str:
+        warnings = list()
+        if self.blood_abg_pH is not None:
+            if self.blood_abg_pH < 7.15:
+                warnings.append(
+                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;7.15. Acidosis requires intervention. Check <abbr title="Arterial Blood Gas">ABG</abbr>.</span>"""
+                )
+
+        if self.blood_abg_cK is not None:
+            if self.blood_abg_cK > 7:
+                warnings.append(
+                    f"""<strong style="color:red;">cK {self.blood_abg_cK} mmol/L. Check for hyperkalemia ECG changes.</strong>"""
+                )
+            elif self.blood_abg_cK > 6:
+                warnings.append(
+                    f"""<span style="color:red;">cK {self.blood_abg_cK} mmol/L.</span>"""
+                )
+
+        if self.blood_abg_cGlu is not None:
+            if self.blood_abg_cGlu < 3.9:
+                warnings.append(
+                    f"""<span style="color:red;">Hypoglycemia: cGlu {self.blood_abg_cGlu} mmol/L.</span>"""
+                )
+
+        return " ".join(warnings)
 
     def describe_anion_gap(self):
         if None in (
@@ -1136,7 +1158,7 @@ class HumanModel:
 
     def describe_body(self) -> str:
         info = ""
-        if not self.is_init():
+        if self.body_height is None or self.body_sex is None:
             return "Empty human model (set sex, height, weight)"
         info += "{}\n".format(self._info_in_body())
         info += "\n-- Respiration ---------------------------------\n"
@@ -1153,7 +1175,8 @@ class HumanModel:
         return info
 
     def describe_blood_abg(self) -> str:
-        info = ""
+        self.init()
+        info = self.flags.render()
         info += "Basic ABG assessment\n"
         info += "====================\n"
         info += "{}\n".format(self.describe_abg())
@@ -1167,6 +1190,10 @@ class HumanModel:
         info += "{}\n\n".format(self.describe_glucose())
         info += "{}\n\n".format(self.describe_albumin())
         info += "{}\n".format(self.describe_hb())
+        return info
+
+    def init(self):
+        """Run after model population."""
         self.flags.add(
             common.Flag(
                 reason="Low Hb",
@@ -1203,10 +1230,13 @@ class HumanModel:
                 description=self.flag_ttp(),
             )
         )
-
-        if self.flags:
-            info += f"\n{self.flags.render()}\n"
-        return info
+        self.flags.add(
+            common.Flag(
+                reason="ABG",
+                description=self.flag_abg(),
+                severity=common.FlagSeverity.RED,
+            )
+        )
 
 
 def body_mass_index(height: float, weight: float) -> float:

@@ -85,11 +85,10 @@ class FlagWarnings:
 
     def render(self) -> str:
         """Render flags in triage order."""
-        if self._flags:
-            items = list()
-            for f in sorted(self._flags.values(), key=operator.attrgetter("severity")):
-                if f.description:  # Not empty
-                    items.append(f.html)
-            return "Flags:<ul><li>" + "</li><li>".join(items) + "</li></ul>"
-        else:
-            return ""
+        items = list()
+        for f in sorted(self._flags.values(), key=operator.attrgetter("severity")):
+            if f.description:  # Not empty
+                items.append(f.html)
+        if items:
+            return "<ul><li>" + "</li><li>".join(items) + "</li></ul>"
+        return ""

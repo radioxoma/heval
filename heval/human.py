@@ -1067,6 +1067,73 @@ class HumanModel:
         else:
             return ""
 
+    def flag_ttp(self) -> str:
+        """Predict ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
+
+        * Applicable to adults
+        * Only for population with thrombocytopenia
+
+        Returns:
+            PLASMIC score, ADAMTS13 deficiency probability,
+            therapeutic plasma exchange suggestion.
+
+        References
+        ----------
+        Bendapudi 2017. Derivation and external validation of the PLASMIC score for rapid assessment of adults with thrombotic microangiopathies: a cohort study
+            https://www.ncbi.nlm.nih.gov/pubmed/28259520
+        https://www.mdcalc.com/calc/10200/plasmic-score-ttp#evidence
+        https://www.emdocs.net/emdocs-podcast-episode-45-thrombotic-thrombocytopenic-purpura/
+        """
+        score = 2  # Assuming no active malignancy; no transplant history
+        if self.blood_cbc_plt is not None:
+            # Valid only for thrombocytopenia and microangiopathic hemolytic anemia (schistocytes)
+            if self.blood_cbc_plt >= 150:
+                return ""
+            if self.blood_cbc_plt < 30:  # 10^9/L
+                score += 1
+
+        if self.blood_bchem_ctBil_indirect is not None:
+            if self.blood_bchem_ctBil_indirect > 34.2:  # umol/L
+                score += 1
+
+        hemolysis = False
+        if self.blood_cbc_ret_fraq is not None:
+            if self.blood_cbc_ret_fraq > 2.5:  # Фракция незрелых ретикулоцитов, %
+                hemolysis = True
+        if self.blood_cbc_mcv is not None:
+            if self.blood_cbc_mcv < 90:  # fl
+                hemolysis = True
+        # Reticulocyte count >2.5%, haptoglobin undetectable (<30 mg/dL), or indirect bilirubin >2.0 mg/dL (34.2 µmol/L)
+        if hemolysis:
+            score += 1
+
+        if self.blood_coag_inr is not None:
+            if self.blood_coag_inr < 1.5:
+                score += 1
+
+        if self.blood_abg_cCrea is not None:
+            if self.blood_abg_cCrea < 176.8:
+                score += 1
+
+        if score < 5:
+            return ""
+
+        tpl = f""" (<abbr title="Predicts ADAMTS13 deficiency if suspected thrombotic thrombocytopenic purpura">PLASMIC score for TTP</abbr>
+            <abbr title="Minus one point for active cancer;\nminus one point if history of solid-organ or stem cell transplant">&le;{score}</abbr>)"""
+        if score < 5:
+            # Consider alternative diagnoses
+            return "0 % ADAMTS13 deficiency probability" + tpl
+        elif score > 5:
+            return (
+                """72 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, start <abbr title="Therapeutic plasma exchange">TPE</abbr>, methylprednisolone 1 mg/kg/24h"""
+                + tpl
+            )
+        else:
+            return (
+                """6 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, consider <abbr title="Therapeutic plasma exchange">TPE</abbr>"""
+                + tpl
+            )
+
     def describe_body(self) -> str:
         info = ""
         if not self.is_init():
@@ -1128,6 +1195,12 @@ class HumanModel:
             common.Flag(
                 reason="DIC probability",
                 description=self.flag_dic(),
+            )
+        )
+        self.flags.add(
+            common.Flag(
+                reason="Trombocitopenic purpura",
+                description=self.flag_ttp(),
             )
         )
 

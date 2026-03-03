@@ -989,6 +989,38 @@ class HumanModel:
                 msg += f"""{plt_count} transfusion in the case of life-threatening bleeding (e.g. intracranial)"""
         return msg
 
+    def flag_fib(self):
+        """Flag low fibrinogen, suggest cryo replacement.
+
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10193588/
+            1 unit (40 mL) per 10 kg of body weight; this may raise the fibrinogen level by 50 mg/dL.
+            In most neonates, the administration of 5–10 mL/kg is sufficient.
+        """
+        msg = ""
+        if self.blood_coag_fib is not None:
+            if self.blood_coag_fib < 2:
+                # 1 unit each 5 kg if fib <1 g/L; 1 unit each 10 kg if fib 1-2 g/L
+                dose = ""
+                if self.body_weight is not None:
+                    fib_packs = (2 - self.blood_coag_fib) * 0.1 * self.body_weight
+                    dose = f"""<abbr title="1 unit per 5-10 kg RBW. Typically 10 units per transfusion">{fib_packs:.0f} units</abbr> of """
+                msg += f"""<abbr title="Fibrinogen">Fib</abbr> <abbr title="Target fibrinogen 1.5-2 g/L">{self.blood_coag_fib}</abbr> g/L: consider {dose}cryoprecipitate"""
+        return msg
+
+    def flag_inr(self):
+        """Flag high INR."""
+        msg = ""
+        if self.body_weight is not None and self.blood_coag_inr is not None:
+            if self.blood_coag_inr > 2:
+                ffp_volume = self.body_weight * 15  # 15 ml/kg
+                ffp_units = math.ceil(ffp_volume / 300)  # 300 ml per FFP unit
+                msg += f"""
+                <abbr title="International normalized ratio">INR</abbr>
+                <abbr title="Target ≤1.5 for surgery">{self.blood_coag_inr:0.2f}</abbr>: consider menadione,
+                <abbr title="Fresh frozen plasma">FFP</abbr> (<abbr title="{ffp_volume:.0f} ml (15 ml/kg)">{ffp_units} units</abbr>), protrombin concentrate in urgent cases for reversal
+                """
+        return msg
+
     def describe_body(self) -> str:
         info = ""
         if not self.is_init():
@@ -1033,6 +1065,19 @@ class HumanModel:
             common.Flag(reason="Anemia type", description=self.flag_anemia_type())
         )
         self.flags.add(common.Flag(reason="Low PLT", description=self.flag_plt()))
+        self.flags.add(
+            common.Flag(
+                reason="Low Fib",
+                description=self.flag_fib(),
+                severity=common.FlagSeverity.YELLOW,
+            )
+        )
+        self.flags.add(
+            common.Flag(
+                reason="High INR",
+                description=self.flag_inr(),
+            )
+        )
 
         if self.flags:
             info += f"\n{self.flags.render()}\n"

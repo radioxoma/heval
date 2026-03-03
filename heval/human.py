@@ -973,6 +973,22 @@ class HumanModel:
             )
         return info
 
+    def flag_plt(self):
+        """Flag low platelets."""
+        msg = ""
+        # Platelets 10^9/L
+        # >50 usually ok, <20 hemorrhagic syndrome
+        # PLT transfusion threshold https://www.ncbi.nlm.nih.gov/books/NBK560632/
+        if self.blood_cbc_plt is not None:
+            plt_count = f"""<abbr title="Platelets">PLT</abbr> {self.blood_cbc_plt:.0f}×10<sup>9</sup>/L:"""
+            if self.blood_cbc_plt < 10:
+                msg += f"{plt_count} transfusion is required to prevent spontaneous bleeding"
+            elif 10 <= self.blood_cbc_plt < 50:
+                msg += f"""{plt_count} transfusion is required before surgery, invasive manipulations (tunnel catheter insertion, <abbr title="Epidural anesthesia">EDA</abbr>)"""
+            elif 50 <= self.blood_cbc_plt < 100:
+                msg += f"""{plt_count} transfusion in the case of life-threatening bleeding (e.g. intracranial)"""
+        return msg
+
     def describe_body(self) -> str:
         info = ""
         if not self.is_init():
@@ -1016,6 +1032,7 @@ class HumanModel:
         self.flags.add(
             common.Flag(reason="Anemia type", description=self.flag_anemia_type())
         )
+        self.flags.add(common.Flag(reason="Low PLT", description=self.flag_plt()))
 
         if self.flags:
             info += f"\n{self.flags.render()}\n"

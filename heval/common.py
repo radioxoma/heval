@@ -75,7 +75,7 @@ class Flag:
 
 
 class FlagWarnings:
-    """Autodiscovered clinical data that should be considered."""
+    """Auto discovered clinical data that should be considered."""
 
     def __init__(self):
         self._flags: dict[str, Flag] = dict()
@@ -88,7 +88,8 @@ class FlagWarnings:
         if self._flags:
             items = list()
             for f in sorted(self._flags.values(), key=operator.attrgetter("severity")):
-                items.append(f.html)
+                if f.description:  # Not empty
+                    items.append(f.html)
             return "Flags:<ul><li>" + "</li><li>".join(items) + "</li></ul>"
         else:
             return ""

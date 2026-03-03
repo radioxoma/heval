@@ -57,6 +57,26 @@ child = {  # 3 year old kid
 newborn = {"height": 0.5, "weight": 3.6, "sex": HumanSex.child, "body_temp": 36.6}
 
 
+class FloatAttr:
+    """Descriptor to set attr from float or obj.float."""
+
+    def __init__(self, default: float | None = None):
+        self.default = default
+
+    def __set_name__(self, owner, name):
+        self.private_name = "_" + name
+
+    def __get__(self, obj, objtype=None) -> float | None:
+        return obj.__dict__.get(self.private_name, self.default)
+
+    def __set__(self, obj, value):
+        val = value
+        if hasattr(value, "float"):
+            val = value.float
+        if isinstance(val, float | int):
+            obj.__dict__[self.private_name] = float(val)
+
+
 @dataclass
 class HumanModel:
     """Must set 'sex' and 'height' to make it work. See `is_init()`.
@@ -66,21 +86,33 @@ class HumanModel:
 
     body_sex: HumanSex
     body_height: float  # Human height in meters
-    body_age: float | None = None  # Human age in years
-    body_temp: float = 36.6  # Celsius
+    body_age = FloatAttr()  # Human age in years
+    body_temp = FloatAttr(36.6)  # Celsius
 
     # Represents an human blood ABG status
-    blood_abg_pH: float | None = None
-    blood_abg_pCO2: float | None = None  # kPa
+    blood_abg_pH = FloatAttr()
+    blood_abg_pCO2 = FloatAttr()  # kPa
+    blood_abg_cK = FloatAttr()  # mmol/L
+    blood_abg_cNa = FloatAttr()  # mmol/L
+    blood_abg_cCl = FloatAttr()  # mmol/L
 
-    blood_abg_cK: float | None = None  # mmol/L
-    blood_abg_cNa: float | None = None  # mmol/L
-    blood_abg_cCl: float | None = None  # mmol/L
+    blood_abg_ctHb = FloatAttr()  # g/dl, haemoglobin
+    blood_abg_cGlu = FloatAttr()  # mmol/L
+    blood_abg_ctAlb = FloatAttr()  # g/dL albumin
+    blood_abg_cCrea = FloatAttr()
+    blood_abg_ctBun = FloatAttr()  # May be for osmolarity in future
 
-    blood_abg_ctAlb: float | None = None  # g/dL albumin
-    blood_abg_cGlu: float | None = None  # mmol/L
-    blood_abg_ctHb: float | None = None  # g/dl, haemoglobin
-    blood_abg_ctBun: float | None = None  # May be for osmolarity in future
+    blood_bchem_ctBil = FloatAttr()
+    blood_bchem_ctBil_indirect = FloatAttr()
+
+    blood_cbc_hb = FloatAttr()
+    blood_cbc_plt = FloatAttr()
+    blood_cbc_mcv = FloatAttr()
+    blood_cbc_ret_fraq = FloatAttr()
+
+    blood_coag_fib = FloatAttr()
+    blood_coag_inr = FloatAttr()
+    blood_coag_ddimer = FloatAttr()
 
     def __init__(self):
         self.debug = False
@@ -423,7 +455,7 @@ class HumanModel:
 
         # Перспирационные потери – 5-7 мл/кг/сут на каждый градус выше 37°С [Пособие дежуранта 2014, стр. 230]
         # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
-        if self.body_temp > 37:
+        if self.body_temp is not None and self.body_temp > 37:
             deg = self.body_temp - 37
             info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
                 5 * self.body_weight * deg, 7 * self.body_weight * deg

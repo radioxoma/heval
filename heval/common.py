@@ -17,7 +17,7 @@ class HumanSex(enum.IntEnum):
     child = 3  # For <12 years old
 
 
-class FlagSeverity(enum.IntEnum):
+class FlagSeverity(enum.Enum):
     """Severity color codes.
 
     https://en.wikipedia.org/wiki/Triage_tag
@@ -25,10 +25,10 @@ class FlagSeverity(enum.IntEnum):
     """
 
     # Numbers according to METTAG
-    black = 0  # Do not resuscitate, immediate death,
-    red = 1  # Life-threatening
-    yellow = 2  # Non-life-threatening
-    green = 3  # No color highlight
+    BLACK = 0  # Do not resuscitate, immediate death,
+    RED = 1  # Life-threatening
+    YELLOW = 2  # Non-life-threatening
+    GREEN = 3  # No color highlight
 
 
 @dataclass
@@ -40,7 +40,7 @@ class Flag:
 
         Flag(
             reason="Hypoglycemia",
-            severity=FlagSeverity.black,
+            severity=FlagSeverity.BLACK,
             description="cGlu < 1.5 mmol/L",
             solution="Bolus administration of intravenous glucose",
             action_required=True,
@@ -48,7 +48,7 @@ class Flag:
     """
 
     reason: str
-    severity: FlagSeverity = FlagSeverity.green
+    severity: FlagSeverity = FlagSeverity.GREEN
     description: str = ""
     solution: str = ""
     action_required: bool = False
@@ -60,17 +60,17 @@ class Flag:
     def html(self) -> str:
         style = list()
 
-        if self.severity == FlagSeverity.black:
+        if self.severity == FlagSeverity.BLACK:
             style.append("color:white")
             style.append("background-color:black")
-        elif self.severity == FlagSeverity.red:
+        elif self.severity == FlagSeverity.RED:
             style.append("color:red")
-        elif self.severity == FlagSeverity.yellow:
+        elif self.severity == FlagSeverity.YELLOW:
             style.append("background-color:yellow")
-        elif self.severity == FlagSeverity.green:
+        elif self.severity == FlagSeverity.GREEN:
             pass  # No color highlight
         else:
-            style.append("color:" + self.severity.name)
+            style.append("color:" + self.severity.name.lower())
         return f"""<span style="{";".join(style)}">{self.reason}</span>: {self.description} {self.solution}"""
 
 

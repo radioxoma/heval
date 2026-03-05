@@ -104,9 +104,9 @@ norm_ctAlb_mean = 4.4  # g/dL
 norm_ctAlb = (3.5, 5)  # g/dL
 
 # https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
-hb_norm_male = (13.5, 17.5)  # g/dl, 130-160 g/L
-hb_norm_female = (12.0, 15.5)  # g/dl, 120-140 g/L
-hb_norm_child = (11, 16)  # g/dl
+hb_norm_male = (135, 175)  # 130-160 g/L
+hb_norm_female = (120, 155)  # 120-140 g/L
+hb_norm_child = (110, 160)  # g/L
 
 # Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
 hct_norm_male = (0.407, 0.503)
@@ -490,8 +490,10 @@ def calculate_hct(ctHb: float) -> float:
             Haematocrit-is-a-derived-measurment-in-the-blood-gas-analyser.php
 
     Examples:
-        >>> calculate_hct(171 / 10 / 1.61140)
+        >>> calculate_hct(171 / 10 / 1.61140)  # g/dl
         0.5229766786645154
+        >>> calculate_hct(171 / M_Hb)  # g/L
+        0.5229766786645152
 
     Args:
         ctHb: Concentration of total hemoglobin in blood, mmol/L.

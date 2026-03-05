@@ -1022,14 +1022,14 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.bind("<KeyRelease>", self.set_model_ctAlb)
         self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
-        ttk.Label(fr_extra_entry, text="ctHb, g/dL").grid(row=4, column=0)
+        ttk.Label(fr_extra_entry, text="ctHb, g/L").grid(row=4, column=0)
         self.ctl_sbx_ctHb = SpinboxFloat(
             fr_extra_entry,
             width=4,
             from_=0,
-            to=50,
-            format="%.1f",
-            increment=0.1,
+            to=500,
+            format="%.0f",
+            increment=1,
             command=self.set_model_ctHb,
         )
         CreateToolTip(
@@ -1084,7 +1084,7 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.insert(0, str(abg.norm_ctAlb_mean))
         self.set_model_ctAlb()
         self.ctl_sbx_ctHb.delete(0, tk.END)
-        self.ctl_sbx_ctHb.insert(0, "14.0")  # g/dl, mean value for both sexes
+        self.ctl_sbx_ctHb.insert(0, "140")  # g/L, mean value for both sexes
         self.set_model_ctHb()
 
     def set_model_pH(self, event=None):
@@ -1116,7 +1116,7 @@ class CalcElectrolytes(ttk.Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctHb(self, event=None):
-        self.human_model.blood_abg_ctHb = float(self.ctl_sbx_ctHb.get())
+        self.human_model.blood_cbc_hb = float(self.ctl_sbx_ctHb.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):

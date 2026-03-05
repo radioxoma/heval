@@ -79,7 +79,7 @@ class FloatAttr:
 
 @dataclass
 class HumanModel:
-    """Must set 'sex' and 'height' to make it work. See `is_init()`.
+    """Must set 'sex' and 'height' to make it work.
 
     Note that 'use_ibw == False' by default.
     """
@@ -89,7 +89,6 @@ class HumanModel:
     body_age = FloatAttr()  # Human age in years
     body_temp = FloatAttr(36.6)  # Celsius
 
-    # Represents an human blood ABG status
     blood_abg_pH = FloatAttr()
     blood_abg_pCO2 = FloatAttr()  # kPa
     blood_abg_cK = FloatAttr()  # mmol/L
@@ -99,13 +98,11 @@ class HumanModel:
     blood_abg_cGlu = FloatAttr()  # mmol/L
     blood_abg_ctAlb = FloatAttr()  # g/dL albumin
     blood_abg_cCrea = FloatAttr()
-
     # blood_bchem_ctBil = FloatAttr()
     blood_bchem_ctBil_indirect = FloatAttr()
 
-    blood_abg_ctHb = FloatAttr()  # g/dl, haemoglobin
+    # blood_abg_ctHb = FloatAttr()  # g/L, haemoglobin, usage discouraged
     blood_cbc_hb = FloatAttr()
-
     blood_cbc_plt = FloatAttr()
     blood_cbc_mcv = FloatAttr()
     blood_cbc_ret_fraq = FloatAttr()
@@ -296,7 +293,7 @@ class HumanModel:
     @property
     def blood_abg_hct_calc(self):
         """Haematocrit."""
-        return abg.calculate_hct(self.blood_abg_ctHb * 10 / abg.M_Hb)
+        return abg.calculate_hct(self.blood_cbc_hb / abg.M_Hb)  # g/L
 
     def _info_in_body(self) -> str:
         info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.0f}:"
@@ -921,7 +918,7 @@ class HumanModel:
         if (
             self.body_weight is None
             or self.body_sex is None
-            or self.blood_abg_ctHb is None
+            or self.blood_cbc_hb is None
         ):
             return info
         # Top hct value for free water deficit calculation.
@@ -939,20 +936,13 @@ class HumanModel:
             self.body_weight, self.blood_abg_hct_calc, hct_target
         )
 
-        desc_hb = f"{self.blood_abg_ctHb:.1f} ({hb_norm[0]:.1f}-{hb_norm[1]:.1f} g/dl)"
+        desc_hb = f"{self.blood_cbc_hb:.0f} ({hb_norm[0]:.0f}-{hb_norm[1]:.0f} g/L)"
         desc_hct = (
             f"{self.blood_abg_hct_calc:.3f} ({hct_norm[0]:.3f}-{hct_norm[1]:.3f})"
         )
         info = ""
-        if self.blood_abg_ctHb < 7:  # Generic threshold
+        if self.blood_cbc_hb < 75:  # Generic threshold
             info += f"Hb is low {desc_hb}, consider transfusion. "
-            self.flags.add(
-                common.Flag(
-                    reason="Low Hb",
-                    severity=common.FlagSeverity.RED,
-                    description=f"Hb is low {desc_hb}, consider transfusion.",
-                )
-            )
         else:
             info += f"Hb {desc_hb}. "
 
@@ -964,7 +954,7 @@ class HumanModel:
             info += f"Hct is ok {desc_hct}"
 
         if self.blood_abg_hct_calc > hct_target + 0.01:  # Age-independent threshold
-            info += f", free water deficit {vol_def:.0f} ml (limitations: valid if no anemia, osmolarity and Na⁺ are more specific)."
+            info += f", free water deficit {vol_def:.0f} ml (limitation: valid if no anemia; osmolarity and Na⁺ are more specific)."
 
         if self.body_sex == HumanSex.CHILD:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."

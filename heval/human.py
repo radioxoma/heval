@@ -116,6 +116,8 @@ class HumanModel:
         self._weight: float | None = None
         self._use_ibw: bool = False
         self._weight_ideal_method: str = ""
+        self._eval_body = ""
+        self._eval_labs = ""
         self.flags = common.FlagWarnings()
         self.nutrition = nutrition.HumanNutritionModel(self)
 
@@ -295,7 +297,7 @@ class HumanModel:
         """Haematocrit."""
         return abg.calculate_hct(self.blood_cbc_hb / abg.M_Hb)  # g/L
 
-    def _info_in_body(self) -> str:
+    def _body_composition(self) -> str:
         info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.0f}:"
         info += f" IBW {self.body_weight_ideal:.1f} kg [{self._weight_ideal_method}],"
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
@@ -322,7 +324,7 @@ class HumanModel:
             info += f"\n{mnemonic_wetflag(weight=self.body_weight)}"
         return info
 
-    def _info_in_respiration(self) -> str:
+    def _body_respiration(self) -> str:
         """Calulate optimal Tidal Volume for given patient (any gas mixture).
 
         IBW - ideal body weight
@@ -421,7 +423,7 @@ class HumanModel:
         )
         return info
 
-    def _info_in_fluids(self) -> str:
+    def _body_fluids_in(self) -> str:
         # Normal physiologic demand
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
@@ -455,7 +457,7 @@ class HumanModel:
             )
         return info
 
-    def _info_in_food(self) -> str:
+    def _body_food(self) -> str:
         """Daily electrolytes demand."""
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
@@ -488,7 +490,7 @@ class HumanModel:
         else:
             return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
 
-    def _info_in_energy(self) -> str:
+    def _body_energy(self) -> str:
         """Attempt to calculate energy requirements for an human.
 
         There are ESPEN and ASPEN recommendations. See:
@@ -574,7 +576,7 @@ class HumanModel:
             info += "Energy calculations for children not implemented. Refer to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
         return info
 
-    def _info_out_fluids(self) -> str:
+    def _body_fluids_out(self) -> str:
         """Minimal required urinary output 0.5-1 ml/kg/h.
 
         У детей диурез значительно выше, у новорождённых 2.5 ml/kg/h.
@@ -602,7 +604,7 @@ class HumanModel:
             )
         return info
 
-    def describe_osmolarity(self):
+    def _lab_osmolarity(self):
         """Verbally describe osmolarity impact on human.
 
         Diabetes mellitus decompensation:
@@ -656,7 +658,7 @@ class HumanModel:
             info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
         return info
 
-    def describe_abg(self) -> str:
+    def _lab_abg(self) -> str:
         """Describe pH and pCO2 - an old implementation considered stable."""
         info = ""
         if self.blood_abg_pH is not None and self.blood_abg_pCO2 is not None:
@@ -674,33 +676,7 @@ class HumanModel:
                 )
         return info
 
-    def flag_abg(self) -> str:
-        warnings = list()
-        if self.blood_abg_pH is not None:
-            if self.blood_abg_pH < 7.15:
-                warnings.append(
-                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;7.15. Acidosis requires intervention. Check <abbr title="Arterial Blood Gas">ABG</abbr>.</span>"""
-                )
-
-        if self.blood_abg_cK is not None:
-            if self.blood_abg_cK > 7:
-                warnings.append(
-                    f"""<strong style="color:red;">cK {self.blood_abg_cK} mmol/L. Check for hyperkalemia ECG changes.</strong>"""
-                )
-            elif self.blood_abg_cK > 6:
-                warnings.append(
-                    f"""<span style="color:red;">cK {self.blood_abg_cK} mmol/L.</span>"""
-                )
-
-        if self.blood_abg_cGlu is not None:
-            if self.blood_abg_cGlu < 3.9:
-                warnings.append(
-                    f"""<span style="color:red;">Hypoglycemia: cGlu {self.blood_abg_cGlu} mmol/L.</span>"""
-                )
-
-        return " ".join(warnings)
-
-    def describe_anion_gap(self):
+    def _lab_anion_gap(self):
         if None in (
             self.blood_abg_pH,
             self.blood_abg_pCO2,
@@ -709,7 +685,7 @@ class HumanModel:
             self.blood_abg_ctAlb,
         ):
             return "pH, pCO2, cNa, cCl, albumin required"
-        info = "-- Anion gap ---------------------------------------\n"
+        info = "<h4>Anion gap</h4>"
         desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
         if (
             abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[1]
@@ -745,19 +721,18 @@ class HumanModel:
             Try distinguish Na-Cl balance in case high/low osmolarity.
             Should help to choose better fluid for correction.
             """
-            SIDabbr_norm = (-5, 5)  # Arbitrary threshold
-            ref_str = f"{self.blood_abg_sid_abbr:.1f} ({SIDabbr_norm[0]:.0f}-{SIDabbr_norm[1]:.0f} mEq/L)"
+            ref_str = f"{self.blood_abg_sid_abbr:.1f} ({abg.norm_SIDabbr[0]:.0f}-{abg.norm_SIDabbr[1]:.0f} mEq/L)"
             info += "\nSIDabbr [Na⁺-Cl⁻-38] "
-            if self.blood_abg_sid_abbr > SIDabbr_norm[1]:
+            if self.blood_abg_sid_abbr > abg.norm_SIDabbr[1]:
                 info += f"is alkalotic {ref_str}, relative Na⁺ excess"
-            elif self.blood_abg_sid_abbr < SIDabbr_norm[0]:
+            elif self.blood_abg_sid_abbr < abg.norm_SIDabbr[0]:
                 info += f"is acidotic {ref_str}, relative Cl⁻ excess"
             else:
                 info += f"is ok {ref_str}"
             info += f", BDE gap {self.blood_abg_sbe - self.blood_abg_sid_abbr:.01f} mEq/L"  # Lactate?
         return info
 
-    def describe_sbe(self):
+    def _lab_sbe(self):
         """Calculate needed NaHCO3 for metabolic acidosis correction.
 
         Using SBE (not pH) as threshold point guaranties that bicarbonate
@@ -830,7 +805,7 @@ class HumanModel:
             info += f"SBE is ok {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
         return info
 
-    def describe_electrolytes(self):
+    def _lab_electrolytes(self):
         if None in (
             self.body_weight,
             self.blood_abg_cK,
@@ -839,19 +814,14 @@ class HumanModel:
             self.blood_abg_cGlu,
         ):
             return ""
-        info = [
-            "-- Electrolyte and osmolar abnormalities -----------",
-            self.describe_osmolarity(),
-            electrolyte_K(self.body_weight, self.blood_abg_cK),
-            electrolyte_Na(
-                self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.debug
-            ),
-            electrolyte_Cl(self.blood_abg_cCl),
-        ]
+        return textwrap.dedent(f"""\
+            <h4>Electrolyte and osmolar abnormalities</h4>{self._lab_osmolarity()}
+            {electrolyte_K(self.body_weight, self.blood_abg_cK)}
+            {electrolyte_Na(self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.debug)}
+            {electrolyte_Cl(self.blood_abg_cCl)}
+            """)
 
-        return "\n".join(info) + "\n"
-
-    def describe_glucose(self):
+    def _lab_glucose(self):
         """Assess glucose level.
 
         https://en.wikipedia.org/wiki/Renal_threshold
@@ -889,7 +859,7 @@ class HumanModel:
             info += f"cGlu is ok {self.blood_abg_cGlu:.1f} ({abg.norm_cGlu[0]:.1f}-{abg.norm_cGlu[1]:.1f} mmol/L)"
         return info
 
-    def describe_albumin(self):
+    def _lab_albumin(self):
         """Albumin as nutrition marker in adults."""
         if self.blood_abg_ctAlb is None:
             return ""
@@ -906,7 +876,7 @@ class HumanModel:
             info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
         return info
 
-    def describe_hb(self):
+    def _lab_hb(self):
         """Describe Hb and hct_calc.
 
         References
@@ -960,7 +930,33 @@ class HumanModel:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
         return info
 
-    def flag_hb(self) -> str:
+    def _flag_abg(self) -> str:
+        warnings = list()
+        if self.blood_abg_pH is not None:
+            if self.blood_abg_pH < 7.15:
+                warnings.append(
+                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;7.15. Acidosis requires intervention. Check <abbr title="Arterial Blood Gas">ABG</abbr>.</span>"""
+                )
+
+        if self.blood_abg_cK is not None:
+            if self.blood_abg_cK > 7:
+                warnings.append(
+                    f"""<strong style="color:red;">cK {self.blood_abg_cK} mmol/L. Check for hyperkalemia ECG changes.</strong>"""
+                )
+            elif self.blood_abg_cK > 6:
+                warnings.append(
+                    f"""<span style="color:red;">cK {self.blood_abg_cK} mmol/L.</span>"""
+                )
+
+        if self.blood_abg_cGlu is not None:
+            if self.blood_abg_cGlu < 3.9:
+                warnings.append(
+                    f"""<span style="color:red;">Hypoglycemia: cGlu {self.blood_abg_cGlu} mmol/L.</span>"""
+                )
+
+        return " ".join(warnings)
+
+    def _flag_hb(self) -> str:
         """Flag low hemoglobin, calculate required pRBC replacement.
 
         Chronic anemia with Hb <30 g/L causes syncope.
@@ -976,7 +972,7 @@ class HumanModel:
                 return f"""{msg} {math.ceil(prbc_volume / 350)} units of <abbr title="Packed red blood cells">pRBC</abbr> ({prbc_volume:.0f} ml) is required to reach 75 g/L"""
         return ""
 
-    def flag_anemia_type(self):
+    def _flag_anemia_type(self):
         info = ""
         if self.blood_cbc_hb is not None and self.blood_cbc_mcv is not None:
             info += check_anemia(
@@ -985,7 +981,7 @@ class HumanModel:
             )
         return info
 
-    def flag_plt(self):
+    def _flag_plt(self):
         """Flag low platelets."""
         msg = ""
         # Platelets 10^9/L
@@ -1001,7 +997,7 @@ class HumanModel:
                 msg += f"""{plt_count} transfusion in the case of life-threatening bleeding (e.g. intracranial)"""
         return msg
 
-    def flag_fib(self):
+    def _flag_fib(self):
         """Flag low fibrinogen, suggest cryo replacement.
 
         https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10193588/
@@ -1019,21 +1015,21 @@ class HumanModel:
                 msg += f"""<abbr title="Fibrinogen">Fib</abbr> <abbr title="Target fibrinogen 1.5-2 g/L">{self.blood_coag_fib}</abbr> g/L: consider {dose}cryoprecipitate"""
         return msg
 
-    def flag_inr(self):
+    def _flag_inr(self):
         """Flag high INR."""
         msg = ""
         if self.body_weight is not None and self.blood_coag_inr is not None:
             if self.blood_coag_inr > 2:
                 ffp_volume = self.body_weight * 15  # 15 ml/kg
                 ffp_units = math.ceil(ffp_volume / 300)  # 300 ml per FFP unit
-                msg += f"""
-                <abbr title="International normalized ratio">INR</abbr>
-                <abbr title="Target ≤1.5 for surgery">{self.blood_coag_inr:0.2f}</abbr>: consider menadione,
+                msg += f"""\
+                <abbr title="International normalized ratio">INR</abbr>\
+                <abbr title="Target ≤1.5 for surgery">{self.blood_coag_inr:0.2f}</abbr>: consider menadione,\
                 <abbr title="Fresh frozen plasma">FFP</abbr> (<abbr title="{ffp_volume:.0f} ml (15 ml/kg)">{ffp_units} units</abbr>), protrombin concentrate in urgent cases for reversal
                 """
         return msg
 
-    def flag_dic(self) -> str:
+    def _flag_dic(self) -> str:
         """Flag >=5 ISTH disseminated intravascular coagulation score.
 
         Value >=5 means high probability of DIC.
@@ -1079,7 +1075,7 @@ class HumanModel:
         else:
             return ""
 
-    def flag_ttp(self) -> str:
+    def _flag_ttp(self) -> str:
         """Predict ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
 
         * Applicable to adults
@@ -1146,85 +1142,82 @@ class HumanModel:
                 + tpl
             )
 
-    def describe_body(self) -> str:
-        info = ""
-        if self.body_height is None or self.body_sex is None:
-            return "Empty human model (set sex, height, weight)"
-        info += "{}\n".format(self._info_in_body())
-        info += "\n-- Respiration ---------------------------------\n"
-        info += "{}\n".format(self._info_in_respiration())
-        info += "\n-- Fluids --------------------------------------\n"
-        info += "{}\n".format(self._info_in_fluids())
-        info += "\n-- Metabolic -----------------------------------\n"
-        info += "{}\n".format(self._info_in_energy())
-        if self.debug:
-            info += "\n{}\n".format(self._info_in_food())
-        # Estimate also CO2 production?
-        info += "\n-- Diuresis ------------------------------------\n"
-        info += f"{self._info_out_fluids()}\n"
-        return info
+    def eval_body(self) -> str:
+        return self._eval_body
 
-    def describe_blood_abg(self) -> str:
-        self.init()
-        info = self.flags.render()
-        info += "Basic ABG assessment\n"
-        info += "====================\n"
-        info += "{}\n".format(self.describe_abg())
-        info += "{}\n\n\n".format(self.describe_sbe())
-
-        info += "Complex electrolyte assessment\n"
-        info += "==============================\n"
-        info += "{}\n\n".format(self.describe_anion_gap())
-        info += "{}\n".format(self.describe_electrolytes())
-
-        info += "{}\n\n".format(self.describe_glucose())
-        info += "{}\n\n".format(self.describe_albumin())
-        info += "{}\n".format(self.describe_hb())
-        return info
+    def eval_labs(self) -> str:
+        return self._eval_labs
 
     def init(self):
         """Run after model population."""
+        if self.body_height is None or self.body_sex is None:
+            return "Empty human model (set sex, height, weight)"
+        self._eval_body = ""
+        self._eval_body += "{}\n".format(self._body_composition())
+        self._eval_body += "<h3>Respiration</h3>"
+        self._eval_body += "{}\n".format(self._body_respiration())
+        self._eval_body += "<h3>Fluids</h3>"
+        self._eval_body += "{}\n".format(self._body_fluids_in())
+        self._eval_body += "<h3>Metabolic</h3>"
+        self._eval_body += "{}\n".format(self._body_energy())
+        if self.debug:
+            self._eval_body += "\n{}\n".format(self._body_food())
+        self._eval_body += "<h3>Diuresis</h3>"
+        self._eval_body += f"{self._body_fluids_out()}\n"
+
+        self._eval_labs = ""
+        self._eval_labs += "<h3>Basic ABG assessment</h3>"
+        self._eval_labs += "{}\n".format(self._lab_abg())
+        self._eval_labs += "{}\n".format(self._lab_sbe())
+        self._eval_labs += "<h3>Complex electrolyte assessment</h3>"
+        self._eval_labs += "{}\n".format(self._lab_anion_gap())
+        self._eval_labs += "{}\n".format(self._lab_electrolytes())
+        self._eval_labs += "{}\n".format(self._lab_glucose())
+        self._eval_labs += "{}\n".format(self._lab_albumin())
+        self._eval_labs += "<h3>Transfusion</h3>"
+        self._eval_labs += "{}\n".format(self._lab_hb())
+
         self.flags.add(
             common.Flag(
                 reason="Low Hb",
-                description=self.flag_hb(),
+                description=self._flag_hb(),
                 severity=common.FlagSeverity.RED,
             )
         )
         self.flags.add(
-            common.Flag(reason="Anemia type", description=self.flag_anemia_type())
+            common.Flag(reason="Anemia type", description=self._flag_anemia_type())
         )
-        self.flags.add(common.Flag(reason="Low PLT", description=self.flag_plt()))
+        self.flags.add(common.Flag(reason="Low PLT", description=self._flag_plt()))
         self.flags.add(
             common.Flag(
                 reason="Low Fib",
-                description=self.flag_fib(),
+                description=self._flag_fib(),
                 severity=common.FlagSeverity.YELLOW,
             )
         )
         self.flags.add(
             common.Flag(
                 reason="High INR",
-                description=self.flag_inr(),
+                description=self._flag_inr(),
             )
         )
         self.flags.add(
             common.Flag(
                 reason="DIC probability",
-                description=self.flag_dic(),
+                description=self._flag_dic(),
                 severity=common.FlagSeverity.YELLOW,
             )
         )
         self.flags.add(
             common.Flag(
                 reason="Trombocitopenic purpura",
-                description=self.flag_ttp(),
+                description=self._flag_ttp(),
             )
         )
         self.flags.add(
             common.Flag(
                 reason="ABG",
-                description=self.flag_abg(),
+                description=self._flag_abg(),
                 severity=common.FlagSeverity.RED,
             )
         )

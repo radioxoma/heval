@@ -74,6 +74,7 @@ norm_pCO2mmHg_mean = 40.0  # mmHg
 
 norm_HCO3 = (22, 26)  # mEq/L
 norm_sbe = (-2, 2)  # mEq/L
+norm_SIDabbr = (-5, 5)  # Arbitrary threshold
 
 norm_K = (3.5, 5.3)  # mmol/L, Radiometer, adult
 norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia

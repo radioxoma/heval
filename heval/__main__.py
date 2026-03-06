@@ -634,7 +634,8 @@ class CalcMain(ttk.Frame):
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text(self.human.describe_body())
+        self.human.init()
+        self.TxtView.set_text(self.human.eval_body())
 
 
 class CalcNutrition(ttk.Frame):
@@ -1204,7 +1205,8 @@ class CalcElectrolytes(ttk.Frame):
 
     def eval(self, event=None):
         self.lbl_hco3["text"] = f"{self.human.blood_abg_hco3p:.1f}"
-        self.TxtView.set_text(self.human.describe_blood_abg())
+        self.human.init()
+        self.TxtView.set_text(self.human.flags.render() + self.human.eval_labs())
 
 
 class CalcGFR(ttk.Frame):

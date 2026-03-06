@@ -290,7 +290,7 @@ class MainWindow(ttk.Frame):
         style.configure("TMenubutton", padding=2, width=6)  # Otherwise too big on Linux
         self.adjust_font_size()
 
-        self.HBody = human.HumanModel()
+        self.human = human.HumanModel()
 
         menubar = tk.Menu(self.parent)  # Conventional name
         menu_file = tk.Menu(menubar, tearoff=False)
@@ -301,7 +301,7 @@ class MainWindow(ttk.Frame):
 
         menu_view = tk.Menu(menubar, tearoff=False)
         self._debug = tk.BooleanVar()
-        self._debug.set(self.HBody.debug)  # Model debug flag is superior
+        self._debug.set(self.human.debug)  # Model debug flag is superior
         # tooltip="Show normally hidden extra messages in report texts"
         menu_view.add_checkbutton(
             label="Verbose report",
@@ -425,10 +425,10 @@ class MainWindow(ttk.Frame):
         self.set_input_defaults()
 
         nb = tkinterweb.Notebook(self)  # ty:ignore[possibly-missing-attribute]
-        self.CMain = CalcMain(nb, self.HBody)
-        self.CNutrition = CalcNutrition(nb, self.HBody)
-        self.CElectrolytes = CalcElectrolytes(nb, self.HBody)
-        self.CGFR = CalcGFR(nb, self.HBody)
+        self.CMain = CalcMain(nb, self.human)
+        self.CNutrition = CalcNutrition(nb, self.human)
+        self.CElectrolytes = CalcElectrolytes(nb, self.human)
+        self.CGFR = CalcGFR(nb, self.human)
         nb.add(self.CMain, text="Human body")
         nb.add(self.CNutrition, text="Nutrition")
         nb.add(self.CElectrolytes, text="ABG & Electrolytes")
@@ -505,46 +505,46 @@ class MainWindow(ttk.Frame):
                 font_obj["size"] = 9
 
     def set_model_sex(self, event=None):
-        self.HBody.body_sex = common.HumanSex[self.var_sex.get().upper()]
+        self.human.body_sex = common.HumanSex[self.var_sex.get().upper()]
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
-        self.HBody.body_height = float(self.ctl_height.get()) / 100
+        self.human.body_height = float(self.ctl_height.get()) / 100
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_weight(self, event=None):
-        self.HBody.body_weight = float(self.ctl_weight.get())
+        self.human.body_weight = float(self.ctl_weight.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_body_temp(self, event=None):
-        self.HBody.body_temp = float(self.ctl_sbx_temp.get())
+        self.human.body_temp = float(self.ctl_sbx_temp.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_use_ibw(self, event=None):
         if self.var_use_ibw.get() == 0:
-            self.HBody.body_use_ibw = False
+            self.human.body_use_ibw = False
             self.lbl_weight["state"] = tk.NORMAL
             self.ctl_weight["state"] = tk.NORMAL
         else:
-            self.HBody.body_use_ibw = True
+            self.human.body_use_ibw = True
             self.ctl_weight.delete(0, tk.END)
-            self.ctl_weight.insert(0, round(self.HBody.body_weight, 1))
+            self.ctl_weight.insert(0, f"{self.human.body_weight:.1f}")
             self.ctl_weight["state"] = tk.DISABLED
             self.lbl_weight["state"] = tk.DISABLED
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_debug(self, event=None):
         """Be verbose if debug is True."""
-        self.HBody.debug = not self.HBody.debug  # Invert boolean
-        self._debug.set(self.HBody.debug)  # Change flag in menu accordingly
+        self.human.debug = not self.human.debug  # Invert boolean
+        self._debug.set(self.human.debug)  # Change flag in menu accordingly
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
         """Update GUI."""
-        if self.HBody.body_use_ibw:
+        if self.human.body_use_ibw:
             self.ctl_weight["state"] = tk.NORMAL
             self.ctl_weight.delete(0, tk.END)
-            self.ctl_weight.insert(0, round(self.HBody.body_weight, 1))
+            self.ctl_weight.insert(0, f"{self.human.body_weight:.1f}")
             self.ctl_weight["state"] = self.lbl_weight["state"]
 
 
@@ -618,7 +618,7 @@ class CalcMain(ttk.Frame):
     def __init__(self, parent, human_model):
         super().__init__(parent)
         self.parent = parent
-        self.human_model = human_model
+        self.human = human_model
 
         self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
@@ -634,14 +634,14 @@ class CalcMain(ttk.Frame):
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        self.TxtView.set_text(self.human_model.describe_body())
+        self.TxtView.set_text(self.human.describe_body())
 
 
 class CalcNutrition(ttk.Frame):
     def __init__(self, parent, human_model):
         super().__init__(parent)
         self.parent = parent
-        self.human_model = human_model
+        self.human = human_model
 
         fr_entry = ttk.Frame(self)
         fr_entry.pack(anchor=tk.W)
@@ -840,43 +840,40 @@ class CalcNutrition(ttk.Frame):
         self.eval()
 
     def set_model_fluid_multiplier(self, event=None):
-        self.human_model.nutrition.fluid_multiplier = float(
-            self.ctl_sbx_fluid_mul.get()
-        )
+        self.human.nutrition.fluid_multiplier = float(self.ctl_sbx_fluid_mul.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_kcal_multiplier(self, event=None):
-        self.human_model.nutrition.kcal_multiplier = float(self.ctl_sbx_kcal_mul.get())
+        self.human.nutrition.kcal_multiplier = float(self.ctl_sbx_kcal_mul.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_uurea(self, event=None):
-        self.human_model.nutrition.uurea = float(self.ctl_sbx_uurea.get())
+        self.human.nutrition.uurea = float(self.ctl_sbx_uurea.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
-        self.lbl_fluid_24h["text"] = round(self.human_model.nutrition.fluid_24h)
-        self.lbl_kcal_24h["text"] = round(self.human_model.nutrition.kcal_24h)
-        self.lbl_prot_24h["text"] = f"{self.human_model.nutrition.uurea_prot_24h:.1f}"
+        self.lbl_fluid_24h["text"] = f"{self.human.nutrition.fluid_24h:.0f}"
+        self.lbl_kcal_24h["text"] = f"{self.human.nutrition.kcal_24h:.0f}"
+        self.lbl_prot_24h["text"] = f"{self.human.nutrition.uurea_prot_24h:.1f}"
         self.lbl_sbx_prot_g_kg_24h["text"] = (
-            f"{self.human_model.nutrition.uures_prot_g_kg_24h:.2f}"
+            f"{self.human.nutrition.uures_prot_g_kg_24h:.2f}"
         )
-        # self.ctl_sbx_prot_g_kg_24h.delete(0, END)
-        # self.ctl_sbx_prot_g_kg_24h.insert(0, round(self.human_model.nutrition.uures_prot_g_kg_24h, 2))  # g/kg/24h
+        # self.ctl_sbx_prot_g_kg_24h.delete(0, tk.END)
+        # self.ctl_sbx_prot_g_kg_24h.insert(0, f"{self.human_model.nutrition.uures_prot_g_kg_24h:.2f}")  # g/kg/24h
         info = list()
         if self.var_rbtm_calc_method.get() == 0:  # By kcal
-            info.append(self.human_model.nutrition.describe_nutrition())
+            info.append(self.human.nutrition.describe_nutrition())
         elif self.var_rbtm_calc_method.get() == 1:  # By UUN
-            info.append(self.human_model.nutrition.describe_nutrition(by_protein=True))
+            info.append(self.human.nutrition.describe_nutrition(by_protein=True))
         self.TxtView.set_text("\n".join(info))
 
 
 class CalcElectrolytes(ttk.Frame):
-    def __init__(self, parent, human_model):
+    def __init__(self, parent, human_model: human.HumanModel):
         super().__init__(parent)
-        self.__form_ready = False
         self.parent = parent
-        self.human_model = human_model
+        self.human = human_model
         fr_entry = ttk.Frame(self)
         fr_entry.pack(anchor=tk.W)
 
@@ -1034,16 +1031,79 @@ class CalcElectrolytes(ttk.Frame):
         )
         CreateToolTip(
             self.ctl_sbx_ctHb,
-            "Not required. Enter to estimate free water deficit by Hct.",
+            "PRBC dosage for anemia. Free water deficit by Hct if too high.",
         )
         self.ctl_sbx_ctHb.bind("<KeyRelease>", self.set_model_ctHb)
         self.ctl_sbx_ctHb.grid(row=4, column=1)
 
+        # TRANSFUSION
+        fr_trans_entry = ttk.LabelFrame(fr_entry, text="Transfusion")
+        fr_trans_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
+
+        ctl_btn_trans = ttk.Button(
+            fr_trans_entry, text="Reset", command=self.set_input_trans_defaults
+        )
+        CreateToolTip(ctl_btn_trans, "Estimate hemotransfusion therapy needs")
+        ctl_btn_trans.grid(row=1, column=0)
+
+        ttk.Label(fr_trans_entry, text="PLT, ×10⁹/L").grid(row=2, column=0)
+        self.ctl_sbx_plt = SpinboxFloat(
+            fr_trans_entry,
+            width=4,
+            from_=0,
+            to=3000,
+            format="%.0f",
+            increment=1,
+            command=self.set_model_plt,
+        )
+        CreateToolTip(
+            self.ctl_sbx_plt,
+            "Low count provokes spontaneous bleeding. Overall count promotes clot density",
+        )
+        self.ctl_sbx_plt.bind("<KeyRelease>", self.set_model_plt)
+        self.ctl_sbx_plt.grid(row=2, column=1)
+
+        ttk.Label(fr_trans_entry, text="Fib, g/L").grid(row=3, column=0)
+        self.ctl_sbx_fib = SpinboxFloat(
+            fr_trans_entry,
+            width=4,
+            from_=0,
+            to=50,
+            format="%.1f",
+            increment=0.1,
+            command=self.set_model_fib,
+        )
+        CreateToolTip(
+            self.ctl_sbx_fib,
+            "Clot density. Consumed during bleeding. Amount is reduced in liver impairment.",
+        )
+        self.ctl_sbx_fib.bind("<KeyRelease>", self.set_model_fib)
+        self.ctl_sbx_fib.grid(row=3, column=1)
+
+        ttk.Label(fr_trans_entry, text="INR").grid(row=4, column=0)
+        self.ctl_sbx_inr = SpinboxFloat(
+            fr_trans_entry,
+            width=4,
+            from_=0,
+            to=50,
+            format="%.2f",
+            increment=0.01,
+            command=self.set_model_inr,
+        )
+        CreateToolTip(
+            self.ctl_sbx_inr,
+            "Created for warfarin monitoring. High if overall coagulation factors or liver function are impaired.",
+        )
+        self.ctl_sbx_inr.bind("<KeyRelease>", self.set_model_inr)
+        self.ctl_sbx_inr.grid(row=4, column=1)
+
+        # Text view
         self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.set_input_abg_defaults()
         self.set_input_elec_defaults()
         self.set_input_extra_defaults()
+        self.set_input_trans_defaults()
         self.TxtView.set_text(
             textwrap.dedent(
                 """\
@@ -1087,41 +1147,64 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctHb.insert(0, "140")  # g/L, mean value for both sexes
         self.set_model_ctHb()
 
+    def set_input_trans_defaults(self, event=None):
+        self.ctl_sbx_plt.delete(0, tk.END)
+        self.ctl_sbx_plt.insert(0, str(abg.norm_plt_mean))
+        self.set_model_plt()
+        self.ctl_sbx_fib.delete(0, tk.END)
+        self.ctl_sbx_fib.insert(0, f"{abg.norm_fib_mean:.1f}")
+        self.set_model_fib()
+        self.ctl_sbx_inr.delete(0, tk.END)
+        self.ctl_sbx_inr.insert(0, f"{abg.norm_inr_mean:.2f}")
+        self.set_model_inr()
+
     def set_model_pH(self, event=None):
-        self.human_model.blood_abg_pH = float(self.ctl_sbx_pH.get())
+        self.human.blood_abg_pH = float(self.ctl_sbx_pH.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_pCO2(self, event=None):
-        self.human_model.blood_abg_pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
+        self.human.blood_abg_pCO2 = float(self.ctl_sbx_pCO2.get()) * abg.kPa
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_K(self, event=None):
-        self.human_model.blood_abg_cK = float(self.ctl_sbx_K.get())
+        self.human.blood_abg_cK = float(self.ctl_sbx_K.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Na(self, event=None):
-        self.human_model.blood_abg_cNa = float(self.ctl_sbx_Na.get())
+        self.human.blood_abg_cNa = float(self.ctl_sbx_Na.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_Cl(self, event=None):
-        self.human_model.blood_abg_cCl = float(self.ctl_sbx_Cl.get())
+        self.human.blood_abg_cCl = float(self.ctl_sbx_Cl.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctAlb(self, event=None):
-        self.human_model.blood_abg_ctAlb = float(self.ctl_sbx_ctAlb.get())
+        self.human.blood_abg_ctAlb = float(self.ctl_sbx_ctAlb.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_cGlu(self, event=None):
-        self.human_model.blood_abg_cGlu = float(self.ctl_sbx_cGlu.get())
+        self.human.blood_abg_cGlu = float(self.ctl_sbx_cGlu.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctHb(self, event=None):
-        self.human_model.blood_cbc_hb = float(self.ctl_sbx_ctHb.get())
+        self.human.blood_cbc_hb = float(self.ctl_sbx_ctHb.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_plt(self, event=None):
+        self.human.blood_cbc_plt = float(self.ctl_sbx_plt.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_fib(self, event=None):
+        self.human.blood_coag_fib = float(self.ctl_sbx_fib.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_inr(self, event=None):
+        self.human.blood_coag_inr = float(self.ctl_sbx_inr.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
-        self.lbl_hco3["text"] = round(self.human_model.blood_abg_hco3p, 1)
-        self.TxtView.set_text(self.human_model.describe_blood_abg())
+        self.lbl_hco3["text"] = f"{self.human.blood_abg_hco3p:.1f}"
+        self.TxtView.set_text(self.human.describe_blood_abg())
 
 
 class CalcGFR(ttk.Frame):
@@ -1130,7 +1213,7 @@ class CalcGFR(ttk.Frame):
     def __init__(self, parent, human_model):
         super().__init__(parent)
         self.parent = parent
-        self.human_model = human_model
+        self.human = human_model
 
         fr_entry = ttk.Frame(self)
         fr_entry.pack(anchor=tk.W)
@@ -1200,16 +1283,16 @@ class CalcGFR(ttk.Frame):
         self.eval()
 
     def set_model_age(self, event=None):
-        self.human_model.body_age = float(self.ctl_sbx_age.get())
+        self.human.body_age = float(self.ctl_sbx_age.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):
-        sex = self.human_model.body_sex
+        sex = self.human.body_sex
         cCrea = float(self.ctl_sbx_ccrea.get())
         cCrea_mgdl = cCrea / abg.M_Crea
         info = ""
         if sex in (common.HumanSex.MALE, common.HumanSex.FEMALE):
-            age = self.human_model.body_age
+            age = self.human.body_age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = self.var_isblack.get() == 1
             mdrd = human.egfr_mdrd(sex, cCrea, age, black_skin)
@@ -1223,7 +1306,7 @@ class CalcGFR(ttk.Frame):
             Conclusion: {human.gfr_describe(epi)}
             """
         elif sex == common.HumanSex.CHILD:
-            schwartz = human.egfr_schwartz(cCrea, self.human_model.body_height)
+            schwartz = human.egfr_schwartz(cCrea, self.human.body_height)
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL
             {schwartz:.0f} mL/min/1.73 m² [Schwartz revised 2009]

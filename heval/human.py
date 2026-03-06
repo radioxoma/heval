@@ -924,13 +924,13 @@ class HumanModel:
         # Top hct value for free water deficit calculation.
         if self.body_sex == HumanSex.MALE:
             hb_norm = abg.hb_norm_male
-            hct_norm = abg.hct_norm_male
+            hct_norm = abg.norm_hct_male
         elif self.body_sex == HumanSex.FEMALE:
             hb_norm = abg.hb_norm_female
-            hct_norm = abg.hct_norm_female
+            hct_norm = abg.norm_hct_female
         elif self.body_sex == HumanSex.CHILD:
             hb_norm = abg.hb_norm_child
-            hct_norm = abg.hct_norm_child
+            hct_norm = abg.norm_hct_child
         hct_target = hct_norm[0] + (hct_norm[1] - hct_norm[0]) / 2  # Mean
         vol_def = volume_deficit_hct(
             self.body_weight, self.blood_abg_hct_calc, hct_target
@@ -1212,6 +1212,7 @@ class HumanModel:
             common.Flag(
                 reason="DIC probability",
                 description=self.flag_dic(),
+                severity=common.FlagSeverity.YELLOW,
             )
         )
         self.flags.add(
@@ -1908,9 +1909,6 @@ def check_anemia(hb: float, mcv: float) -> str:
         # manual blood count or expensive analyzer
         msg = f"""<abbr title="Normal MCV {mcv:.0f} fL: blood loss, hemolysis, chronic disease (suppressed production, B2, B6 deficiency).\n\nCheck reticulocyte count: it raises in 12-24 hours after hemorrhage and stays low if problem in the bone marrow.">Normocytic</abbr> anemia"""
     return msg
-
-
-###
 
 
 def solution_glucose(

@@ -109,9 +109,13 @@ hb_norm_female = (120, 155)  # 120-140 g/L
 hb_norm_child = (110, 160)  # g/L
 
 # Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
-hct_norm_male = (0.407, 0.503)
-hct_norm_female = (0.361, 0.443)
-hct_norm_child = (0.31, 0.41)
+norm_hct_male = (0.407, 0.503)
+norm_hct_female = (0.361, 0.443)
+norm_hct_child = (0.31, 0.41)
+
+norm_plt_mean = 300
+norm_fib_mean = 3
+norm_inr_mean = 1
 
 
 def calculate_anion_gap(

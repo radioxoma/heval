@@ -2446,6 +2446,35 @@ def electrolyte_Cl(Cl_serum: float) -> str:
     return info
 
 
+def ccrea_clearance_cockcroft_gault(
+    sex: HumanSex, cCrea: float, age: float, weight: float
+):
+    """Estimage creatinine clearence in adults by Cockcroft-Gault equation.
+
+    Args:
+        age: Age in years
+        weight: Real body weight (RBW), kg
+        cCrea: Serum creatinine concentration, µmol/L
+
+    Returns:
+        Creatinine clearance (CrCl), mL/min
+
+    https://www.mdcalc.com/calc/43/creatinine-clearance-cockcroft-gault-equation
+    https://boris.bikbov.ru/2013/07/21/kalkulyator-skf-rascheta-skorosti-klubochkovoy-filtratsii/
+
+    Examples
+    --------
+    >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.MALE, cCrea=75, age=40, weight=72.7)
+    119.0125925925926
+    >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.FEMALE, cCrea=75, age=40, weight=72.7)
+    101.1607037037037
+    """
+    crcl = (140 - age) * weight / (72 * cCrea / abg.M_Crea)
+    if sex == HumanSex.FEMALE:
+        crcl *= 0.85
+    return crcl
+
+
 def egfr_mdrd(
     sex: HumanSex, cCrea: float, age: float, black_skin: bool = False
 ) -> float:
@@ -2549,7 +2578,7 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
 
     Example
     -------
-    >>> egfr_schwartz(40, 1.15)
+    >>> egfr_schwartz(cCrea=40, height=1.15)
     104.96395
 
     References
@@ -2560,6 +2589,10 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
     [2] Creatinine Clearance: Revised Schwartz Estimate
         http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
 
+    https://www.kidney.org/professionals/gfr_calculatorPed
+    http://nephron.com/bedside_peds_nic.cgi
+    http://nephron.com/peds_nic.cgi
+
     Args:
         cCrea: Serum creatinine (IDMS-calibrated), μmol/L
         height: Children height, meters
@@ -2567,12 +2600,11 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
     Returns:
         eGFR, mL/min/1.73 m2.
     """
-    cCrea /= abg.M_Crea  # to mg/dl
     # k = 0.33  # First year of life, pre-term infants
     # k = 0.45  # First year of life, full-term infants
     # k = 0.55  # 1-12 years
     k = 0.413  # 1 to 16 years. Updated in 2009
-    return k * height * 100 / cCrea
+    return k * height * 100 / cCrea * abg.M_Crea
 
 
 def gfr_describe(gfr: float) -> str:

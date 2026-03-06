@@ -1297,11 +1297,17 @@ class CalcGFR(ttk.Frame):
             age = self.human.body_age
             dob = datetime.now().year - age  # timedelta is complicated
             black_skin = self.var_isblack.get() == 1
-            mdrd = human.egfr_mdrd(sex, cCrea, age, black_skin)
-            epi = human.egfr_ckd_epi(sex, cCrea, age, black_skin)
+            crcl = human.ccrea_clearance_cockcroft_gault(
+                sex=sex, cCrea=cCrea, age=age, weight=self.human.body_weight
+            )
+            mdrd = human.egfr_mdrd(sex=sex, cCrea=cCrea, age=age, black_skin=black_skin)
+            epi = human.egfr_ckd_epi(
+                sex=sex, cCrea=cCrea, age=age, black_skin=black_skin
+            )
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL
             Year of birth: {dob:.0f}
+            CrCl\t{crcl:3.0f} mL/min (Cockcroft-Gault)
             MDRD\t{mdrd:3.0f} mL/min/1.73 m² (considered obsolete)
             CKD-EPI\t{epi:3.0f} mL/min/1.73 m²
 

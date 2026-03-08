@@ -51,6 +51,7 @@ __helptext__ = """
 <li>BMR - basal metabolic rate</li>
 <li>BSA - body surface area, m²</li>
 <li>CKD - chronic kidney disease</li>
+<li>CRRT - continuous renal replacement therapy</li>
 <li>D5, D5W - dextrose 5%</li>
 <li>DKE - diabetic ketoacidosis</li>
 <li>eGFR - estimated glomerular filtration rate</li>

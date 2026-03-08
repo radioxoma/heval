@@ -407,7 +407,7 @@ class HumanModel:
         mv = normal_minute_ventilation(weight_chosen)
         Vd = mv * weight_chosen  # l/min
         info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(
-            weight_type, self.body_sex.name, weight_chosen
+            weight_type, self.body_sex.name.lower(), weight_chosen
         )
         info += f"MV x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
         info += f"VDaw is {VDaw:.0f} ml, so TV must be >{Tv_min:.0f} ml\n"
@@ -1156,14 +1156,15 @@ class HumanModel:
         self._eval_body += "{}\n".format(self._body_composition())
         self._eval_body += "<h3>Respiration</h3>"
         self._eval_body += "{}\n".format(self._body_respiration())
-        self._eval_body += "<h3>Fluids</h3>"
-        self._eval_body += "{}\n".format(self._body_fluids_in())
         self._eval_body += "<h3>Metabolic</h3>"
         self._eval_body += "{}\n".format(self._body_energy())
+        self._eval_body += "<h3>Fluids</h3>"
+        self._eval_body += "{}\n".format(self._body_fluids_in())
         if self.debug:
             self._eval_body += "\n{}\n".format(self._body_food())
-        self._eval_body += "<h3>Diuresis</h3>"
+        self._eval_body += "<h3>Renal function</h3>"
         self._eval_body += f"{self._body_fluids_out()}\n"
+        self._eval_body += crrt_weight_to_rate(self.body_weight)
 
         self._eval_labs = ""
         self._eval_labs += "<h3>Basic ABG assessment</h3>"
@@ -1662,6 +1663,22 @@ def fluid_holidaysegar_mod(rbw: float) -> float:
         return 1000 + 50 * (rbw - 10)
     else:  # 20 kg and up
         return 1500 + 20 * (rbw - 20)
+
+
+def crrt_weight_to_rate(weight: float) -> str:
+    """Calculate CRRT hourly dose.
+
+    Args:
+        weight: real body weight, kg
+
+    What is safe blood urea rate of drop to prevent dialysis disequilibrium syndrome? 15 ml/kg/h is safe start, 20-25 ml/kg/h are recommended.
+    """
+    return textwrap.dedent(f"""
+        CRRT total effluent dose (dialysate + substitute + UF + diuresis):
+        * Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [KDIGO 20-25 ml/kg/h].
+        * Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (BUN, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: BUN 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h
+        * Ultrafiltration, diuresis, other losses counts as effluent too.
+        """)
 
 
 def mnemonic_wetflag(age: float | None = None, weight: float | None = None) -> str:

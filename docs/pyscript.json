@@ -2,7 +2,7 @@
   "files": {
     "{DOMAIN}": "https://raw.githubusercontent.com",
     "{PATH}": "radioxoma/heval/refs/heads",
-    "{VERSION}": "html",
+    "{VERSION}": "main",
     "{FROM}": "{DOMAIN}/{PATH}/{VERSION}/heval",
     "{TO}": "./heval/",
     "{FROM}/__init__.py": "{TO}",

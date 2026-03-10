@@ -14,18 +14,20 @@
   </head>
   <body>
     <p>
-      <label for="sel_body_sex">Sex</label>
-      <select id="sel_body_sex" name="sel_body_sex">
+      <label for="body_sex">Sex</label>
+      <select id="body_sex" name="body_sex">
         <option value="male">Male</option>
         <option value="female">Female</option>
         <option value="child">Child</option>
       </select>
-      <label for="sbx_body_height">Height, m</label>
-      <input type="number" id="sbx_body_height" step="0.01" min="0" max="3.00" value="1.86">
-      <button id="btn_body_set">Set</button>
-      <button id="btn_body_reset">Reset</button>
+
+      <label for="body_height">Height, m</label>
+      <input type="number" id="body_height" step="0.01" min="0" max="3.00">
+
+      <button id="body_reset">Reset</button>
     </p>
-    <p><pre id="output">Please wait</pre></p>
+    <p><pre id="output_body">Please wait</pre></p>
+    <p><pre id="output_labs"></pre></p>
     <script type="py" src="./main.py" config="./pyscript.json"></script>
   </body>
 </html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Heval</title>
+      <link rel="stylesheet" href="https://pyscript.net/releases/2026.3.1/core.css">
+      <style>
+        pre {
+          white-space: pre-wrap;
+        }
+      </style>
+      <script type="module" src="https://pyscript.net/releases/2026.3.1/core.js"></script>
+  </head>
+  <body>
+    <p>
+      <label for="sel_body_sex">Sex</label>
+      <select id="sel_body_sex" name="sel_body_sex">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="child">Child</option>
+      </select>
+      <label for="sbx_body_height">Height, m</label>
+      <input type="number" id="sbx_body_height" step="0.01" min="0" max="3.00" value="1.86">
+      <button id="btn_body_set">Set</button>
+      <button id="btn_body_reset">Reset</button>
+    </p>
+    <p><pre id="output">Please wait</pre></p>
+    <script type="py" src="./main.py" config="./pyscript.json"></script>
+  </body>
+</html>

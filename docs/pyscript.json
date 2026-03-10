@@ -1,0 +1,15 @@
+{
+  "files": {
+    "{DOMAIN}": "https://raw.githubusercontent.com",
+    "{PATH}": "radioxoma/heval/refs/heads",
+    "{VERSION}": "html",
+    "{FROM}": "{DOMAIN}/{PATH}/{VERSION}/heval",
+    "{TO}": "./heval/",
+    "{FROM}/__init__.py": "{TO}",
+    "{FROM}/abg.py": "{TO}",
+    "{FROM}/common.py": "{TO}",
+    "{FROM}/human.py": "{TO}",
+    "{FROM}/nutrition.py": "{TO}"
+    },
+  "debug": "true"
+}

@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width,initial-scale=1" />
-      <title>Heval</title>
-      <link rel="stylesheet" href="https://pyscript.net/releases/2026.3.1/core.css">
-      <style>
-        pre {
-          white-space: pre-wrap;
-        }
-      </style>
-      <script type="module" src="https://pyscript.net/releases/2026.3.1/core.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Heval</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2026.3.1/core.css">
+    <style>
+      pre {
+      white-space: pre-wrap;
+      }
+    </style>
+    <script type="module" src="https://pyscript.net/releases/2026.3.1/core.js"></script>
   </head>
   <body>
+    <script type="py" src="./main.py" config="./pyscript.json"></script>
+    <h3>Heval: the human evaluator. Calculate what your human crave!</h3>
     <p>
       <label for="body_sex">Sex</label>
       <select id="body_sex" name="body_sex">
@@ -20,14 +22,29 @@
         <option value="female">Female</option>
         <option value="child">Child</option>
       </select>
-
       <label for="body_height">Height, m</label>
       <input type="number" id="body_height" step="0.01" min="0" max="3.00">
-
       <button id="body_reset">Reset</button>
     </p>
-    <p><pre id="output_body">Please wait</pre></p>
-    <p><pre id="output_labs"></pre></p>
-    <script type="py" src="./main.py" config="./pyscript.json"></script>
+    <details open>
+      <summary>Human body</summary>
+      <p>
+      <pre id="output_body">🟡 Please wait</pre>
+      </p>
+    </details>
+    <hr>
+    <p>
+      <label for="blood_abg_pH">pH</label>
+      <input type="number" id="blood_abg_pH" step="0.01" min="0" max="14.00">
+      <label for="blood_abg_pCO2">pCO2, kPa</label>
+      <input type="number" id="blood_abg_pCO2" step="0.1" min="0" max="150.0">
+    </p>
+    <details open>
+      <summary>Human labs</summary>
+      <p>
+      <pre id="output_labs">🟡 Please wait</pre>
+      </p>
+    </details>
+    <p style="text-align: right;"><a href="https://github.com/radioxoma/heval" target="_blank">Heval on GitHub</a></p>
   </body>
 </html>

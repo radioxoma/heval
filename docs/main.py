@@ -44,6 +44,8 @@ def set_input_defaults():
     web.page["body_sex"].dispatchEvent(event_change)
     # Reset spinboxes
     web.page["body_height"].value = 1.77
+    web.page["blood_abg_pH"].value = 7.4
+    web.page["blood_abg_pCO2"].value = 5.3
     for k in web.page.find("input[type=number]"):
         k.dispatchEvent(event_change)
     human_model_changed.trigger(None)
@@ -59,4 +61,5 @@ def eval_model():
     web.page["output_labs"].innerHTML = human.eval_labs()
 
 
-web.page["output_body"].innerText = "Ready"
+web.page["output_body"].innerText = "🟢 Ready"
+web.page["output_labs"].innerText = "🟢 Ready"

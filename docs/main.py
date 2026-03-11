@@ -8,6 +8,7 @@ https://github.com/pyscript/pyscript-stubs/tree/main/src/pyscript-stubs
 """
 
 from pyscript import Event, web, when, window
+import heval.abg
 import heval.common
 import heval.human
 
@@ -15,6 +16,39 @@ import heval.human
 human = heval.human.HumanModel()
 human_model_changed = Event()
 event_change = window.Event.new("change")  # Dummy object to generate events
+
+lab_list = (
+    ("blood_abg_pH", "", 7.4),
+    ("blood_abg_pCO2", "mmHg", 40),
+    ("blood_abg_cK", "mmol/L", 4),
+    ("blood_abg_cNa", "mmol/L", 140),
+    ("blood_abg_cCl", "mmol/L", 105),
+    ("blood_abg_cGlu", "mmol/L", 5.5),
+    ("blood_abg_ctAlb", "g/dL", 4.4),
+    ("blood_abg_cCrea", "μmol/L", 75),
+    ("blood_cbc_hb", "g/L", 140),
+    ("blood_cbc_plt", "×10⁹/L", 300),
+    ("blood_coag_fib", "g/L", 3),
+    ("blood_coag_inr", "", 1),
+    ("body_age", "years", 40),
+)
+
+
+def gen_ui():
+    control: web.Element = web.page["#human_labs_form"]
+    for prop, unit, val in lab_list:
+        # Browser uses 'min', 'max' to calculate input size
+        control.append(
+            web.input_(type="number", id=prop, min=0, max=999, step=0.1, value=val)
+        )
+        control.append(" ")
+        control.append(
+            web.label(f"{prop.split('_')[-1]}{f', {unit}' if unit else ''}", for_=prop)
+        )
+        control.append(web.br())
+
+
+gen_ui()
 
 
 @when("change", "select#body_sex")
@@ -33,7 +67,10 @@ def spinbox_changed(event):
     """Auto map spinboxes to model properties."""
     # if event.target.tagName == "INPUT" and event.target.type == "number":
     print(f"spinbox_changed by event: {event.target.id}={event.target.value}")
-    setattr(human, event.target.id, float(event.target.value))
+    if event.target.id == "blood_abg_pCO2":
+        setattr(human, event.target.id, float(event.target.value) * heval.abg.kPa)
+    else:
+        setattr(human, event.target.id, float(event.target.value))
     human_model_changed.trigger(None)
 
 
@@ -56,8 +93,8 @@ def set_input_defaults():
     web.page["body_sex"].dispatchEvent(event_change)
     # Reset spinboxes
     web.page["body_height"].value = 1.77
-    web.page["blood_abg_pH"].value = 7.4
-    web.page["blood_abg_pCO2"].value = 5.3
+    for prop, unit, val in lab_list:
+        web.page[prop].value = val
     for k in web.page.find("input[type=number]"):
         k.dispatchEvent(event_change)
     human_model_changed.trigger(None)

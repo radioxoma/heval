@@ -30,10 +30,22 @@ def select_changed(event):
 
 @when("change", "input[type=number]")
 def spinbox_changed(event):
+    """Auto map spinboxes to model properties."""
     # if event.target.tagName == "INPUT" and event.target.type == "number":
     print(f"spinbox_changed by event: {event.target.id}={event.target.value}")
     setattr(human, event.target.id, float(event.target.value))
     human_model_changed.trigger(None)
+
+
+@when("wheel", "input[type=number]")
+def spinbox_scroll(event):
+    """Scroll spinboxes with mouse wheel."""
+    event.preventDefault()
+    if event.deltaY < 0:
+        event.target.stepUp()
+    else:
+        event.target.stepDown()
+    event.target.dispatchEvent(event_change)
 
 
 @when("click", "#body_reset")

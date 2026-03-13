@@ -17,7 +17,11 @@ human = heval.human.HumanModel()
 human_model_changed = Event()
 event_change = window.Event.new("change")  # Dummy object to generate events
 
-lab_list = (
+ctl_sbx_list = (
+    ("body_height", "m", 1.77),
+    ("body_weight", "kg", 75),
+    ("body_age", "years", 40),
+    ("body_temp", "°C", 36.6),
     ("blood_abg_pH", "", 7.4),
     ("blood_abg_pCO2", "mmHg", 40),
     ("blood_abg_cK", "mmol/L", 4),
@@ -26,17 +30,23 @@ lab_list = (
     ("blood_abg_cGlu", "mmol/L", 5.5),
     ("blood_abg_ctAlb", "g/dL", 4.4),
     ("blood_abg_cCrea", "μmol/L", 75),
+    ("blood_bchem_ctBilindirect", "μmol/L", 10),
     ("blood_cbc_hb", "g/L", 140),
     ("blood_cbc_plt", "×10⁹/L", 300),
+    ("blood_cbc_mcv", "fL", 90),
+    ("blood_cbc_ret", "%", 1),
     ("blood_coag_fib", "g/L", 3),
     ("blood_coag_inr", "", 1),
-    ("body_age", "years", 40),
+    ("blood_coag_ddimer", "ng/ml", 300),
 )
+
+
+ctl_chk_list = ("body_use_ibw", True)
 
 
 def gen_ui():
     control: web.Element = web.page["#human_labs_form"]
-    for prop, unit, val in lab_list:
+    for prop, unit, val in ctl_sbx_list:
         # Browser uses 'min', 'max' to calculate input size
         control.append(
             web.input_(type="number", id=prop, min=0, max=999, step=0.1, value=val)
@@ -92,8 +102,7 @@ def set_input_defaults():
     web.page["body_sex"].value = web.page["body_sex option:first-of-type"].value
     web.page["body_sex"].dispatchEvent(event_change)
     # Reset spinboxes
-    web.page["body_height"].value = 1.77
-    for prop, unit, val in lab_list:
+    for prop, unit, val in ctl_sbx_list:
         web.page[prop].value = val
     for k in web.page.find("input[type=number]"):
         k.dispatchEvent(event_change)
@@ -106,6 +115,7 @@ set_input_defaults()
 @when(human_model_changed)
 def eval_model():
     human.init()
+    web.page["output_flags"].innerHTML = human.flags.render()
     web.page["output_body"].innerHTML = human.eval_body()
     web.page["output_labs"].innerHTML = human.eval_labs()
 

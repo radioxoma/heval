@@ -1,8 +1,10 @@
 ## Heval: the human evaluator. Calculate what your human crave!
 
+tl;dr: use web app at https://radioxoma.github.io/heval/ Since 2026 development switched towards pyscript web app. Desktop app is obsolete.
+
 Heval is a medical calculator for [intensive care unit](https://en.wikipedia.org/wiki/Intensive_care_medicine). Easy to use and ugly as hell, see [screenshots](https://github.com/radioxoma/heval#screenshots).
 
-From just *sex* and *height* it evaluates [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, some drugs dosage and more. [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggests urgent correction measures and infusion therapy.
+From just *sex* and *height* it evaluates [IBW](https://en.wikipedia.org/wiki/Human_body_weight#Ideal_body_weight), [BSA](https://en.wikipedia.org/wiki/Body_surface_area), [fluid](https://en.wikipedia.org/wiki/Fluid_replacement), respiratory and [parenteral nutrition](https://en.wikipedia.org/wiki/Parenteral_nutrition) demands, urinary output, dialysis dose and more. [ABG interpreter](https://en.wikipedia.org/wiki/Acid%E2%80%93base_homeostasis) reveals hidden processes, suggests urgent correction measures and infusion therapy.
 
 Main features:
 
@@ -60,8 +62,6 @@ Just [estimated glomerular filtration rate](https://en.wikipedia.org/w/index.php
 ## Disclaimer
 Heval is an experimental software. Whatever it calculates, it's *your* decisions will affect your human's live longevity. I have no responsibility for your collateral damage.
 
-An web or Android application is planned, but implementation deferred until calculations being tested and I'll get some feedback.
-
 > Key: Garbage -> Limited -> Medium -> Good -> Excellent
 
 | Function | Status | Comment |
@@ -86,7 +86,7 @@ An web or Android application is planned, but implementation deferred until calc
 Download *exe* file from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Just run it — installation is not required.
 
 * [v0.1.5](https://github.com/radioxoma/heval/releases/tag/v0.1.5) is last compatible with Windows XP SP3 x86 and python 3.4.3.
-* Latest development version can be installed with `pip install https://github.com/radioxoma/heval/archive/master.zip`. You may need to upgrade pip.
+* Latest version can be installed with `pip install https://github.com/radioxoma/heval/archive/main.zip`.
 
 ### Mac OS X
 
@@ -100,19 +100,20 @@ Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [release
 
 > Tip: Archlinux [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository) package [`heval-git`](https://aur.archlinux.org/packages/heval-git/) available.
 
-Heval is written in pure python3 and uses tkinter for GUI. Install dependencies and run code directly:
+Heval is written in python and uses tkinter for GUI. Install dependencies and run code directly:
 
     $ sudo apt install git python3-tk  # Debian / Ubuntu
     $ sudo pacman -S git python tk  # Archlinux
 
     $ git clone https://github.com/radioxoma/heval.git
     $ cd heval
+    $ pip install .
     $ python -m heval
 
 Instead of executing `python -m heval` it's possible to double-click 'heval.desktop'.
 
 
-## Screenshots
+## Desktop app screenshots
 
 ![2023-04-02_17-39-38](https://user-images.githubusercontent.com/4701641/229360354-9b64cf87-eee7-415f-b536-650ed7f0294b.png)
 ![2023-04-02_17-46-04](https://user-images.githubusercontent.com/4701641/229360360-f9b12a49-7ffa-4bd9-b309-e4b94f00e57c.png)

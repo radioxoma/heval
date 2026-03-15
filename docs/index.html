@@ -21,23 +21,26 @@
     </style>
   </head>
   <body>
-    <h3>Heval: the human evaluator. Calculate what your human crave!</h3>
-    <fieldset id="human_model_form"><legend>Human model properties</legend>
-      <div><select id="body_sex" name="body_sex">
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="child">Child</option>
-      </select>
-      <label for="body_sex">sex</label></div>
+    <h3>Heval: the human evaluator</h3>
+    <p><small>Calculate what your human crave!</small></p>
+    <fieldset id="human_model_form"><legend>Model properties</legend>
+      <div>
+        <select id="body_sex" name="body_sex">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="child">Child</option>
+        </select>
+        <label for="body_sex">sex</label>
+      </div>
       <div><button id="body_reset">Reset</button></div>
     </fieldset>
-    <div id="output_flags"></div>
+    <p id="output_flags"></p>
     <details open>
-      <summary>Human body</summary>
+      <summary>Body</summary>
       <pre id="output_body">🟡 Please wait</pre>
     </details>
     <details open>
-      <summary>Human labs</summary>
+      <summary>Labs</summary>
       <pre id="output_labs">🟡 Please wait</pre>
     </details>
     <p style="text-align: right;"><a href="https://github.com/radioxoma/heval/" target="_blank">Heval on GitHub</a></p>

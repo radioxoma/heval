@@ -1302,9 +1302,7 @@ class CalcGFR(ttk.Frame):
                 sex=sex, cCrea=cCrea, age=age, weight=self.human.body_weight
             )
             mdrd = human.egfr_mdrd(sex=sex, cCrea=cCrea, age=age, black_skin=black_skin)
-            epi = human.egfr_ckd_epi(
-                sex=sex, cCrea=cCrea, age=age, black_skin=black_skin
-            )
+            epi = human.egfr_ckd_epi_2021(sex=sex, cCrea=cCrea, age=age)
             info += f"""\
             cCrea\t{cCrea_mgdl:.2f} mg/dL
             Year of birth: {dob:.0f}

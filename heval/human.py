@@ -2542,10 +2542,10 @@ def egfr_mdrd(
     return egfr
 
 
-def egfr_ckd_epi(
+def egfr_ckd_epi_2009(
     sex: HumanSex, cCrea: float, age: float, black_skin: bool = False
 ) -> float:
-    """Estimated glomerular filtration rate (CKD-EPI 2009 formula).
+    """Estimated glomerular filtration rate in adults (2009 CKD-EPI formula).
 
     For patients >18 years. Appears as more accurate than MDRD, especially
     when actual GFR is greater than 60 mL/min per 1.73 m2.
@@ -2555,43 +2555,101 @@ def egfr_ckd_epi(
     References
     ----------
     [1] A new equation to estimate glomerular filtration rate. Ann Intern Med. 2009;150(9):604-12.
-    [2] https://en.wikipedia.org/wiki/Renal_function#Glomerular_filtration_rate
 
     Args:
-        sex: Choose 'male', 'female'.
+        sex: Human sex
         cCrea: Serum creatinine (IDMS-calibrated), μmol/L
         age: Human age, years
         black_skin: True for people with black skin (african american)
 
     Returns:
         eGFR, mL/min/1.73 m2
+
+    Examples
+    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40, black_skin=True)
+    163.68594283784108
+    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40, black_skin=True)  # 145
+    148.08325740660493
+    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40)
+    141.23032168925027
+    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40)  # 126
+    127.76812545867551
+    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=100, age=40)  # 94
+    80.74749063632697
+    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=100, age=40)  # 71
+    61.95331202029062
     """
+    if sex == HumanSex.CHILD:
+        raise ValueError("CKD-EPI eGFR for children not supported")
     cCrea /= abg.M_Crea  # to mg/dl
     if sex == HumanSex.MALE:
         if cCrea <= 0.9:
             egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993**age
         else:
             egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993**age
-    elif sex == HumanSex.FEMALE:
+    else:  # Female
         if cCrea <= 0.7:
-            egfr = 141 * (cCrea / 0.7) ** -0.329 * 0.993**age * 1.018
+            egfr = 144 * (cCrea / 0.7) ** -0.329 * 0.993**age * 1.018
         else:
-            egfr = 141 * (cCrea / 0.7) ** -1.209 * 0.993**age * 1.018
-    elif sex == HumanSex.CHILD:
-        raise ValueError("CKD-EPI eGFR for children not supported")
+            egfr = 144 * (cCrea / 0.7) ** -1.209 * 0.993**age * 1.018
 
     if black_skin:
         egfr *= 1.159
     return egfr
 
 
-def egfr_schwartz(cCrea: float, height: float) -> float:
-    """Estimated glomerular filtration rate (revised Schwartz formula for children).
+def egfr_ckd_epi_2021(sex: HumanSex, cCrea: float, age: float) -> float:
+    """Estimated glomerular filtration rate in adults (2021 CKD-EPI formula).
 
-    * Not for adults.
-    * Revised Schwartz formula with fixed 'k = 0.413' for 1-16 years and
+    Args:
+        sex: Human sex
+        cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+        age: Human age, years
+
+    Returns:
+        eGFR, mL/min/1.73 m2
+
+    References:
+        [1] https://en.wikipedia.org/wiki/Glomerular_filtration_rate
+        [2] https://www.kidney.org/professionals/gfr_calculator
+
+    Examples
+    >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=40, age=40)
+    136.28113606385867
+    >>> egfr_ckd_epi_2021(sex=HumanSex.FEMALE, cCrea=40, age=40)
+    124.47889340674664
+    >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=100, age=40)
+    84.15535766486853
+    >>> egfr_ckd_epi_2021(sex=HumanSex.FEMALE, cCrea=100, age=40)
+    62.99251082741861
+    """
+    if sex == HumanSex.CHILD:
+        raise ValueError("CKD-EPI eGFR for children not supported")
+    cCrea /= abg.M_Crea  # to mg/dl
+    if sex == HumanSex.MALE:
+        if cCrea <= 0.9:
+            return 142 * (cCrea / 0.9) ** -0.302 * 0.9938**age
+        else:
+            return 142 * (cCrea / 0.9) ** -1.2 * 0.9938**age
+    else:  # Female
+        if cCrea <= 0.7:
+            return 142 * (cCrea / 0.7) ** -0.241 * 0.9938**age * 1.012
+        else:
+            return 142 * (cCrea / 0.7) ** -1.2 * 0.9938**age * 1.012
+
+
+def egfr_schwartz(cCrea: float, height: float) -> float:
+    """Estimated glomerular filtration rate in children (Bedside Schwartz 2009).
+
+    Revised Schwartz formula with fixed 'k = 0.413' for 1-16 years and
         IDMS-calibrated creatinine.
-    * Most accurate in range 15-75 ml/min per 1.73 m2.
+
+    Args:
+        cCrea: Serum creatinine (IDMS-calibrated), μmol/L
+        height: Child height, meters
+
+    Returns:
+        eGFR, mL/min/1.73 m2. Most accurate in range 15-75 mL/min/1.73 m2.
 
     Example
     -------
@@ -2607,20 +2665,14 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
         http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
 
     https://www.kidney.org/professionals/gfr_calculatorPed
+    https://web.archive.org/web/20221006204252/https://www.kidney.org/content/creatinine-based-%E2%80%9Cbedside-schwartz%E2%80%9D-equation-2009
     http://nephron.com/bedside_peds_nic.cgi
     http://nephron.com/peds_nic.cgi
-
-    Args:
-        cCrea: Serum creatinine (IDMS-calibrated), μmol/L
-        height: Children height, meters
-
-    Returns:
-        eGFR, mL/min/1.73 m2.
     """
     # k = 0.33  # First year of life, pre-term infants
     # k = 0.45  # First year of life, full-term infants
     # k = 0.55  # 1-12 years
-    k = 0.413  # 1 to 16 years. Updated in 2009
+    k = 0.413  # 1 to 16 years. Updated in 2009 ""
     return k * height * 100 / cCrea * abg.M_Crea
 
 

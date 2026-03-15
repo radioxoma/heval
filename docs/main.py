@@ -114,9 +114,12 @@ def set_input_defaults():
     web.page["body_sex"].dispatchEvent(event_change)
     # Reset spinboxes
     for prop, unit, val in input_list:
-        web.page[prop].value = val
-    for k in web.page.find("input[type=number]"):
-        k.dispatchEvent(event_change)
+        target = web.page[prop]
+        if target.type == "number":
+            target.value = val
+        elif target.type == "checkbox":
+            target.checked = val
+        target.dispatchEvent(event_change)
     human_model_changed.trigger(None)
 
 

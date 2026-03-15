@@ -1187,6 +1187,7 @@ class HumanModel:
 
     def init(self):
         """Run after model population."""
+        self.flags = common.FlagWarnings()
         if self.body_height is None or self.body_sex is None:
             return "Empty human model (set sex, height, weight)"
         self._eval_body = ""

@@ -11,22 +11,26 @@
 <!--    <script type="module" src="https://cdn.jsdelivr.net/npm/@pyscript/core/dist/core.js"></script>-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pyscript/core@0.7.19/dist/core.css">
     <script type="module" src="https://cdn.jsdelivr.net/npm/@pyscript/core@0.7.19/dist/core.js"></script>
-    <style>pre {white-space: pre-wrap;}</style>
+    <style>
+      pre { white-space: pre-wrap; }
+      #human_model_form {
+        display: grid;
+        grid-template-columns: max-content auto;
+        column-gap: 5px;
+      }
+    </style>
   </head>
   <body>
-    <script type="py" src="./main.py" config="./pyscript.json"></script>
     <h3>Heval: the human evaluator. Calculate what your human crave!</h3>
-    <p>🚧 under construction 🚧</p>
-    <p>
-      <label for="body_sex">Sex</label>
-      <select id="body_sex" name="body_sex">
+    <fieldset id="human_model_form"><legend>Human model properties</legend>
+      <div><select id="body_sex" name="body_sex">
         <option value="male">Male</option>
         <option value="female">Female</option>
         <option value="child">Child</option>
       </select>
-      <button id="body_reset">Reset</button>
-      <p id="human_labs_form"></p>
-    </p>
+      <label for="body_sex">sex</label></div>
+      <div><button id="body_reset">Reset</button></div>
+    </fieldset>
     <div id="output_flags"></div>
     <details open>
       <summary>Human body</summary>
@@ -37,5 +41,6 @@
       <pre id="output_labs">🟡 Please wait</pre>
     </details>
     <p style="text-align: right;"><a href="https://github.com/radioxoma/heval/" target="_blank">Heval on GitHub</a></p>
+    <script type="py" src="./main.py" config="./pyscript.json"></script>
   </body>
 </html>

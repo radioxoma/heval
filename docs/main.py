@@ -17,7 +17,8 @@ human = heval.human.HumanModel()
 human_model_changed = Event()
 event_change = window.Event.new("change")  # Dummy object to generate events
 
-ctl_sbx_list = (
+input_list = (
+    ("body_use_ibw", """Use <abbr title="Ideal body weight">IBW</abbr>""", True),
     ("body_height", "m", 1.77),
     ("body_weight", "kg", 75),
     ("body_age", "years", 40),
@@ -30,32 +31,33 @@ ctl_sbx_list = (
     ("blood_abg_cGlu", "mmol/L", 5.5),
     ("blood_abg_ctAlb", "g/dL", 4.4),
     ("blood_abg_cCrea", "μmol/L", 75),
-    ("blood_bchem_ctBilindirect", "μmol/L", 10),
+    ("blood_bchem_ctBilIndirect", "μmol/L", 10),
     ("blood_cbc_hb", "g/L", 140),
-    ("blood_cbc_plt", "×10⁹/L", 300),
+    ("blood_cbc_plt", "10⁹/L", 300),
     ("blood_cbc_mcv", "fL", 90),
     ("blood_cbc_ret", "%", 1),
     ("blood_coag_fib", "g/L", 3),
     ("blood_coag_inr", "", 1),
-    ("blood_coag_ddimer", "ng/ml", 300),
+    ("blood_coag_dDimer", "ng/ml", 300),
 )
 
 
-ctl_chk_list = ("body_use_ibw", True)
-
-
 def gen_ui():
-    control: web.Element = web.page["#human_labs_form"]
-    for prop, unit, val in ctl_sbx_list:
-        # Browser uses 'min', 'max' to calculate input size
-        control.append(
-            web.input_(type="number", id=prop, min=0, max=999, step=0.1, value=val)
-        )
-        control.append(" ")
-        control.append(
+    control: web.Element = web.page["#human_model_form"]
+    for prop, unit, val in input_list:
+        div = web.div()
+        if isinstance(val, bool):  # Subclass of int, so check first
+            div.append(web.input_(type="checkbox", id=prop, checked=val))
+        elif isinstance(val, int | float):
+            # Browser uses 'min', 'max' to calculate input size
+            div.append(
+                web.input_(type="number", id=prop, min=0, max=999, step=0.1, value=val)
+            )
+        div.append(" ")
+        div.append(
             web.label(f"{prop.split('_')[-1]}{f', {unit}' if unit else ''}", for_=prop)
         )
-        control.append(web.br())
+        control.append(div)
 
 
 gen_ui()
@@ -72,16 +74,25 @@ def select_changed(event):
     human_model_changed.trigger(None)
 
 
-@when("change", "input[type=number]")
-def spinbox_changed(event):
+@when("change", "input")
+def input_changed(event):
     """Auto map spinboxes to model properties."""
     # if event.target.tagName == "INPUT" and event.target.type == "number":
-    print(f"spinbox_changed by event: {event.target.id}={event.target.value}")
-    if event.target.id == "blood_abg_pCO2":
-        setattr(human, event.target.id, float(event.target.value) * heval.abg.kPa)
-    else:
-        setattr(human, event.target.id, float(event.target.value))
-    human_model_changed.trigger(None)
+    if event.target.type == "number":
+        print(
+            f"{event.target.type} changed by event: {event.target.id}={event.target.value}"
+        )
+        if event.target.id == "blood_abg_pCO2":
+            setattr(human, event.target.id, float(event.target.value) * heval.abg.kPa)
+        else:
+            setattr(human, event.target.id, float(event.target.value))
+        human_model_changed.trigger(None)
+    elif event.target.type == "checkbox":
+        print(
+            f"{event.target.type} changed by event: {event.target.id}={event.target.checked}"
+        )
+        setattr(human, event.target.id, event.target.checked)
+        human_model_changed.trigger(None)
 
 
 @when("wheel", "input[type=number]")
@@ -102,7 +113,7 @@ def set_input_defaults():
     web.page["body_sex"].value = web.page["body_sex option:first-of-type"].value
     web.page["body_sex"].dispatchEvent(event_change)
     # Reset spinboxes
-    for prop, unit, val in ctl_sbx_list:
+    for prop, unit, val in input_list:
         web.page[prop].value = val
     for k in web.page.find("input[type=number]"):
         k.dispatchEvent(event_change)

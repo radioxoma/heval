@@ -99,17 +99,17 @@ class HumanModel:
     blood_abg_ctAlb = FloatAttr()  # g/dL albumin
     blood_abg_cCrea = FloatAttr()  # μmol/L
     # blood_bchem_ctBil = FloatAttr()
-    blood_bchem_ctBilindirect = FloatAttr()  # μmol/L
+    blood_bchem_ctBilIndirect = FloatAttr()  # μmol/L
 
     # blood_abg_ctHb = FloatAttr()  # g/L, haemoglobin, usage discouraged
     blood_cbc_hb = FloatAttr()  # g/L
-    blood_cbc_plt = FloatAttr()  # ×10⁹/L
+    blood_cbc_plt = FloatAttr()  # 10⁹/L
     blood_cbc_mcv = FloatAttr()  # fL
     blood_cbc_ret = FloatAttr()  # Percent
 
     blood_coag_fib = FloatAttr()  # g/L
     blood_coag_inr = FloatAttr()  # Fraction
-    blood_coag_ddimer = FloatAttr()  # ng/ml
+    blood_coag_dDimer = FloatAttr()  # ng/ml
 
     def __init__(self):
         self.debug = False
@@ -1054,10 +1054,10 @@ class HumanModel:
             elif self.blood_cbc_plt < 50:
                 score += 2
 
-        if self.blood_coag_ddimer is not None:
-            if 400 <= self.blood_coag_ddimer <= 4000:  # ng/ml
+        if self.blood_coag_dDimer is not None:
+            if 400 <= self.blood_coag_dDimer <= 4000:  # ng/ml
                 score += 2
-            elif self.blood_coag_ddimer > 4000:
+            elif self.blood_coag_dDimer > 4000:
                 score += 3
 
         if self.blood_coag_inr is not None:
@@ -1100,8 +1100,8 @@ class HumanModel:
             if self.blood_cbc_plt < 30:  # 10^9/L
                 score += 1
 
-        if self.blood_bchem_ctBilindirect is not None:
-            if self.blood_bchem_ctBilindirect > 34.2:  # μmol/L
+        if self.blood_bchem_ctBilIndirect is not None:
+            if self.blood_bchem_ctBilIndirect > 34.2:  # μmol/L
                 score += 1
 
         hemolysis = False

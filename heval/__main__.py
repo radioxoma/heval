@@ -1048,7 +1048,7 @@ class CalcElectrolytes(ttk.Frame):
         CreateToolTip(ctl_btn_trans, "Estimate hemotransfusion therapy needs")
         ctl_btn_trans.grid(row=1, column=0)
 
-        ttk.Label(fr_trans_entry, text="PLT, ×10⁹/L").grid(row=2, column=0)
+        ttk.Label(fr_trans_entry, text="PLT, 10⁹/L").grid(row=2, column=0)
         self.ctl_sbx_plt = SpinboxFloat(
             fr_trans_entry,
             width=4,

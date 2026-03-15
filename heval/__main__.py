@@ -10,7 +10,6 @@ from __future__ import annotations
 import random
 import textwrap
 import tkinter as tk
-from datetime import datetime
 from tkinter import font as tkfont
 from tkinter import ttk
 
@@ -344,11 +343,11 @@ class MainWindow(ttk.Frame):
         fr_entry = ttk.Frame(self)
         fr_entry.pack(anchor=tk.W)
         ttk.Label(fr_entry, text="Sex").pack(side=tk.LEFT)
-        self.var_sex = tk.StringVar()
+        self._var_sex = tk.StringVar()
         self.sex_list = [sex.title() for sex in common.HumanSex.__members__.keys()]
         self.ctl_sex = ttk.OptionMenu(
             fr_entry,
-            self.var_sex,
+            self._var_sex,
             self.sex_list[0],
             *self.sex_list,
             command=self.set_model_sex,
@@ -360,21 +359,21 @@ class MainWindow(ttk.Frame):
         )
 
         ttk.Label(fr_entry, text="Height, cm").pack(side=tk.LEFT)
-        self.ctl_height = SpinboxFloat(
+        self.ctl_sbx_height = SpinboxFloat(
             fr_entry, width=3, from_=1, to=500, command=self.set_model_height
         )
-        self.ctl_height.bind("<KeyRelease>", self.set_model_height)
-        self.ctl_height.pack(side=tk.LEFT)
+        self.ctl_sbx_height.bind("<KeyRelease>", self.set_model_height)
+        self.ctl_sbx_height.pack(side=tk.LEFT)
         CreateToolTip(
-            self.ctl_height,
+            self.ctl_sbx_height,
             "Height highly correlates with age, ideal body weight and body surface area",
         )
 
-        self.var_use_ibw = tk.IntVar()  # No real body weight
-        self.var_use_ibw.set(1)
+        self._var_use_ibw = tk.IntVar()  # No real body weight
+        self._var_use_ibw.set(1)
         self.ctl_use_ibw_cb = ttk.Checkbutton(
             fr_entry,
-            variable=self.var_use_ibw,
+            variable=self._var_use_ibw,
             onvalue=1,
             offvalue=0,
             text="Use IBW",
@@ -388,7 +387,7 @@ class MainWindow(ttk.Frame):
 
         self.lbl_weight = ttk.Label(fr_entry, text="Weight, kg")
         self.lbl_weight.pack(side=tk.LEFT)
-        self.ctl_weight = SpinboxFloat(
+        self.ctl_sbx_weight = SpinboxFloat(
             fr_entry,
             width=4,
             from_=1,
@@ -397,9 +396,23 @@ class MainWindow(ttk.Frame):
             increment=1,
             command=self.set_model_weight,
         )
-        self.ctl_weight.bind("<KeyRelease>", self.set_model_weight)
-        self.ctl_weight.pack(side=tk.LEFT)
-        CreateToolTip(self.ctl_weight, "Real body weight")
+        self.ctl_sbx_weight.bind("<KeyRelease>", self.set_model_weight)
+        self.ctl_sbx_weight.pack(side=tk.LEFT)
+        CreateToolTip(self.ctl_sbx_weight, "Real body weight")
+
+        ttk.Label(fr_entry, text="Age, years").pack(side=tk.LEFT)
+        self.ctl_sbx_age = SpinboxFloat(
+            fr_entry,
+            width=3,
+            from_=0.0,
+            to=200.0,
+            format="%1.0f",
+            increment=1,
+            command=self.set_model_age,
+        )
+        self.ctl_sbx_age.bind("<KeyRelease>", self.set_model_age)
+        self.ctl_sbx_age.pack(side=tk.LEFT)
+        CreateToolTip(self.ctl_sbx_age, "Human age, years")
 
         ttk.Label(fr_entry, text="Body temp, °C").pack(side=tk.LEFT)
         self.ctl_sbx_temp = SpinboxFloat(
@@ -429,11 +442,9 @@ class MainWindow(ttk.Frame):
         self.CMain = CalcMain(nb, self.human)
         self.CNutrition = CalcNutrition(nb, self.human)
         self.CElectrolytes = CalcElectrolytes(nb, self.human)
-        self.CGFR = CalcGFR(nb, self.human)
         nb.add(self.CMain, text="Human body")
         nb.add(self.CNutrition, text="Nutrition")
-        nb.add(self.CElectrolytes, text="ABG & Electrolytes")
-        nb.add(self.CGFR, text="eGFR")
+        nb.add(self.CElectrolytes, text="Laboratory")
         nb.pack(expand=True, fill=tk.BOTH)  # BOTH looks less ugly under Windows
 
         self.parent.bind("<Escape>", lambda e: self.parent.destroy())
@@ -450,12 +461,10 @@ class MainWindow(ttk.Frame):
         self.parent.bind("<Alt-KeyPress-1>", lambda e: nb.select(0))
         self.parent.bind("<Alt-KeyPress-2>", lambda e: nb.select(1))
         self.parent.bind("<Alt-KeyPress-3>", lambda e: nb.select(2))
-        self.parent.bind("<Alt-KeyPress-4>", lambda e: nb.select(3))
         self.bind_all("<<HumanModelChanged>>", self.eval)
         self.bind_all("<<HumanModelChanged>>", self.CMain.eval, add="+")
         self.bind_all("<<HumanModelChanged>>", self.CNutrition.eval, add="+")
         self.bind_all("<<HumanModelChanged>>", self.CElectrolytes.eval, add="+")
-        self.bind_all("<<HumanModelChanged>>", self.CGFR.eval, add="+")
 
         # self.statusbar_str = StringVar()
         # self.statusbar_str.set("Hello world!")
@@ -463,22 +472,26 @@ class MainWindow(ttk.Frame):
         # statusbar.pack(side=BOTTOM, fill=X)
 
     def set_input_defaults(self, event=None):
-        self.var_sex.set(self.sex_list[0])
+        self._var_sex.set(self.sex_list[0])
         self.set_model_sex()
 
-        self.ctl_height.delete(0, tk.END)
-        self.ctl_height.insert(0, "177")  # cm
+        self.ctl_sbx_height.delete(0, tk.END)
+        self.ctl_sbx_height.insert(0, "177")  # cm
         self.set_model_height()
 
         # Can't change widget value while it being disabled, so here is a trick
-        self.ctl_weight["state"] = tk.NORMAL
-        self.ctl_weight.delete(0, tk.END)
-        self.ctl_weight.insert(0, "69.0")  # kg
-        self.ctl_weight["state"] = self.lbl_weight["state"]
+        self.ctl_sbx_weight["state"] = tk.NORMAL
+        self.ctl_sbx_weight.delete(0, tk.END)
+        self.ctl_sbx_weight.insert(0, "69.0")  # kg
+        self.ctl_sbx_weight["state"] = self.lbl_weight["state"]
         self.set_model_weight()
 
-        self.var_use_ibw.set(1)
+        self._var_use_ibw.set(1)
         self.set_model_use_ibw()
+
+        self.ctl_sbx_age.delete(0, tk.END)
+        self.ctl_sbx_age.insert(0, "40")
+        self.set_model_age()
 
         self.ctl_sbx_temp.delete(0, tk.END)
         self.ctl_sbx_temp.insert(0, "36.6")  # celsus degrees
@@ -506,15 +519,19 @@ class MainWindow(ttk.Frame):
                 font_obj["size"] = 9
 
     def set_model_sex(self, event=None):
-        self.human.body_sex = common.HumanSex[self.var_sex.get().upper()]
+        self.human.body_sex = common.HumanSex[self._var_sex.get().upper()]
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_height(self, event=None):
-        self.human.body_height = float(self.ctl_height.get()) / 100
+        self.human.body_height = float(self.ctl_sbx_height.get()) / 100
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_weight(self, event=None):
-        self.human.body_weight = float(self.ctl_weight.get())
+        self.human.body_weight = float(self.ctl_sbx_weight.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_age(self, event=None):
+        self.human.body_age = float(self.ctl_sbx_age.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_body_temp(self, event=None):
@@ -522,15 +539,15 @@ class MainWindow(ttk.Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_use_ibw(self, event=None):
-        if self.var_use_ibw.get() == 0:
+        if self._var_use_ibw.get() == 0:
             self.human.body_use_ibw = False
             self.lbl_weight["state"] = tk.NORMAL
-            self.ctl_weight["state"] = tk.NORMAL
+            self.ctl_sbx_weight["state"] = tk.NORMAL
         else:
             self.human.body_use_ibw = True
-            self.ctl_weight.delete(0, tk.END)
-            self.ctl_weight.insert(0, f"{self.human.body_weight:.1f}")
-            self.ctl_weight["state"] = tk.DISABLED
+            self.ctl_sbx_weight.delete(0, tk.END)
+            self.ctl_sbx_weight.insert(0, f"{self.human.body_weight:.1f}")
+            self.ctl_sbx_weight["state"] = tk.DISABLED
             self.lbl_weight["state"] = tk.DISABLED
         self.event_generate("<<HumanModelChanged>>")
 
@@ -543,10 +560,10 @@ class MainWindow(ttk.Frame):
     def eval(self, event=None):
         """Update GUI."""
         if self.human.body_use_ibw:
-            self.ctl_weight["state"] = tk.NORMAL
-            self.ctl_weight.delete(0, tk.END)
-            self.ctl_weight.insert(0, f"{self.human.body_weight:.1f}")
-            self.ctl_weight["state"] = self.lbl_weight["state"]
+            self.ctl_sbx_weight["state"] = tk.NORMAL
+            self.ctl_sbx_weight.delete(0, tk.END)
+            self.ctl_sbx_weight.insert(0, f"{self.human.body_weight:.1f}")
+            self.ctl_sbx_weight["state"] = self.lbl_weight["state"]
 
 
 class HelpWindow(tk.Toplevel):
@@ -1021,9 +1038,33 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.bind("<KeyRelease>", self.set_model_ctAlb)
         self.ctl_sbx_ctAlb.grid(row=3, column=1)
 
-        ttk.Label(fr_extra_entry, text="ctHb, g/L").grid(row=4, column=0)
-        self.ctl_sbx_ctHb = SpinboxFloat(
+        ttk.Label(fr_extra_entry, text="cCrea, μmol/L").grid(row=4, column=0)
+        self.ctl_sbx_cCrea = SpinboxFloat(
             fr_extra_entry,
+            width=4,
+            from_=0.0,
+            to=1000.0,
+            format="%.0f",
+            increment=1,
+            command=self.set_model_cCrea,
+        )
+        self.ctl_sbx_cCrea.bind("<KeyRelease>", self.set_model_cCrea)
+        self.ctl_sbx_cCrea.grid(row=4, column=1)
+        CreateToolTip(self.ctl_sbx_cCrea, "Serum creatinine (IDMS-calibrated)")
+
+        # TRANSFUSION
+        fr_trans_entry = ttk.LabelFrame(fr_entry, text="Transfusion")
+        fr_trans_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
+
+        ctl_btn_trans = ttk.Button(
+            fr_trans_entry, text="Reset", command=self.set_input_trans_defaults
+        )
+        CreateToolTip(fr_trans_entry, "Estimate hemotransfusion therapy needs")
+        ctl_btn_trans.grid(row=1, column=0)
+
+        ttk.Label(fr_trans_entry, text="ctHb, g/L").grid(row=2, column=0)
+        self.ctl_sbx_ctHb = SpinboxFloat(
+            fr_trans_entry,
             width=4,
             from_=0,
             to=500,
@@ -1036,19 +1077,9 @@ class CalcElectrolytes(ttk.Frame):
             "PRBC dosage for anemia. Free water deficit by Hct if too high.",
         )
         self.ctl_sbx_ctHb.bind("<KeyRelease>", self.set_model_ctHb)
-        self.ctl_sbx_ctHb.grid(row=4, column=1)
+        self.ctl_sbx_ctHb.grid(row=2, column=1)
 
-        # TRANSFUSION
-        fr_trans_entry = ttk.LabelFrame(fr_entry, text="Transfusion")
-        fr_trans_entry.pack(side=tk.LEFT, anchor=tk.N, expand=True, fill=tk.BOTH)
-
-        ctl_btn_trans = ttk.Button(
-            fr_trans_entry, text="Reset", command=self.set_input_trans_defaults
-        )
-        CreateToolTip(ctl_btn_trans, "Estimate hemotransfusion therapy needs")
-        ctl_btn_trans.grid(row=1, column=0)
-
-        ttk.Label(fr_trans_entry, text="PLT, 10⁹/L").grid(row=2, column=0)
+        ttk.Label(fr_trans_entry, text="PLT, 10⁹/L").grid(row=3, column=0)
         self.ctl_sbx_plt = SpinboxFloat(
             fr_trans_entry,
             width=4,
@@ -1063,9 +1094,9 @@ class CalcElectrolytes(ttk.Frame):
             "Low count provokes spontaneous bleeding. Overall count promotes clot density",
         )
         self.ctl_sbx_plt.bind("<KeyRelease>", self.set_model_plt)
-        self.ctl_sbx_plt.grid(row=2, column=1)
+        self.ctl_sbx_plt.grid(row=3, column=1)
 
-        ttk.Label(fr_trans_entry, text="Fib, g/L").grid(row=3, column=0)
+        ttk.Label(fr_trans_entry, text="Fib, g/L").grid(row=4, column=0)
         self.ctl_sbx_fib = SpinboxFloat(
             fr_trans_entry,
             width=4,
@@ -1080,9 +1111,9 @@ class CalcElectrolytes(ttk.Frame):
             "Clot density. Consumed during bleeding. Amount is reduced in liver impairment.",
         )
         self.ctl_sbx_fib.bind("<KeyRelease>", self.set_model_fib)
-        self.ctl_sbx_fib.grid(row=3, column=1)
+        self.ctl_sbx_fib.grid(row=4, column=1)
 
-        ttk.Label(fr_trans_entry, text="INR").grid(row=4, column=0)
+        ttk.Label(fr_trans_entry, text="INR").grid(row=5, column=0)
         self.ctl_sbx_inr = SpinboxFloat(
             fr_trans_entry,
             width=4,
@@ -1097,7 +1128,7 @@ class CalcElectrolytes(ttk.Frame):
             "Created for warfarin monitoring. High if overall coagulation factors or liver function are impaired.",
         )
         self.ctl_sbx_inr.bind("<KeyRelease>", self.set_model_inr)
-        self.ctl_sbx_inr.grid(row=4, column=1)
+        self.ctl_sbx_inr.grid(row=5, column=1)
 
         # Text view
         self.TxtView = TextHtmlView(self)
@@ -1145,11 +1176,14 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_ctAlb.delete(0, tk.END)
         self.ctl_sbx_ctAlb.insert(0, str(abg.norm_ctAlb_mean))
         self.set_model_ctAlb()
+        self.ctl_sbx_cCrea.delete(0, tk.END)
+        self.ctl_sbx_cCrea.insert(0, "75")
+        self.set_model_cCrea()
+
+    def set_input_trans_defaults(self, event=None):
         self.ctl_sbx_ctHb.delete(0, tk.END)
         self.ctl_sbx_ctHb.insert(0, "140")  # g/L, mean value for both sexes
         self.set_model_ctHb()
-
-    def set_input_trans_defaults(self, event=None):
         self.ctl_sbx_plt.delete(0, tk.END)
         self.ctl_sbx_plt.insert(0, str(abg.norm_plt_mean))
         self.set_model_plt()
@@ -1188,6 +1222,10 @@ class CalcElectrolytes(ttk.Frame):
         self.human.blood_abg_cGlu = float(self.ctl_sbx_cGlu.get())
         self.event_generate("<<HumanModelChanged>>")
 
+    def set_model_cCrea(self, event=None):
+        self.human.blood_abg_cCrea = float(self.ctl_sbx_cCrea.get())
+        self.event_generate("<<HumanModelChanged>>")
+
     def set_model_ctHb(self, event=None):
         self.human.blood_cbc_hb = float(self.ctl_sbx_ctHb.get())
         self.event_generate("<<HumanModelChanged>>")
@@ -1208,118 +1246,6 @@ class CalcElectrolytes(ttk.Frame):
         self.lbl_hco3["text"] = f"{self.human.blood_abg_hco3p:.1f}"
         self.human.init()
         self.TxtView.set_text(self.human.flags.render() + self.human.eval_labs())
-
-
-class CalcGFR(ttk.Frame):
-    """Estimate glomerular filtration rate (eGFR)."""
-
-    def __init__(self, parent, human_model):
-        super().__init__(parent)
-        self.parent = parent
-        self.human = human_model
-
-        fr_entry = ttk.Frame(self)
-        fr_entry.pack(anchor=tk.W)
-
-        ttk.Label(fr_entry, text="cCrea, μmol/L").pack(side=tk.LEFT)
-        self.ctl_sbx_ccrea = SpinboxFloat(
-            fr_entry,
-            width=4,
-            from_=0.0,
-            to=1000.0,
-            format="%.1f",
-            increment=10,
-            command=self.eval,
-        )
-        self.ctl_sbx_ccrea.bind("<KeyRelease>", self.eval)
-        self.ctl_sbx_ccrea.pack(side=tk.LEFT)
-        CreateToolTip(self.ctl_sbx_ccrea, "Serum creatinine (IDMS-calibrated)")
-
-        ttk.Label(fr_entry, text="Age, years").pack(side=tk.LEFT)
-        self.ctl_sbx_age = SpinboxFloat(
-            fr_entry,
-            width=3,
-            from_=0.0,
-            to=200.0,
-            format="%1.0f",
-            increment=1,
-            command=self.set_model_age,
-        )
-        self.ctl_sbx_age.bind("<KeyRelease>", self.set_model_age)
-        self.ctl_sbx_age.pack(side=tk.LEFT)
-        CreateToolTip(self.ctl_sbx_age, "Human age, years")
-
-        self.var_isblack = tk.IntVar()  # No real body weight
-        self.var_isblack.set(0)
-        self.ctl_ckb_isblack = ttk.Checkbutton(
-            fr_entry,
-            variable=self.var_isblack,
-            onvalue=1,
-            offvalue=0,
-            text="Black human",
-            command=self.eval,
-        )
-        self.ctl_ckb_isblack.pack(side=tk.LEFT)
-        CreateToolTip(self.ctl_ckb_isblack, "Is this human skin is black?")
-
-        self.reset = ttk.Button(fr_entry, text="Reset", command=self.set_input_defaults)
-        self.reset.pack(side=tk.LEFT)
-        CreateToolTip(self.reset, "Drop changes for cCrea, age, skin")
-
-        self.TxtView = TextHtmlView(self)
-        self.TxtView.pack(expand=True, fill=tk.BOTH)
-        self.set_input_defaults()
-        self.TxtView.set_text(
-            "Estimate glomerular filtration rate (eGFR).\n"
-            "Make sure you set sex, cCrea (IDMS-calibrated), age, skin color."
-        )
-
-    def set_input_defaults(self, event=None):
-        self.ctl_sbx_ccrea.delete(0, tk.END)
-        self.ctl_sbx_ccrea.insert(0, "75.0")
-
-        self.ctl_sbx_age.delete(0, tk.END)
-        self.ctl_sbx_age.insert(0, "40")
-        self.set_model_age()
-
-        self.var_isblack.set(0)
-        self.eval()
-
-    def set_model_age(self, event=None):
-        self.human.body_age = float(self.ctl_sbx_age.get())
-        self.event_generate("<<HumanModelChanged>>")
-
-    def eval(self, event=None):
-        sex = self.human.body_sex
-        cCrea = float(self.ctl_sbx_ccrea.get())
-        cCrea_mgdl = cCrea / abg.M_Crea
-        info = ""
-        if sex in (common.HumanSex.MALE, common.HumanSex.FEMALE):
-            age = self.human.body_age
-            dob = datetime.now().year - age  # timedelta is complicated
-            black_skin = self.var_isblack.get() == 1
-            crcl = human.ccrea_clearance_cockcroft_gault(
-                sex=sex, cCrea=cCrea, age=age, weight=self.human.body_weight
-            )
-            mdrd = human.egfr_mdrd(sex=sex, cCrea=cCrea, age=age, black_skin=black_skin)
-            epi = human.egfr_ckd_epi_2021(sex=sex, cCrea=cCrea, age=age)
-            info += f"""\
-            cCrea\t{cCrea_mgdl:.2f} mg/dL
-            Year of birth: {dob:.0f}
-            CrCl\t{crcl:3.0f} mL/min (Cockcroft-Gault)
-            MDRD\t{mdrd:3.0f} mL/min/1.73 m² (considered obsolete)
-            CKD-EPI\t{epi:3.0f} mL/min/1.73 m²
-
-            Conclusion: {human.gfr_describe(epi)}
-            """
-        elif sex == common.HumanSex.CHILD:
-            schwartz = human.egfr_schwartz(cCrea, self.human.body_height)
-            info += f"""\
-            cCrea\t{cCrea_mgdl:.2f} mg/dL
-            {schwartz:.0f} mL/min/1.73 m² [Schwartz revised 2009]
-            {human.gfr_describe(schwartz)}
-            """
-        self.TxtView.set_text(textwrap.dedent(info))
 
 
 class CreateToolTip:

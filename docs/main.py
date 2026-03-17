@@ -19,6 +19,7 @@ event_change = window.Event.new("change")  # Dummy object to generate events
 
 input_list = (
     ("body_use_ibw", """Use <abbr title="Ideal body weight">IBW</abbr>""", True),
+    ("verbose", "", False),
     ("body_height", "m", 1.77),
     ("body_weight", "kg", 75),
     ("body_age", "years", 40),
@@ -31,7 +32,7 @@ input_list = (
     ("blood_abg_cGlu", "mmol/L", 5.5),
     ("blood_abg_ctAlb", "g/dL", 4.4),
     ("blood_abg_cCrea", "μmol/L", 75),
-    ("blood_bchem_ctBilIndirect", "μmol/L", 10),
+    ("blood_bchem_ctBilIndir", "μmol/L", 10),
     ("blood_cbc_hb", "g/L", 140),
     ("blood_cbc_plt", "10⁹/L", 300),
     ("blood_cbc_mcv", "fL", 90),

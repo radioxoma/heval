@@ -300,13 +300,13 @@ class MainWindow(ttk.Frame):
         menubar.add_cascade(label="File", menu=menu_file)
 
         menu_view = tk.Menu(menubar, tearoff=False)
-        self._debug = tk.BooleanVar()
-        self._debug.set(self.human.debug)  # Model debug flag is superior
+        self._verbose = tk.BooleanVar()
+        self._verbose.set(self.human.verbose)
         # tooltip="Show normally hidden extra messages in report texts"
         menu_view.add_checkbutton(
             label="Verbose report",
-            command=self.set_model_debug,
-            variable=self._debug,
+            command=self.set_model_verbose,
+            variable=self._verbose,
             accelerator="v",
         )
         menu_view.add_command(
@@ -449,7 +449,7 @@ class MainWindow(ttk.Frame):
 
         self.parent.bind("<Escape>", lambda e: self.parent.destroy())
         self.bind_all("<F1>", lambda e: HelpWindow(self.parent))
-        self.bind_all("<v>", self.set_model_debug)
+        self.bind_all("<v>", self.set_model_verbose)
         self.bind_all(
             "<Control-Key-equal>", lambda e: self.adjust_font_size("increase")
         )
@@ -551,10 +551,9 @@ class MainWindow(ttk.Frame):
             self.lbl_weight["state"] = tk.DISABLED
         self.event_generate("<<HumanModelChanged>>")
 
-    def set_model_debug(self, event=None):
-        """Be verbose if debug is True."""
-        self.human.debug = not self.human.debug  # Invert boolean
-        self._debug.set(self.human.debug)  # Change flag in menu accordingly
+    def set_model_verbose(self, event=None):
+        self.human.verbose = not self.human.verbose  # Invert boolean
+        self._verbose.set(self.human.verbose)  # Change flag in menu accordingly
         self.event_generate("<<HumanModelChanged>>")
 
     def eval(self, event=None):

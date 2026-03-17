@@ -100,7 +100,7 @@ class HumanModel:
     blood_abg_ctAlb = FloatAttr()  # g/dL albumin
     blood_abg_cCrea = FloatAttr()  # μmol/L
     # blood_bchem_ctBil = FloatAttr()
-    blood_bchem_ctBilIndirect = FloatAttr()  # μmol/L
+    blood_bchem_ctBilIndir = FloatAttr()  # μmol/L
 
     # blood_abg_ctHb = FloatAttr()  # g/L, haemoglobin, usage discouraged
     blood_cbc_hb = FloatAttr()  # g/L
@@ -113,7 +113,7 @@ class HumanModel:
     blood_coag_dDimer = FloatAttr()  # ng/ml
 
     def __init__(self):
-        self.debug = False
+        self.verbose = False
         self._weight: float | None = None
         self._use_ibw: bool = False
         self._weight_ideal_method: str = ""
@@ -669,7 +669,7 @@ class HumanModel:
                 HCO3(P) {self.blood_abg_hco3p:2.1f} mmol/L
                 Conclusion: {abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[0]}\n"""
             )
-            if self.debug:
+            if self.verbose:
                 info += "\n-- Manual compensatory response check --------------\n"
                 # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
                 info += abg.abg_approach_research(
@@ -715,7 +715,7 @@ class HumanModel:
             else:
                 info += f"AG is ok {desc}"
 
-        if self.debug:
+        if self.verbose:
             """Strong ion difference.
 
             Sometimes Na and Cl don't changes simultaneously.
@@ -788,7 +788,7 @@ class HumanModel:
                     NaHCO3_ml = NaHCO3_g / dilution * 100
                     NaHCO3_ml_24h = NaHCO3_g_24h / dilution * 100
                     info += f"    * NaHCO3 {dilution:.1f}% {NaHCO3_ml:.0f} ml, daily dose {NaHCO3_ml_24h:.0f} ml/24h\n"
-                if self.debug:
+                if self.verbose:
                     info += textwrap.dedent(
                         """\
                         Confirmed NaHCO₃ use cases:
@@ -818,7 +818,7 @@ class HumanModel:
         return textwrap.dedent(f"""\
             <h4>Electrolyte and osmolar abnormalities</h4>{self._lab_osmolarity()}
             {electrolyte_K(self.body_weight, self.blood_abg_cK)}
-            {electrolyte_Na(self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.debug)}
+            {electrolyte_Na(self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.verbose)}
             {electrolyte_Cl(self.blood_abg_cCl)}
             """)
 
@@ -1137,8 +1137,8 @@ class HumanModel:
             if self.blood_cbc_plt < 30:  # 10^9/L
                 score += 1
 
-        if self.blood_bchem_ctBilIndirect is not None:
-            if self.blood_bchem_ctBilIndirect > 34.2:  # μmol/L
+        if self.blood_bchem_ctBilIndir is not None:
+            if self.blood_bchem_ctBilIndir > 34.2:  # μmol/L
                 score += 1
 
         hemolysis = False
@@ -1198,7 +1198,7 @@ class HumanModel:
         self._eval_body += "{}\n".format(self._body_energy())
         self._eval_body += "<h3>Fluids</h3>"
         self._eval_body += "{}\n".format(self._body_fluids_in())
-        if self.debug:
+        if self.verbose:
             self._eval_body += "\n{}\n".format(self._body_food())
         self._eval_body += "<h3>Renal function</h3>"
         self._eval_body += f"{self._body_fluids_out()}\n"

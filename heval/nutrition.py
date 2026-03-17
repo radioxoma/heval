@@ -238,13 +238,13 @@ class HumanNutritionModel:
     def describe_nutrition(self, by_protein=False):
         """Find a compromise between fluids, electrolytes and energy."""
         info = ""
-        if self.human_body.debug:
+        if self.human_body.verbose:
             info += "{}\n".format(self.describe_nitrogen_balance())
 
         # Total enteral nutrition
         info += "Enteral nutrition\n"
         info += "-----------------\n"
-        if self.human_body.debug:
+        if self.human_body.verbose:
             info += "Always prefer enteral nutrition. Enteral mixtures contains proteins, fat, glucose. Plus vitamins and electrolytes - all that human craves. For an adult give 1500-2000 kcal, add water to meet daily requirements and call it a day.\n"
         n_form = NutritionFormula(enteral_nutricomp_standard, self.human_body)
         info += "{}\n".format(str(n_form))
@@ -263,7 +263,7 @@ class HumanNutritionModel:
         # Total parenteral nutrition
         info += "Total parenteral nutrition\n"
         info += "--------------------------\n"
-        if self.human_body.debug:
+        if self.human_body.verbose:
             info += "Parenteral mixtures contains proteins, fat, glucose and minimal electrolytes to not strain the vein. Add vitamins, fluid, electrolytes to meet daily requirements (total parenteral nutrition criteria).\n"
         n_form = NutritionFormula(parenteral_nutriflex_48_150, self.human_body)
         info += "{}\n".format(str(n_form))
@@ -281,7 +281,7 @@ class HumanNutritionModel:
         # Mixed parenteral with enteral
         info += "Total parenteral peripheral nutrition\n"
         info += "-------------------------------------\n"
-        if self.human_body.debug:
+        if self.human_body.verbose:
             info += "Using peripheral vein is possible for <900 mOsm/kg mixtures, but needs simultaneous enteral feeding to meet daily requirements. Peripheral nutrition diluted, so additional fluid not required.\n"
         n_form = NutritionFormula(parenteral_kabiven_perif, self.human_body)
         info += "{}\n".format(str(n_form))

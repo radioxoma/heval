@@ -183,14 +183,14 @@ class HumanModel:
             * Blood pressure, heart rate.
 
         Понятие идеальной массы тела было введено во время изучения клиренса
-        лекарственных средств, так как клиренс ЛС больше кореллирует с
+        лекарственных средств, так как клиренс ЛС больше коррелирует с
         идеальной, чем с реальной массой тела.
         Ideal weight for minute volume calculation taken from Hamilton G5 documentation
             1. Formulas for adult male/female taken from Hamilton G5 Ventilator - Operators manual ru v2.6x 2017-02-24 page 197
             2. Precalculated tables 4-1, 4-2 to check formulas was taken from RAPHAEL-ops-manual-ru-624150.02 2015-09-24
             3. Traub-Kichen formula for children taken directly from publications, not from Hamilton docs
 
-        Определение должной массы тела (ДМТ) [посдеж 2014, страница 211]:
+        Определение должной массы тела (ДМТ) [Посдеж 2014, страница 211]:
             self.weight_ideal = 50 +   0.91   (height * 100 - 152.4);   # Для мужчин
             self.weight_ideal = 45.5 + 0.91 (height * 100 - 152.4);   # Для женщин
             Упрощенный вариант расчета для обоих полов: self.weight_ideal = height – 100
@@ -861,9 +861,10 @@ class HumanModel:
 
     def _lab_ccrea(self) -> str:
         """Estimate glomerular filtration rate (eGFR)."""
-        report = f"cCrea {self.blood_abg_cCrea:.0f} μmol/L"
         egfr = None
+        report = ""
         if self.blood_abg_cCrea is not None and self.blood_abg_cCrea > 0:
+            report += f"cCrea {self.blood_abg_cCrea:.0f} μmol/L"
             if self.body_sex == HumanSex.CHILD:
                 if self.body_height is not None:
                     egfr = egfr_schwartz(
@@ -1251,7 +1252,7 @@ class HumanModel:
         )
         self.flags.add(
             common.Flag(
-                reason="Trombocitopenic purpura",
+                reason="Thrombocytopenic purpura",
                 description=self._flag_ttp(),
             )
         )
@@ -1461,7 +1462,7 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
 
     Known issues:
     1. Not suitable for neonatal patients - use real body weight
-    2. Formula <=70 cm doesn't looks good. May be Broselow is better.
+    2. Formula <=70 cm doesn't look good. May be Broselow is better.
     3. Joint between formulas has a notch around 127 cm for females
         and no notch for males
 
@@ -2218,11 +2219,11 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
 
     Hyperkalemia
     ------------
-    Неотложеные мероприятия при K >= 7 mmol/L или ЭКГ-признаках гиперкалиемии [131]
+    Неотложные мероприятия при K >= 7 mmol/L или ЭКГ-признаках гиперкалиемии [131]
         * Glu 20 % 0.5 g/kg + Ins 0.3 IU/g
         * Salbutamol
 
-    Уменьшние количества ионизированного калия:
+    Уменьшение количества ионизированного калия:
         * NaHCO3 2 mmol/kg (за 10-20 минут)
         * CaCl2 - только если есть изменения на ЭКГ [PICU: Electrolyte Emergencies]
         * hyperventilation
@@ -2241,7 +2242,7 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
             info += "Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
             # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
             info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml (RBWx2={2 * weight:.0f} mmol) [Курек 2013]\n"
-            info += "Don't forget salbutamol, furesemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
+            info += "Don't forget salbutamol, furosemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
         else:
             info += f"K⁺ on the upper acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     elif K_serum < abg.norm_K[0]:
@@ -2279,7 +2280,7 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
             info += f"K⁺ on lower acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     else:
         info += (
-            f"K⁺ is ok {K_serum:.1f} ({abg.norm_K[0]:.1f}-{abg.norm_K[1]:.1f} mmol/L)]"
+            f"K⁺ is ok {K_serum:.1f} ({abg.norm_K[0]:.1f}-{abg.norm_K[1]:.1f} mmol/L)"
         )
     return info
 
@@ -2307,13 +2308,13 @@ def electrolyte_Na(
 
     Hyponatremia
     ------------
-    Common chromic causes: SIADH, CHF, cirrosis.
+    Common chromic causes: SIADH, CHF, cirrhosis.
     Rare acute causes: psychogenic polydipsia, thiazide diuretics, postoperative
 
     Slow Na replacement:
         * Rapid Na increase -> serum osmolarity increase -> central pontine myelinolysis
         * Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)
-        * Slow 0.5-1 mmol/L/h inctease to 125-130 mmol/L [Нейрореаниматология: практическое руководство 2017 - Гипонатриемия]
+        * Slow 0.5-1 mmol/L/h increase to 125-130 mmol/L [Нейрореаниматология: практическое руководство 2017 - Гипонатриемия]
         * Коррекция гипонатриемии в течение 2-3 суток путем инфузии NaCl 3% со скоростью 0.25-0.5 мл/кг/час [ПосДеж 90]
         * Возможно имеется гипокортицизм и потребуется вводить гидрокортизон
 
@@ -2758,8 +2759,8 @@ def insulin_by_glucose(cGlu: float) -> float:
         Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
     """
     # cGlu mg/dl * 0.0555 = mmol/L
-    # 0.55 = (100 / daily_iu) may be considered as sensetivity to ins
-    target = 7  # Tagget glycemia, mmol/L
+    # 0.55 = (100 / daily_iu) may be considered as sensitivity to ins
+    target = 7  # Target glycemia, mmol/L
     if cGlu < 10 or 25 < cGlu:
         return 0
     else:

@@ -1151,21 +1151,21 @@ class CalcElectrolytes(ttk.Frame):
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, tk.END)
-        self.ctl_sbx_pH.insert(0, str(abg.norm_pH_mean))
+        self.ctl_sbx_pH.insert(0, f"{abg.norm_pH_mean:.2f}")
         self.set_model_pH()
         self.ctl_sbx_pCO2.delete(0, tk.END)
-        self.ctl_sbx_pCO2.insert(0, str(abg.norm_pCO2mmHg_mean))  # kg
+        self.ctl_sbx_pCO2.insert(0, f"{abg.norm_pCO2mmHg_mean:.0f}")
         self.set_model_pCO2()
 
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, tk.END)
-        self.ctl_sbx_K.insert(0, "4.0")
+        self.ctl_sbx_K.insert(0, f"{abg.norm_K_mean:.1f}")
         self.set_model_K()
         self.ctl_sbx_Na.delete(0, tk.END)
-        self.ctl_sbx_Na.insert(0, "140")
+        self.ctl_sbx_Na.insert(0, f"{abg.norm_Na_mean:.0f}")
         self.set_model_Na()
         self.ctl_sbx_Cl.delete(0, tk.END)
-        self.ctl_sbx_Cl.insert(0, "105")
+        self.ctl_sbx_Cl.insert(0, f"{abg.norm_Cl_mean:.0f}")
         self.set_model_Cl()
 
     def set_input_extra_defaults(self, event=None):
@@ -1173,18 +1173,20 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_cGlu.insert(0, str(abg.norm_cGlu_mean))
         self.set_model_cGlu()
         self.ctl_sbx_ctAlb.delete(0, tk.END)
-        self.ctl_sbx_ctAlb.insert(0, str(abg.norm_ctAlb_mean))
+        self.ctl_sbx_ctAlb.insert(0, f"{abg.norm_ctAlb_mean:.0f}")
         self.set_model_ctAlb()
         self.ctl_sbx_cCrea.delete(0, tk.END)
-        self.ctl_sbx_cCrea.insert(0, "75")
+        self.ctl_sbx_cCrea.insert(0, f"{abg.norm_cCrea:.0f}")
         self.set_model_cCrea()
 
     def set_input_trans_defaults(self, event=None):
         self.ctl_sbx_ctHb.delete(0, tk.END)
-        self.ctl_sbx_ctHb.insert(0, "140")  # g/L, mean value for both sexes
+        self.ctl_sbx_ctHb.insert(
+            0, f"{abg.norm_hb_mean:.0f}"
+        )  # g/L, mean value for both sexes
         self.set_model_ctHb()
         self.ctl_sbx_plt.delete(0, tk.END)
-        self.ctl_sbx_plt.insert(0, str(abg.norm_plt_mean))
+        self.ctl_sbx_plt.insert(0, f"{abg.norm_plt_mean:.0f}")
         self.set_model_plt()
         self.ctl_sbx_fib.delete(0, tk.END)
         self.ctl_sbx_fib.insert(0, f"{abg.norm_fib_mean:.1f}")

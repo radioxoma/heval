@@ -77,10 +77,13 @@ norm_sbe = (-2, 2)  # mEq/L
 norm_SIDabbr = (-5, 5)  # Arbitrary threshold
 
 norm_K = (3.5, 5.3)  # mmol/L, Radiometer, adult
+norm_K_mean = 4
 norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
+norm_Na_mean = 140
 # norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
 norm_Cl = (98, 115)  # mmol/L, Radiometer, adult
+norm_Cl_mean = 105
 
 # Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
 # Used as initial value for mOsm calculation.
@@ -103,20 +106,26 @@ norm_pO2 = (80, 100)  # mmHg
 # See Anion Gap calculation for reference
 norm_ctAlb_mean = 44  # g/L
 norm_ctAlb = (35, 50)  # g/L
+norm_cCrea = 75  # μmol/L
+norm_ctBilIndir = 10  # μmol/L
 
 # https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
 hb_norm_male = (135, 175)  # 130-160 g/L
 hb_norm_female = (120, 155)  # 120-140 g/L
 hb_norm_child = (110, 160)  # g/L
+norm_hb_mean = 140  # g/L
 
 # Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
 norm_hct_male = (0.407, 0.503)
 norm_hct_female = (0.361, 0.443)
 norm_hct_child = (0.31, 0.41)
 
-norm_plt_mean = 300
-norm_fib_mean = 3
-norm_inr_mean = 1
+norm_plt_mean = 300  # 10⁹/L
+norm_mcv_mean = 90  # fL
+norm_ret_mean = 1  # %
+norm_fib_mean = 3  # g/L
+norm_inr_mean = 1  # Fraqtion
+norm_ddimer_mean = 300  # ng/ml
 
 
 def calculate_anion_gap(

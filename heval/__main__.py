@@ -122,7 +122,7 @@ class SpinboxFloat(ttk.Spinbox):
             return False
 
 
-class TextHtmlView(tkinterweb.HtmlFrame):  # ty:ignore[possibly-missing-attribute]
+class TextHtmlView(tkinterweb.HtmlFrame):
     """Default HTML widget to show formatted text with tooltips."""
 
     def __init__(self, parent=None, *args, **kwargs):
@@ -438,7 +438,7 @@ class MainWindow(ttk.Frame):
         # END INPUT SECTION
         self.set_input_defaults()
 
-        nb = tkinterweb.Notebook(self)  # ty:ignore[possibly-missing-attribute]
+        nb = tkinterweb.Notebook(self)
         self.CMain = CalcMain(nb, self.human)
         self.CNutrition = CalcNutrition(nb, self.human)
         self.CElectrolytes = CalcElectrolytes(nb, self.human)
@@ -1042,7 +1042,7 @@ class CalcElectrolytes(ttk.Frame):
             fr_extra_entry,
             width=4,
             from_=0.0,
-            to=1000.0,
+            to=2000.0,
             format="%.0f",
             increment=1,
             command=self.set_model_cCrea,
@@ -1050,6 +1050,20 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_cCrea.bind("<KeyRelease>", self.set_model_cCrea)
         self.ctl_sbx_cCrea.grid(row=4, column=1)
         CreateToolTip(self.ctl_sbx_cCrea, "Serum creatinine (IDMS-calibrated)")
+
+        ttk.Label(fr_extra_entry, text="ctBil, μmol/L").grid(row=5, column=0)
+        self.ctl_sbx_ctBil = SpinboxFloat(
+            fr_extra_entry,
+            width=4,
+            from_=0.0,
+            to=1000.0,
+            format="%.0f",
+            increment=1,
+            command=self.set_model_ctBil,
+        )
+        self.ctl_sbx_ctBil.bind("<KeyRelease>", self.set_model_ctBil)
+        self.ctl_sbx_ctBil.grid(row=5, column=1)
+        CreateToolTip(self.ctl_sbx_ctBil, "Serum bilirubin")
 
         # TRANSFUSION
         fr_trans_entry = ttk.LabelFrame(fr_entry, text="Transfusion")
@@ -1178,6 +1192,9 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_cCrea.delete(0, tk.END)
         self.ctl_sbx_cCrea.insert(0, f"{abg.norm_cCrea:.0f}")
         self.set_model_cCrea()
+        self.ctl_sbx_ctBil.delete(0, tk.END)
+        self.ctl_sbx_ctBil.insert(0, f"{abg.norm_ctBil:.0f}")
+        self.set_model_ctBil()
 
     def set_input_trans_defaults(self, event=None):
         self.ctl_sbx_ctHb.delete(0, tk.END)
@@ -1225,6 +1242,10 @@ class CalcElectrolytes(ttk.Frame):
 
     def set_model_cCrea(self, event=None):
         self.human.blood_abg_cCrea = float(self.ctl_sbx_cCrea.get())
+        self.event_generate("<<HumanModelChanged>>")
+
+    def set_model_ctBil(self, event=None):
+        self.human.blood_bchem_ctBil = float(self.ctl_sbx_ctBil.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctHb(self, event=None):

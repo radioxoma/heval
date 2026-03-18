@@ -21,12 +21,13 @@ classifiers = [
 version = {attr = "heval.__version__"}
 
 [project.optional-dependencies]
-gui = ["tkinterweb==4.11.0",]
+gui = ["tkinterweb==4.25.0",]
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
     "ruff>=0.14.10",
+    "ty>=0.0.23",
 ]
 
 [project.urls]

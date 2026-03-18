@@ -99,7 +99,7 @@ class HumanModel:
     blood_abg_cGlu = FloatAttr()  # mmol/L
     blood_abg_ctAlb = FloatAttr()  # g/L, albumin
     blood_abg_cCrea = FloatAttr()  # μmol/L
-    # blood_bchem_ctBil = FloatAttr()
+    blood_bchem_ctBil = FloatAttr()
     blood_bchem_ctBilIndir = FloatAttr()  # μmol/L
 
     # blood_abg_ctHb = FloatAttr()  # g/L, haemoglobin, usage discouraged
@@ -249,6 +249,92 @@ class HumanModel:
         :return: Total blood volume, ml
         """
         return 70 / math.sqrt(self.body_bmi / 22) * self.body_weight
+
+    @property
+    def blood_sofa_partial(self) -> int | None:
+        """Precalculate ICU SOFA score from lab data.
+
+        https://en.wikipedia.org/wiki/SOFA_score
+        https://pubmed.ncbi.nlm.nih.gov/8844239/
+
+        Mortality
+        ---------
+        0-1.0    1.2%
+        1.1-2.0  5.4%
+        2.1-3.0 20.0%
+        3.1-4.0 36.1%
+        4.1-5.0 73.1%
+        >5.1    84.4%
+        """
+
+        if (
+            self.blood_cbc_plt is None
+            or self.blood_bchem_ctBil is None
+            or self.blood_abg_cCrea is None
+        ):
+            return None
+
+        sofa = 0
+        # Coagulation
+        if self.blood_cbc_plt < 20:
+            sofa += 4
+        elif self.blood_cbc_plt < 50:
+            sofa += 3
+        elif self.blood_cbc_plt < 100:
+            sofa += 2
+        elif self.blood_cbc_plt < 150:
+            sofa += 1
+
+        # Liver cBil μmol/L
+        if self.blood_bchem_ctBil > 204:
+            sofa += 4
+        elif self.blood_bchem_ctBil >= 102:
+            sofa += 3
+        elif self.blood_bchem_ctBil >= 33:
+            sofa += 2
+        elif self.blood_bchem_ctBil >= 20:
+            sofa += 1
+
+        # Renal function cCrea μmol/L
+        if self.blood_abg_cCrea > 440:  # (or diuresis < 200 ml/d)
+            sofa += 4
+        elif self.blood_abg_cCrea >= 300:  # (or diuresis < 500 ml/d)
+            sofa += 3
+        elif self.blood_abg_cCrea >= 171:
+            sofa += 2
+        elif self.blood_abg_cCrea >= 110:
+            sofa += 1
+
+        # # Central nervous system
+        # if gcs < 6:
+        #     sofa += 4
+        # elif gcs <= 9
+        #     sofa += 3
+        # elif gcs <= 12
+        #     sofa += 2
+        # elif gcs <= 14:
+        #     sofa += 1
+
+        # # Respiration
+        # if pO2_FO2_fraction < 100:
+        #     sofa += 4
+        # elif pO2_FO2_fraction < 200:
+        #     sofa += 3
+        # elif pO2_FO2_fraction < 300:
+        #     sofa += 2
+        # elif pO2_FO2_fraction < 400:
+        #     sofa += 1
+
+        # # Cardiovascular
+        # dopamine > 15 μg/kg/min OR epinephrine > 0.1 μg/kg/min OR norepinephrine > 0.1 μg/kg/min
+        #     sofa += 4
+        # dopamine > 5 μg/kg/min OR epinephrine ≤ 0.1 μg/kg/min OR norepinephrine ≤ 0.1 μg/kg/min
+        #     sofa += 3
+        # dopamine ≤ 5 μg/kg/min or dobutamine (any dose)
+        #     sofa += 2
+        # MAP < 70 mmHg
+        #     sofa += 1
+        return sofa
 
     @property
     def blood_abg_sbe(self):
@@ -1187,7 +1273,7 @@ class HumanModel:
     def eval_labs(self) -> str:
         return self._eval_labs
 
-    def init(self):
+    def init(self) -> str | None:
         """Run after model population."""
         self.flags = common.FlagWarnings()
         if self.body_height is None or self.body_sex is None:
@@ -1263,6 +1349,15 @@ class HumanModel:
                 severity=common.FlagSeverity.RED,
             )
         )
+        if self.blood_sofa_partial is not None and self.blood_sofa_partial >= 4:
+            self.flags.add(
+                common.Flag(
+                    reason="SOFA",
+                    description=f"&ge;{self.blood_sofa_partial} (based on PLT, ctBil, cCrea)",
+                    severity=common.FlagSeverity.YELLOW,
+                )
+            )
+        return None
 
 
 def body_mass_index(height: float, weight: float) -> float:

@@ -7,7 +7,7 @@ PyCharm `RMB > Show Interpreter Paths`, Add pyscript stubs:
 https://github.com/pyscript/pyscript-stubs/tree/main/src/pyscript-stubs
 """
 
-from pyscript import Event, web, when, window
+from pyscript import Event, web, when, window  # ty: ignore[unresolved-import]
 import heval.abg
 import heval.common
 import heval.human
@@ -32,6 +32,7 @@ input_list = (
     ("blood_abg_cGlu", "mmol/L", heval.abg.norm_cGlu_mean),
     ("blood_abg_ctAlb", "g/L", heval.abg.norm_ctAlb_mean),
     ("blood_abg_cCrea", "μmol/L", heval.abg.norm_cCrea),
+    ("blood_bchem_ctBil", "μmol/L", heval.abg.norm_ctBil),
     ("blood_bchem_ctBilIndir", "μmol/L", heval.abg.norm_ctBilIndir),
     ("blood_cbc_hb", "g/L", heval.abg.norm_hb_mean),
     ("blood_cbc_plt", "10⁹/L", heval.abg.norm_plt_mean),

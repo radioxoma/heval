@@ -107,6 +107,7 @@ norm_pO2 = (80, 100)  # mmHg
 norm_ctAlb_mean = 44  # g/L
 norm_ctAlb = (35, 50)  # g/L
 norm_cCrea = 75  # μmol/L
+norm_ctBil = 10  # μmol/L
 norm_ctBilIndir = 10  # μmol/L
 
 # https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075

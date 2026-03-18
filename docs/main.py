@@ -30,7 +30,7 @@ input_list = (
     ("blood_abg_cNa", "mmol/L", 140),
     ("blood_abg_cCl", "mmol/L", 105),
     ("blood_abg_cGlu", "mmol/L", 5.5),
-    ("blood_abg_ctAlb", "g/dL", 4.4),
+    ("blood_abg_ctAlb", "g/L", heval.abg.norm_ctAlb_mean),
     ("blood_abg_cCrea", "μmol/L", 75),
     ("blood_bchem_ctBilIndir", "μmol/L", 10),
     ("blood_cbc_hb", "g/L", 140),

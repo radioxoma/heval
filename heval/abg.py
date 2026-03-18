@@ -101,8 +101,8 @@ norm_pO2 = (80, 100)  # mmHg
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
-norm_ctAlb_mean = 4.4  # g/dL
-norm_ctAlb = (3.5, 5)  # g/dL
+norm_ctAlb_mean = 44  # g/L
+norm_ctAlb = (35, 50)  # g/L
 
 # https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
 hb_norm_male = (135, 175)  # 130-160 g/L
@@ -120,7 +120,7 @@ norm_inr_mean = 1
 
 
 def calculate_anion_gap(
-    Na: float, Cl: float, HCO3act: float, K: float = 0, albumin: float = norm_ctAlb_mean
+    Na: float, Cl: float, HCO3act: float, K: float = 0, ctAlb: float = norm_ctAlb_mean
 ) -> float:
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
@@ -153,10 +153,10 @@ def calculate_anion_gap(
         pH 7.4 2.8 mEq/L
         pH 7.6 3.0 mEq/L
 
-    Normal (target) albumin value varies 4-4.5 g/dl among papers and books:
+    Normal (target) albumin value varies 40-45 g/L among papers and books:
         * Radiometer states nothing
-        * 4.0 g/dl https://litfl.com/anion-gap/ https://www.mdcalc.com/anion-gap
-        * 4.4 g/dl https://en.wikipedia.org/wiki/Anion_gap
+        * 40 g/L https://litfl.com/anion-gap/ https://www.mdcalc.com/anion-gap
+        * 44 g/L https://en.wikipedia.org/wiki/Anion_gap
 
 
     See also Delta Ratio - an derived calculation to asses acidosis cause and
@@ -168,19 +168,6 @@ def calculate_anion_gap(
             Acid base balance in critical care medicine
         [4] Hypoalbuminemia correction: Anion gap and hypoalbuminemia Figge 1998 10.1097/00003246-199811000-00019 https://journals.lww.com/ccmjournal/Citation/2000/05000/Reliability_of_the_Anion_Gap.101.aspx
 
-    Examples:
-        Typical usage, potassium usually not included:
-        >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
-        14.0
-
-        With albumin:
-        >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=calculate_hco3p(pH=7.499, pCO2=4.77294), K=0, albumin=3.39)
-        3.9175115055719747
-
-        To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
-        >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
-        93.07578958435911
-
     Args:
         Na: Serum sodium, mmol/L.
         Cl: Serum chloride, mmol/L.
@@ -188,14 +175,31 @@ def calculate_anion_gap(
         K: Serum potassium, mmol/L.
             If not given returns AG, otherwise AG(K). Serum potassium value
             usually low and frequently omitted. Usually not used.
-        albumin: Protein correction, g/dL. If not given,
+        ctAlb: Protein correction, g/L. If not given,
             hypoalbuminemia leads to lower anion gap.
 
-    Rreturns:
+    Returns:
         Anion gap or Anion gap (K+), mEq/L.
+
+    Examples:
+        Typical usage, potassium usually not included:
+        >>> calculate_anion_gap(Na=140, Cl=102, HCO3act=24)
+        14.0
+
+        With albumin:
+        >>> calculate_anion_gap(Na=140, Cl=105, HCO3act=24, ctAlb=norm_ctAlb_mean)
+        11.0
+        >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=24, ctAlb=23)
+        10.25
+
+        To reproduce 'Radiometer ABL800 Flex' Anion gap calculation:
+        >>> calculate_anion_gap(173, 77, calculate_hco3p(pH=6.656, pCO2=3.71))
+        93.07578958435911
+
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
-    anion_gap += 2.5 * (norm_ctAlb_mean - albumin)
+    if ctAlb is not None:
+        anion_gap += 0.25 * (norm_ctAlb_mean - ctAlb)
     return anion_gap
 
 
@@ -245,11 +249,13 @@ def calculate_anion_gap_delta(AG: float, HCO3act: float) -> str:
     gg = (AG - 12) / (24 - HCO3act)
     info = ""
     # info += "Delta gap ({:.1f} - 12) / (24 - {:.1f}) = {:.1f}\n".format(AG, HCO3act, gg)
-    info += "delta ratio {:.1f} ".format(gg)
+    info += f"delta ratio {gg:.1f} "
     if gg < 0.4:
         # Usually due to mass transfusion of NaCl (dilution acidosis)
         # Normal gap because kidney excrete HCO3-
-        info += "(gg < 0.4): hyperchloremic normal anion gap metabolic acidosis (NAGMA)"
+        info += (
+            "(gg &lt; 0.4): hyperchloremic normal anion gap metabolic acidosis (NAGMA)"
+        )
         return info
     elif 0.4 <= gg <= 0.8:
         # Consider combined high AG & normal AG acidosis BUT note that the
@@ -258,7 +264,7 @@ def calculate_anion_gap_delta(AG: float, HCO3act: float) -> str:
         info += "(0.4 ≤ gg ≤ 0.8): combined HAGMA + NAGMA (gg ratio <1 often associated with renal failure - check urine electrolytes and kidney function)"
         return info
     elif 0.8 < gg < 1:
-        info += "(0.8 < gg < 1): most likely caused by diabetic ketoacidosis due to urine ketone bodies loss (when patient not dehydrated yet)"
+        info += "(0.8 &lt; gg &lt; 1): most likely caused by diabetic ketoacidosis due to urine ketone bodies loss (when patient not dehydrated yet)"
         return info
     elif 1 <= gg <= 2:
         # Usual for uncomplicated high-AG acidosis - "pure metabolic acidosis"?
@@ -274,11 +280,11 @@ def calculate_anion_gap_delta(AG: float, HCO3act: float) -> str:
         #   * a concurrent metabolic alkalosis
         #   * a pre-existing compensated respiratory acidosis
         # tiazide diuretics?
-        info += "(2 < gg): concurrent metabolic alkalosis or chronic respiratory acidosis with high HCO₃⁻"
+        info += "(2 &lt; gg): concurrent metabolic alkalosis or chronic respiratory acidosis with high HCO₃⁻"
         return info
 
 
-def calculate_sid_abbr(cNa: float, cCl: float, ctAlb: float) -> float:
+def calculate_sid_abbr(cNa: float, cCl: float, ctAlb: float = norm_ctAlb_mean) -> float:
     """Strong ion difference.
 
     Strong ion gap (SIG).
@@ -307,14 +313,20 @@ def calculate_sid_abbr(cNa: float, cCl: float, ctAlb: float) -> float:
     Args:
         cNa: Na concentration, mmol/L
         cCl: Cl concentration, mmol/L
-        ctAlb: Albumin, g/dL for correction.
+        ctAlb: Albumin, g/L for correction
 
     Returns:
         Strong ion difference.
+
+    Examples:
+    >>> calculate_sid_abbr(cNa=140, cCl=102)
+    0.0
+    >>> calculate_sid_abbr(cNa=140, cCl=102, ctAlb=44)
+    0.0
     """
     sid = cNa - cCl - 38
-    if ctAlb:
-        sid += 2.5 * (norm_ctAlb_mean - ctAlb)
+    if ctAlb is not None:
+        sid += 0.25 * (norm_ctAlb_mean - ctAlb)
     return sid
 
 
@@ -923,12 +935,8 @@ def abg_approach_research(pH: float, pCO2: float) -> str:
     wint_ac = 1.5 * HCO3act + 8
     wint_alc = 0.7 * HCO3act + 20
     info += "pCO2 by cHCO3(P) - expected respiratory compensation [Winters]:\n"
-    info += " * Met. acid. lungs will drop pCO2, but not lower than ≥{:.1f}-{:.1f} mmHg\n".format(
-        wint_ac - 2, wint_ac + 2
-    )
-    info += " * Met. alc. lungs will save pCO2, but not higher than ≤{:.1f}-{:.1f} mmHg\n".format(
-        wint_alc - 1.5, wint_alc + 1.5
-    )
+    info += f" * Met. acid. lungs will drop pCO2, but not lower than ≥{wint_ac - 2:.1f}-{wint_ac + 2:.1f} mmHg\n"
+    info += f" * Met. alc. lungs will save pCO2, but not higher than ≤{wint_alc - 1.5:.1f}-{wint_alc + 1.5:.1f} mmHg\n"
     # try:
     #     y = (7.4 - pH) / (pCO2mmHg - 40.0) * 100
     #     info += "y = ΔpH/ΔpCO2×100 = {:.2f} [needs table p 56 to assess]\n".format(y)

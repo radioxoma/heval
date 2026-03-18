@@ -1020,14 +1020,14 @@ class CalcElectrolytes(ttk.Frame):
         self.ctl_sbx_cGlu.bind("<KeyRelease>", self.set_model_cGlu)
         self.ctl_sbx_cGlu.grid(row=2, column=1)
 
-        ttk.Label(fr_extra_entry, text="ctAlb, g/dL").grid(row=3, column=0)
+        ttk.Label(fr_extra_entry, text="ctAlb, g/L").grid(row=3, column=0)
         self.ctl_sbx_ctAlb = SpinboxFloat(
             fr_extra_entry,
             width=4,
             from_=0,
-            to=15,
-            format="%.1f",
-            increment=0.1,
+            to=150,
+            format="%.0f",
+            increment=1,
             command=self.set_model_ctAlb,
         )
         CreateToolTip(

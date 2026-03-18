@@ -97,7 +97,7 @@ class HumanModel:
     blood_abg_cCl = FloatAttr()  # mmol/L
 
     blood_abg_cGlu = FloatAttr()  # mmol/L
-    blood_abg_ctAlb = FloatAttr()  # g/dL albumin
+    blood_abg_ctAlb = FloatAttr()  # g/L, albumin
     blood_abg_cCrea = FloatAttr()  # μmol/L
     # blood_bchem_ctBil = FloatAttr()
     blood_bchem_ctBilIndir = FloatAttr()  # μmol/L
@@ -267,7 +267,7 @@ class HumanModel:
                 Cl=self.blood_abg_cCl,
                 HCO3act=self.blood_abg_hco3p,
                 K=self.blood_abg_cK,
-                albumin=self.blood_abg_ctAlb,
+                ctAlb=self.blood_abg_ctAlb,
             )
         else:
             raise ValueError("No potassium specified")
@@ -279,7 +279,7 @@ class HumanModel:
             Na=self.blood_abg_cNa,
             Cl=self.blood_abg_cCl,
             HCO3act=self.blood_abg_hco3p,
-            albumin=self.blood_abg_ctAlb,
+            ctAlb=self.blood_abg_ctAlb,
         )
 
     @property
@@ -670,7 +670,7 @@ class HumanModel:
                 Conclusion: {abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[0]}\n"""
             )
             if self.verbose:
-                info += "\n-- Manual compensatory response check --------------\n"
+                info += "<h4>Manual compensatory response check</h4>"
                 # info += "Abg Ryabov:\n{}\n".format(textwrap.indent(abg_approach_ryabov(self.pH, self.pCO2), '  '))
                 info += abg.abg_approach_research(
                     self.blood_abg_pH, self.blood_abg_pCO2
@@ -714,7 +714,6 @@ class HumanModel:
                 info += f"Unexpected low AG {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
             else:
                 info += f"AG is ok {desc}"
-
         if self.verbose:
             """Strong ion difference.
 
@@ -900,16 +899,18 @@ class HumanModel:
         """Albumin as nutrition marker in adults."""
         if self.blood_abg_ctAlb is None:
             return ""
-        ctalb_range = f"{self.blood_abg_ctAlb:0.1f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/dL)"
+        ctalb_range = (
+            f"{self.blood_abg_ctAlb:0.0f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/L)"
+        )
         if abg.norm_ctAlb[1] < self.blood_abg_ctAlb:
             info = f"ctAlb is high {ctalb_range}. Dehydration?"
         elif abg.norm_ctAlb[0] <= self.blood_abg_ctAlb <= abg.norm_ctAlb[1]:
             info = f"ctAlb is ok {ctalb_range}"
-        elif 3 <= self.blood_abg_ctAlb < abg.norm_ctAlb[0]:
+        elif 30 <= self.blood_abg_ctAlb < abg.norm_ctAlb[0]:
             info = f"ctAlb is low: mild hypoalbuminemia {ctalb_range}"
-        elif 2.5 <= self.blood_abg_ctAlb < 3:
+        elif 25 <= self.blood_abg_ctAlb < 30:
             info = f"ctAlb is low: medium hypoalbuminemia {ctalb_range}"
-        elif self.blood_abg_ctAlb < 2.5:
+        elif self.blood_abg_ctAlb < 25:
             info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
         return info
 

@@ -113,6 +113,7 @@ norm_mOsm = (275, 295)  # mOsm/kg
 # See Anion Gap calculation for reference
 norm_ctAlb_mean = 44  # g/L
 norm_ctAlb = (35, 50)  # g/L
+norm_urea = 7  # mmol/L
 norm_cCrea = 75  # μmol/L
 norm_ctBil = 10  # μmol/L
 norm_ctBilIndir = 10  # μmol/L
@@ -658,6 +659,7 @@ def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
         high A-a: pneumonia | pulmonary embolism | damaged alveolar wall | right-to-left shunt
 
     [1] https://en.wikipedia.org/wiki/Alveolar–arterial_gradient
+    [2] https://www.respiratorytherapyzone.com/alveolar-gas-equation/
 
     Normal A-a gradient is:
         * Normal   PAO2, kPa  < 2.6 [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
@@ -678,8 +680,10 @@ def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
     >>> calculate_Aa_gradient(pCO2=4.9, pO2=12.1)  # Case 30
     1.7180000000000017
     """
-    # PAO2 = 20 - 5 / 4 * pCO2  # Also [1]
+    # PAO2 is theoretical partial pressure of oxygen
+    # 93.8 kPa is barometric pressure at sea level minus water vapor pressure (47 mmHg)
     PAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
+    # PAO2 = 20 - 5 / 4 * pCO2  # Also simplified calculation [1]
     return PAO2 - pO2
 
 

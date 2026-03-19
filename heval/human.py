@@ -100,6 +100,7 @@ class HumanModel:
     blood_abg_cGlu = FloatAttr()  # mmol/L
     blood_abg_ctAlb = FloatAttr()  # g/L, albumin
     blood_abg_cCrea = FloatAttr()  # μmol/L
+    blood_bchem_urea = FloatAttr()  # mmol/L
     blood_bchem_ctBil = FloatAttr()
     blood_bchem_ctBilIndir = FloatAttr()  # μmol/L
 
@@ -949,30 +950,42 @@ class HumanModel:
     def _lab_ccrea(self) -> str:
         """Estimate glomerular filtration rate (eGFR)."""
         egfr = None
-        report = ""
-        if self.blood_abg_cCrea is not None and self.blood_abg_cCrea > 0:
-            report += f"cCrea {self.blood_abg_cCrea:.0f} μmol/L"
-            if self.body_sex == HumanSex.CHILD:
-                if self.body_height is not None:
-                    egfr = egfr_schwartz(
-                        cCrea=self.blood_abg_cCrea, height=self.body_height
-                    )
-                    report += f""" eGFR Schwartz revised {egfr:.0f} ml/min/1.73 m²"""
-            else:
-                if self.body_age is not None:
-                    egfr = egfr_ckd_epi_2021(
-                        sex=self.body_sex, cCrea=self.blood_abg_cCrea, age=self.body_age
-                    )
-                    crcl = ccrea_clearance_cockcroft_gault(
-                        sex=self.body_sex,
-                        cCrea=self.blood_abg_cCrea,
-                        age=self.body_age,
-                        weight=self.body_weight,
-                    )
-                    report += f""" <abbr title="Creatinine clearance by Cockcroft-Gault">CrCl</abbr> {crcl:.0f} mL/min, eGFR CKD-EPI 2021 {egfr:.0f} ml/min/1.73 m²"""
+        info = ""
+        if self.blood_abg_cCrea is None or self.blood_abg_cCrea <= 0:
+            return info
+        info += f"cCrea {self.blood_abg_cCrea:.0f} μmol/L"
+        if self.body_sex == HumanSex.CHILD:
+            if self.body_height is not None:
+                egfr = egfr_schwartz(
+                    cCrea=self.blood_abg_cCrea, height=self.body_height
+                )
+                info += f""" eGFR Schwartz revised {egfr:.0f} ml/min/1.73 m²"""
+        else:
+            if self.body_age is not None:
+                egfr = egfr_ckd_epi_2021(
+                    sex=self.body_sex, cCrea=self.blood_abg_cCrea, age=self.body_age
+                )
+                crcl = ccrea_clearance_cockcroft_gault(
+                    sex=self.body_sex,
+                    cCrea=self.blood_abg_cCrea,
+                    age=self.body_age,
+                    weight=self.body_weight,
+                )
+                info += f""" <abbr title="Creatinine clearance by Cockcroft-Gault">CrCl</abbr> {crcl:.0f} mL/min, eGFR CKD-EPI 2021 {egfr:.0f} ml/min/1.73 m²"""
         if egfr:
             stage, stage_report = gfr_describe(egfr)
-            report += ": " + stage_report
+            info += ": " + stage_report
+            if stage > 1 and self.blood_bchem_urea is not None:
+                bun_ccrea_ratio = bun_creatinine_ratio(
+                    urea=self.blood_bchem_urea, cCrea=self.blood_abg_cCrea
+                )
+                info += f". BUN:cCrea ratio is {bun_ccrea_ratio:.0f}: "
+                if bun_ccrea_ratio <= 10:
+                    info += """renal cause of <abbr title="Acute kidney injury">AKI</abbr> or liver disease, malnutrition (low protein diet), pregnancy, acute tubular necrosis, <abbr title="Syndrome of inappropriate antidiuretic hormone secretion">SIADH</abbr>"""
+                elif bun_ccrea_ratio <= 20:
+                    info += """normal kidney function or post renal cause of <abbr title="Acute kidney injury">AKI</abbr>"""
+                else:
+                    info += """prerenal kidney injury (hypovolemia), rapid protein destruction (high protein intake or catabolism), corticosteroids, <abbr title="Congestive heart failure">CHF</abbr>, <abbr title="Gastrointestinal">GI</abbr> bleeding"""
             if stage >= 4:
                 self.flags.add(
                     common.Flag(
@@ -981,7 +994,7 @@ class HumanModel:
                         severity=common.FlagSeverity.YELLOW,
                     )
                 )
-        return report
+        return info
 
     def _lab_albumin(self):
         """Albumin as nutrition marker in adults."""
@@ -2864,6 +2877,38 @@ def gfr_describe(gfr: float) -> tuple[int, str]:
         return 4, "CKD4, severe loss of kidney function (29-15 %). Prepare for dialysis"
     else:
         return 5, "CKD5, kidney failure (&lt;15 %). Needs dialysis or kidney transplant"
+
+
+def bun_creatinine_ratio(urea: float, cCrea: float) -> float:
+    """BUN:creatinine raio tp guess likely cause of acure renal failure (ARF).
+
+    Widely adopted formula, which converts values to mg/dL:
+        >20: indicates prerenal cause of ARF
+        10-20: is a normal value or indicates postrenal cause;
+        <10: indicates renal cause of ARF
+
+    Args:
+        urea, mmol/L
+        cCrea, μmol/L
+
+    Returns:
+        Normal BUN:Creatinine ratio values are generally 10-20.
+        If BUN:Cr >20, this may be a sign of prerenal azotemia.
+
+    References:
+        https://en.wikipedia.org/wiki/Urea-to-creatinine_ratio
+        https://litfl.com/urea-creatinine-ratio/
+        https://www.mdcalc.com/calc/10501/bun-creatinine-ratio#evidence
+
+    Example:
+        >>> bun_creatinine_ratio(urea=10, cCrea=100)
+        24.752475247524753
+        >>> bun_creatinine_ratio(urea=30, cCrea=700)
+        10.608203677510607
+    """
+    urea_mgdl = urea * abg.M_BUN / 10
+    cCrea_mgdl = cCrea * abg.M_CREA / 10000
+    return urea_mgdl / cCrea_mgdl
 
 
 def insulin_by_glucose(cGlu: float) -> float:

@@ -9,7 +9,7 @@ repos:
     -   id: trailing-whitespace
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.14.10
+  rev: v0.15.6
   hooks:
     - id: ruff-check
       args: [ --fix ]
@@ -25,6 +25,15 @@ repos:
     rev: v1.19.1
     hooks:
     -   id: mypy
+
+-   repo: local
+    hooks:
+    -   id: ty
+        name: ty
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: true
 
 -   repo: local
     hooks:

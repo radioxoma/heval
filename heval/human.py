@@ -12,7 +12,6 @@ import textwrap
 import warnings
 from dataclasses import dataclass
 
-import heval.common
 from heval import abg, nutrition, common
 from heval.common import HumanSex
 
@@ -92,6 +91,8 @@ class HumanModel:
 
     blood_abg_pH = FloatAttr()
     blood_abg_pCO2 = FloatAttr()  # kPa
+    blood_abg_pO2 = FloatAttr()  # kPa
+    blood_abg_FiO2 = FloatAttr(0.21)
     blood_abg_cK = FloatAttr()  # mmol/L
     blood_abg_cNa = FloatAttr()  # mmol/L
     blood_abg_cCl = FloatAttr()  # mmol/L
@@ -974,10 +975,10 @@ class HumanModel:
             report += ": " + stage_report
             if stage >= 4:
                 self.flags.add(
-                    heval.common.Flag(
+                    common.Flag(
                         "CKD",
                         description=stage_report,
-                        severity=heval.common.FlagSeverity.YELLOW,
+                        severity=common.FlagSeverity.YELLOW,
                     )
                 )
         return report
@@ -1053,6 +1054,32 @@ class HumanModel:
 
         if self.body_sex == HumanSex.CHILD:
             info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
+        return info
+
+    def _lab_oxygenation(self) -> str:
+        info = ""
+        if (
+            self.blood_abg_pCO2 is None
+            or self.blood_abg_pO2 is None
+            or self.blood_abg_FiO2 is None
+        ):
+            return info
+        pf_index = abg.calculate_pO2_FO2_fraction(
+            pO2=self.blood_abg_pO2, FiO2=self.blood_abg_FiO2
+        )
+        Aa_gradient = (
+            abg.calculate_Aa_gradient(
+                pCO2=self.blood_abg_pCO2,
+                pO2=self.blood_abg_pO2,
+                FiO2=self.blood_abg_FiO2,
+            )
+            / abg.kPa
+        )
+
+        info += f"""Oxygenation (implies arterial blood): p/f {pf_index:.0f}, <abbr title="Alveolar-arterial gradient">A-a gradient</abbr>"""
+        if Aa_gradient > abg.norm_Aa_gradient_mmHg[1]:
+            info += " is high"
+        info += f" {Aa_gradient:.1f} ({abg.norm_Aa_gradient_mmHg[0]:.0f}-{abg.norm_Aa_gradient_mmHg[1]:.0f} mmHg)"
         return info
 
     def _flag_abg(self) -> str:
@@ -1296,6 +1323,7 @@ class HumanModel:
         self._eval_labs += "<h3>Basic ABG assessment</h3>"
         self._eval_labs += "{}\n".format(self._lab_abg())
         self._eval_labs += "{}\n".format(self._lab_sbe())
+        self._eval_labs += "{}\n".format(self._lab_oxygenation())
         self._eval_labs += "<h3>Complex electrolyte assessment</h3>"
         self._eval_labs += "{}\n".format(self._lab_anion_gap())
         self._eval_labs += "{}\n".format(self._lab_electrolytes())

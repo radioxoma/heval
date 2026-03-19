@@ -76,6 +76,10 @@ norm_pH_alive = (6.8, 7.8)  # Live borders
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
 norm_pCO2mmHg_mean = 40.0  # mmHg
+norm_pO2mmHg = (80, 100)  # mmHg
+norm_pO2mmHg_mean = 95.0  # mmHg
+norm_FiO2 = 0.21  # Fraction in air
+norm_Aa_gradient_mmHg = (5, 20)
 
 norm_HCO3 = (22, 26)  # mEq/L
 norm_sbe = (-2, 2)  # mEq/L
@@ -104,8 +108,6 @@ norm_gap = (7, 16)  # mEq/L without potassium [Курек 2013, с 47],
 # corresponds to mOsm reference range without BUN
 # https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
 norm_mOsm = (275, 295)  # mOsm/kg
-
-norm_pO2 = (80, 100)  # mmHg
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
@@ -612,7 +614,7 @@ def calculate_ctO2(
     return alphaO2 * pO2 + sO2 * (1 - FCOHb - FMetHb) * ctHb
 
 
-def calculate_pO2_FO2_fraction(pO2: float, FiO2: float) -> float:
+def calculate_pO2_FO2_fraction(pO2: float, FiO2: float = 0.21) -> float:
     """pO2(a)/FO2(I) - the ratio of pO2 and fraction of inspired oxygen measured at PEEP 5 mbar.
 
     Simplest calculation to diagnose ARDS. Known as:

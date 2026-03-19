@@ -26,6 +26,8 @@ input_list = (
     ("body_temp", "°C", 36.6),
     ("blood_abg_pH", "", heval.abg.norm_pH_mean),
     ("blood_abg_pCO2", "mmHg", heval.abg.norm_pCO2mmHg_mean),
+    ("blood_abg_pO2", "mmHg", heval.abg.norm_pO2mmHg_mean),
+    ("blood_abg_FiO2", "", heval.abg.norm_FiO2),
     ("blood_abg_cK", "mmol/L", heval.abg.norm_K_mean),
     ("blood_abg_cNa", "mmol/L", heval.abg.norm_Na_mean),
     ("blood_abg_cCl", "mmol/L", heval.abg.norm_Cl_mean),
@@ -84,7 +86,7 @@ def input_changed(event):
         print(
             f"{event.target.type} changed by event: {event.target.id}={event.target.value}"
         )
-        if event.target.id == "blood_abg_pCO2":
+        if event.target.id in ("blood_abg_pCO2", "blood_abg_pO2"):
             setattr(human, event.target.id, float(event.target.value) * heval.abg.kPa)
         else:
             setattr(human, event.target.id, float(event.target.value))

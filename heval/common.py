@@ -15,6 +15,9 @@ class HumanSex(enum.IntEnum):
     MALE = 1
     FEMALE = 2
     CHILD = 3  # For <12 years old
+    M = MALE
+    F = FEMALE
+    C = CHILD
 
 
 class FlagSeverity(enum.IntEnum):

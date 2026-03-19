@@ -1812,7 +1812,7 @@ def crrt_weight_to_rate(weight: float) -> str:
     return textwrap.dedent(f"""
         CRRT total effluent dose (dialysate + substitute + UF + diuresis):
         * Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [KDIGO 20-25 ml/kg/h].
-        * Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (BUN, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: BUN 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h
+        * Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (urea, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: urea 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h
         * Ultrafiltration, diuresis, other losses counts as effluent too.
         """)
 
@@ -2623,7 +2623,7 @@ def ccrea_clearance_cockcroft_gault(
     >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.FEMALE, cCrea=75, age=40, weight=72.7)
     101.1607037037037
     """
-    crcl = (140 - age) * weight / (72 * cCrea / abg.M_Crea)
+    crcl = (140 - age) * weight / (72 * cCrea / abg.Crea)
     if sex == HumanSex.FEMALE:
         crcl *= 0.85
     return crcl
@@ -2669,7 +2669,7 @@ def egfr_mdrd(
     # Revised equation from 2005, to accommodate for standardization of
     # creatinine assays over isotope dilution mass spectrometry (IDMS) SRM 967.
     # Equation being used by Radiometer devices
-    egfr = 175 * (cCrea / abg.M_Crea) ** -1.154 * age**-0.203
+    egfr = 175 * (cCrea / abg.Crea) ** -1.154 * age**-0.203
     if sex == HumanSex.FEMALE:
         egfr *= 0.742
     elif sex == HumanSex.CHILD:
@@ -2718,7 +2718,7 @@ def egfr_ckd_epi_2009(
     """
     if sex == HumanSex.CHILD:
         raise ValueError("CKD-EPI eGFR for children not supported")
-    cCrea /= abg.M_Crea  # to mg/dl
+    cCrea /= abg.Crea  # to mg/dl
     if sex == HumanSex.MALE:
         if cCrea <= 0.9:
             egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993**age
@@ -2762,7 +2762,7 @@ def egfr_ckd_epi_2021(sex: HumanSex, cCrea: float, age: float) -> float:
     """
     if sex == HumanSex.CHILD:
         raise ValueError("CKD-EPI eGFR for children not supported")
-    cCrea /= abg.M_Crea  # to mg/dl
+    cCrea /= abg.Crea  # to mg/dl
     if sex == HumanSex.MALE:
         if cCrea <= 0.9:
             return 142 * (cCrea / 0.9) ** -0.302 * 0.9938**age
@@ -2810,7 +2810,7 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
     # k = 0.45  # First year of life, full-term infants
     # k = 0.55  # 1-12 years
     k = 0.413  # 1 to 16 years. Updated in 2009 ""
-    return k * height * 100 / cCrea * abg.M_Crea
+    return k * height * 100 / (cCrea / abg.Crea)
 
 
 def gfr_describe(gfr: float) -> tuple[int, str]:

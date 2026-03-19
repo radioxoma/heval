@@ -53,14 +53,19 @@ from __future__ import annotations
 
 import math
 
-# Units conversion
-kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 
-M_C6H12O6 = 180
-M_Crea = 88.40  # cCrea (μmol/L) = 88.40 * cCrea (mg/dL)
-M_KCl = 74.5
-M_NaCl = 58.5
-M_NaHCO3 = 84  # g/mol or mg/mmol
+# Multiple to convert
+kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
+Crea = 88.40  # mg/dL to μmol/L, 1 mg/dL = 88.40 μmol/L
+bun = 0.357  # mg/dL to mmol/L, 1 mg/dL = 0.357 mmol/L
+
+# Molar mass. Divide to convert. g/mol = mg/mmol
+M_CREA = 113.12  # g/mol
+M_BUN = 28  # g/mol, not urea, just nitrogen i.e. 14 * 2
+M_C6H12O6 = 180  # g/mol
+M_KCl = 74.5  # g/mol
+M_NaCl = 58.5  # g/mol
+M_NaHCO3 = 84  # g/mol
 M_Hb = 16.1140  # g/mol
 
 # Reference blood test ranges
@@ -646,7 +651,9 @@ def calculate_pO2_FO2_fraction(pO2: float, FiO2: float) -> float:
 def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
     """Calculate Alveolar–arterial gradient.
 
-    Determine source of hypoxemia: low air pO2 or damaged alveolar wall.
+    Determine source of hypoxemia:
+        normal A-a: hypoventilation|asphyxiation|low FiO2
+        high A-a: pneumonia | pulmonary embolism | damaged alveolar wall | right-to-left shunt
 
     [1] https://en.wikipedia.org/wiki/Alveolar–arterial_gradient
 
@@ -662,8 +669,14 @@ def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
 
     Returns:
         Alveolar–arterial gradient.
+
+    Examples:
+    >>> calculate_Aa_gradient(pCO2=3.9, pO2=10.3)  # Case 3
+    4.718
+    >>> calculate_Aa_gradient(pCO2=4.9, pO2=12.1)  # Case 30
+    1.7180000000000017
     """
-    # Also PAO2 = (20 - 5 / 4 * pCO2) - pO2 [1]
+    # PAO2 = 20 - 5 / 4 * pCO2  # Also [1]
     PAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
     return PAO2 - pO2
 

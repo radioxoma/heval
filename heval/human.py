@@ -943,7 +943,9 @@ class HumanModel:
                 egfr = egfr_schwartz(
                     cCrea=self.blood_abg_cCrea, height=self.body_height
                 )
-                info += f""" eGFR Schwartz revised {egfr:.0f} ml/min/1.73 m²"""
+                info += (
+                    f""" {common.A.egfr} Schwartz revised {egfr:.0f} ml/min/1.73 m²"""
+                )
         else:
             if self.body_age is not None:
                 egfr = egfr_ckd_epi_2021(
@@ -2839,26 +2841,35 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
 def gfr_describe(gfr: float) -> tuple[int, str]:
     """Describe GFR value meaning and stage of Chronic Kidney Disease."""
     if 90 <= gfr:
-        return 1, "Normal kidney function if no proteinuria, otherwise CKD1 (90-100 %)"
+        return (
+            1,
+            f"Normal kidney function if no proteinuria, otherwise {common.A.ckd}1 (90-100 %)",
+        )
     elif 60 <= gfr < 90:
         return (
             2,
-            "CKD2 kidney damage with mild loss of kidney function (89-60 %). For most patients GFR over 60 mL/min/1.73 m2 is adequate",
+            f"{common.A.ckd}2 kidney damage with mild loss of kidney function (89-60 %). For most patients GFR over 60 mL/min/1.73 m2 is adequate",
         )
     elif 45 <= gfr < 60:
         return (
             3,
-            "CKD3a, mild to moderate loss of kidney function (59-45 %). Evaluate progression",
+            f"{common.A.ckd}3a, mild to moderate loss of kidney function (59-45 %). Evaluate progression",
         )
     elif 30 <= gfr < 45:
         return (
             3,
-            "CKD3b, moderate to severe loss of kidney function (44-30 %). Evaluate progression",
+            f"{common.A.ckd}3b, moderate to severe loss of kidney function (44-30 %). Evaluate progression",
         )
     elif 15 <= gfr < 30:
-        return 4, "CKD4, severe loss of kidney function (29-15 %). Prepare for dialysis"
+        return (
+            4,
+            f"{common.A.ckd}4, severe loss of kidney function (29-15 %). Prepare for dialysis",
+        )
     else:
-        return 5, "CKD5, kidney failure (&lt;15 %). Needs dialysis or kidney transplant"
+        return (
+            5,
+            f"{common.A.ckd}5, kidney failure (&lt;15 %). Needs dialysis or kidney transplant",
+        )
 
 
 def bun_creatinine_ratio(urea: float, cCrea: float) -> float:

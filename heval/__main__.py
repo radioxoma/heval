@@ -52,7 +52,7 @@ Heval is an experimental medical software intended for healthcare \
 specialists. Software is provided "as is". Developer makes no warranties, \
 express or implied.
 
-Written by Eugene Dvoretsky 2015-2020. Check source code for references and \
+Written by Eugene Dvoretsky 2015-2026. Check source code for references and \
 formulas. Contact e-mail: radioxoma@gmail.com
 
 Heval is a free software and licensed under the terms of \

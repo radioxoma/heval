@@ -103,7 +103,7 @@ class Abbr:
         self.full = full
 
     def __str__(self):
-        return f"""<abbr title="{self.full}">{self.short}</abbr>"""
+        return f"""<abbr title="{self.full}" tabindex="0">{self.short}</abbr>"""
 
 
 class A:

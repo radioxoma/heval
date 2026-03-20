@@ -18,6 +18,13 @@
         grid-template-columns: max-content auto;
         column-gap: 5px;
       }
+      @media (hover: none) {
+        abbr[title]:focus::after {
+          content: " (" attr(title) ")";
+          font-size: 0.9em;
+          color: #555;
+        }
+      }
     </style>
   </head>
   <body>

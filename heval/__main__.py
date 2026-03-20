@@ -471,10 +471,10 @@ class MainWindow(ttk.Frame):
         Bug 2. Must be called once on __init__ without parameters, because
         `some_font['size']` has negative value by default.
         """
-        for fontvar in ("TkDefaultFont", "TkTextFont", "TkFixedFont", "TkMenuFont"):
-            font_obj = tkfont.nametofont(fontvar)
+        for font in ("TkDefaultFont", "TkTextFont", "TkFixedFont", "TkMenuFont"):
+            font_obj = tkfont.nametofont(font)
             # print(font_obj.actual())
-            # font_obj = font.Font(font=fontvar)
+            # font_obj = font.Font(font=font)
             if event == "increase":
                 font_obj["size"] += 1
             elif event == "decrease":

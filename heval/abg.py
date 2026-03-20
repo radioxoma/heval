@@ -15,7 +15,7 @@ Main statements:
     * No algebraic optimizations reducing readability
     * Entities should not be multiplied without necessity
         * Use simple and validated formula. REPRODUCIBILITY IS CRUCIAL
-        * Don't use formula improvements and sophistications from single
+        * Don't use formula improvements and sophistication from single
             authors: it may be a solution for their systematic error
     * All voodoo calculations shall be outside class and documented
     * Heuristic can be anywhere - it complicated anyway.

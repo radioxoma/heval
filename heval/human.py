@@ -387,22 +387,21 @@ class HumanModel:
         return abg.calculate_hct(self.blood_cbc_hb / abg.M_Hb)  # g/L
 
     def _body_composition(self) -> str:
-        info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.0f}:"
-        info += f" IBW {self.body_weight_ideal:.1f} kg [{self._weight_ideal_method}],"
+        info = f"{self.body_sex.name.title()} {self.body_height * 100:.0f}/{self.body_weight:.1f}:"
+        info += f" {common.A.ibw} {self.body_weight_ideal:.1f} kg [{self._weight_ideal_method}],"
+        info += f" {common.A.bmi} {self.body_bmi:.1f}"
+        # Adult normal ranges cannot be applied to children
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += f" BMI {self.body_bmi:.1f} ({bmi_describe(self.body_bmi)}),"
-        else:
-            # Adult normal ranges cannot be applied to children
-            info += f" BMI {self.body_bmi:.1f},"
+            info += f", ({bmi_describe(self.body_bmi)}),"
 
-        info += f" BSA {self.body_bsa:.3f} m².\n"
+        info += f" {common.A.bsa} {self.body_bsa:.3f} m².\n"
 
         # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
         # older than 3 month. ml/kg ratio more in neonates and underweight
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
             self.body_weight * 70, self.body_total_blood_volume
         )
-        info += f"Transfusion of one pRBC dose will increase Hb by {estimate_prbc_transfusion_response(self.body_weight):+.2f} g/dL."
+        info += f"Transfusion of one {common.A.prbc} dose will increase {common.A.hb} by {estimate_prbc_transfusion_response(self.body_weight):+.2f} g/dL."
 
         if self.body_sex == HumanSex.CHILD:
             try:
@@ -429,12 +428,12 @@ class HumanModel:
 
         Расчёт минутного объёма (MV) не так важен, поскольку всё равно не будут совпадать с расчётным:
             * целевая норма ETCO2 35-45 mmHg (не ниже 28 mmHg - спазм сосудов ГМ и риск ишемического инсульта)
-                pCO2 в артериаьной крови может быть на 5 mmHg выше у здорорых (с нормальным сердечным выбросом)
+                pCO2 в артериальной крови может быть на 5 mmHg выше у здоровых (с нормальным сердечным выбросом)
                 или ОЧЕНЬ сильно выше (даже 60-80 mmHg) у пациентов с сердечной недостаточностью / ХОБЛ.
-            * при повшении ETCO2/pCO2 пациент начинает делать дополнительные вдохи сам:
+            * при повышении ETCO2/pCO2 пациент начинает делать дополнительные вдохи сам:
                 * В случае вспомогательной ИВЛ в сознании нужно настроить триггер вентилятора и Psupp
                 * Во время ОЭТН увеличить MV, чтобы подавить самостоятельные вдохи и снизить использование миорелаксантов, беспокойство хирургов
-            * Во время анестезии использовать TV вместе с более-менее подходщей частатой дыхания.
+            * Во время анестезии использовать TV вместе с более-менее подходящей частотой дыхания.
                 Настройка подходящего для данного пациента MV (за счёт F или TV) в соответствии с ETCO2 монитора или pCO2 по КЩС.
                 Удерживать на нижней границе нормы, чтобы не поддыхивал
 
@@ -481,10 +480,10 @@ class HumanModel:
         #    * Neonate's weight must be known in advance
         #    * They RBW must be near IBW
         if self.body_use_ibw:
-            weight_type = "IBW"
+            weight_type = f"{common.A.ibw}"
             weight_chosen = self.body_weight_ideal
         else:
-            weight_type = "RBW"
+            weight_type = f"{common.A.rbw}"
             weight_chosen = self.body_weight
 
         # Dead space https://www.openanesthesia.org/aba_respiratory_function_-_dead_space
@@ -498,40 +497,27 @@ class HumanModel:
         info += "{} respiration parameters for {} {:.1f} kg [Hamilton ASV]\n".format(
             weight_type, self.body_sex.name.lower(), weight_chosen
         )
-        info += f"MV x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
-        info += f"VDaw is {VDaw:.0f} ml, so TV must be >{Tv_min:.0f} ml\n"
-        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min\n".format(
-            tv_mul_min,
-            weight_chosen * tv_mul_min,
-            Vd * 1000 / (weight_chosen * tv_mul_min),
-        )
-        info += " * TV x{:.1f}={:3.0f} ml, RR {:.0f}/min".format(
-            tv_mul_max,
-            weight_chosen * tv_mul_max,
-            Vd * 1000 / (weight_chosen * tv_mul_max),
-        )
+        info += f"{common.A.mv} x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
+        info += f"{common.A.vd_airway} is {VDaw:.0f} ml, so {common.A.tv} must be &gt;{Tv_min:.0f} ml\n"
+        info += f" * {common.A.tv} x{tv_mul_min}={weight_chosen * tv_mul_min:3.0f} ml, {common.A.resp_rate} {Vd * 1000 / (weight_chosen * tv_mul_min):.0f}/min\n"
+        info += f" * {common.A.tv} x{tv_mul_max}={weight_chosen * tv_mul_max:3.0f} ml, {common.A.resp_rate} {Vd * 1000 / (weight_chosen * tv_mul_max):.0f}/min"
         return info
 
     def _body_fluids_in(self) -> str:
         # Normal physiologic demand
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += " * RBW fluids demand {:.0f}-{:.0f} ml/24h (30-35 ml/kg/24h) [ПосДеж]\n".format(
-                30 * self.body_weight, 35 * self.body_weight
-            )
+            info += f" * {common.A.rbw} fluids demand {30 * self.body_weight:.0f}-{35 * self.body_weight:.0f} ml/24h (30-35 ml/kg/24h) [{common.A.ru_pos_dej}]\n"
 
         hs_fluid = fluid_holidaysegar_mod(self.body_weight)
-        info += " * RBW fluids demand {:.0f} ml/24h or {:.0f} ml/h [Holliday-Segar]\n".format(
-            hs_fluid, hs_fluid / 24
-        )
+        info += f" * {common.A.rbw} fluids demand {hs_fluid:.0f} ml/24h or {hs_fluid / 24:.0f} ml/h [Holliday-Segar]\n"
 
         if self.body_height is not None:
-            info += " * BSA fluids demand {:.0f} ml/24h (1750 ml/m²)".format(
-                body_surface_area_dubois(
-                    height=self.body_height, weight=self.body_weight
-                )
-                * 1750
-            )  # All ages
+            # All ages
+            dubois = 1750 * body_surface_area_dubois(
+                height=self.body_height, weight=self.body_weight
+            )
+            info += f" * {common.A.bsa} fluids demand {dubois:.0f} ml/24h (1750 ml/m²)"
 
         # Variable perspiration losses, which is not included in physiologic demand
         # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
@@ -550,7 +536,9 @@ class HumanModel:
         """Daily electrolytes demand."""
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += "Daily nutrition requirements for adults [ПосДеж]:\n"
+            info += (
+                f"Daily nutrition requirements for adults [{common.A.ru_pos_dej}]:\n"
+            )
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(
                 1.2 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
             )
@@ -654,11 +642,7 @@ class HumanModel:
                 )
             else:
                 info += "Enter age to calculate REE\n"
-            info += (
-                " * {:.0f}-{:.0f} kcal/24h (25-30 kcal/kg/24h IBW) [ESPEN 2019]".format(
-                    25 * self.body_weight_ideal, 30 * self.body_weight_ideal
-                )
-            )
+            info += f" * {25 * self.body_weight_ideal:.0f}-{30 * self.body_weight_ideal:.0f} kcal/24h (25-30 kcal/kg/24h {common.A.ibw}) [{common.A.espen} 2019]"
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
@@ -673,7 +657,7 @@ class HumanModel:
         """
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += "RBW adult urinary output:\n"
+            info += f"{common.A.rbw} adult urinary output:\n"
             info += (
                 " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(
                     0.5 * self.body_weight, 0.5 * self.body_weight * 24
@@ -684,7 +668,7 @@ class HumanModel:
             )
         if self.body_sex == HumanSex.CHILD:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
-            info += "RBW child urinary output:\n"
+            info += f"{common.A.rbw} child urinary output:\n"
             info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(
                 self.body_weight, self.body_weight * 24
             )
@@ -787,21 +771,21 @@ class HumanModel:
                     self.blood_abg_anion_gap, self.blood_abg_hco3p
                 )
             elif self.blood_abg_anion_gap < abg.norm_gap[0]:
-                info += f"Low AG {desc} - hypoalbuminemia or low Na⁺?"
+                info += f"Low {common.A.anion_gap} {desc} - hypoalbuminemia or low Na⁺?"
             else:
                 # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
                 info += f"NAGMA {desc}. Diarrhea or renal tubular acidosis?"
         else:
             if abg.norm_gap[1] < self.blood_abg_anion_gap:
-                info += f"Unexpected high AG {desc} without main metabolic acidosis; "
+                info += f"Unexpected high {common.A.anion_gap} {desc} without main metabolic acidosis; "
                 # Can catch COPD or concurrent metabolic alkalosis here
                 info += abg.calculate_anion_gap_delta(
                     self.blood_abg_anion_gap, self.blood_abg_hco3p
                 )
             elif self.blood_abg_anion_gap < abg.norm_gap[0]:
-                info += f"Unexpected low AG {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
+                info += f"Unexpected low {common.A.anion_gap} {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
             else:
-                info += f"AG is ok {desc}"
+                info += f"{common.A.anion_gap} is ok {desc}"
         if self.verbose:
             """Strong ion difference.
 
@@ -857,10 +841,10 @@ class HumanModel:
             # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856150
             # https://en.wikipedia.org/wiki/Contraction_alkalosis
             # Acetazolamide https://en.wikipedia.org/wiki/Carbonic_anhydrase_inhibitor
-            info += f"SBE is high {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L). Low Cl⁻, hypoalbuminemia? NaHCO₃ overdose?"
+            info += f"{common.A.sbe} is high {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L). Low Cl⁻, hypoalbuminemia? NaHCO₃ overdose?"
         elif self.blood_abg_sbe < abg.norm_sbe[0]:
             if self.blood_abg_sbe <= NaHCO3_threshold:
-                info += f"SBE is drastically low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
+                info += f"{common.A.sbe} is drastically low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
                 info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
                 NaHCO3_mmol = -0.3 * self.blood_abg_sbe * self.body_weight  # mmol/L
@@ -888,9 +872,9 @@ class HumanModel:
                           * Target urine pH 8, serum 7.34 [ПосДеж, с 379]"""
                     )
             else:
-                info += f"SBE is low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {NaHCO3_threshold:.0f} mEq/L"
+                info += f"{common.A.sbe} is low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), but NaHCO₃ won't improve outcome when BE > {NaHCO3_threshold:.0f} mEq/L"
         else:
-            info += f"SBE is ok {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
+            info += f"{common.A.sbe} is ok {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
         return info
 
     def _lab_electrolytes(self):
@@ -938,7 +922,7 @@ class HumanModel:
                 info += solution_glucose(
                     0.25 * self.body_weight,
                     self.body_weight,
-                    add_insuline=False,
+                    add_insulin=False,
                 )
                 # High lactate + refractory low cGlu marks liver failure: expect death in 24-48 hours
                 info += "Check cGlu after 20 min, repeat bolus and use continuous infusion, if refractory. In case of sepsis, liver failure may be the cause."
@@ -971,7 +955,7 @@ class HumanModel:
                     age=self.body_age,
                     weight=self.body_weight,
                 )
-                info += f""" <abbr title="Creatinine clearance by Cockcroft-Gault">CrCl</abbr> {crcl:.0f} mL/min, eGFR CKD-EPI 2021 {egfr:.0f} ml/min/1.73 m²"""
+                info += f""" {common.A.crcl} {crcl:.0f} mL/min, {common.A.egfr} CKD-EPI 2021 {egfr:.0f} ml/min/1.73 m²"""
         if egfr:
             stage, stage_report = gfr_describe(egfr)
             info += ": " + stage_report
@@ -981,11 +965,11 @@ class HumanModel:
                 )
                 info += f". BUN:cCrea ratio is {bun_ccrea_ratio:.0f}: "
                 if bun_ccrea_ratio <= 10:
-                    info += """renal cause of <abbr title="Acute kidney injury">AKI</abbr> or liver disease, malnutrition (low protein diet), pregnancy, acute tubular necrosis, <abbr title="Syndrome of inappropriate antidiuretic hormone secretion">SIADH</abbr>"""
+                    info += f"""renal cause of {common.A.aki} or liver disease, malnutrition (low protein diet), pregnancy, acute tubular necrosis, {common.A.siadh}"""
                 elif bun_ccrea_ratio <= 20:
-                    info += """normal kidney function or postrenal cause of <abbr title="Acute kidney injury">AKI</abbr>"""
+                    info += f"""normal kidney function or postrenal cause of {common.A.aki}"""
                 else:
-                    info += """prerenal kidney injury (hypovolemia), rapid protein destruction (high protein intake or catabolism), corticosteroids, <abbr title="Congestive heart failure">CHF</abbr>, <abbr title="Gastrointestinal">GI</abbr> bleeding"""
+                    info += f"""prerenal kidney injury (hypovolemia), rapid protein destruction (high protein intake or catabolism), corticosteroids, {common.A.chf}, {common.A.gi} bleeding"""
             if stage >= 4:
                 self.flags.add(
                     common.Flag(
@@ -1051,9 +1035,9 @@ class HumanModel:
         )
         info = ""
         if self.blood_cbc_hb < 75:  # Generic threshold
-            info += f"Hb is low {desc_hb}, consider transfusion. "
+            info += f"{common.A.hb} is low {desc_hb}, consider transfusion. "
         else:
-            info += f"Hb {desc_hb}. "
+            info += f"{common.A.hb} {desc_hb}. "
 
         if self.blood_abg_hct_calc > hct_norm[1]:
             info += f"Hct is high {desc_hct}"
@@ -1089,7 +1073,7 @@ class HumanModel:
             / abg.kPa
         )
 
-        info += f"""Oxygenation (implies arterial blood): p/f {pf_index:.0f}, <abbr title="Alveolar-arterial gradient">A-a gradient</abbr>"""
+        info += f"""Oxygenation (implies arterial blood): p/f {pf_index:.0f}, {common.A.aa_gradient}"""
         if Aa_gradient > abg.norm_Aa_gradient_mmHg[1]:
             info += " is high"
         info += f" {Aa_gradient:.1f} ({abg.norm_Aa_gradient_mmHg[0]:.0f}-{abg.norm_Aa_gradient_mmHg[1]:.0f} mmHg)"
@@ -1100,7 +1084,7 @@ class HumanModel:
         if self.blood_abg_pH is not None:
             if self.blood_abg_pH < 7.15:
                 warnings.append(
-                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;7.15. Acidosis requires intervention. Check <abbr title="Arterial Blood Gas">ABG</abbr>.</span>"""
+                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;7.15. Acidosis requires intervention. Check {common.A.abg}.</span>"""
                 )
 
         if self.blood_abg_cK is not None:
@@ -1131,10 +1115,10 @@ class HumanModel:
                 prbc_volume = estimate_prbc_transfusion_volume(
                     real_body_weight=self.body_weight, hb=self.blood_cbc_hb
                 )
-                msg = f"""<span style="color:red"><abbr title="Hemoglobin">Hb</abbr> {self.blood_cbc_hb:.0f} g/L:</span>"""
+                msg = f"""<span style="color:red">{common.A.hb} {self.blood_cbc_hb:.0f} g/L:</span>"""
                 if self.blood_cbc_hb < 50:
                     msg = f"""<strong>{msg}</strong>"""
-                return f"""{msg} {math.ceil(prbc_volume / 350)} units of <abbr title="Packed red blood cells">pRBC</abbr> ({prbc_volume:.0f} ml) is required to reach 75 g/L"""
+                return f"""{msg} {math.ceil(prbc_volume / 350)} units of {common.A.prbc} ({prbc_volume:.0f} ml) is required to reach 75 g/L"""
         return ""
 
     def _flag_anemia_type(self):
@@ -1153,11 +1137,11 @@ class HumanModel:
         # >50 usually ok, <20 hemorrhagic syndrome
         # PLT transfusion threshold https://www.ncbi.nlm.nih.gov/books/NBK560632/
         if self.blood_cbc_plt is not None:
-            plt_count = f"""<abbr title="Platelets">PLT</abbr> {self.blood_cbc_plt:.0f}×10<sup>9</sup>/L:"""
+            plt_count = f"""{common.A.plt} {self.blood_cbc_plt:.0f}×10<sup>9</sup>/L:"""
             if self.blood_cbc_plt < 10:
                 msg += f"{plt_count} transfusion is required to prevent spontaneous bleeding"
             elif 10 <= self.blood_cbc_plt < 50:
-                msg += f"""{plt_count} transfusion is required before surgery, invasive manipulations (tunnel catheter insertion, <abbr title="Epidural anesthesia">EDA</abbr>)"""
+                msg += f"""{plt_count} transfusion is required before surgery, invasive manipulations (tunnel catheter insertion, {common.A.eda})"""
             elif 50 <= self.blood_cbc_plt < 100:
                 msg += f"""{plt_count} transfusion in the case of life-threatening bleeding (e.g. intracranial)"""
         return msg
@@ -1176,8 +1160,8 @@ class HumanModel:
                 dose = ""
                 if self.body_weight is not None:
                     fib_packs = (2 - self.blood_coag_fib) * 0.1 * self.body_weight
-                    dose = f"""<abbr title="1 unit per 5-10 kg RBW. Typically 10 units per transfusion">{fib_packs:.0f} units</abbr> of """
-                msg += f"""<abbr title="Fibrinogen">Fib</abbr> <abbr title="Target fibrinogen 1.5-2 g/L">{self.blood_coag_fib}</abbr> g/L: consider {dose}cryoprecipitate"""
+                    dose = f"""<abbr title="1 unit per 5-10 kg {common.A.rbw.full}. Typically 10 units per transfusion">{fib_packs:.0f} units</abbr> of """
+                msg += f"""{common.A.fib} <abbr title="Target fibrinogen 1.5-2 g/L">{self.blood_coag_fib}</abbr> g/L: consider {dose}cryoprecipitate"""
         return msg
 
     def _flag_inr(self):
@@ -1188,9 +1172,9 @@ class HumanModel:
                 ffp_volume = self.body_weight * 15  # 15 ml/kg
                 ffp_units = math.ceil(ffp_volume / 300)  # 300 ml per FFP unit
                 msg += f"""\
-                <abbr title="International normalized ratio">INR</abbr>\
+                {common.A.inr}\
                 <abbr title="Target ≤1.5 for surgery">{self.blood_coag_inr:0.2f}</abbr>: consider menadione,\
-                <abbr title="Fresh frozen plasma">FFP</abbr> (<abbr title="{ffp_volume:.0f} ml (15 ml/kg)">{ffp_units} units</abbr>), protrombin concentrate in urgent cases for reversal
+                {common.A.ffp} (<abbr title="{ffp_volume:.0f} ml (15 ml/kg)">{ffp_units} units</abbr>), protrombin concentrate in urgent cases for reversal
                 """
         return msg
 
@@ -1236,7 +1220,7 @@ class HumanModel:
                 score += 1
 
         if score >= 5:
-            return f"""Probable <abbr title="Disseminated intravascular coagulation: consider blood components and coagulation factors replacement">DIC syndrome</abbr> ({score} <abbr title="International Society on Thrombosis and Haemostasis">ISTH</abbr> points)"""
+            return f"""Probable <abbr title="Disseminated intravascular coagulation: consider blood components and coagulation factors replacement">DIC syndrome</abbr> ({score} {common.A.isth} points)"""
         else:
             return ""
 
@@ -1298,12 +1282,12 @@ class HumanModel:
             return "0 % ADAMTS13 deficiency probability" + tpl
         elif score > 5:
             return (
-                """72 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, start <abbr title="Therapeutic plasma exchange">TPE</abbr>, methylprednisolone 1 mg/kg/24h"""
+                f"""72 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, start {common.A.tpe}, methylprednisolone 1 mg/kg/24h"""
                 + tpl
             )
         else:
             return (
-                """6 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, consider <abbr title="Therapeutic plasma exchange">TPE</abbr>"""
+                f"""6 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, consider {common.A.tpe}"""
                 + tpl
             )
 
@@ -1851,8 +1835,8 @@ def crrt_weight_to_rate(weight: float) -> str:
     What is safe blood urea rate of drop to prevent dialysis disequilibrium syndrome? 15 ml/kg/h is safe start, 20-25 ml/kg/h are recommended.
     """
     return textwrap.dedent(f"""
-        CRRT total effluent dose (dialysate + substitute + UF + diuresis):
-        * Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [KDIGO 20-25 ml/kg/h].
+        {common.A.crrt} total effluent dose (dialysate + substitute + {common.A.uf} + diuresis):
+        * Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [{common.A.kdigo} 20-25 ml/kg/h].
         * Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (urea, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: urea 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h
         * Ultrafiltration, diuresis, other losses counts as effluent too.
         """)
@@ -2029,7 +2013,7 @@ def estimate_prbc_transfusion_volume(
         Estimated pRBC volume (formula valid for pRBC HCT 0.64-0.72), ml
 
     References:
-        Dr K Morris et all, 2005 https://adc.bmj.com/content/90/7/724
+        Dr K Morris et al., 2005 https://adc.bmj.com/content/90/7/724
 
         Old unvalidated formula (for reference)
         donor_rbc_vol = real_body_weight * (target_hb - hb) / donor_rbc_hb
@@ -2099,7 +2083,7 @@ def check_anemia(hb: float, mcv: float) -> str:
 
 
 def solution_glucose(
-    glu_mass: float, body_weight: float, add_insuline: bool = True
+    glu_mass: float, body_weight: float, add_insulin: bool = True
 ) -> str:
     """Glucose and insulin solution calculation.
 
@@ -2113,7 +2097,7 @@ def solution_glucose(
     Args:
         glu_mass: glucose mass, grams
         body_weight: patient body weight, kg
-        add_insuline: Set False if bolus intended for hypoglycemic state
+        add_insulin: Set False if bolus intended for hypoglycemic state
     """
     glu_mol = glu_mass / abg.M_C6H12O6  # mmol/L
     # Glucose nutrition
@@ -2121,7 +2105,7 @@ def solution_glucose(
     # Usually referenced as 4.1 kcal/g
 
     # It's convenient to start with 0.15-0.2 g/kg/h, increasing speed up
-    # to 0.5 g/kg/h. If hyperglycemia occurs, slow down or add more insulinum
+    # to 0.5 g/kg/h. If hyperglycemia occurs, slow down or add more insulin
     # to avoid glycosuria:
     # Hyperglycemia -> renal threshold (8.9-10 mmol/L) -> glycosuria
 
@@ -2129,10 +2113,10 @@ def solution_glucose(
     # 5-8 mg/kg/min in an infant and about 3-5 mg/kg/min in an older child
     # https://emedicine.medscape.com/article/921936-treatment
     info = f"Glu {glu_mass:.1f} g ({glu_mol:.2f} mmol, {glu_mass * 4.1:.0f} kcal)"
-    if add_insuline:
+    if add_insulin:
         ins_dosage = 0.25  # IU/g
-        insulinum = glu_mass * ins_dosage
-        info += f" + Ins {insulinum:.1f} IU ({ins_dosage:.2f} IU/g)"
+        insulin = glu_mass * ins_dosage
+        info += f" + Ins {insulin:.1f} IU ({ins_dosage:.2f} IU/g)"
     info += ":\n"
 
     for dilution in (5, 10, 40):
@@ -2372,18 +2356,18 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
     if K_serum > abg.norm_K[1]:
         if K_serum >= K_high:
             glu_mass = 0.5 * weight  # Child and adults
-            info += f"K⁺ is dangerously high (>{K_high:.1f} mmol/L)\n"
+            info += f"K⁺ is dangerously high (&gt;{K_high:.1f} mmol/L)\n"
             info += "Inject bolus 0.5 g/kg "
             info += solution_glucose(glu_mass, weight)
-            info += "Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [ПосДеж]\n"
+            info += f"Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [{common.A.ru_pos_dej}]\n"
             # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-            info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml (RBWx2={2 * weight:.0f} mmol) [Курек 2013]\n"
+            info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml ({common.A.rbw}x2={2 * weight:.0f} mmol) [Курек 2013]\n"
             info += "Don't forget salbutamol, furosemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
         else:
             info += f"K⁺ on the upper acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
     elif K_serum < abg.norm_K[0]:
         if K_serum < K_low:
-            info += f"K⁺ is dangerously low (<{K_low:.1f} mmol/L). Often associated with low Mg²⁺ (should be at least 1 mmol/L) and low Cl⁻.\n"
+            info += f"K⁺ is dangerously low (&lt;{K_low:.1f} mmol/L). Often associated with low Mg²⁺ (should be at least 1 mmol/L) and low Cl⁻.\n"
             info += "NB! Potassium calculations considered inaccurate, so use standard K⁺ replacement rate "
             if weight < 40:
                 info += "{:.1f}-{:.1f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
@@ -2629,12 +2613,10 @@ def electrolyte_Cl(Cl_serum: float) -> str:
     info = ""
     Cl_low, Cl_high = abg.norm_Cl[0], abg.norm_Cl[1]
     if Cl_serum > Cl_high:
-        info += f"Cl⁻ is high {Cl_serum:.0f} (>{Cl_high} mmol/L), excessive NaCl infusion or dehydration (check osmolarity)."
+        info += f"Cl⁻ is high {Cl_serum:.0f} (&gt;{Cl_high} mmol/L), excessive NaCl infusion or dehydration (check osmolarity)."
     elif Cl_serum < Cl_low:
         # KCl replacement?
-        info += (
-            f"Cl⁻ is low {Cl_serum:.0f} (<{Cl_low} mmol/L). Vomiting? Diuretics abuse?"
-        )
+        info += f"Cl⁻ is low {Cl_serum:.0f} (&lt;{Cl_low} mmol/L). Vomiting? Diuretics abuse?"
     else:
         info += f"Cl⁻ is ok {Cl_serum:.0f} ({abg.norm_Cl[0]:.0f}-{abg.norm_Cl[1]:.0f} mmol/L)"
     return info

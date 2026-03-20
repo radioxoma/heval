@@ -18,7 +18,7 @@ human_model_changed = Event()
 event_change = window.Event.new("change")  # Dummy object to generate events
 
 input_list = (
-    ("body_use_ibw", """Use <abbr title="Ideal body weight">IBW</abbr>""", True),
+    ("body_use_ibw", f"Use {heval.common.A.ibw}", True),
     ("verbose", "", False),
     ("body_height", "m", 1.77),
     ("body_weight", "kg", 75),

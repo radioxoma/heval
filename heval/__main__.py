@@ -23,14 +23,14 @@ __css__ = """
 </style>
 """
 
-__helptext__ = """
+__helptext__ = f"""
 <h3>HUMAN BODY</h3>
 Введите пол и рост — этого достаточно для большей части антропометрических
-расчётов. Идеальный вес (IBW) рассчитывается по росту и полу автоматически.
+расчётов. Идеальный вес ({common.A.ibw}) рассчитывается по росту и полу автоматически.
 Снимите галочку "Use IBW" и введите реальный вес, если знаете его.<br>
 
-Мгновенно доступны: <abbr title="Ideal body weight">IBW</abbr>, <abbr title="Body surface area">BSA</abbr>, <abbr title="Body mass index">BMI</abbr>, объёмы вентиляции, суточная потребность
-в энергии и жидкости, диурез, дозировки <abbr title="Лекарственные средства">ЛС</abbr> etc.
+Мгновенно доступны: {common.A.ibw}, {common.A.bmi}, {common.A.bsa}, объёмы вентиляции, суточная потребность
+в энергии и жидкости, диурез, дозировки {common.A.ru_ls} etc.
 
 <h3>ABG & ELECTROLYTES</h3>
 <p>Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае
@@ -40,41 +40,6 @@ __helptext__ = """
 Пол и вес влияют на рассчитанную инфузионную терапию.</p>
 
 <p>При наведении курсора на поле ввода появляется всплывающая подсказка.</p>
-
-<h3>ABBREVIATIONS</h3>
-<ul>
-<li>ABG - arterial blood gas test</li>
-<li>AG - anion gap</li>
-<li>AKI - acute kidney injury</li>
-<li>BMI - body mass index</li>
-<li>BMR - basal metabolic rate</li>
-<li>BSA - body surface area, m²</li>
-<li>CKD - chronic kidney disease</li>
-<li>CRRT - continuous renal replacement therapy</li>
-<li>D5, D5W - dextrose 5%</li>
-<li>DKE - diabetic ketoacidosis</li>
-<li>eGFR - estimated glomerular filtration rate</li>
-<li>GA - general anesthesia</li>
-<li>gg - gap-gap, delta gap</li>
-<li>HAGMA - high anion gap metabolic acidosis</li>
-<li>HHS - hyperosmolar hyperglycemic state</li>
-<li>IBW - ideal body weight, kg</li>
-<li>IV, I/V - intravenous</li>
-<li>KULT - Ketones, Uremia, Lactate, Toxins</li>
-<li>MV - minute volume</li>
-<li>NAGMA - normal anion gap metabolic acidosis</li>
-<li>NMT - neuromuscular monitoring</li>
-<li>pRBC - packed red blood cells</li>
-<li>RBW - real body weight, kg</li>
-<li>RR - respiratory rate</li>
-<li>SBE - standard base excess</li>
-<li>TIVA - total intravenous anesthesia</li>
-<li>TOF - train of four</li>
-<li>TV - tidal volume</li>
-<li>UUN - Urine Urea Nitrogen</li>
-<li>VDaw - dead space airway volume</li>
-<li>ПосДеж - Пособие дежуранта, С.А. Деревщиков, 2014 г</li>
-</ul>
 """
 
 __about__ = """\

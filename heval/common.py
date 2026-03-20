@@ -95,3 +95,49 @@ class FlagWarnings:
         if items:
             return "<ul><li>" + "</li><li>".join(items) + "</li></ul>"
         return ""
+
+
+class Abbr:
+    def __init__(self, short: str, full: str):
+        self.short = short
+        self.full = full
+
+    def __str__(self):
+        return f"""<abbr title="{self.full}">{self.short}</abbr>"""
+
+
+class A:
+    """Abbreviation namespace."""
+
+    ru_ls = Abbr("ЛС", "Лекарственные средства")
+    ru_pos_dej = Abbr("ПосДеж", "Пособие дежуранта, С.А. Деревщиков, 2014 г")
+    abg = Abbr("ABG", "Arterial blood gas test")
+    aki = Abbr("AKI", "Acute kidney injury")
+    anion_gap = Abbr("AG", "Anion gap")
+    bmi = Abbr("BMI", "Body mass index")
+    bmr = Abbr("BMR", "Basal metabolic rate")
+    bsa = Abbr("BSA", "Body surface area, m²")
+    ckd = Abbr("CKD", "Chronic kidney disease")
+    crrt = Abbr("CRRT", "Continuous renal replacement therapy")
+    d5w = Abbr("D5, D5W", "Dextrose 5%")
+    dke = Abbr("DKE", "Diabetic ketoacidosis")
+    egfr = Abbr("eGFR", "Estimated glomerular filtration rate")
+    ganest = Abbr("GA", "General anesthesia")
+    gapgap = Abbr("gg", "Gap-gap, delta gap")
+    hagma = Abbr("HAGMA", "High anion gap metabolic acidosis")
+    hhs = Abbr("HHS", "Hyperosmolar hyperglycemic state")
+    ibw = Abbr("IBW", "Ideal body weight, kg")
+    iv = Abbr("IV, I/V", "Intravenous")
+    kult = Abbr("KULT", "Ketones, uremia, lactate, toxins")
+    mv = Abbr("MV", "Minute volume")
+    nagma = Abbr("NAGMA", "Normal anion gap metabolic acidosis")
+    nmt = Abbr("NMT", "Neuromuscular monitoring")
+    prbc = Abbr("pRBC", "Packed red blood cells")
+    rbw = Abbr("RBW", "Real body weight, kg")
+    resp_rate = Abbr("RR", "Respiratory rate")
+    sbe = Abbr("SBE", "Standard base excess")
+    tiva = Abbr("TIVA", "Total intravenous anesthesia")
+    tof = Abbr("TOF", "Train of four")
+    tv = Abbr("TV", "Tidal volume")
+    urea_nitrogen = Abbr("UUN", "Urine Urea Nitrogen")
+    vd_airway = Abbr("VDaw", "Dead space airway volume")

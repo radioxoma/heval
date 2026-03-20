@@ -983,7 +983,7 @@ class HumanModel:
                 if bun_ccrea_ratio <= 10:
                     info += """renal cause of <abbr title="Acute kidney injury">AKI</abbr> or liver disease, malnutrition (low protein diet), pregnancy, acute tubular necrosis, <abbr title="Syndrome of inappropriate antidiuretic hormone secretion">SIADH</abbr>"""
                 elif bun_ccrea_ratio <= 20:
-                    info += """normal kidney function or post renal cause of <abbr title="Acute kidney injury">AKI</abbr>"""
+                    info += """normal kidney function or postrenal cause of <abbr title="Acute kidney injury">AKI</abbr>"""
                 else:
                     info += """prerenal kidney injury (hypovolemia), rapid protein destruction (high protein intake or catabolism), corticosteroids, <abbr title="Congestive heart failure">CHF</abbr>, <abbr title="Gastrointestinal">GI</abbr> bleeding"""
             if stage >= 4:

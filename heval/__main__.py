@@ -15,49 +15,14 @@ from tkinter import ttk
 
 import tkinterweb
 
-from heval import __version__, abg, human, common
+import heval
+from heval import abg, human, common
 
 __css__ = """
 <style>
   abbr { border-bottom: 1px dotted; }
 </style>
 """
-
-__helptext__ = f"""
-<h3>Human body</h3>
-Введите пол и рост — этого достаточно для большей части антропометрических
-расчётов. Идеальный вес ({common.A.ibw}) рассчитывается по росту и полу автоматически.
-Снимите галочку "Use IBW" и введите реальный вес, если знаете его.<br>
-
-Мгновенно доступны: {common.A.ibw}, {common.A.bmi}, {common.A.bsa}, объёмы вентиляции, суточная потребность
-в энергии и жидкости, диурез, дозировки {common.A.ru_ls} etc.
-
-<h3>Laboratory</h3>
-<p>Кислотно-щелочной статус оценивается по pH и pCO2. Но в случае
-метаболического ацидоза необходимо ввести концентрации K⁺, Na⁺, Cl⁻, чтобы
-программа смогла рассчитать анионный промежуток и попыталась найти скрытые
-метаболические процессы при помощи Delta ratio.<br>
-Пол и вес влияют на рассчитанную инфузионную терапию.</p>
-
-<p>При наведении курсора на поле ввода появляется всплывающая подсказка.</p>
-"""
-
-__about__ = """\
-Heval — экспериментальное программное обеспечение, предназначенное для \
-использования врачами анестезиологами-реаниматологами. Программа \
-предоставляется "как есть". Автор не несёт ответственности за ваши \
-действия и не предоставляет никаких гарантий.
-
-Heval is an experimental medical software intended for healthcare \
-specialists. Software is provided "as is". Developer makes no warranties, \
-express or implied.
-
-Written by Eugene Dvoretsky 2015-2026. Check source code for references and \
-formulas. Contact e-mail: radioxoma@gmail.com
-
-Heval is a free software and licensed under the terms of \
-GNU General Public License version 3."""
-
 
 __easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
 
@@ -246,7 +211,7 @@ class MainWindow(ttk.Frame):
     def __init__(self, parent: tk.Tk, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.parent = parent
-        self.parent.title("Heval: the human evaluator — v" + __version__)
+        self.parent.title("Heval: the human evaluator — v" + heval.__version__)
         self.parent.geometry("650x590")
 
         style = ttk.Style()
@@ -545,7 +510,7 @@ class HelpWindow(tk.Toplevel):
         self.configure(bg=lbl_bg)
 
         self.text = TextHtmlView(self)
-        self.text.set_html(__helptext__)
+        self.text.set_html(heval.__doc__)
         self.text.pack(expand=True, fill=tk.BOTH)
 
         self.ctl_frame = ttk.Frame(self, padding=8)
@@ -575,11 +540,13 @@ class AboutWindow(tk.Toplevel):
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
         self.geometry(f"+{x + 50:.0f}+{y + 100:.0f}")
-        self.title("About v" + __version__)
+        self.title("About v" + heval.__version__)
 
-        abouttext = __about__ + " And remember: " + random.choice(__easter_text__)
-        self.lbl = ttk.Label(self, text=abouttext, wraplength=500, padding=8)
-        self.lbl.pack(expand=True, fill=tk.BOTH)
+        self.text = TextHtmlView(self)
+        self.text.set_html(
+            heval.DISCLAIMER + " And remember: " + random.choice(__easter_text__)
+        )
+        self.text.pack(expand=True, fill=tk.BOTH)
 
         self.ctl_frame = ttk.Frame(self, padding=8)
         self.ctl_btn_website = ttk.Button(
@@ -1393,7 +1360,7 @@ class MenuTooltip(tk.Menu):
 def visit_website(event=None):
     import webbrowser
 
-    webbrowser.open_new_tab("https://github.com/radioxoma/heval")
+    webbrowser.open_new_tab(heval.__url__)
 
 
 def magic8ball() -> str:

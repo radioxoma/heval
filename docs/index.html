@@ -13,6 +13,7 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/@pyscript/core@0.7.19/dist/core.js"></script>
     <style>
       pre { white-space: pre-wrap; }
+      summary { padding: 0.3em 0.3em; }
       #human_model_form {
         display: grid;
         grid-template-columns: max-content auto;
@@ -49,6 +50,10 @@
     <details open>
       <summary>Labs</summary>
       <pre id="output_labs">🟡 Please wait</pre>
+    </details>
+    <details>
+      <summary>Help</summary>
+      <div id="output_help"><pre>🟡 Please wait</pre></div>
     </details>
     <p style="text-align: right;"><a href="https://github.com/radioxoma/heval/" target="_blank">Heval on GitHub</a></p>
     <script type="py" src="./main.py" config="./pyscript.json"></script>

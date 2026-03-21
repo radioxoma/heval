@@ -9,6 +9,7 @@ https://github.com/pyscript/pyscript-stubs/tree/main/src/pyscript-stubs
 
 from pyscript import Event, web, when, window  # ty: ignore[unresolved-import]
 
+import heval
 from heval import abg, common, human
 
 human_model = human.HumanModel()
@@ -139,3 +140,5 @@ def eval_model():
 
 web.page["output_body"].innerText = "🟢 Ready"
 web.page["output_labs"].innerText = "🟢 Ready"
+web.page["output_help"].innerHTML = heval.__doc__
+web.page["output_help"].append(web.p(heval.DISCLAIMER))

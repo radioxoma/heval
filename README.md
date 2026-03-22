@@ -1,11 +1,20 @@
-## Heval: the human evaluator. Calculate what your human crave!
+## Heval: the Human EVALuator
 
-> Heval is available as a web app https://radioxoma.github.io/heval/
+> Calculate what your human crave online https://radioxoma.github.io/heval/
 
-Heval is a medical calculator for [intensive care unit](https://en.wikipedia.org/wiki/Intensive_care_medicine). Main features:
+Heval is an advanced medical calculator and decision support system for [intensive care units](https://en.wikipedia.org/wiki/Intensive_care_medicine).
+It is available as a web app, a desktop app, and a Python package for integration with existing medical information systems.
+
+Heval aims to achieve an ambitious goal: unifying multiple calculations within a single robust human model.
+
+When the model properties are populated with anthropometric and laboratory data, it derives additional human features (calculated properties) and executes a comprehensive rule set of validation and diagnostic checks.
+Found issues are represented as broad _text report_ and set of _flags_.
+The _flag_ is a short distinct warning with a reason, description, color coded severity and action required.
+
+Main features:
 
 * Minimal user input — unknown values estimated automatically whenever possible (e.g. weight by height)
-* Only measurable parameters — no need to speak with a human of interest
+* Only measurable parameters — no need to speak with a human of interest, no opinion controversy
 * No "Calculate" button — evaluated data changes immediately with your input
 * Every calculation referenced and explained in source code, so everyone can reproduce it
 * Python package can be integrated into medical information system
@@ -76,7 +85,7 @@ Download *exe* file from the [releases page](https://github.com/radioxoma/heval/
 
 ### Mac OS X
 
-Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Unpack *Heval.app* from *dmg*. Application unsigned, so warning "*macOS cannot verify the developer of "Heval"*" will appear if you try to run it. You can overcome this in one of two ways:
+Download *dmg* file (Apple Disk Image with 64-bit *Heval.app*) from the [releases page](https://github.com/radioxoma/heval/releases/latest/). Unpack *Heval.app* from *dmg*. Application unsigned, so warning "*macOS cannot verify the developer of 'Heval'*" will appear if you try to run it. You can overcome this in one of two ways:
 
 * Press <kbd>Control</kbd> and simultaneously click on unpacked *Heval.app*. Click *Open* in appeared context menu. Click *Open* in appeared window
 * Run in terminal `xattr -dr com.apple.quarantine "Heval.app"`. Now "Heval" can be run by click

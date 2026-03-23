@@ -1442,7 +1442,12 @@ def body_surface_area_dubois(height: float, weight: float) -> float:
 
     Suitable for newborn, adult, fat.
 
-    BSA = (W ** 0.425 * H ** 0.725) * 0.007184
+    Args:
+        height: Patient height, meters
+        weight: Real body mass, kg
+
+    Returns:
+        m2, square meters
 
     References
     ----------
@@ -1451,15 +1456,8 @@ def body_surface_area_dubois(height: float, weight: float) -> float:
     [3] http://www-users.med.cornell.edu/~spon/picu/calc/bsacalc.htm
 
     Examples
-    --------
     >>> body_surface_area_dubois(1.86, 70)
     1.931656390627583
-
-    :param float height: Patient height, meters
-    :param float weight: Real body mass, kg
-    :return:
-        m2, square meters
-    :rtype: float
     """
     return 0.007184 * weight**0.425 * (height * 100) ** 0.725
 
@@ -2708,7 +2706,7 @@ def egfr_mdrd(
 
 
 def egfr_ckd_epi_2009(
-    sex: HumanSex, cCrea: float, age: float, black_skin: bool = False
+    sex: HumanSex, cCrea: float, age: float, black_race: bool = False
 ) -> float:
     """Estimated glomerular filtration rate in adults (2009 CKD-EPI formula).
 
@@ -2717,50 +2715,47 @@ def egfr_ckd_epi_2009(
     Cahexy, limb amputation will reduce creatinine production, so eGFR
     will look better than it is.
 
-    References
-    ----------
-    [1] A new equation to estimate glomerular filtration rate. Ann Intern Med. 2009;150(9):604-12.
+    References:
+        https://pubmed.ncbi.nlm.nih.gov/34554658/
 
     Args:
         sex: Human sex
         cCrea: Serum creatinine (IDMS-calibrated), μmol/L
         age: Human age, years
-        black_skin: True for people with black skin (african american)
+        black_race: True for black people
 
     Returns:
         eGFR, mL/min/1.73 m2
 
     Examples
-    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40, black_skin=True)
-    163.68594283784108
-    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40, black_skin=True)  # 145
-    148.08325740660493
+    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40, black_race=True)
+    163.0278767156715
+    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40, black_race=True)  # 145
+    144.41525374226973
     >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40)
-    141.23032168925027
+    140.66253383578214
     >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40)  # 126
-    127.76812545867551
+    124.60332505804116
     >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=100, age=40)  # 94
-    80.74749063632697
+    80.42286173346137
     >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=100, age=40)  # 71
-    61.95331202029062
+    60.418736272242604
     """
     if sex == HumanSex.CHILD:
-        raise ValueError("CKD-EPI eGFR for children not supported")
-    cCrea /= abg.Crea  # to mg/dl
-    if sex == HumanSex.MALE:
-        if cCrea <= 0.9:
-            egfr = 141 * (cCrea / 0.9) ** -0.411 * 0.993**age
-        else:
-            egfr = 141 * (cCrea / 0.9) ** -1.209 * 0.993**age
-    else:  # Female
-        if cCrea <= 0.7:
-            egfr = 144 * (cCrea / 0.7) ** -0.329 * 0.993**age * 1.018
-        else:
-            egfr = 144 * (cCrea / 0.7) ** -1.209 * 0.993**age * 1.018
-
-    if black_skin:
-        egfr *= 1.159
-    return egfr
+        raise ValueError("CKD-EPI 2009 eGFR for children not supported")
+    cCrea /= abg.Crea
+    k = 0.7 if sex == HumanSex.FEMALE else 0.9
+    a1 = -0.329 if sex == HumanSex.FEMALE else -0.411
+    d = 1.018 if sex == HumanSex.FEMALE else 1
+    e = 1.159 if black_race else 1
+    return (
+        141
+        * min(cCrea / k, 1) ** a1
+        * max(cCrea / k, 1) ** -1.209
+        * 0.9929**age
+        * d
+        * e
+    )
 
 
 def egfr_ckd_epi_2021(sex: HumanSex, cCrea: float, age: float) -> float:
@@ -2775,8 +2770,10 @@ def egfr_ckd_epi_2021(sex: HumanSex, cCrea: float, age: float) -> float:
         eGFR, mL/min/1.73 m2
 
     References:
-        [1] https://en.wikipedia.org/wiki/Glomerular_filtration_rate
-        [2] https://www.kidney.org/professionals/gfr_calculator
+        https://en.wikipedia.org/wiki/Glomerular_filtration_rate
+        https://www.kidney.org/professionals/gfr_calculator
+        https://www.kidney.org/professionals/ckd-epi-creatinine-equation-2021
+        https://pubmed.ncbi.nlm.nih.gov/34554658/
 
     Examples
     >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=40, age=40)
@@ -2789,18 +2786,12 @@ def egfr_ckd_epi_2021(sex: HumanSex, cCrea: float, age: float) -> float:
     62.99251082741861
     """
     if sex == HumanSex.CHILD:
-        raise ValueError("CKD-EPI eGFR for children not supported")
-    cCrea /= abg.Crea  # to mg/dl
-    if sex == HumanSex.MALE:
-        if cCrea <= 0.9:
-            return 142 * (cCrea / 0.9) ** -0.302 * 0.9938**age
-        else:
-            return 142 * (cCrea / 0.9) ** -1.2 * 0.9938**age
-    else:  # Female
-        if cCrea <= 0.7:
-            return 142 * (cCrea / 0.7) ** -0.241 * 0.9938**age * 1.012
-        else:
-            return 142 * (cCrea / 0.7) ** -1.2 * 0.9938**age * 1.012
+        raise ValueError("CKD-EPI 2021 eGFR for children not supported")
+    cCrea /= abg.Crea
+    k = 0.7 if sex == HumanSex.FEMALE else 0.9
+    a1 = -0.241 if sex == HumanSex.FEMALE else -0.302
+    d = 1.012 if sex == HumanSex.FEMALE else 1
+    return 142 * min(cCrea / k, 1) ** a1 * max(cCrea / k, 1) ** -1.2 * 0.9938**age * d
 
 
 def egfr_schwartz(cCrea: float, height: float) -> float:
@@ -2842,7 +2833,11 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
 
 
 def gfr_describe(gfr: float) -> tuple[int, str]:
-    """Describe GFR value meaning and stage of Chronic Kidney Disease."""
+    """Describe GFR value meaning and stage of Chronic Kidney Disease.
+
+    Args:
+        gfr: eGFR levels for ≥3 months, mL/min/1.73 m2
+    """
     if 90 <= gfr:
         return (
             1,

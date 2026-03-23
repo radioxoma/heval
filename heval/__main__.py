@@ -24,8 +24,6 @@ __css__ = """
 </style>
 """
 
-__easter_text__ = ("It's got what plants crave!", "It's got electrolytes!")
-
 
 class SpinboxFloat(ttk.Spinbox):
     """Spinbox widget with float (dot separator) or empty input allowed.
@@ -543,9 +541,7 @@ class AboutWindow(tk.Toplevel):
         self.title("About v" + heval.__version__)
 
         self.text = TextHtmlView(self)
-        self.text.set_html(
-            heval.DISCLAIMER + " And remember: " + random.choice(__easter_text__)
-        )
+        self.text.set_html(heval.DISCLAIMER)
         self.text.pack(expand=True, fill=tk.BOTH)
 
         self.ctl_frame = ttk.Frame(self, padding=8)

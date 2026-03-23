@@ -1,3 +1,4 @@
+import random
 from heval import common
 
 __version__ = "0.1.6"
@@ -43,4 +44,6 @@ express or implied.</blockquote></p>
 GNU General Public License version 3. Written by {__author__}.
 Check source code for references and formulas, contact and support.
 <a href="{__url__}" target="_blank">{__url__}</a></p>
-"""
+""" + "<p>And remember: {}</p>".format(
+    random.choice(("It's got what plants crave!", "It's got electrolytes!"))
+)

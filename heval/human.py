@@ -82,6 +82,9 @@ class HumanModel:
     """Must set 'sex' and 'height' to make it work.
 
     Note that 'use_ibw == False' by default.
+
+    Properties with snake_case_names_endedWithCamelCase,
+    as last part split and used for form generation.
     """
 
     body_sex: HumanSex
@@ -728,7 +731,7 @@ class HumanModel:
         ):
             # https://www.aafp.org/afp/2005/0501/p1723.html
             # IV insulin drip and crystalloids
-            info += " Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for HAGMA and ketonuria to exclude DKA. Look for infection or another underlying illness that caused the hyperglycemic crisis."
+            info += f" Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for {common.A.hagma} and ketonuria to exclude {common.A.dka}. Look for infection or another underlying illness that caused the hyperglycemic crisis."
         return info
 
     def _lab_abg(self) -> str:
@@ -766,7 +769,7 @@ class HumanModel:
         ):
             if abg.norm_gap[1] < self.blood_abg_anion_gap:
                 # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
-                info += f"HAGMA {desc} (KULT?), "
+                info += f"{common.A.hagma} {desc} ({common.A.kult}?), "
                 info += abg.calculate_anion_gap_delta(
                     self.blood_abg_anion_gap, self.blood_abg_hco3p
                 )
@@ -774,7 +777,7 @@ class HumanModel:
                 info += f"Low {common.A.anion_gap} {desc} - hypoalbuminemia or low Na⁺?"
             else:
                 # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
-                info += f"NAGMA {desc}. Diarrhea or renal tubular acidosis?"
+                info += f"{common.A.nagma} {desc}. Diarrhea or renal tubular acidosis?"
         else:
             if abg.norm_gap[1] < self.blood_abg_anion_gap:
                 info += f"Unexpected high {common.A.anion_gap} {desc} without main metabolic acidosis; "
@@ -910,7 +913,7 @@ class HumanModel:
                 if self.blood_abg_cGlu <= 20:  # Arbitrary threshold
                     info += f", consider insulin {insulin_by_glucose(self.blood_abg_cGlu):.0f} IU subcut for adult"
                 else:
-                    info += f", refer to DKE/HHS protocol (HAGMA and urine ketone), start fluid and I/V insulin {self.body_weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
+                    info += f", refer to DKE/HHS protocol ({common.A.hagma} and urine ketone), start fluid and I/V insulin {self.body_weight * 0.1:.1f} IU/h (0.1 IU/kg/h)"
 
         elif self.blood_abg_cGlu < abg.norm_cGlu[0]:
             if self.blood_abg_cGlu > 3:  # Hypoglycemia <3.3 mmol/L for pregnant?
@@ -967,11 +970,11 @@ class HumanModel:
                 )
                 info += f". BUN:cCrea ratio is {bun_ccrea_ratio:.0f}: "
                 if bun_ccrea_ratio <= 10:
-                    info += f"""renal cause of {common.A.aki} or liver disease, malnutrition (low protein diet), pregnancy, acute tubular necrosis, {common.A.siadh}"""
+                    info += f"""renal cause of {common.A.aki} (acute tubular necrosis) or liver disease, malnutrition (low protein diet), pregnancy, {common.A.siadh}"""
                 elif bun_ccrea_ratio <= 20:
                     info += f"""normal kidney function or postrenal cause of {common.A.aki}"""
                 else:
-                    info += f"""prerenal kidney injury (hypovolemia), rapid protein destruction (high protein intake or catabolism), corticosteroids, {common.A.chf}, {common.A.gi} bleeding"""
+                    info += f"""prerenal kidney injury (hypovolemia, {common.A.gi} bleeding), rapid protein destruction (high protein intake or catabolism), corticosteroids, {common.A.chf}"""
             if stage >= 4:
                 self.flags.add(
                     common.Flag(
@@ -1042,17 +1045,17 @@ class HumanModel:
             info += f"{common.A.hb} {desc_hb}. "
 
         if self.blood_abg_hct_calc > hct_norm[1]:
-            info += f"Hct is high {desc_hct}"
+            info += f"{common.A.hct} is high {desc_hct}"
         elif self.blood_abg_hct_calc < hct_norm[0]:
-            info += f"Hct is low {desc_hct}"
+            info += f"{common.A.hct} is low {desc_hct}"
         else:
-            info += f"Hct is ok {desc_hct}"
+            info += f"{common.A.hct} is ok {desc_hct}"
 
         if self.blood_abg_hct_calc > hct_target + 0.01:  # Age-independent threshold
             info += f", free water deficit {vol_def:.0f} ml (limitation: valid if no anemia; osmolarity and Na⁺ are more specific)."
 
         if self.body_sex == HumanSex.CHILD:
-            info += " \nNote that normal Hb and Hct values in children greatly dependent from age."
+            info += f" \nNote that normal {common.A.hb} and {common.A.hct} values in children greatly dependent from age."
         return info
 
     def _lab_oxygenation(self) -> str:

@@ -98,9 +98,10 @@ class FlagWarnings:
 
 
 class Abbr:
-    def __init__(self, short: str, full: str):
+    def __init__(self, short: str, full: str, url: str = ""):
         self.short = short
         self.full = full
+        self.url = url
 
     def __str__(self):
         return f"""<abbr title="{self.full}" tabindex="0">{self.short}</abbr>"""
@@ -121,7 +122,7 @@ class A:
     crcl = Abbr("CrCl", "Creatinine clearance by Cockcroft-Gault")
     crrt = Abbr("CRRT", "Continuous renal replacement therapy")
     d5w = Abbr("D5, D5W", "Dextrose 5%")
-    dke = Abbr("DKE", "Diabetic ketoacidosis")
+    dka = Abbr("DKA", "Diabetic ketoacidosis")
     eda = Abbr("EDA", "Epidural anesthesia")
     egfr = Abbr("eGFR", "Estimated glomerular filtration rate")
     espen = Abbr("ESPEN", "European Society for Clinical Nutrition and Metabolism")
@@ -132,6 +133,7 @@ class A:
     gi = Abbr("GI", "Gastrointestinal")
     hagma = Abbr("HAGMA", "High anion gap metabolic acidosis")
     hb = Abbr("Hb", "Hemoglobin")
+    hct = Abbr("HCT", "Hematocrit", "https://en.wikipedia.org/wiki/Hematocrit")
     hhs = Abbr("HHS", "Hyperosmolar hyperglycemic state")
     ibw = Abbr("IBW", "Ideal body weight, kg")
     inr = Abbr("INR", "International normalized ratio")

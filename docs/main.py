@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Heval web interface (static website).
+"""Heval web interface (static website).
 
 PyCharm `RMB > Show Interpreter Paths`, Add pyscript stubs:
 https://github.com/pyscript/pyscript-stubs/tree/main/src/pyscript-stubs
@@ -117,7 +116,7 @@ def set_input_defaults():
     web.page["body_sex"].value = web.page["body_sex option:first-of-type"].value
     web.page["body_sex"].dispatchEvent(event_change)
     # Reset spinboxes
-    for prop, unit, val in input_list:
+    for prop, _unit, val in input_list:
         target = web.page[prop]
         if target.type == "number":
             target.value = val

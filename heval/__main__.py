@@ -16,7 +16,7 @@ from tkinter import ttk
 import tkinterweb
 
 import heval
-from heval import abg, human, common
+from heval import abg, common, human
 
 __css__ = """
 <style>
@@ -499,7 +499,7 @@ class HelpWindow(tk.Toplevel):
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
-        self.geometry(f"+{x + 50:.0f}+{y + 100:.0f}")
+        self.geometry(f"+{x + 50:d}+{y + 100:d}")
         self.title("Help")
 
         # Mimic Label colors
@@ -537,7 +537,7 @@ class AboutWindow(tk.Toplevel):
         self.parent = parent
         x = self.parent.winfo_x()
         y = self.parent.winfo_y()
-        self.geometry(f"+{x + 50:.0f}+{y + 100:.0f}")
+        self.geometry(f"+{x + 50:d}+{y + 100:d}")
         self.title("About v" + heval.__version__)
 
         self.text = TextHtmlView(self)
@@ -1234,14 +1234,14 @@ class CreateToolTip:
             tw.destroy()
 
     def showtip(self, event=None):
-        x, y, cx, cy = self.parent.bbox(tk.INSERT)
+        x, y, _cx, _cy = self.parent.bbox(tk.INSERT)
         x += self.parent.winfo_rootx() + 25
         y += self.parent.winfo_rooty() + 20
         # Creates a toplevel window
         self.tw = tk.Toplevel(self.parent)
         # Leaves only the label and removes the app window
         self.tw.wm_overrideredirect(True)
-        self.tw.wm_geometry("+%d+%d" % (x, y))
+        self.tw.wm_geometry(f"+{x:d}+{y:d}")
         label = ttk.Label(
             self.tw,
             text=self.text,
@@ -1260,6 +1260,8 @@ class MenuTooltip(tk.Menu):
 
         Args:
             parent: 'root' or 'Menubar'
+            args: args
+            kwargs: kwargs
 
         https://stackoverflow.com/questions/3929355/making-menu-options-with-checkbutton-in-tkinter
         https://stackoverflow.com/questions/55316791/how-can-i-add-a-tooltip-to-menu-item
@@ -1323,7 +1325,7 @@ class MenuTooltip(tk.Menu):
                     self.tw = tk.Toplevel(self)
                     # Leaves only the label and removes the app window
                     self.tw.wm_overrideredirect(True)
-                    self.tw.wm_geometry("+%d+%d" % (x, y))
+                    self.tw.wm_geometry(f"+{x:d}+{y:d}")
                     label = ttk.Label(
                         self.tw,
                         text=self.tooltip[idx][1],
@@ -1364,10 +1366,9 @@ def magic8ball() -> str:
 
     Provides answers for any yes/no question.
 
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Magic_8-Ball
-    [2] https://en.wikipedia.org/wiki/Interstate_60
+    References:
+        * https://en.wikipedia.org/wiki/Magic_8-Ball
+        * https://en.wikipedia.org/wiki/Interstate_60
     """
     answers = (
         "It is certain",

@@ -1,11 +1,8 @@
-"""Drug dosage calculator.
-
-Author: Eugene Dvoretsky
-"""
+"""Drug dosage calculator."""
 
 from __future__ import annotations
 
-from heval import human, common
+from heval import common, human
 
 press_nor16 = {
     "name": "Nor-16",

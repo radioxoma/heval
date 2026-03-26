@@ -1,7 +1,5 @@
 """Calculate pre-made nutrition solution dose.
 
-Author: Eugene Dvoretsky
-
 Heval automatically estimates required kcal and fluid volume by RBW.
 User can switch from default kcal estimation to protein estimation
 (measured nitrogen balance).
@@ -19,7 +17,7 @@ from __future__ import annotations
 
 import textwrap
 
-from heval import human, common
+from heval import common, human
 
 """Nutriflex 48/150 lipid https://www.rlsnet.ru/tn_index_id_36361.htm
 
@@ -305,8 +303,9 @@ class NutritionFormula:
     def __init__(self, preparation, human_body):
         """Calculate pre-made mixture volume by protein or caloric demand.
 
-        :param dict preparation: Specific dict with an nutrition preparation.
-        :param class human_body: HumanModel class instance.
+        Args:
+            preparation: Specific dict with an nutrition preparation.
+            human_body: HumanModel class instance.
         """
         self.human_body = human_body
         self.name: str = preparation["name"]
@@ -362,7 +361,8 @@ class NutritionFormula:
 
         Mathod can returm volume exceeding maximal recommended daily dose.
 
-        :param float protein_24h: Required protein for 24h, grams
+        Args:
+            protein_24h: Required protein for 24h, grams
         """
         return protein_24h / self.c_prt
 
@@ -383,7 +383,8 @@ class NutritionFormula:
     def describe_dose(self, vol_24h):
         """Info about given volime content.
 
-        :param float vol_24h: 24 hours dose, ml
+        Args:
+            vol_24h: 24 hours dose, ml
         """
         kcal_24h = vol_24h * self.c_kcal
         info = ""
@@ -428,13 +429,13 @@ def uun_mgdl2mmoll(gdl):
 
     Note that it uses different bolam mass, so it's not an urea converter.
 
-    https://en.wikipedia.org/wiki/Urine_urea_nitrogen
-    http://www.scymed.com/en/smnxps/psxfg163_c.htm
+    Examples:
+        >>> uun_mgdl2mmoll(500)
+        178.57142857142858
 
-    Examples
-    --------
-    >>> uun_mgdl2mmoll(500)
-    178.57142857142858
+    References:
+        * https://en.wikipedia.org/wiki/Urine_urea_nitrogen
+        * http://www.scymed.com/en/smnxps/psxfg163_c.htm
     """
     return gdl / 2.8  # Urea nitrogen molar mass
 
@@ -444,12 +445,12 @@ def uun_mmoll2mgdl(mmol):
 
     Note that it uses different molar mass, so it's not an urea converter.
 
-    https://en.wikipedia.org/wiki/Urine_urea_nitrogen
+    Exaxmples:
+        >>> uun_mmoll2mgdl(200)
+        560.0
 
-    Exaxmples
-    ---------
-    >>> uun_mmoll2mgdl(200)
-    560.0
+    References:
+        * https://en.wikipedia.org/wiki/Urine_urea_nitrogen
     """
     return mmol * 2.8  # Urea nitrogen molar mass
 
@@ -459,12 +460,12 @@ def urea_mmoll2mgdl(mmol):
 
     Note that it uses different molar mass, so it's not an urea converter.
 
-    https://en.wikipedia.org/wiki/Urine_urea_nitrogen
+    Exaxmples:
+        >>> urea_mmoll2mgdl(500)
+        3003.0
 
-    Exaxmples
-    ---------
-    >>> urea_mmoll2mgdl(500)
-    3003.0
+    References:
+        * https://en.wikipedia.org/wiki/Urine_urea_nitrogen
     """
     return mmol * 6.006  # Urea molar mass
 
@@ -488,13 +489,8 @@ def nitrogen_balance(
     Goal is positive balance 3-4 g for growth and repair.
     Must give non-protein caloric substrate along with protein, or protein will be wasted for energy.
 
-    [1] Original paper? https://www.ncbi.nlm.nih.gov/pubmed/98649
-    [2] https://en.wikipedia.org/wiki/Nitrogen_balance
-    [3] Dickerson R.N. Using nitrogen balance in clinical practice. Hosp. Pharm. 2005;40:1081–1087. doi: 10.1177/001857870504001210.
-        https://www.researchgate.net/profile/Roland_Dickerson/publication/237837800_Using_Nitrogen_Balance_in_Clinical_Practice/links/540daa0b0cf2d8daaacc6c84/Using-Nitrogen-Balance-in-Clinical-Practice.pdf
-    [4] Нутритивная терапия. Костюченко 2016
+    Examples::
 
-    Examples:
         Urea 177 mmol/L (= 10.6 g / 60 * 1000) == Protein requirement 70 * 0.8 g/kg/24h
         print("In healthy 70 kg person: protein requirement {:.1f} g/24h, UUN {:.1f} g/24h, Urea {:.1f} g/24h".format(
             0.8 * 70,
@@ -511,6 +507,13 @@ def nitrogen_balance(
 
     Returns:
         Protein requirement per g/24h
+
+    References:
+        * Original paper? https://www.ncbi.nlm.nih.gov/pubmed/98649
+        * https://en.wikipedia.org/wiki/Nitrogen_balance
+        * Dickerson R.N. Using nitrogen balance in clinical practice. Hosp. Pharm. 2005;40:1081–1087. doi: 10.1177/001857870504001210.
+            https://www.researchgate.net/profile/Roland_Dickerson/publication/237837800_Using_Nitrogen_Balance_in_Clinical_Practice/links/540daa0b0cf2d8daaacc6c84/Using-Nitrogen-Balance-in-Clinical-Practice.pdf
+        * Нутритивная терапия. Костюченко 2016
     """
     # UUN - Urine Urea Nitrogen
     # M_UUN = (14 + 1 * 2) * 2 + 12  + 16  # 60 g/mol (NH_2)_2 CO

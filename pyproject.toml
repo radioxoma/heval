@@ -26,8 +26,8 @@ gui = ["tkinterweb==4.25.0",]
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
-    "ruff>=0.14.10",
-    "ty>=0.0.23",
+    "ruff>=0.15.8",
+    "ty>=0.0.26",
 ]
 
 [project.urls]
@@ -35,3 +35,33 @@ homepage = "https://github.com/radioxoma/heval"
 
 [project.gui-scripts]
 heval = "heval.__main__:main"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "D",
+#    "DOC",
+    "RUF",
+]
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D107",
+    "E501",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "UP032",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

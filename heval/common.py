@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import enum
 import functools
 import operator
+from dataclasses import dataclass
 
 
 class HumanSex(enum.IntEnum):
@@ -41,7 +41,8 @@ class Flag:
     Issue is mandatory, description and solution are optional.
     action_required: medical intervention required.
 
-        Flag(
+    Examples:
+        >>> Flag(
             reason="Hypoglycemia",
             severity=FlagSeverity.BLACK,
             description="cGlu < 1.5 mmol/L",

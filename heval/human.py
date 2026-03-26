@@ -1,7 +1,5 @@
 """Calculations based on human height and weight.
 
-Author: Eugene Dvoretsky
-
 Function parameters tends to be in International System of Units.
 """
 
@@ -12,9 +10,8 @@ import textwrap
 import warnings
 from dataclasses import dataclass
 
-from heval import abg, nutrition, common
+from heval import abg, common, nutrition
 from heval.common import HumanSex
-
 
 # https://news.tut.by/society/311809.html
 # Average Belorussian male in 2008 >=18 years old
@@ -81,9 +78,9 @@ class FloatAttr:
 class HumanModel:
     """Must set 'sex' and 'height' to make it work.
 
-    Note that 'use_ibw == False' by default.
+    Note that `use_ibw` is False by default.
 
-    Properties with snake_case_names_endedWithCamelCase,
+    Properties with `snake_case_names_endedWithCamelCase`,
     as last part split and used for form generation.
     """
 
@@ -235,10 +232,6 @@ class HumanModel:
 
         Considered as more accurate, than Nadler 1962 method.
 
-        [1] Lemmens HJ, Bernstein DP, Brodsky JB. Estimating blood volume in obese and morbidly obese patients. Obes Surg. 2006 Jun;16(6):773-6.
-            https://www.ncbi.nlm.nih.gov/pubmed/16756741
-        [2] https://www.ncbi.nlm.nih.gov/books/NBK526077/
-
         Blood volume Human 77 ml/kg [https://en.wikipedia.org/wiki/Blood_volume]
         Курек, Кулагин Анестезия и ИТ у детей, 2009 с 621; Курек 2013 231
 
@@ -251,7 +244,13 @@ class HumanModel:
         as 80–90 ml/kg early) has the same mean blood volume 70 ml/kg RBW.
         [Dr K Morris et all, 2005 https://adc.bmj.com/content/90/7/724]
 
-        :return: Total blood volume, ml
+        Returns:
+            Total blood volume, ml
+
+        References:
+            * Lemmens HJ, Bernstein DP, Brodsky JB. Estimating blood volume in obese and morbidly obese patients. Obes Surg. 2006 Jun;16(6):773-6.
+                https://www.ncbi.nlm.nih.gov/pubmed/16756741
+            * https://www.ncbi.nlm.nih.gov/books/NBK526077/
         """
         return 70 / math.sqrt(self.body_bmi / 22) * self.body_weight
 
@@ -259,19 +258,19 @@ class HumanModel:
     def blood_sofa_partial(self) -> int | None:
         """Precalculate ICU SOFA score from lab data.
 
-        https://en.wikipedia.org/wiki/SOFA_score
-        https://pubmed.ncbi.nlm.nih.gov/8844239/
+        Mortality::
 
-        Mortality
-        ---------
-        0-1.0    1.2%
-        1.1-2.0  5.4%
-        2.1-3.0 20.0%
-        3.1-4.0 36.1%
-        4.1-5.0 73.1%
-        >5.1    84.4%
+            0-1.0    1.2%
+            1.1-2.0  5.4%
+            2.1-3.0 20.0%
+            3.1-4.0 36.1%
+            4.1-5.0 73.1%
+            >5.1    84.4%
+
+        References:
+            * https://en.wikipedia.org/wiki/SOFA_score
+            * https://pubmed.ncbi.nlm.nih.gov/8844239/
         """
-
         if (
             self.blood_cbc_plt is None
             or self.blood_bchem_ctBil is None
@@ -1007,10 +1006,9 @@ class HumanModel:
     def _lab_hb(self):
         """Describe Hb and hct_calc.
 
-        References
-        ----------
-        [1] https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
-        [2] https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
+        References:
+            * https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
+            * https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
         """
         info = ""
         if (
@@ -1189,17 +1187,16 @@ class HumanModel:
         Value >=5 means high probability of DIC.
         Not requires all lab data to be available.
 
-        Ranges are ambiguous
-        INR     0 < 1.3 <= 1 <= 1.7 < 2   # Fraction
-        Fib     1 < 1 <= 0                # g/L
-        D-dimer 0 < 400 <= 2 <= 4000 < 3  # ng/ml
-        PLT     2 < 50 <= 1 <= 100 < 0    # 10^9/L
+            Ranges are ambiguous
+            INR     0 < 1.3 <= 1 <= 1.7 < 2   # Fraction
+            Fib     1 < 1 <= 0                # g/L
+            D-dimer 0 < 400 <= 2 <= 4000 < 3  # ng/ml
+            PLT     2 < 50 <= 1 <= 100 < 0    # 10^9/L
 
-        References
-        ----------
-        https://doi.org/10.1111/jth.12155
-        https://pubmed.ncbi.nlm.nih.gov/27708553/
-        https://www.mdcalc.com/calc/10203/isth-criteria-disseminated-intravascular-coagulation-dic
+        References:
+            * https://doi.org/10.1111/jth.12155
+            * https://pubmed.ncbi.nlm.nih.gov/27708553/
+            * https://www.mdcalc.com/calc/10203/isth-criteria-disseminated-intravascular-coagulation-dic
         """
         score = 0
         if self.blood_cbc_plt is not None:
@@ -1239,12 +1236,11 @@ class HumanModel:
             PLASMIC score, ADAMTS13 deficiency probability,
             therapeutic plasma exchange suggestion.
 
-        References
-        ----------
-        Bendapudi 2017. Derivation and external validation of the PLASMIC score for rapid assessment of adults with thrombotic microangiopathies: a cohort study
-            https://www.ncbi.nlm.nih.gov/pubmed/28259520
-        https://www.mdcalc.com/calc/10200/plasmic-score-ttp#evidence
-        https://www.emdocs.net/emdocs-podcast-episode-45-thrombotic-thrombocytopenic-purpura/
+        References:
+            * Bendapudi 2017. Derivation and external validation of the PLASMIC score for rapid assessment of adults with thrombotic microangiopathies: a cohort study
+                https://www.ncbi.nlm.nih.gov/pubmed/28259520
+            * https://www.mdcalc.com/calc/10200/plasmic-score-ttp#evidence
+            * https://www.emdocs.net/emdocs-podcast-episode-45-thrombotic-thrombocytopenic-purpura/
         """
         score = 2  # Assuming no active malignancy; no transplant history
         if self.blood_cbc_plt is not None:
@@ -1395,12 +1391,15 @@ def body_mass_index(height: float, weight: float) -> float:
 
     NB! Normal ranges in children differ from adults.
 
-    http://apps.who.int/bmi/index.jsp?introPage=intro_3.html
+    Args:
+        height: meters
+        weight: kilograms
 
-    :param float height: meters
-    :param float weight: kilograms
-    :return: Body Mass Index
-    :rtype: float
+    Returns:
+        Body Mass Index
+
+    References:
+        * http://apps.who.int/bmi/index.jsp?introPage=intro_3.html
     """
     assert height < 10  # Fall if height in centimeters
     return weight / height**2
@@ -1409,9 +1408,11 @@ def body_mass_index(height: float, weight: float) -> float:
 def bmi_describe(bmi: float) -> str:
     """Describe Body Mass Index for adults.
 
-    :param float bmi: Body Mass Index.
-    :return: Opinion
-    :rtype: str
+    Args:
+        bmi: Body Mass Index.
+
+    Returns:
+        Opinion
     """
     info = ""
     if bmi < 18.5:
@@ -1449,15 +1450,14 @@ def body_surface_area_dubois(height: float, weight: float) -> float:
     Returns:
         m2, square meters
 
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Body_surface_area
-    [2] DuBois D, DuBois EF. A formula to estimate the approximate surface area if height and weight be known. Arch Intern Medicine. 1916; 17:863-71.
-    [3] http://www-users.med.cornell.edu/~spon/picu/calc/bsacalc.htm
+    Examples:
+        >>> body_surface_area_dubois(1.86, 70)
+        1.931656390627583
 
-    Examples
-    >>> body_surface_area_dubois(1.86, 70)
-    1.931656390627583
+    References:
+        * https://en.wikipedia.org/wiki/Body_surface_area
+        * DuBois D, DuBois EF. A formula to estimate the approximate surface area if height and weight be known. Arch Intern Medicine. 1916; 17:863-71.
+        * http://www-users.med.cornell.edu/~spon/picu/calc/bsacalc.htm
     """
     return 0.007184 * weight**0.425 * (height * 100) ** 0.725
 
@@ -1468,20 +1468,20 @@ def get_broselow_code(height: float) -> tuple[str, str, float]:
     Broselow tape https://www.ncbi.nlm.nih.gov/pubmed/3377285
     How to use Broselow tape https://www.jems.com/2019/04/29/a-tale-of-two-tapes-broselow-luten-tapes-2011-vs-2017/
 
-    Kinder-sicher T.O Zugck (numbers taken from this tape) https://kindersicher.biz
-    Each color zone estimates the 50th percentile weight for length
-    Color   Age,     Height,      Ideal body weight
-    Grey    Newborn  46.8- 51.9,   3    kg
-    Grey    Newborn  51.9- 55.0,   4    kg
-    Grey     2 mos   55.0- 59.2,   5    kg
-    Pink     4 mos   59.2- 66.9,   6- 7 kg (13-15 lbs)
-    Red      8 mos   66.9- 74.2,   8- 9 kg (17-20 lbs)
-    Purple   1 yr    74.2- 83.8,  10-11 kg (22-24 lbs)
-    Yellow   2 yr    83.8- 95.4,  12-14 kg (26-30 lbs)
-    White    4 yr    95.4-108.3,  15-18 kg (33-40 lbs)
-    Blue     6 yr   108.3-121.5,  19-23 kg (42-50 lbs)
-    Orange   8 yr   121.5-130.7,  24-29 kg (53-64 lbs)
-    Green   10 yr   130.7-143.3,  30-36 kg (66-80 lbs)
+        Kinder-sicher T.O Zugck (numbers taken from this tape) https://kindersicher.biz
+        Each color zone estimates the 50th percentile weight for length
+        Color   Age,     Height,      Ideal body weight
+        Grey    Newborn  46.8- 51.9,   3    kg
+        Grey    Newborn  51.9- 55.0,   4    kg
+        Grey     2 mos   55.0- 59.2,   5    kg
+        Pink     4 mos   59.2- 66.9,   6- 7 kg (13-15 lbs)
+        Red      8 mos   66.9- 74.2,   8- 9 kg (17-20 lbs)
+        Purple   1 yr    74.2- 83.8,  10-11 kg (22-24 lbs)
+        Yellow   2 yr    83.8- 95.4,  12-14 kg (26-30 lbs)
+        White    4 yr    95.4-108.3,  15-18 kg (33-40 lbs)
+        Blue     6 yr   108.3-121.5,  19-23 kg (42-50 lbs)
+        Orange   8 yr   121.5-130.7,  24-29 kg (53-64 lbs)
+        Green   10 yr   130.7-143.3,  30-36 kg (66-80 lbs)
 
 
     An remark
@@ -1490,20 +1490,22 @@ def get_broselow_code(height: float) -> tuple[str, str, float]:
     "Weight-by-height" approach declared as more accurate and objective.
     But unfortunately I'm not able to find decent calculations
     "weight-by-height", although it definitely exists:
-      * https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
-      * https://www.who.int/childgrowth/
-      * http://www.who.int/childgrowth/standards/Technical_report.pdf
+    * https://www.researchgate.net/post/Is_there_a_formula_for_calculating_weight_for_height_and_height_for_age_z_scores
+    * https://www.who.int/childgrowth/
+    * http://www.who.int/childgrowth/standards/Technical_report.pdf
     So I have to use Broselow height ranges and it's weight percentiles for now.
 
     The accuracy of emergency weight estimation systems:
-        * https://www.ncbi.nlm.nih.gov/pubmed/28936627
-        * https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6223606/
-    Real body weight estimation (not IBW!)
-        * PW10 70.9%, PW20 95.3% Mercy Tape method
-        * PW10 78.0%, PW20 96.6% PAWPER tape http://www.wjem.com.cn/default/articlef/index/id/674
-        * PW10 69.8%, PW20 87.1% parental estimates
-        * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
-        * Age-based estimates achieved a very low accuracy - use length-based
+    * https://www.ncbi.nlm.nih.gov/pubmed/28936627
+    * https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6223606/
+
+    Real body weight estimation (not IBW!):
+
+    * PW10 70.9%, PW20 95.3% Mercy Tape method
+    * PW10 78.0%, PW20 96.6% PAWPER tape http://www.wjem.com.cn/default/articlef/index/id/674
+    * PW10 69.8%, PW20 87.1% parental estimates
+    * PW10 55.6%, PW20 81.2% https://en.wikipedia.org/wiki/Broselow_tape
+    * Age-based estimates achieved a very low accuracy - use length-based
 
     Args:
         height: Child height in meters.
@@ -1565,13 +1567,16 @@ def ibw_traub_kichen(height: float) -> float:
     Underestimates total body weight.
     For children over 0.74-1.524 m and aged 1 to 17 years.
 
-    :param float height: meters, valid range is 0.74 < height < 1.524 (5 ft)
-    :return: Ideal children body weight in kg
-    :rtype: float
+    Args:
+        height: meters, valid range is 0.74 < height < 1.524 (5 ft)
+
+    Returns:
+        Ideal children body weight in kg
     """
     if not 0.74 <= height <= 1.524:
         warnings.warn(
-            f"Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {height}"
+            f"Warning: ibw_traub_kichen height must be in 0.74-1.524 m, not {height}",
+            stacklevel=2,
         )
     # return 2.396 * 1.0188 ** (height * 100)  # First variant
     return 2.396 * math.exp(0.01863 * height * 100)  # Second variant
@@ -1588,19 +1593,6 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
     2. Formula <=70 cm doesn't look good. May be Broselow is better.
     3. Joint between formulas has a notch around 127 cm for females
         and no notch for males
-
-    References:
-        Traub SL. Am J Hosp Pharm 1980 (pediatric patients):
-
-            height ≤ 70 cm       IBW = 0.125 * height - 0.75
-            70 < height ≤ 128    IBW = (0.0037 * height - 0.4018) * height + 18.62
-
-        Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center.
-        Same line as ARDSNET predicted body weight.
-
-            height ≥ 129
-                Male             IBW = 0.9079 * height - 88.022
-                Female           IBW = 0.9049 * height - 92.006
 
     Examples:
         >>> ibw_hamilton(HumanSex.MALE, 0.6)
@@ -1619,6 +1611,18 @@ def ibw_hamilton(sex: HumanSex, height: float) -> float:
     Returns:
         Ideal body weight, kg
 
+    References:
+        Traub SL. Am J Hosp Pharm 1980 (pediatric patients):
+
+            height ≤ 70 cm       IBW = 0.125 * height - 0.75
+            70 < height ≤ 128    IBW = (0.0037 * height - 0.4018) * height + 18.62
+
+        Hamilton manual, table 4-1. Adopted from Pennsylvania Medical Center.
+        Same line as ARDSNET predicted body weight.
+
+            height ≥ 129
+                Male             IBW = 0.9079 * height - 88.022
+                Female           IBW = 0.9049 * height - 92.006
     """
     height *= 100  # to cm
     if height <= 70:
@@ -1646,27 +1650,27 @@ def ree_harris_benedict_revised(
 ) -> float:
     """Resting energy expenditure, revised Harris-Benedict equation (revised 1984).
 
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
-    [2] Roza AM, Shizgal HM (1984). "The Harris Benedict equation reevaluated:
-        resting energy requirements and the body cell mass" (PDF).
-        The American Journal of Clinical Nutrition. 40 (1): 168–182.
-    [3] https://www.omnicalculator.com/health/bmr
+    Args:
+        height: Height, meters
+        weight: Weight, kg
+        sex: Choose HumanSex.male, HumanSex.female
+        age: Age, years
 
-    Examples
-    --------
-    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.MALE, 55)
-    1372.7820000000002
-    >>> ree_harris_benedict_revised(1.68, 59, HumanSex.FEMALE, 55)
-    1275.4799999999998
+    Returns:
+        Resting energy expenditure, kcal/24h
 
-    :param float height: Height, meters
-    :param float weight: Weight, kg
-    :param human.HumanSex sex: Choose HumanSex.male, HumanSex.female
-    :param float age: Age, years
-    :return: Resting energy expenditure, kcal/24h
-    :rtype: float
+    Examples:
+        >>> ree_harris_benedict_revised(1.68, 59, HumanSex.MALE, 55)
+        1372.7820000000002
+        >>> ree_harris_benedict_revised(1.68, 59, HumanSex.FEMALE, 55)
+        1275.4799999999998
+
+    References:
+        * https://en.wikipedia.org/wiki/Basal_metabolic_rate
+        * Roza AM, Shizgal HM (1984). "The Harris Benedict equation reevaluated:
+            resting energy requirements and the body cell mass" (PDF).
+            The American Journal of Clinical Nutrition. 40 (1): 168–182.
+        * https://www.omnicalculator.com/health/bmr
     """
     if sex == HumanSex.MALE:
         return 13.397 * weight + 4.799 * height * 100 - 5.677 * age + 88.362
@@ -1683,30 +1687,28 @@ def ree_mifflin(height: float, weight: float, sex: HumanSex, age: float) -> floa
 
     Considered as more accurate than revised Harris-Benedict equation.
 
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Basal_metabolic_rate
-    [2] Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO (1990).
-        "A new predictive equation for resting energy expenditure in healthy
-        individuals".
-        The American Journal of Clinical Nutrition. 51 (2): 241–247.
-    [3] https://www.omnicalculator.com/health/bmr
+    Args:
+        height: Height, meters
+        weight: Weight, kg
+        sex: Choose HumanSex.male, HumanSex.female
+        age: Age, years
 
-    Examples
-    --------
-    >>> ree_mifflin(1.68, 59, HumanSex.MALE, 55)
-    1373.81
-    >>> ree_mifflin(1.68, 59, HumanSex.FEMALE, 55)
-    1207.81
-
-    :param float height: Height, meters
-    :param float weight: Weight, kg
-    :param human.HumanSex sex: Choose HumanSex.male, HumanSex.female
-    :param float age: Age, years
-    :return:
+    Returns:
         REE, kcal/24h
-    :rtype:
-        float
+
+    References:
+        * https://en.wikipedia.org/wiki/Basal_metabolic_rate
+        * Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO (1990).
+            "A new predictive equation for resting energy expenditure in healthy
+            individuals".
+            The American Journal of Clinical Nutrition. 51 (2): 241–247.
+        * https://www.omnicalculator.com/health/bmr
+
+    Examples:
+        >>> ree_mifflin(1.68, 59, HumanSex.MALE, 55)
+        1373.81
+        >>> ree_mifflin(1.68, 59, HumanSex.FEMALE, 55)
+        1207.81
     """
     # ree = 10 * weight + 6.25 * height * 100 - 5 * age  # Simplifyed
     ree = 9.99 * weight + 6.25 * height * 100 - 4.92 * age  # From paper
@@ -1722,16 +1724,16 @@ def ree_mifflin(height: float, weight: float, sex: HumanSex, age: float) -> floa
 def mean_arterial_pressure(SysP: float, DiasP: float) -> float:
     """Calculate mean arterial pressure (MAP).
 
-    Examples
-    --------
-    >>> mean_arterial_pressure(120, 87)
-    98.0
+    Args:
+        SysP: Systolic pressure, mmHg
+        DiasP: Diastolic pressure, mmHg
 
-    :param float SysP: Systolic pressure, mmHg
-    :param float DiasP: Diastolic pressure, mmHg
-    :return:
+    Returns:
         Mean arterial pressure, mmHg
-    :rtype: float
+
+    Examples:
+        >>> mean_arterial_pressure(120, 87)
+        98.0
     """
     # (120 + 2 * 87) / 3
     # return (SysP - DiasP) / 3 + DiasP  # Just different algebra
@@ -1747,44 +1749,42 @@ def fluid_parcland(weight: float, burned_surface: float) -> float:
 
     Increase volume if urinary output <0.5 ml/kg/h). Don't use potassium solutions!
 
-    References
-    ----------
-    [1] https://en.wikipedia.org/wiki/Parkland_formula
-    [2] Клинические случаи в анестезиологии А.П. Рид, Дж. Каплан 1995 г, с 309
-    [3] https://www.remm.nlm.gov/burns.htm
-    [4] В.В. Курек, А.Е. Кулагин «Анестезия и интенсивная терапия у детей» изд. третье 2013, с 418
+        V = 4 * m * A%
+        V = 4 x 75 kg x 20% = 6000 ml
 
-    Examples
-    --------
-    V = 4 * m * A%
-    V = 4 x 75 kg x 20% = 6000 ml
+    Args:
+        weight: Real body mass (not ideal), kg
+        burned_surface: Percent (not fraction) of body surface area
+            affected by burns of SECOND degree and worse.
+            See 'Wallace rule of nines' for area estimation
+            При ожоге > 50% поверхности тела вводят то же количество как для 50 %.
+            Т.е. этот параметр не может быть больше 50.
 
-    :param float weight: Real body mass (not ideal), kg
-    :param float burned_surface: Percent (not fraction) of body surface area
-        affected by burns of SECOND degree and worse.
-        See 'Wallace rule of nines' for area estimation
-        При ожоге > 50% поверхности тела вводят то же количество как для 50 %.
-        Т.е. этот параметр не может быть больше 50.
-    :return:
-        Total volume for 24 hours after burn incident, ml.
-        The first half of this amount is delivered within 8 hours from
-        the burn incident (not from time of admission to ED), and the
-        remaining fluid is delivered in the next 16 hours.
-    :rtype: float
+    Returns:
+            Total volume for 24 hours after burn incident, ml.
+            The first half of this amount is delivered within 8 hours from
+            the burn incident (not from time of admission to ED), and the
+            remaining fluid is delivered in the next 16 hours.
+
+    Examples:
+        >>> fluid_parcland(75, 20)
+        6000
+
+    References:
+        * https://en.wikipedia.org/wiki/Parkland_formula
+        * Клинические случаи в анестезиологии А.П. Рид, Дж. Каплан 1995 г, с 309
+        * https://www.remm.nlm.gov/burns.htm
+        * В.В. Курек, А.Е. Кулагин «Анестезия и интенсивная терапия у детей» изд. третье 2013, с 418
     """
     # Or 5000 ml/m2 of burned area?
     if burned_surface > 50:
         burned_surface = 50
-    print("Warning: burn area set to 50 %")
     volume_ml = 4 * weight * burned_surface
-    print(
-        "Patient {} kg with burns {} % of body surface area: deliver {} ml of lactated Ringer's within 24 hours".format(
-            weight, burned_surface, volume_ml
-        )
-    )
-    print(
-        f"{volume_ml / 2.0:.0f} ml within first 8 hours\n{volume_ml / 2.0:.0f} ml within next 16 hours"
-    )
+    # textwrap.dedent(
+    #     """
+    #     Patient {weight} kg with burns {burned_surface} % of body surface area: deliver {volume_ml} ml of lactated Ringer's within 24 hours
+    #     {volume_ml / 2.0:.0f} ml within first 8 hours\n{volume_ml / 2.0:.0f} ml within next 16 hours
+    #     """)
     return volume_ml
 
 
@@ -1794,12 +1794,11 @@ def fluid_holidaysegar_mod(rbw: float) -> float:
     Looks like Holliday-Segar method, but modified for premature infants
     with body weight <3 kg.
 
-    References:
-        [1] The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
-            https://www.ncbi.nlm.nih.gov/pubmed/13431307
+    Args:
+        rbw: Real body mass, kg
 
-        [2] Курек 2013, стр. 121 или 418. По идее, дложен соответствовать
-        таблице с 121, но для >20 кг это не так.
+    Returns:
+        24 hour fluid demand.
 
     Examples:
         >>> fluid_holidaysegar_mod(1)
@@ -1813,11 +1812,11 @@ def fluid_holidaysegar_mod(rbw: float) -> float:
         >>> fluid_holidaysegar_mod(90)
         2900
 
-    Args:
-        rbw: Real body mass, kg
-
-    Returns:
-        24 hour fluid demand.
+    References:
+        * The maintenance need for water in parenteral fluid therapy, Pediatrics 1957. Holliday Segar
+            https://www.ncbi.nlm.nih.gov/pubmed/13431307
+        * Курек 2013, стр. 121 или 418. По идее, дложен соответствовать
+            таблице с 121, но для >20 кг это не так.
     """
     if rbw < 2:  # Kurek modification?
         return 150 * rbw
@@ -1832,10 +1831,10 @@ def fluid_holidaysegar_mod(rbw: float) -> float:
 def crrt_weight_to_rate(weight: float) -> str:
     """Calculate CRRT hourly dose.
 
+    What is safe blood urea rate of drop to prevent dialysis disequilibrium syndrome? 15 ml/kg/h is safe start, 20-25 ml/kg/h are recommended.
+
     Args:
         weight: real body weight, kg
-
-    What is safe blood urea rate of drop to prevent dialysis disequilibrium syndrome? 15 ml/kg/h is safe start, 20-25 ml/kg/h are recommended.
     """
     return textwrap.dedent(f"""
         {common.A.crrt} total effluent dose (dialysate + substitute + {common.A.uf} + diuresis):
@@ -1847,8 +1846,6 @@ def crrt_weight_to_rate(weight: float) -> str:
 
 def mnemonic_wetflag(age: float | None = None, weight: float | None = None) -> str:
     """Fast and not very precise formulas for calculations in children.
-
-    https://www.resus.org.uk/faqs/faqs-paediatric-life-support/
 
     EPALS course uses the simple acronym W E T Fl A G for children over
     the age of 1 year and up to 10 years old. This equates to:
@@ -1864,8 +1861,12 @@ def mnemonic_wetflag(age: float | None = None, weight: float | None = None) -> s
     Whilst this is not evidence based, it provides a simple, easy to remember
     framework in a stressful situation reducing the risk or error.
 
-    :param float age: years, 1-10
-    :param float weight: kg, just a fallback now
+    Args:
+        age: years, 1-10
+        weight: kg, just a fallback now
+
+    References:
+        * https://www.resus.org.uk/faqs/faqs-paediatric-life-support/
     """
     if weight:  # Don't want to add age field now
         age = weight / 2 - 4
@@ -1901,9 +1902,6 @@ def total_blood_volume_nadler(sex: HumanSex, height: float, weight: float) -> fl
 
         PV = TBV * (1 – hct)
 
-    References:
-        [1] Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
-
     Args:
         height: Human height, meters
         weight: Human weight, kg
@@ -1911,6 +1909,9 @@ def total_blood_volume_nadler(sex: HumanSex, height: float, weight: float) -> fl
 
     Returns:
         Total blood volume, ml
+
+    References:
+        * Nadler SB, Hidalgo JH, Bloch T. Prediction of blood volume in normal human adults. Surgery. 1962 Feb;51(2):224-32.
     """
     # Same as http://apheresisnurses.org/apheresis-calculators
     if sex == HumanSex.MALE:
@@ -1932,23 +1933,6 @@ def transfusion_prbc_target(
       * In an average adult (70 kg): one pRBC unit increases Hgb by 1 g/dL (Hct by 2–3%) [1]
       * Infant: 10-15 ml/kg to achieve the same response
 
-    References:
-        [1] Calculating the required transfusion volume in children, 2007
-            https://www.ncbi.nlm.nih.gov/pubmed/17302766
-            * 10 mL/kg gives an increment of 2 g/dL
-            * Hb estimation 1 hour after transfusion is the same as 7 hours after transfusion.
-        [2] Ness PM, Kruskall MS. Principles of red blood cell transfusion. In: Hoffman K, editor.
-            Hematology: basic principles and practice. 4th ed. Orlando, FL: Churchill Livingstone; 2005.
-        [3] https://www.sciencedirect.com/topics/biochemistry-genetics-and-molecular-biology/hemoglobin-blood-level
-            One RBC unit:
-              * 300 ml, prbc_hct 0.7, so rbc_volume = 300 * 0.7
-              * 200 mg of iron
-        [4] https://www.omnicalculator.com/health/pediatric-transfusion
-
-    Examples:
-        >>> transfusion_prbc_target(70)
-        350.0
-
     Args:
         weight: Real body weight, kg
         target_hb_increment: Desired Hb increment, g/dL
@@ -1956,6 +1940,23 @@ def transfusion_prbc_target(
 
     Returns:
         Required pRBC volume to reach target Hb, ml
+
+    Examples:
+        >>> transfusion_prbc_target(70)
+        350.0
+
+    References:
+        * Calculating the required transfusion volume in children, 2007
+            https://www.ncbi.nlm.nih.gov/pubmed/17302766
+            * 10 mL/kg gives an increment of 2 g/dL
+            * Hb estimation 1 hour after transfusion is the same as 7 hours after transfusion.
+        * Ness PM, Kruskall MS. Principles of red blood cell transfusion. In: Hoffman K, editor.
+            Hematology: basic principles and practice. 4th ed. Orlando, FL: Churchill Livingstone; 2005.
+        * https://www.sciencedirect.com/topics/biochemistry-genetics-and-molecular-biology/hemoglobin-blood-level
+            One RBC unit:
+              * 300 ml, prbc_hct 0.7, so rbc_volume = 300 * 0.7
+              * 200 mg of iron
+        * https://www.omnicalculator.com/health/pediatric-transfusion
     """
     return weight * target_hb_increment * 3 / prbc_hct
 
@@ -1967,18 +1968,6 @@ def estimate_prbc_transfusion_response(
 
     Applicable to adult and children.
 
-    References:
-        See function `hb_prbc_dose` for complete reference.
-
-        [1] https://www.ncbi.nlm.nih.gov/pubmed/17302766
-            10 mL/kg gives an increment of 2 g/dL
-
-    Examples:
-        >>> estimate_prbc_transfusion_response(70, 10 * 70)
-        2.0
-        >>> estimate_prbc_transfusion_response(real_body_weight=70)
-        1.0
-
     Args:
         real_body_weight: Real body weight, kg
         prbc_volume: Volume of one pRBC package, ml
@@ -1986,6 +1975,18 @@ def estimate_prbc_transfusion_response(
 
     Returns:
         Expected Hb increase, g/dL
+
+    Examples:
+        >>> estimate_prbc_transfusion_response(70, 10 * 70)
+        2.0
+        >>> estimate_prbc_transfusion_response(real_body_weight=70)
+        1.0
+
+    References:
+        See function `hb_prbc_dose` for complete reference.
+
+        [1] https://www.ncbi.nlm.nih.gov/pubmed/17302766
+            10 mL/kg gives an increment of 2 g/dL
     """
     return prbc_volume / (real_body_weight * 3 / prbc_hct)
 
@@ -1997,6 +1998,14 @@ def estimate_prbc_transfusion_volume(
 
     For 0-16 years old, based on recipient Hb.
 
+    Args:
+        real_body_weight: recipient real body weight, kg
+        hb: Recipient hemoglobin, g/L
+        target_hb: Target recipient hemoglobin, g/L
+
+    Returns:
+        Estimated pRBC volume (formula valid for pRBC HCT 0.64-0.72), ml
+
     Examples:
         >>> estimate_prbc_transfusion_volume(real_body_weight=70, hb=70, target_hb=75)
         168.0
@@ -2006,14 +2015,6 @@ def estimate_prbc_transfusion_volume(
         840.0
         >>> estimate_prbc_transfusion_volume(90, 30)
         1944.0
-
-    Args:
-        real_body_weight: recipient real body weight, kg
-        hb: Recipient hemoglobin, g/L
-        target_hb: Target recipient hemoglobin, g/L
-
-    Returns:
-        Estimated pRBC volume (formula valid for pRBC HCT 0.64-0.72), ml
 
     References:
         Dr K Morris et al., 2005 https://adc.bmj.com/content/90/7/724
@@ -2029,44 +2030,42 @@ def estimate_prbc_transfusion_volume(
 def check_anemia(hb: float, mcv: float) -> str:
     """Check for anemia and guess it's cause.
 
+    Universal anemia threshold is <110 g/L, based on [WHO VMNIS 2011]:
+    * Minimal Hb registered in humans during lifetime (at age 6 months - 5 years)
+    * Minimal Hb in pregnant women
+    * Simpler to implement, than thresholds for each sex, age,
+        condition (120 for females, 130 males, etc)
+
+        MCV low
+            Ferritin coefficient
+                Normal/high
+                    Total iron binding capacity
+                        High/Normal -> Plumbum; Perform Hemoglobin electrophoresis for abnormal Hb like Sickle cell disease B-thalassemia); bone marrow smear (e.g. sideroblastic anemia)
+                        Low -> Anemia of Chronic Disease (ACD)
+                Low -> Iron deficiency
+
+        MCV high
+            B9 low -> Folate deficiency anemia
+            B12 low
+                 Schilling test for intrinsic factor
+                    Low -> B12 deficiency;
+                    Normal -> Gastrointestinal condition;
+            Both normal -> Liver; Drug induced anemia; Reticulocytosis.
+
+        MCV normal
+            Reticulocyte
+                High -> blood loss; hemolysis; platelet sequestration in spleen;
+                Low
+                    LEY, PLT
+                        Low -> Myelodysplastic syndrome; Aplastic anemia; Leukemia.
+                        Normal/High -> Chronic infection; Malignancy; Chronic kidney disease.
+
     Args:
         hb: Hemoglobin, g/L
         mcv: Mean corpuscular volume, fL
 
-
-    References
-    ----------
-    Universal anemia threshold is <110 g/L, based on [WHO VMNIS 2011]:
-        * Minimal Hb registered in humans during lifetime (at age 6 months - 5 years)
-        * Minimal Hb in pregnant women
-        * Simpler to implement, than thresholds for each sex, age,
-            condition (120 for females, 130 males, etc)
-
-
-    https://medvisor.ru/services/kalkulyator-anemii/
-    MCV low
-        Ferritin coefficient
-            Normal/high
-                Total iron binding capacity
-                    High/Normal -> Plumbum; Perform Hemoglobin electrophoresis for abnormal Hb like Sickle cell disease B-thalassemia); bone marrow smear (e.g. sideroblastic anemia)
-                    Low -> Anemia of Chronic Disease (ACD)
-            Low -> Iron deficiency
-
-    MCV high
-        B9 low -> Folate deficiency anemia
-        B12 low
-             Schilling test for intrinsic factor
-                Low -> B12 deficiency;
-                Normal -> Gastrointestinal condition;
-        Both normal -> Liver; Drug induced anemia; Reticulocytosis.
-
-    MCV normal
-        Reticulocyte
-            High -> blood loss; hemolysis; platelet sequestration in spleen;
-            Low
-                LEY, PLT
-                    Low -> Myelodysplastic syndrome; Aplastic anemia; Leukemia.
-                    Normal/High -> Chronic infection; Malignancy; Chronic kidney disease.
+    References:
+        * https://medvisor.ru/services/kalkulyator-anemii/
     """
     msg = ""
     if hb >= 110:
@@ -2161,8 +2160,9 @@ def solution_normal_saline(salt_mmol: float, hours: float | None = None) -> str:
     Args:
         salt_mmol: Amount of substance (NaCl or single ion equivalent), mmol
         hours: Replacement time. If given, return flow speed, otherwise just volume
+
     Returns:
-        Info string
+        Opinion.
     """
     info = ""
     for dilution in (0.9, 3, 5, 10):
@@ -2188,10 +2188,6 @@ def electrolyte_Na_classic(
 
     Calculates amount of pure water or Na.
 
-    References:
-        Original paper is unknown. Plenty simplified calculations among the books.
-        [1] http://www.medcalc.com/sodium.html
-
     Args:
         total_body_water: Liters
         Na_serum: Serum sodium level, mmol/L
@@ -2200,6 +2196,10 @@ def electrolyte_Na_classic(
 
     Returns:
         Text describing Na deficit/excess and solutions dosage to correct.
+
+    References:
+        * Original paper is unknown. Plenty simplified calculations among the books.
+        * http://www.medcalc.com/sodium.html
     """
     info = ""
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
@@ -2233,14 +2233,6 @@ def electrolyte_Na_adrogue(
     If patient urinates during Na replacement, calculated dose may be excessive
     because total body water won't be increased as expected.
 
-    References:
-        [1] Adrogue, HJ; and Madias, NE. Primary Care: Hypernatremia. New England Journal of Medicine 2000.
-            https://www.ncbi.nlm.nih.gov/pubmed/10824078
-            https://www.ncbi.nlm.nih.gov/pubmed/10816188
-        [2] Does the Adrogue–Madias formula accurately predict serum sodium levels in patients with dysnatremias?
-            https://www.nature.com/articles/ncpneph0335
-        [3] http://www.medcalc.com/sodium.html
-
     Args:
         total_body_water: Liters
         Na_serum: Serum sodium level, mmol/L
@@ -2249,6 +2241,14 @@ def electrolyte_Na_adrogue(
 
     Returns:
             Text describing Na deficit/excess and solutions dosage to correct.
+
+    References:
+        * Adrogue, HJ; and Madias, NE. Primary Care: Hypernatremia. New England Journal of Medicine 2000.
+            https://www.ncbi.nlm.nih.gov/pubmed/10824078
+            https://www.ncbi.nlm.nih.gov/pubmed/10816188
+        * Does the Adrogue–Madias formula accurately predict serum sodium levels in patients with dysnatremias?
+            https://www.nature.com/articles/ncpneph0335
+        * http://www.medcalc.com/sodium.html
     """
     solutions: list[dict[str, str | float]] = [
         # Hyper
@@ -2305,9 +2305,6 @@ def electrolyte_Na_adrogue(
 def electrolyte_K(weight: float, K_serum: float) -> str:
     """Assess blood serum potassium level.
 
-    :param float weight: Real body weight, kg
-    :param float K_serum: Potassium serum level, mmol/L
-
     Hypokalemia (additional K if <3.5 mmol/L)
     -----------------------------------------
     1. As far it's practically impossible to calculate K deficit,
@@ -2350,6 +2347,10 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
         * NaHCO3 2 mmol/kg (за 10-20 минут)
         * CaCl2 - только если есть изменения на ЭКГ [PICU: Electrolyte Emergencies]
         * hyperventilation
+
+    Args:
+        weight: Real body weight, kg
+        K_serum: Potassium serum level, mmol/L
     """
     K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
     K_target = 5.0  # mmol/L Not from book
@@ -2453,14 +2454,14 @@ def electrolyte_Na(
         * If Na<150 use enteral water (https://med.virginia.edu/ginutrition/wp-content/uploads/sites/199/2014/06/Parrish_Rosner-Dec-14.pdf)
         * Spironolactone 25 mg, Furosemide 10-20 mg
 
-    References:
-        [1] http://www.medcalc.com/sodium.html
-
     Args:
         weight: Real body weight, kg
         Na_serum: Serum sodium level, mmol/L
         cGlu: Serum glucose level, mmol/L
         verbose: Return all possible text if True
+
+    References:
+        * http://www.medcalc.com/sodium.html
     """
     Na_target = 140  # mmol/L just mean value, from Маневич и Плохой
 
@@ -2536,33 +2537,30 @@ def correct_Na_hyperosmolar(cNa: float, cGlu: float) -> float:
     with arbitrary particles, trough chemical amount of substance,
     but anyway we can measure only glucose concentration.
 
-    References
-    ----------
-    https://emedicine.medscape.com/article/767624-workup
-    https://www.mdcalc.com/sodium-correction-hyperglycemia#evidence
+    Args:
+        cNa: Na, mmol/L
+        cGlu: cGlu, mmol/L
 
-    https://www.ncbi.nlm.nih.gov/pubmed/4763428
-        Corrected Sodium (Katz, 1973) = Measured sodium + 0.016 * (Serum glucose - 100)
-        Underestimates Na derease in comparison to [Hillier, 1999].
+    Returns:
+        Corrected cNa concentration, mmol/L
 
-    https://www.ncbi.nlm.nih.gov/pubmed/10225241
-        Corrected Sodium (Hillier, 1999) = Measured sodium + 0.024 * (Serum glucose - 100)
+    Examples:
+        >>> correct_Na_hyperosmolar(126, 33.3)  # Katz, 1973 # doctest: +SKIP
+        133.9904
+        >>> correct_Na_hyperosmolar(126, 33.3)  # Hillier, 1999
+        137.9856
 
-    Diagnosis and treatment of diabetic ketoacidosis and the hyperglycemic hyperosmolar state
-        * Psychopathology and necessity of Na correction explained
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC151994/
-
-    Examples
-    --------
-    # >>> correct_Na_hyperosmolar(126, 33.3)  # Katz, 1973
-    # 133.9904
-    >>> correct_Na_hyperosmolar(126, 33.3)  # Hillier, 1999
-    137.9856
-
-    :param float cNa: Na, mmol/L
-    :param float cGlu: cGlu, mmol/L
-    :return: Corrected cNa concentration, mmol/L
-    :rtype: float
+    References:
+        * https://emedicine.medscape.com/article/767624-workup
+        * https://www.mdcalc.com/sodium-correction-hyperglycemia#evidence
+        * https://www.ncbi.nlm.nih.gov/pubmed/4763428
+            Corrected Sodium (Katz, 1973) = Measured sodium + 0.016 * (Serum glucose - 100)
+            Underestimates Na derease in comparison to [Hillier, 1999].
+        * https://www.ncbi.nlm.nih.gov/pubmed/10225241
+            Corrected Sodium (Hillier, 1999) = Measured sodium + 0.024 * (Serum glucose - 100)
+        * Diagnosis and treatment of diabetic ketoacidosis and the hyperglycemic hyperosmolar state
+            * Psychopathology and necessity of Na correction explained
+            https://www.ncbi.nlm.nih.gov/pmc/articles/PMC151994/
     """
     cGlu_mgdl = cGlu * abg.M_C6H12O6 / 10
     # Na_shift = (cGlu_mgdl - 100) / 100 * 1.6  # Katz, 1973
@@ -2584,17 +2582,6 @@ def volume_deficit_hct(weight: float, hct: float, hct_target: float = 0.4) -> fl
         * Рвота - метаболический алкозоз, восполнять Cl- физраствором
         * Понос - метаболический алкалоз? восполнять NaHCO3, NaCL, KCl?
 
-    References
-    ----------
-    [1] Рябов 1994, с 36
-    [2] Маневич, Плохой, с 113
-    [3] https://en.wikipedia.org/wiki/Hematocrit
-
-    Examples
-    --------
-    >>> volume_deficit_hct(70, 0.55)  # 79 kg, hct 0.55
-    3818.181818181818
-
     Args:
         weight: Real body weight, kg
         hct: Hematocrit fraction, e.g 0.5
@@ -2603,6 +2590,15 @@ def volume_deficit_hct(weight: float, hct: float, hct_target: float = 0.4) -> fl
 
     Returns:
         Volume deficiency, ml
+
+    Examples:
+        >>> volume_deficit_hct(70, 0.55)  # 79 kg, hct 0.55
+        3818.181818181818
+
+    References:
+        * Рябов 1994, с 36
+        * Маневич, Плохой, с 113
+        * https://en.wikipedia.org/wiki/Hematocrit
     """
     return (1 - hct_target / hct) * 0.2 * weight * 1000
 
@@ -2639,15 +2635,15 @@ def ccrea_clearance_cockcroft_gault(
     Returns:
         Creatinine clearance (CrCl), mL/min
 
-    https://www.mdcalc.com/calc/43/creatinine-clearance-cockcroft-gault-equation
-    https://boris.bikbov.ru/2013/07/21/kalkulyator-skf-rascheta-skorosti-klubochkovoy-filtratsii/
+    Examples:
+        >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.MALE, cCrea=75, age=40, weight=72.7)
+        119.0125925925926
+        >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.FEMALE, cCrea=75, age=40, weight=72.7)
+        101.1607037037037
 
-    Examples
-    --------
-    >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.MALE, cCrea=75, age=40, weight=72.7)
-    119.0125925925926
-    >>> ccrea_clearance_cockcroft_gault(sex=HumanSex.FEMALE, cCrea=75, age=40, weight=72.7)
-    101.1607037037037
+    References:
+        * https://www.mdcalc.com/calc/43/creatinine-clearance-cockcroft-gault-equation
+        * https://boris.bikbov.ru/2013/07/21/kalkulyator-skf-rascheta-skorosti-klubochkovoy-filtratsii/
     """
     crcl = (140 - age) * weight / (72 * cCrea / abg.Crea)
     if sex == HumanSex.FEMALE:
@@ -2662,24 +2658,6 @@ def egfr_mdrd(
 
     For patients >18 years, can't be used for acute renal failure.
 
-
-    References
-    ----------
-    [1] Radiometer ABL800 Flex Reference Manual English US.
-        chapter 6-43, p. 279, equations 53, 54.
-    [2] https://www.kidney.org/sites/default/files/docs/12-10-4004_abe_faqs_aboutgfrrev1b_singleb.pdf
-    24. U.S Department of Health and Human Services, National Institutes of Health, National Institute of Diabetes and Digestive and Kidney Diseases: NKDEP National Kidney Disease Education Program. Rationale for Use and Reporting of Estimated GFR. NIH Publication No. 04-5509. Revised November 2005.
-    25. Myers GL, Miller WG, Coresh J, Fleming J, Greenberg N, Greene T, Hostetter T, Levey AS, Panteghini M, Welch M, and Eckfeldt JH for the National Kidney Disease Education Program Laboratory Working Group. Clin Chem, 52:5-18, 2006; First published December 6, 2005, 10.1373/clinchem.2005.0525144.
-
-
-    Examples
-    --------
-    >>> from heval import common
-    >>> egfr_mdrd(common.HumanSex.MALE, 74.4, 27)
-    109.36590492087734
-    >>> egfr_mdrd(common.HumanSex.FEMALE, 100, 80, True)
-    55.98942027449337
-
     Args:
         sex: Choose 'male', 'female'.
         cCrea: Serum creatinine (IDMS-calibrated), μmol/L
@@ -2688,6 +2666,20 @@ def egfr_mdrd(
 
     Returns:
         eGFR, mL/min/1.73 m2
+
+    Examples:
+        >>> from heval import common
+        >>> egfr_mdrd(common.HumanSex.MALE, 74.4, 27)
+        109.36590492087734
+        >>> egfr_mdrd(common.HumanSex.FEMALE, 100, 80, True)
+        55.98942027449337
+
+    References:
+        * Radiometer ABL800 Flex Reference Manual English US.
+            chapter 6-43, p. 279, equations 53, 54.
+        * https://www.kidney.org/sites/default/files/docs/12-10-4004_abe_faqs_aboutgfrrev1b_singleb.pdf
+        24. U.S Department of Health and Human Services, National Institutes of Health, National Institute of Diabetes and Digestive and Kidney Diseases: NKDEP National Kidney Disease Education Program. Rationale for Use and Reporting of Estimated GFR. NIH Publication No. 04-5509. Revised November 2005.
+        25. Myers GL, Miller WG, Coresh J, Fleming J, Greenberg N, Greene T, Hostetter T, Levey AS, Panteghini M, Welch M, and Eckfeldt JH for the National Kidney Disease Education Program Laboratory Working Group. Clin Chem, 52:5-18, 2006; First published December 6, 2005, 10.1373/clinchem.2005.0525144.
     """
     # Original equation from 1999 (non IDMS)
     # egfr = 186 * (cCrea / m_Crea) ** -1.154 * age ** -0.203
@@ -2727,19 +2719,19 @@ def egfr_ckd_epi_2009(
     Returns:
         eGFR, mL/min/1.73 m2
 
-    Examples
-    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40, black_race=True)
-    163.0278767156715
-    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40, black_race=True)  # 145
-    144.41525374226973
-    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40)
-    140.66253383578214
-    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40)  # 126
-    124.60332505804116
-    >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=100, age=40)  # 94
-    80.42286173346137
-    >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=100, age=40)  # 71
-    60.418736272242604
+    Examples:
+        >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40, black_race=True)
+        163.0278767156715
+        >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40, black_race=True)  # 145
+        144.41525374226973
+        >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=40, age=40)
+        140.66253383578214
+        >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=40, age=40)  # 126
+        124.60332505804116
+        >>> egfr_ckd_epi_2009(sex=HumanSex.MALE, cCrea=100, age=40)  # 94
+        80.42286173346137
+        >>> egfr_ckd_epi_2009(sex=HumanSex.FEMALE, cCrea=100, age=40)  # 71
+        60.418736272242604
     """
     if sex == HumanSex.CHILD:
         raise ValueError("CKD-EPI 2009 eGFR for children not supported")
@@ -2769,21 +2761,21 @@ def egfr_ckd_epi_2021(sex: HumanSex, cCrea: float, age: float) -> float:
     Returns:
         eGFR, mL/min/1.73 m2
 
-    References:
-        https://en.wikipedia.org/wiki/Glomerular_filtration_rate
-        https://www.kidney.org/professionals/gfr_calculator
-        https://www.kidney.org/professionals/ckd-epi-creatinine-equation-2021
-        https://pubmed.ncbi.nlm.nih.gov/34554658/
+    Examples:
+        >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=40, age=40)
+        136.28113606385867
+        >>> egfr_ckd_epi_2021(sex=HumanSex.FEMALE, cCrea=40, age=40)
+        124.47889340674664
+        >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=100, age=40)
+        84.15535766486853
+        >>> egfr_ckd_epi_2021(sex=HumanSex.FEMALE, cCrea=100, age=40)
+        62.99251082741861
 
-    Examples
-    >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=40, age=40)
-    136.28113606385867
-    >>> egfr_ckd_epi_2021(sex=HumanSex.FEMALE, cCrea=40, age=40)
-    124.47889340674664
-    >>> egfr_ckd_epi_2021(sex=HumanSex.MALE, cCrea=100, age=40)
-    84.15535766486853
-    >>> egfr_ckd_epi_2021(sex=HumanSex.FEMALE, cCrea=100, age=40)
-    62.99251082741861
+    References:
+        * https://en.wikipedia.org/wiki/Glomerular_filtration_rate
+        * https://www.kidney.org/professionals/gfr_calculator
+        * https://www.kidney.org/professionals/ckd-epi-creatinine-equation-2021
+        * https://pubmed.ncbi.nlm.nih.gov/34554658/
     """
     if sex == HumanSex.CHILD:
         raise ValueError("CKD-EPI 2021 eGFR for children not supported")
@@ -2807,23 +2799,19 @@ def egfr_schwartz(cCrea: float, height: float) -> float:
     Returns:
         eGFR, mL/min/1.73 m2. Most accurate in range 15-75 mL/min/1.73 m2.
 
-    Example
-    -------
-    >>> egfr_schwartz(cCrea=40, height=1.15)
-    104.96395
+    Examples:
+        >>> egfr_schwartz(cCrea=40, height=1.15)
+        104.96395
 
-    References
-    ----------
-    [1] New Equations to Estimate GFR in Children with CKD. J Am Soc Nephrol. 2009 Mar; 20(3): 629–637.
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2653687/
-
-    [2] Creatinine Clearance: Revised Schwartz Estimate
-        http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
-
-    https://www.kidney.org/professionals/gfr_calculatorPed
-    https://web.archive.org/web/20221006204252/https://www.kidney.org/content/creatinine-based-%E2%80%9Cbedside-schwartz%E2%80%9D-equation-2009
-    http://nephron.com/bedside_peds_nic.cgi
-    http://nephron.com/peds_nic.cgi
+    References:
+        * New Equations to Estimate GFR in Children with CKD. J Am Soc Nephrol. 2009 Mar; 20(3): 629–637.
+            https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2653687/
+        * Creatinine Clearance: Revised Schwartz Estimate
+            http://www-users.med.cornell.edu/~spon/picu/calc/crclsch2.htm
+        * https://www.kidney.org/professionals/gfr_calculatorPed
+        * https://web.archive.org/web/20221006204252/https://www.kidney.org/content/creatinine-based-%E2%80%9Cbedside-schwartz%E2%80%9D-equation-2009
+        * http://nephron.com/bedside_peds_nic.cgi
+        * http://nephron.com/peds_nic.cgi
     """
     # k = 0.33  # First year of life, pre-term infants
     # k = 0.45  # First year of life, full-term infants
@@ -2879,23 +2867,23 @@ def bun_creatinine_ratio(urea: float, cCrea: float) -> float:
         <10: indicates renal cause of ARF
 
     Args:
-        urea, mmol/L
-        cCrea, μmol/L
+        urea: mmol/L
+        cCrea: μmol/L
 
     Returns:
         Normal BUN:Creatinine ratio values are generally 10-20.
         If BUN:Cr >20, this may be a sign of prerenal azotemia.
-
-    References:
-        https://en.wikipedia.org/wiki/Urea-to-creatinine_ratio
-        https://litfl.com/urea-creatinine-ratio/
-        https://www.mdcalc.com/calc/10501/bun-creatinine-ratio#evidence
 
     Example:
         >>> bun_creatinine_ratio(urea=10, cCrea=100)
         24.752475247524753
         >>> bun_creatinine_ratio(urea=30, cCrea=700)
         10.608203677510607
+
+    References:
+        https://en.wikipedia.org/wiki/Urea-to-creatinine_ratio
+        https://litfl.com/urea-creatinine-ratio/
+        https://www.mdcalc.com/calc/10501/bun-creatinine-ratio#evidence
     """
     urea_mgdl = urea * abg.M_BUN / 10
     cCrea_mgdl = cCrea * abg.M_CREA / 10000
@@ -2905,17 +2893,17 @@ def bun_creatinine_ratio(urea: float, cCrea: float) -> float:
 def insulin_by_glucose(cGlu: float) -> float:
     """Monoinsulin subcutaneous dose for a given serum glycemia level.
 
-    Insulin sesnitivity at morning lower, then at evening.
-
-    References
-    ----------
-    [1] Oleskevitch uses target 5 mmol/L: `(cGlu - 5) * 2`
-    [2] Lipman, T. Let's abandon urine fractionals in TPN. Nutrition Support Services. 4:38-40, 1984.
+    Insulin sensitivity at morning lower, then at evening.
 
     Args:
         cGlu: Serum glucose mmol/L
     Returns:
         Insulin dose in IU. Returns zero if cGlu < 10 or cGlu > 25.
+
+    References:
+        * Oleskevitch uses target 5 mmol/L: `(cGlu - 5) * 2`
+        * Lipman, T. Let's abandon urine fractionals in TPN. Nutrition Support Services. 4:38-40, 1984.
+
     """
     # cGlu mg/dl * 0.0555 = mmol/L
     # 0.55 = (100 / daily_iu) may be considered as sensitivity to ins

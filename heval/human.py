@@ -945,7 +945,7 @@ class HumanModel:
         info = ""
         if self.blood_abg_cCrea is None or self.blood_abg_cCrea <= 0:
             return info
-        info += f"cCrea {self.blood_abg_cCrea:.0f} μmol/L"
+        info += f"{common.A.ccrea} {self.blood_abg_cCrea:.0f} μmol/L"
         if self.body_sex == HumanSex.CHILD:
             if self.body_height is not None:
                 egfr = egfr_schwartz(
@@ -1190,7 +1190,7 @@ class HumanModel:
                 """
         return msg
 
-    def _flag_dic(self) -> str:
+    def _flag_score_isth(self) -> str:
         """Flag >=5 ISTH disseminated intravascular coagulation score.
 
         Value >=5 means high probability of DIC.
@@ -1235,7 +1235,7 @@ class HumanModel:
         else:
             return ""
 
-    def _flag_ttp(self) -> str:
+    def _flag_score_plasmic(self) -> str:
         """Flag probable ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
 
         * Applicable to adults
@@ -1301,6 +1301,12 @@ class HumanModel:
                 + tpl
             )
 
+    def _flag_score_sofa(self) -> str:
+        """Flag partial lab-only sequential organ failure assessment (SOFA) score >=4."""
+        if self.blood_sofa_partial is not None and self.blood_sofa_partial >= 4:
+            return f"&ge;{self.blood_sofa_partial} (based on {common.A.plt}, {common.A.ctbil}, {common.A.ccrea})"
+        return ""
+
     def init(self) -> str | None:
         """Run after model population."""
         self.flags = common.FlagWarnings()
@@ -1361,14 +1367,14 @@ class HumanModel:
         self.flags.add(
             common.Flag(
                 reason="DIC probability",
-                description=self._flag_dic(),
+                description=self._flag_score_isth(),
                 severity=common.FlagSeverity.YELLOW,
             )
         )
         self.flags.add(
             common.Flag(
                 reason="Thrombocytopenic purpura",
-                description=self._flag_ttp(),
+                description=self._flag_score_plasmic(),
             )
         )
         self.flags.add(
@@ -1378,14 +1384,13 @@ class HumanModel:
                 severity=common.FlagSeverity.RED,
             )
         )
-        if self.blood_sofa_partial is not None and self.blood_sofa_partial >= 4:
-            self.flags.add(
-                common.Flag(
-                    reason="SOFA",
-                    description=f"&ge;{self.blood_sofa_partial} (based on PLT, ctBil, cCrea)",
-                    severity=common.FlagSeverity.YELLOW,
-                )
+        self.flags.add(
+            common.Flag(
+                reason="SOFA",
+                description=self._flag_score_sofa(),
+                severity=common.FlagSeverity.YELLOW,
             )
+        )
         return None
 
     def eval_body(self) -> str:

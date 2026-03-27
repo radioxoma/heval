@@ -5,6 +5,7 @@ Function parameters tends to be in International System of Units.
 
 from __future__ import annotations
 
+import inspect
 import math
 import textwrap
 import warnings
@@ -415,7 +416,7 @@ class HumanModel:
         return info
 
     def _body_respiration(self) -> str:
-        """Calulate optimal Tidal Volume for given patient (any gas mixture).
+        """Calculate ventilation parameters.
 
         IBW - ideal body weight
         RBW - real body weight
@@ -506,7 +507,7 @@ class HumanModel:
         return info
 
     def _body_fluids_in(self) -> str:
-        # Normal physiologic demand
+        """Calculate daily fluid requirements."""
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += f" * {common.A.rbw} fluids demand {30 * self.body_weight:.0f}-{35 * self.body_weight:.0f} ml/24h (30-35 ml/kg/24h) [{common.A.ru_pos_dej}]\n"
@@ -535,7 +536,7 @@ class HumanModel:
         return info
 
     def _body_food(self) -> str:
-        """Daily electrolytes demand."""
+        """Calculate daily macro- and micronutrients demand."""
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += (
@@ -570,7 +571,7 @@ class HumanModel:
             return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
 
     def _body_energy(self) -> str:
-        """Attempt to calculate energy requirements for an human.
+        """Calculate daily energy requirements.
 
         There are ESPEN and ASPEN recommendations. See:
             * ESPEN guideline: Clinical nutrition in surgery
@@ -652,7 +653,7 @@ class HumanModel:
         return info
 
     def _body_fluids_out(self) -> str:
-        """Minimal required urinary output 0.5-1 ml/kg/h.
+        """Calculate minimal required urinary output (0.5-1 ml/kg/h).
 
         У детей диурез значительно выше, у новорождённых 2.5 ml/kg/h.
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
@@ -680,15 +681,15 @@ class HumanModel:
         return info
 
     def _lab_osmolarity(self):
-        """Verbally describe osmolarity impact on human.
+        """Describe osmolarity impact like thirst, HHS, kidney injury risk, coma.
 
         Diabetes mellitus decompensation:
-          1 type - DKA (no insulin enables ketogenesis).
-            dehydration (osmotic diuresis and vomiting)
-            cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
-          2 type - HHNS (cells not sensitive to Ins)
-            dehydration (osmotic diuresis)
-            cGlu >30, mOsm >320, no acidosis and ketone bodies)
+        * 1 type - DKA (no insulin enables ketogenesis).
+            * dehydration (osmotic diuresis and vomiting)
+            * cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
+        * 2 type - HHS (cells not sensitive to Ins)
+            * dehydration (osmotic diuresis)
+            * cGlu >30, mOsm >320, no acidosis and ketone bodies
         """
         info = ""
         if self.blood_abg_cNa is None or self.blood_abg_cGlu is None:
@@ -730,11 +731,11 @@ class HumanModel:
         ):
             # https://www.aafp.org/afp/2005/0501/p1723.html
             # IV insulin drip and crystalloids
-            info += f" Diabetes mellitus type 2 with hyperosmolar hyperglycemic state? Check for {common.A.hagma} and ketonuria to exclude {common.A.dka}. Look for infection or another underlying illness that caused the hyperglycemic crisis."
+            info += f" Diabetes mellitus type 2 with {common.A.hhs}? Check for {common.A.hagma} and ketonuria to exclude {common.A.dka}. Look for infection or another underlying illness that caused the hyperglycemic crisis."
         return info
 
     def _lab_abg(self) -> str:
-        """Describe pH and pCO2 - an old implementation considered stable."""
+        """Describe pH and pCO2, reveal hidden processes."""
         info = ""
         if self.blood_abg_pH is not None and self.blood_abg_pCO2 is not None:
             info += textwrap.dedent(
@@ -752,6 +753,7 @@ class HumanModel:
         return info
 
     def _lab_anion_gap(self):
+        """Describe metabolic acidosis possible cause."""
         if None in (
             self.blood_abg_pH,
             self.blood_abg_pCO2,
@@ -807,7 +809,7 @@ class HumanModel:
         return info
 
     def _lab_sbe(self):
-        """Calculate needed NaHCO3 for metabolic acidosis correction.
+        """Describe needed NaHCO3 for metabolic acidosis correction.
 
         Using SBE (not pH) as threshold point guaranties that bicarbonate
         administration won't be suggested in case of respiratory acidosis.
@@ -819,7 +821,7 @@ class HumanModel:
 
         First approach
         --------------
-        "pH < 7.26 or hco3p < 15" requires correction with NaHCO3 [Курек 2013, с 47],
+        `pH < 7.26 or hco3p < 15` requires correction with NaHCO3 [Курек 2013, с 47],
         but both values pretty close to BE -9 meq/L, so I use it as threshold.
 
         Max dose of NaHCO3 is 4-5 mmol/kg (between ABG checks or 24h?) [Курек 273]
@@ -880,6 +882,7 @@ class HumanModel:
         return info
 
     def _lab_electrolytes(self):
+        """Describe electrolyte and osmolar abnormalities."""
         if None in (
             self.body_weight,
             self.blood_abg_cK,
@@ -896,10 +899,13 @@ class HumanModel:
             """)
 
     def _lab_glucose(self):
-        """Assess glucose level.
+        """Describe glucose level, detect DKE/HHS.
 
-        https://en.wikipedia.org/wiki/Renal_threshold
-        https://en.wikipedia.org/wiki/Glycosuria
+        References:
+            * https://en.wikipedia.org/wiki/Renal_threshold
+            * https://en.wikipedia.org/wiki/Glycosuria
+            * https://en.wikipedia.org/wiki/Diabetic_ketoacidosis
+            * https://en.wikipedia.org/wiki/Hyperosmolar_hyperglycemic_state
         """
         info = ""
         if self.body_weight is None or self.blood_abg_cGlu is None:
@@ -934,7 +940,7 @@ class HumanModel:
         return info
 
     def _lab_ccrea(self) -> str:
-        """Estimate glomerular filtration rate (eGFR)."""
+        """Describe kidney function via glomerular filtration rate (eGFR)."""
         egfr = None
         info = ""
         if self.blood_abg_cCrea is None or self.blood_abg_cCrea <= 0:
@@ -985,9 +991,10 @@ class HumanModel:
         return info
 
     def _lab_albumin(self):
-        """Albumin as nutrition marker in adults."""
+        """Describe low albumin as nutrition marker in adults."""
+        info = ""
         if self.blood_abg_ctAlb is None:
-            return ""
+            return info
         ctalb_range = (
             f"{self.blood_abg_ctAlb:0.0f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/L)"
         )
@@ -1004,7 +1011,7 @@ class HumanModel:
         return info
 
     def _lab_hb(self):
-        """Describe Hb and hct_calc.
+        """Describe Hb and hct_calc (hemoconcentration).
 
         References:
             * https://en.wikipedia.org/wiki/Hematocrit#cite_ref-3
@@ -1057,6 +1064,7 @@ class HumanModel:
         return info
 
     def _lab_oxygenation(self) -> str:
+        """Describe p/f and A-a gradient."""
         info = ""
         if (
             self.blood_abg_pCO2 is None
@@ -1083,6 +1091,7 @@ class HumanModel:
         return info
 
     def _flag_abg(self) -> str:
+        """Flag deadly ABG disturbances."""
         warnings = list()
         if self.blood_abg_pH is not None:
             if self.blood_abg_pH < 7.15:
@@ -1227,7 +1236,7 @@ class HumanModel:
             return ""
 
     def _flag_ttp(self) -> str:
-        """Predict ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
+        """Flag probable ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
 
         * Applicable to adults
         * Only for population with thrombocytopenia
@@ -1291,12 +1300,6 @@ class HumanModel:
                 f"""6 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, consider {common.A.tpe}"""
                 + tpl
             )
-
-    def eval_body(self) -> str:
-        return self._eval_body
-
-    def eval_labs(self) -> str:
-        return self._eval_labs
 
     def init(self) -> str | None:
         """Run after model population."""
@@ -1384,6 +1387,53 @@ class HumanModel:
                 )
             )
         return None
+
+    def eval_body(self) -> str:
+        return self._eval_body
+
+    def eval_labs(self) -> str:
+        return self._eval_labs
+
+    @classmethod
+    def selfdoc(cls) -> str:
+        """Self-document checking functions and it's dependencies.
+
+        startswith() prefixes is just naming convention:
+        * Functions that check HumanModel and should be in user documentation:
+            * `_body_*` for anthropometry
+            * `_lab_*` for lab data interpretation
+            * `_flag_*` for flag-setting
+
+        For each function: try to get list of required attributes that user can set:
+        * FloatAttr: `blood_*`, `body_*`
+
+        Returns:
+            HTML.
+        """
+        # Get all attributes that could be set and check if they are used in function
+        all_attr = set()
+        for name, _obj in inspect.getmembers(
+            cls, predicate=lambda o: isinstance(o, FloatAttr)
+        ):
+            all_attr.add(name)
+
+        info = list()
+        info.append("<h3>Model checklist</h3>")
+        for name, func in inspect.getmembers(cls, inspect.isfunction):
+            if name.startswith(("_body_", "_lab_", "_flag_")):
+                first_docstring = ""
+                if func.__doc__:
+                    first_docstring = func.__doc__.splitlines()[0]
+                used_attr = set(
+                    filter(
+                        lambda k: k.startswith(("blood_", "body_")),
+                        func.__code__.co_names,
+                    )
+                )
+                info.append(
+                    f"<p><strong>{name}</strong> {first_docstring}<br>Depends on {sorted(all_attr & used_attr)}<br>Also uses {sorted((all_attr & used_attr) ^ used_attr)}</p>"
+                )
+        return "".join(info)
 
 
 def body_mass_index(height: float, weight: float) -> float:

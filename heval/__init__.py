@@ -1,6 +1,6 @@
 import random
 
-from heval import common
+from heval import common, human
 
 __version__ = "0.1.6"
 __url__ = "https://github.com/radioxoma/heval/"
@@ -27,7 +27,7 @@ __doc__ = f"""\
 программа смогла рассчитать анионный промежуток и попыталась найти скрытые
 метаболические процессы при помощи Delta ratio.<br>
 Пол и вес влияют на рассчитанную инфузионную терапию.</p>
-"""
+""" + human.HumanModel.selfdoc()
 
 DISCLAIMER = f"""\
 <h3>Disclaimer</h3>

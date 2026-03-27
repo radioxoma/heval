@@ -111,6 +111,7 @@ class Abbr:
 class A:
     """Abbreviation namespace."""
 
+    # fmt: off
     aa_gradient = Abbr("A-a gradient", "Alveolar-arterial gradient")
     abg = Abbr("ABG", "Arterial blood gas test")
     aki = Abbr("AKI", "Acute kidney injury")
@@ -123,7 +124,7 @@ class A:
     crcl = Abbr("CrCl", "Creatinine clearance by Cockcroft-Gault")
     crrt = Abbr("CRRT", "Continuous renal replacement therapy")
     d5w = Abbr("D5, D5W", "Dextrose 5%")
-    dka = Abbr("DKA", "Diabetic ketoacidosis")
+    dka = Abbr("DKA", "Diabetic ketoacidosis", "https://en.wikipedia.org/wiki/Diabetic_ketoacidosis")
     eda = Abbr("EDA", "Epidural anesthesia")
     egfr = Abbr("eGFR", "Estimated glomerular filtration rate")
     espen = Abbr("ESPEN", "European Society for Clinical Nutrition and Metabolism")
@@ -135,7 +136,7 @@ class A:
     hagma = Abbr("HAGMA", "High anion gap metabolic acidosis")
     hb = Abbr("Hb", "Hemoglobin")
     hct = Abbr("HCT", "Hematocrit", "https://en.wikipedia.org/wiki/Hematocrit")
-    hhs = Abbr("HHS", "Hyperosmolar hyperglycemic state")
+    hhs = Abbr("HHS", "Hyperosmolar hyperglycemic state, hyperosmolar non-ketotic state (HONK)", "https://en.wikipedia.org/wiki/Hyperosmolar_hyperglycemic_state")
     ibw = Abbr("IBW", "Ideal body weight, kg")
     inr = Abbr("INR", "International normalized ratio")
     isth = Abbr("ISTH", "International Society on Thrombosis and Haemostasis")
@@ -160,3 +161,4 @@ class A:
     uf = Abbr("UF", "Ultrafiltration")
     urea_nitrogen = Abbr("UUN", "Urine Urea Nitrogen")
     vd_airway = Abbr("VDaw", "Dead space airway volume, ml")
+    # fmt: on

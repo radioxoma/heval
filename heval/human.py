@@ -510,7 +510,7 @@ class HumanModel:
         """Calculate daily fluid requirements."""
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += f" * {common.A.rbw} fluids demand {30 * self.body_weight:.0f}-{35 * self.body_weight:.0f} ml/24h (30-35 ml/kg/24h) [{common.A.ru_pos_dej}]\n"
+            info += f" * {common.A.rbw} fluids demand {30 * self.body_weight:.0f}-{35 * self.body_weight:.0f} ml/24h (30-35 ml/kg/24h) [{common.A.book_pos_dej}]\n"
 
         hs_fluid = fluid_holidaysegar_mod(self.body_weight)
         info += f" * {common.A.rbw} fluids demand {hs_fluid:.0f} ml/24h or {hs_fluid / 24:.0f} ml/h [Holliday-Segar]\n"
@@ -540,7 +540,7 @@ class HumanModel:
         info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += (
-                f"Daily nutrition requirements for adults [{common.A.ru_pos_dej}]:\n"
+                f"Daily nutrition requirements for adults [{common.A.book_pos_dej}]:\n"
             )
             info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(
                 1.2 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
@@ -568,7 +568,7 @@ class HumanModel:
             )
             return info
         else:
-            return "Electrolytes demand calculation for children not implemented. Refer to [Курек 2013, с 130]"
+            return f"Electrolytes demand calculation for children not implemented. Refer to [{common.A.book_kurek2013}, с 130]"
 
     def _body_energy(self) -> str:
         """Calculate daily energy requirements.
@@ -649,7 +649,7 @@ class HumanModel:
         else:
             # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
             # стартовые дозы глюкозы [Курек с 143]
-            info += "Energy calculations for children not implemented. Refer to [Курек АиИТ у детей 3-е изд. 2013, стр. 137]"
+            info += f"Energy calculations for children not implemented. Refer to [{common.A.book_kurek2013}, стр. 137]"
         return info
 
     def _body_fluids_out(self) -> str:
@@ -849,7 +849,7 @@ class HumanModel:
         elif self.blood_abg_sbe < abg.norm_sbe[0]:
             if self.blood_abg_sbe <= NaHCO3_threshold:
                 info += f"{common.A.sbe} is drastically low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in {common.A.aki} patients to reach target pH 7.3:\n"
-                info += f"  * Fast {common.A.acls} tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
+                info += f"  * Fast {common.A.acls} tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [{common.A.book_kurek2013}, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
                 NaHCO3_mmol = -0.3 * self.blood_abg_sbe * self.body_weight  # mmol/L
                 NaHCO3_mmol_24h = self.body_weight * 5  # mmol/L
@@ -2418,9 +2418,9 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
             info += f"K⁺ is dangerously high (&gt;{K_high:.1f} mmol/L)\n"
             info += "Inject bolus 0.5 g/kg "
             info += solution_glucose(glu_mass, weight)
-            info += f"Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [{common.A.ru_pos_dej}]\n"
+            info += f"Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [{common.A.book_pos_dej}]\n"
             # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-            info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml ({common.A.rbw}x2={2 * weight:.0f} mmol) [Курек 2013]\n"
+            info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml ({common.A.rbw}x2={2 * weight:.0f} mmol) [{common.A.book_kurek2013}]\n"
             info += "Don't forget salbutamol, furosemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
         else:
             info += f"K⁺ on the upper acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"

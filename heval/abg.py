@@ -49,6 +49,7 @@ References::
 
 from __future__ import annotations
 
+import enum
 import math
 
 # Multiple to convert
@@ -132,6 +133,15 @@ norm_ret_mean = 1  # %
 norm_fib_mean = 3  # g/L
 norm_inr_mean = 1  # Fraqtion
 norm_ddimer_mean = 300  # ng/ml
+
+
+class AbgProcess(enum.Enum):
+    NORMAL_ABG = enum.auto()
+    METABOLIC_ACIDOSIS = enum.auto()
+    METABOLIC_ALKALOSIS = enum.auto()
+    RESPIRATORY_ACIDOSIS = enum.auto()
+    RESPIRATORY_ALKALOSIS = enum.auto()
+    UNDEFINED = enum.auto()
 
 
 def calculate_anion_gap(
@@ -781,7 +791,7 @@ def resp_acidosis_pH(pCO2: float, status: str = "acute") -> float:
         return 7.4 + 0.003 * (40.0 - pCO2 / kPa)  # Chronic
 
 
-def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, str | None]:
+def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, AbgProcess]:
     """Evaluate arterial blood gas status for complex acid-base disorders.
 
     Args:
@@ -825,12 +835,12 @@ def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, str | None]:
             if pH >= 7.41:
                 return (
                     "Respiratory alkalosis, full comp. by metabolic acidosis",
-                    "respiratory_alkalosis",
+                    AbgProcess.RESPIRATORY_ALKALOSIS,
                 )
             else:
                 return (
                     "Metabolic acidosis, full comp. by CO₂ alkalosis",
-                    "metabolic_acidosis",
+                    AbgProcess.METABOLIC_ACIDOSIS,
                 )
         elif pCO2 > norm_pCO2[1]:
             # High (respiratory acidosis)
@@ -838,15 +848,15 @@ def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, str | None]:
                 # Classic "chronic" COPD gas
                 return (
                     "Respiratory acidosis, full comp. by metabolic alkalosis. COPD?",
-                    "respiratory_acidosis",
+                    AbgProcess.RESPIRATORY_ACIDOSIS,
                 )
             else:
                 return (
                     "Metabolic alkalosis, full comp. by CO₂ acidosis",
-                    "metabolic_alkalosis",
+                    AbgProcess.METABOLIC_ALKALOSIS,
                 )
         else:
-            return "Normal ABG", None
+            return "Normal ABG", AbgProcess.NORMAL_ABG
     else:
         # pH decompensation
         if pCO2 < norm_pCO2[0]:  # Low (respiratory alkalosis)
@@ -855,24 +865,24 @@ def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, str | None]:
                 # Always check anion gap here
                 return (
                     "Metabolic acidosis, partial comp. by CO₂ alkalosis (check AG)",
-                    "metabolic_acidosis",
+                    AbgProcess.METABOLIC_ACIDOSIS,
                 )
             elif pH > norm_pH[1]:
                 return (
                     "Respiratory alkalosis ({})".format(check_metabolic(pH, pCO2)),
-                    "respiratory_alkalosis",
+                    AbgProcess.RESPIRATORY_ALKALOSIS,
                 )
         elif pCO2 > norm_pCO2[1]:
             if pH < norm_pH[0]:
                 return (
                     "Respiratory acidosis ({})".format(check_metabolic(pH, pCO2)),
-                    "respiratory_acidosis",
+                    AbgProcess.RESPIRATORY_ACIDOSIS,
                 )
             elif pH > norm_pH[1]:
                 # Check blood and urine Cl [Курек 2013, 48]: Cl-dependent < 15-20 mmol/L < Cl-independent
                 return (
-                    "Metabolic alkalosis, partial comp. by CO₂ acidosis (check Na, Cl, albumin)",
-                    "metabolic_alkalosis",
+                    "Metabolic alkalosis (check high Na⁺, low Cl⁻ or albumin), partial comp. by CO₂ acidosis",
+                    AbgProcess.METABOLIC_ALKALOSIS,
                 )
         else:
             # Normal pCO2 (35 <= pCO2 <= 45 normal)
@@ -880,14 +890,14 @@ def abg_approach_stable(pH: float, pCO2: float) -> tuple[str, str | None]:
                 # Always check anion gap here
                 return (
                     "Metabolic acidosis, no respiratory comp.",
-                    "metabolic_acidosis",
+                    AbgProcess.METABOLIC_ACIDOSIS,
                 )
             elif pH > norm_pH[1]:
                 return (
                     "Metabolic alkalosis, no respiratory comp.",
-                    "metabolic_alkalosis",
+                    AbgProcess.METABOLIC_ALKALOSIS,
                 )
-    return "Impossible to evaluate", None
+    return "Impossible to evaluate", AbgProcess.UNDEFINED
 
 
 def abg_approach_ryabov(pH: float, pCO2: float) -> str:
@@ -899,7 +909,7 @@ def abg_approach_ryabov(pH: float, pCO2: float) -> str:
     3. Divide measured and calculated pH difference by 0.015 to calculate
        base excess (BE) approximation in mEq/L
     4. If extracellular fluid (HCO3- distribution volume) represents 25 % of
-       real body weight (RBW), global base excess will be near "BE * 0.25 * RBW"
+       real body weight (RBW), global base excess will be near `BE * 0.25 * RBW`
 
     Examples:
         >>> abg_approach_ryabov(7.36, 55*kPa)
@@ -927,6 +937,9 @@ def abg_approach_ryabov(pH: float, pCO2: float) -> str:
 def abg_approach_research(pH: float, pCO2: float) -> str:
     """Calculate expected ABG values.
 
+    Winters' formula - checks if respiratory response (pCO2 level) adequate
+    for current metabolic acidosis or alkalosis (for given pH and pCO2).
+
     Args:
         pH: pH
         pCO2: kPa
@@ -936,6 +949,10 @@ def abg_approach_research(pH: float, pCO2: float) -> str:
 
     References:
         * Kostuchenko S.S., ABB in the ICU, 2009
+        * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
+        * https://www.ncbi.nlm.nih.gov/pubmed/6016545
+        * https://en.wikipedia.org/wiki/Winters%27_formula
+        * https://jasn.asnjournals.org/content/21/6/920
     """
     info = ""
     HCO3act = calculate_hco3p(pH, pCO2)
@@ -945,14 +962,6 @@ def abg_approach_research(pH: float, pCO2: float) -> str:
         resp_acidosis_pH(pCO2, "acute"), resp_acidosis_pH(pCO2, "chronic")
     )
 
-    """
-    Winters' formula - checks if respiratory response (pCO2 level) adequate
-    for current metabolic acidosis or alkalosis (for given pH and pCO2)
-      * Albert MS, Dell RB, Winters RW (February 1967). "Quantitative displacement of acid-base equilibrium in metabolic acidosis". Annals of Internal Medicine
-      * https://www.ncbi.nlm.nih.gov/pubmed/6016545
-      * https://en.wikipedia.org/wiki/Winters%27_formula
-      * https://jasn.asnjournals.org/content/21/6/920
-    """
     wint_ac = 1.5 * HCO3act + 8
     wint_alc = 0.7 * HCO3act + 20
     info += "pCO2 by cHCO3(P) - expected respiratory compensation [Winters]:\n"

@@ -766,7 +766,7 @@ class HumanModel:
         desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
         if (
             abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[1]
-            == "metabolic_acidosis"
+            == abg.AbgProcess.METABOLIC_ACIDOSIS
         ):
             if abg.norm_gap[1] < self.blood_abg_anion_gap:
                 # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
@@ -848,8 +848,8 @@ class HumanModel:
             info += f"{common.A.sbe} is high {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L). Low Cl⁻, hypoalbuminemia? NaHCO₃ overdose?"
         elif self.blood_abg_sbe < abg.norm_sbe[0]:
             if self.blood_abg_sbe <= NaHCO3_threshold:
-                info += f"{common.A.sbe} is drastically low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in AKI patients to reach target pH 7.3:\n"
-                info += "  * Fast ACLS tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
+                info += f"{common.A.sbe} is drastically low {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L), consider NaHCO₃ in {common.A.aki} patients to reach target pH 7.3:\n"
+                info += f"  * Fast {common.A.acls} tip (all ages): load dose 1 mmol/kg, then 0.5 mmol/kg every 10 min [Курек 2013, 273]\n"
                 # info += "NaHCO3 {:.0f} mmol during 30-60 minutes\n".format(0.5 * (24 - self.hco3p) * self.parent.weight)  # Doesn't looks accurate, won't use it [Курек 2013, с 47]
                 NaHCO3_mmol = -0.3 * self.blood_abg_sbe * self.body_weight  # mmol/L
                 NaHCO3_mmol_24h = self.body_weight * 5  # mmol/L

@@ -114,6 +114,7 @@ class A:
     # fmt: off
     aa_gradient = Abbr("A-a gradient", "Alveolar-arterial gradient")
     abg = Abbr("ABG", "Arterial blood gas test")
+    acls = Abbr("ACLS", "Advanced cardiovascular life support")
     aki = Abbr("AKI", "Acute kidney injury")
     anion_gap = Abbr("AG", "Anion gap")
     bmi = Abbr("BMI", "Body mass index")

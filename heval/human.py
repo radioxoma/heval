@@ -1191,7 +1191,7 @@ class HumanModel:
         return msg
 
     def _flag_score_isth(self) -> str:
-        """Flag >=5 ISTH disseminated intravascular coagulation score.
+        """Flag ≥5 ISTH disseminated intravascular coagulation score.
 
         Value >=5 means high probability of DIC.
         Not requires all lab data to be available.
@@ -1236,7 +1236,7 @@ class HumanModel:
             return ""
 
     def _flag_score_plasmic(self) -> str:
-        """Flag probable ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
+        """Flag ≥5 probable ADAMTS13 deficiency in suspected thrombotic thrombocytopenic purpura (TTP).
 
         * Applicable to adults
         * Only for population with thrombocytopenia
@@ -1248,7 +1248,7 @@ class HumanModel:
         References:
             * Bendapudi 2017. Derivation and external validation of the PLASMIC score for rapid assessment of adults with thrombotic microangiopathies: a cohort study
                 https://www.ncbi.nlm.nih.gov/pubmed/28259520
-            * https://www.mdcalc.com/calc/10200/plasmic-score-ttp#evidence
+            * https://www.mdcalc.com/calc/10200/plasmic-score-ttp
             * https://www.emdocs.net/emdocs-podcast-episode-45-thrombotic-thrombocytopenic-purpura/
         """
         score = 2  # Assuming no active malignancy; no transplant history
@@ -1282,27 +1282,24 @@ class HumanModel:
             if self.blood_abg_cCrea < 176.8:
                 score += 1
 
-        if score < 5:
-            return ""
-
         tpl = f""" (<abbr title="Predicts ADAMTS13 deficiency if suspected thrombotic thrombocytopenic purpura">PLASMIC score for TTP</abbr>
             <abbr title="Minus one point for active cancer;\nminus one point if history of solid-organ or stem cell transplant">&le;{score}</abbr>)"""
         if score < 5:
-            # Consider alternative diagnoses
-            return "0 % ADAMTS13 deficiency probability" + tpl
-        elif score > 5:
-            return (
-                f"""72 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, start {common.A.tpe}, methylprednisolone 1 mg/kg/24h"""
-                + tpl
-            )
-        else:
+            # 0 % ADAMTS13 deficiency probability, consider alternative diagnoses
+            return ""
+        elif score == 5:
             return (
                 f"""6 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, consider {common.A.tpe}"""
                 + tpl
             )
+        else:
+            return (
+                f"""72 % ADAMTS13 deficiency probability, send for ADAMTS13 testing, start {common.A.tpe}, methylprednisolone 1 mg/kg/24h"""
+                + tpl
+            )
 
     def _flag_score_sofa(self) -> str:
-        """Flag partial lab-only sequential organ failure assessment (SOFA) score >=4."""
+        """Flag ≥4 partial lab-only sequential organ failure assessment (SOFA) score."""
         if self.blood_sofa_partial is not None and self.blood_sofa_partial >= 4:
             return f"&ge;{self.blood_sofa_partial} (based on {common.A.plt}, {common.A.ctbil}, {common.A.ccrea})"
         return ""

@@ -692,26 +692,89 @@ def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
 
 
 def calculate_Ca74(pH: float, Ca: float) -> float:
-    """Ionized calcium at pH 7.4.
+    """Calculate expected ionized calcium level at pH 7.4.
 
     Args:
-        pH: Due to biological variations this function can only be
+        pH: serum pH
+            Due to biological variations this function can only be
             used for a pH value in the range 7.2-7.6 [1].
             Radiometer device returns '?' with pH=6.928, Ca=1.62.
-        Ca: mmol/L
+        Ca: ionized serum calcium, mmol/L
 
     Returns:
         cCa2+(7.4), mmol/L.
+
+    Examples:
+        >>> calculate_Ca74(pH=7.2, Ca=1.4)
+        1.2515999999999998
+        >>> calculate_Ca74(pH=7.4, Ca=1.2)
+        1.2
+        >>> calculate_Ca74(pH=7.6, Ca=1.1)
+        1.2165999999999997
 
     References:
         * Radiometer ABL800 Flex Reference Manual English US.
             chapter 6-41, p. 277, equation 45.
     """
-    if not 7.2 <= pH <= 7.4:
+    if not 7.2 <= pH <= 7.6:
         raise ValueError(
             "Can calculate only for pH 7.2-7.6 due to biological variations"
         )
     return Ca * (1 - 0.53 * (7.4 - pH))
+
+
+def calculate_cK74(pH: float, cK: float) -> float:
+    """Calculate expected potassium level at pH 7.4.
+
+    98% of the total body K+ resides within cells, impossible to calculate deficency.
+    Potassium level is highly dependent from the blood pH.
+    Low pH can cause severe hyperkalemia.
+
+    Organic acidosis such as ketoacidosis and lactic acidosis leads to little or no effect on potassium shift.
+    factor = 2  # 0-2 mEq/L/pH
+
+    Organic (mineral) acidosis present e.g. chronic renal failure, Type I (distal renal tubular acidosis) -
+    reduced renal excretion of inorganic acids has the greatest impact.
+    factor = 6  # 2.4-17 mEq/L/pH
+
+    Respiratory acidosis leads to very small increases in serum K+ concentrations.
+    factor = 3  #  1-4 mEq/L/pH
+
+    Respiratory and metabolic alkalosis leads to very small reductions in serum K+ concentrations.
+    factor = 3  #  1-4 mEq/L/pH
+
+    In chronic acid-base disorders the final potassium reflects primarily the effect on renal handling of potassium and to lesser extent of transcellular shift.
+
+    Args:
+        pH: serum pH
+        cK: serum potassium, mmol/L
+
+    Returns:
+        Expected potassium level at pH 7.4, mmol/L.
+
+    Examples:
+        >>> calculate_cK74(pH=7.2, cK=5.2)
+        3.999999999999999
+        >>> calculate_cK74(pH=7.4, cK=4)
+        4.0
+        >>> calculate_cK74(pH=7.6, cK=3.4)
+        3.999999999999998
+
+    References:
+        * Effects of pH on Potassium: New Explanations for Old Observations
+            https://pmc.ncbi.nlm.nih.gov/articles/PMC3231780/
+        * https://globalrph.com/medcalcs/potassium-correction-based-ph-changes/?PageSpeed=noscript
+    """
+    if pH < 7.4:
+        # Reliably applies to acute hyperchloremic acidosis and
+        # often fails in organic acidosis like lactic acidosis or DKA
+        factor = 6  # Acute hyperchloremic acidosis
+    else:
+        # https://litfl.com/potassium/
+        # Dynamics of serum potassium change during acute respiratory alkalosis M.G. Sanchez and D.C. Finlayson
+        factor = 3  # Acute respiratory alkalosis
+    # Other sources suggest 0.3 factor for chronic, 0.6 for acute
+    return cK - (7.4 - pH) * factor
 
 
 def resp_acidosis_pH(pCO2: float, status: str = "acute") -> float:

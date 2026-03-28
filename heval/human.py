@@ -893,7 +893,7 @@ class HumanModel:
             return ""
         return textwrap.dedent(f"""\
             <h4>Electrolyte and osmolar abnormalities</h4>{self._lab_osmolarity()}
-            {electrolyte_K(self.body_weight, self.blood_abg_cK)}
+            {electrolyte_K(weight=self.body_weight, K_serum=self.blood_abg_cK, pH=self.blood_abg_pH)}
             {electrolyte_Na(self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.verbose)}
             {electrolyte_Cl(self.blood_abg_cCl)}
             """)
@@ -2170,7 +2170,7 @@ def solution_glucose(
     if add_insulin:
         ins_dosage = 0.25  # IU/g
         insulin = glu_mass * ins_dosage
-        info += f" + Ins {insulin:.1f} IU ({ins_dosage:.2f} IU/g)"
+        info += f" + Ins {insulin:.1f} {common.A.iu} ({ins_dosage:.2f} IU/g)"
     info += ":\n"
 
     for dilution in (5, 10, 40):
@@ -2354,7 +2354,7 @@ def electrolyte_Na_adrogue(
     return info
 
 
-def electrolyte_K(weight: float, K_serum: float) -> str:
+def electrolyte_K(weight: float, K_serum: float, pH: float) -> str:
     """Assess blood serum potassium level.
 
     Hypokalemia (additional K if <3.5 mmol/L)
@@ -2403,49 +2403,39 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
     Args:
         weight: Real body weight, kg
         K_serum: Potassium serum level, mmol/L
+        pH: serum pH
     """
-    K_high = 6  # Курек 2013, p 47 (6 mmol/L, 131 (7 mmol/L)
-    K_target = 5.0  # mmol/L Not from book
-    K_low = 3.5  # Курек 132
+    K_lowlow = 3
+    K_highhigh = 6
 
-    info = ""
-    if K_serum > abg.norm_K[1]:
-        if K_serum >= K_high:
-            glu_mass = 0.5 * weight  # Child and adults
-            info += f"K⁺ is dangerously high (&gt;{K_high:.1f} mmol/L)\n"
-            info += "Inject bolus 0.5 g/kg "
-            info += solution_glucose(glu_mass, weight)
-            info += f"Or standard adult bolus Glu 40% 60 ml + Ins 10 IU [{common.A.book_pos_dej}]\n"
-            # Use NaHCO3 if K greater or equal 6 mmol/L [Курек 2013, 47, 131]
-            info += f"NaHCO₃ 8.4% {2 * weight:.0f} ml ({common.A.rbw}x2={2 * weight:.0f} mmol) [{common.A.book_kurek2013}]\n"
-            info += "Don't forget salbutamol, furosemide, hyperventilation. If ECG changes, use Ca gluconate [PICU: Electrolyte Emergencies]"
-        else:
-            info += f"K⁺ on the upper acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
-    elif K_serum < abg.norm_K[0]:
-        if K_serum < K_low:
-            info += f"K⁺ is dangerously low (&lt;{K_low:.1f} mmol/L). Often associated with low Mg²⁺ (should be at least 1 mmol/L) and low Cl⁻.\n"
-            info += "NB! Potassium calculations considered inaccurate, so use standard K⁺ replacement rate "
+    cK74 = abg.calculate_cK74(pH=pH, cK=K_serum)
+    if abs(K_serum - cK74) >= 1:
+        cK74_text = f", cK74 {cK74:.1f} mmol/L"
+    else:
+        cK74_text = ""
+
+    info = (
+        f"K⁺ {K_serum:.1f} ({abg.norm_K[0]:.1f}-{abg.norm_K[1]:.1f} mmol/L){cK74_text} "
+    )
+    if K_serum < abg.norm_K[0]:
+        if K_serum <= K_lowlow:
+            info += textwrap.dedent(
+                f"""\
+                is dangerously low (&le;{K_lowlow:.1f} mmol/L). Often associated with low Mg²⁺ (should be at least 1 mmol/L) and low Cl⁻. Expect muscle weakness, fatigue, U waves.
+                <em>{common.A.nota_bene} 98% of the all body K⁺ resides within cells, so it's impossible to measure deficiency.</em> Use standard K⁺ replacement rate """
+            )
             if weight < 40:
-                info += "{:.1f}-{:.1f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
-                    0.25 * weight,
-                    0.5 * weight,
-                    solution_kcl4(0.25 * weight),
-                    solution_kcl4(0.5 * weight),
-                )
+                info += f"{(0.25 * weight,):.1f}-{0.5 * weight:.1f} mmol/h (KCl 4 % {solution_kcl4(0.25 * weight):.1f}-{solution_kcl4(0.5 * weight):.1f} ml/h)"
             else:
-                info += "{:.0f}-{:.0f} mmol/h (KCl 4 % {:.1f}-{:.1f} ml/h)".format(
-                    10, 20, solution_kcl4(10), solution_kcl4(20)
-                )
-            info += " and check ABG every 2-4 hours.\n"
+                info += f"{10:.0f}-{20:.0f} mmol/h (KCl 4 % {solution_kcl4(10):.1f}-{solution_kcl4(20):.1f} ml/h)"
+            info += f" and check {common.A.abg} every 2-4 hours.\n"
 
-            # coefficient = 0.45  # новорождённые
+            # coefficient = 0.45  # Newborn
             # coefficient = 0.4   # грудные
-            # coefficient = 0.3   # < 5 лет
+            # coefficient = 0.3   # <5 years
             coefficient = 0.2  # >5 лет [Курек 2013]
-
-            K_deficit = (K_target - K_serum) * weight * coefficient
+            K_deficit = (abg.norm_K_mean - K_serum) * weight * coefficient
             # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement? https://nursemathmedblog.wordpress.com/2016/05/29/potassium-replacement-calculation/
-
             info += f"Estimated K⁺ deficit is {K_deficit:.0f} mmol (KCl 4 % {solution_kcl4(K_deficit):.1f} ml) + "
             if K_deficit > 4 * weight:
                 info += "Too much potassium for 24 hours"
@@ -2453,11 +2443,25 @@ def electrolyte_K(weight: float, K_serum: float) -> str:
             glu_mass = K_deficit * 2.5  # 2.5 g/mmol, ~10 kcal/mmol
             info += solution_glucose(glu_mass, weight)
         else:
-            info += f"K⁺ on lower acceptable border {K_serum:.1f} ({K_low:.1f}-{K_high:.1f} mmol/L)"
+            info += f"on lower acceptable border {K_serum:.1f} ({K_lowlow:.1f}-{K_highhigh:.1f} mmol/L)"
+    elif K_serum > abg.norm_K[1]:
+        if K_serum >= K_highhigh:
+            info += textwrap.dedent(f"""\
+                is dangerously high (&ge;{K_highhigh:.1f} mmol/L):
+                <ul>
+                    <li><em>To lower K⁺ level</em>: resolve acidosis with NaHCO3, hyperventilation; inject insulin with glucose, salbutamol, furosemide.</li>
+                    <ul>
+                        <li>NaHCO₃ 8.4% {2 * weight:.0f} ml ({common.A.rbw}x2={2 * weight:.0f} mmol) [{common.A.book_kurek2013}]</li>
+                        <li>Insulin bolus for child and adults 0.5 g/kg: {solution_glucose(glu_mass=0.5 * weight, body_weight=weight)}</li>
+                        <li>Standard adult bolus Glu 40% 60 ml + Ins 10 {common.A.iu} [{common.A.book_pos_dej}]</li>
+                    </ul>
+                    <li><em>To stabilize heart cells membrane</em>, if changes on ECG (T is higher than R), inject Ca gluconate / Ca chloride 10 ml</li>
+                </ul>
+            """)
+        else:
+            info += f"on the upper acceptable border {K_serum:.1f} ({K_lowlow:.1f}-{K_highhigh:.1f} mmol/L)"
     else:
-        info += (
-            f"K⁺ is ok {K_serum:.1f} ({abg.norm_K[0]:.1f}-{abg.norm_K[1]:.1f} mmol/L)"
-        )
+        info += "is ok"
     return info
 
 

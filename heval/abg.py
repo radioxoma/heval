@@ -726,7 +726,6 @@ def calculate_Ca74(pH: float, Ca: float) -> float:
 def calculate_cK74(pH: float, cK: float) -> float:
     """Calculate expected potassium level at pH 7.4.
 
-    98% of the total body K+ resides within cells, impossible to calculate deficency.
     Potassium level is highly dependent from the blood pH.
     Low pH can cause severe hyperkalemia.
 

@@ -55,14 +55,25 @@ child = {  # 3 year old kid
 newborn = {"height": 0.5, "weight": 3.6, "sex": HumanSex.CHILD, "body_temp": 36.6}
 
 
-class FloatAttr:
-    """Descriptor to set attr from float or obj.float."""
+class HumanAttr:
+    """Base class for human attributes.
 
-    def __init__(self, default: float | None = None):
+    Args:
+        default: Default value to return.
+    """
+
+    def __init__(self, default=None):
         self.default = default
 
     def __set_name__(self, owner, name):
         self.private_name = "_" + name
+
+    def __set__(self, obj, value):
+        obj.__dict__[self.private_name] = value
+
+
+class FloatAttr(HumanAttr):
+    """Descriptor to set attr from float or obj.float."""
 
     def __get__(self, obj, objtype=None) -> float | None:
         return obj.__dict__.get(self.private_name, self.default)
@@ -75,25 +86,64 @@ class FloatAttr:
             obj.__dict__[self.private_name] = float(val)
 
 
+class SexAttr(HumanAttr):
+    """Mandatory sex."""
+
+    def __get__(self, obj, objtype=None) -> HumanSex:
+        return obj.__dict__.get(self.private_name, self.default)
+
+
+class HeightAttr(HumanAttr):
+    """Mandatory height.
+
+    Returns:
+        Human body weight, kg.
+    """
+
+    def __get__(self, obj, objtype=None) -> float:
+        return obj.__dict__.get(self.private_name, self.default)
+
+
+class WeightAttr(HumanAttr):
+    """Mandatory weight: use RBW, then IBW. IBW, then RBW if `use_ibw = True`.
+
+    Returns:
+        Human body weight, kg.
+    """
+
+    def __get__(self, obj: HumanModel, objtype=None) -> float:
+        if obj.body_use_ibw:
+            return obj.body_weight_ideal
+        else:
+            return (
+                obj.__dict__.get(self.private_name, self.default)
+                or obj.body_weight_ideal
+            )
+
+
 @dataclass
 class HumanModel:
     """Must set 'sex' and 'height' to make it work.
 
-    Note that `use_ibw` is False by default.
-
     Properties with `snake_case_names_endedWithCamelCase`,
     as last part split and used for form generation.
+
+    Attributes:
+        verbose (bool): Show additional text in `eval_*` report.
+        body_use_ibw (bool): Use calculated IBW instead real weight.
     """
 
-    body_sex: HumanSex
-    body_height: float  # Human height in meters
+    body_sex = SexAttr()
+    body_height = HeightAttr()  # Human height in meters
+    body_weight = WeightAttr()  # kg, without weight class is useless
+
     body_age = FloatAttr()  # Human age in years
     body_temp = FloatAttr(36.6)  # Celsius
 
     blood_abg_pH = FloatAttr()
     blood_abg_pCO2 = FloatAttr()  # kPa
     blood_abg_pO2 = FloatAttr()  # kPa
-    blood_abg_FiO2 = FloatAttr(0.21)
+    blood_abg_FiO2 = FloatAttr(0.21)  # Fraction
     blood_abg_cK = FloatAttr()  # mmol/L
     blood_abg_cNa = FloatAttr()  # mmol/L
     blood_abg_cCl = FloatAttr()  # mmol/L
@@ -116,45 +166,13 @@ class HumanModel:
     blood_coag_dDimer = FloatAttr()  # ng/ml
 
     def __init__(self):
-        self.verbose = False
-        self._weight: float | None = None
-        self._use_ibw: bool = False
+        self.verbose: bool = False
+        self.body_use_ibw: bool = False
         self._weight_ideal_method: str = ""
         self._eval_body = ""
         self._eval_labs = ""
         self.flags = common.FlagWarnings()
         self.nutrition = nutrition.HumanNutritionModel(self)
-
-    @property
-    def body_weight(self) -> float:
-        """Return human body weight, kg.
-
-        Must calculate weight, without it class is useless.
-        return RBW, then IBW
-        return IBW, then RBW if 'use_ibw = True'
-        """
-        if self._use_ibw:
-            return self.body_weight_ideal
-        else:
-            return self._weight or self.body_weight_ideal
-
-    @body_weight.setter
-    def body_weight(self, value: float):
-        """Human body weight, kg."""
-        self._weight = value
-
-    @property
-    def body_use_ibw(self):
-        return self._use_ibw
-
-    @body_use_ibw.setter
-    def body_use_ibw(self, value: bool):
-        """Set flag to use calculated IBW instead real weight.
-
-        Args:
-            value: Use or not IBW, bool
-        """
-        self._use_ibw = value
 
     @property
     def body_weight_ideal(self) -> float:
@@ -1407,7 +1425,7 @@ class HumanModel:
             * `_flag_*` for flag-setting
 
         For each function: try to get list of required attributes that user can set:
-        * FloatAttr: `blood_*`, `body_*`
+        * HumanAttr: `blood_*`, `body_*`
 
         Returns:
             HTML.
@@ -1415,7 +1433,7 @@ class HumanModel:
         # Get all attributes that could be set and check if they are used in function
         all_attr = set()
         for name, _obj in inspect.getmembers(
-            cls, predicate=lambda o: isinstance(o, FloatAttr)
+            cls, predicate=lambda o: isinstance(o, HumanAttr)
         ):
             all_attr.add(name)
 
@@ -1433,7 +1451,7 @@ class HumanModel:
                     )
                 )
                 info.append(
-                    f"<p><strong>{name}</strong> {first_docstring}<br>Depends on {sorted(all_attr & used_attr)}<br>Also uses {sorted((all_attr & used_attr) ^ used_attr)}</p>"
+                    f"<p><strong>{name}</strong> {first_docstring}<br>Depends {sorted(all_attr & used_attr)}<br>Based {sorted((all_attr & used_attr) ^ used_attr)}</p>"
                 )
         return "".join(info)
 

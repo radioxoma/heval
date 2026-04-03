@@ -129,7 +129,7 @@ norm_hct_child = (0.31, 0.41)
 
 norm_plt_mean = 300  # 10⁹/L
 norm_mcv_mean = 90  # fL
-norm_ret_mean = 1  # %
+norm_ret_fraq_mean = 1  # %
 norm_fib_mean = 3  # g/L
 norm_inr_mean = 1  # Fraqtion
 norm_ddimer_mean = 300  # ng/ml

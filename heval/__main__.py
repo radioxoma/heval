@@ -1161,7 +1161,7 @@ class CalcElectrolytes(ttk.Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctAlb(self, event=None):
-        self.human.blood_abg_ctAlb = float(self.ctl_sbx_ctAlb.get())
+        self.human.blood_bchem_albumin = float(self.ctl_sbx_ctAlb.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_cGlu(self, event=None):
@@ -1173,7 +1173,7 @@ class CalcElectrolytes(ttk.Frame):
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctBil(self, event=None):
-        self.human.blood_bchem_ctBil = float(self.ctl_sbx_ctBil.get())
+        self.human.blood_abg_ctBil = float(self.ctl_sbx_ctBil.get())
         self.event_generate("<<HumanModelChanged>>")
 
     def set_model_ctHb(self, event=None):

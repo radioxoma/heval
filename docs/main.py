@@ -30,7 +30,7 @@ input_list = (
     ("blood_abg_cNa", "mmol/L", abg.norm_Na_mean),
     ("blood_abg_cCl", "mmol/L", abg.norm_Cl_mean),
     ("blood_abg_cGlu", "mmol/L", abg.norm_cGlu_mean),
-    ("blood_abg_ctAlb", "g/L", abg.norm_ctAlb_mean),
+    ("blood_bchem_albumin", "g/L", abg.norm_ctAlb_mean),
     ("blood_bchem_urea", "mmol/L", abg.norm_urea),
     ("blood_abg_cCrea", "μmol/L", abg.norm_cCrea),
     ("blood_bchem_ctBil", "μmol/L", abg.norm_ctBil),
@@ -38,10 +38,10 @@ input_list = (
     ("blood_cbc_hb", "g/L", abg.norm_hb_mean),
     ("blood_cbc_plt", "10⁹/L", abg.norm_plt_mean),
     ("blood_cbc_mcv", "fL", abg.norm_mcv_mean),
-    ("blood_cbc_ret", "%", abg.norm_ret_mean),
+    ("blood_cbc_ret_fraq", "%", abg.norm_ret_fraq_mean),
     ("blood_coag_fib", "g/L", abg.norm_fib_mean),
     ("blood_coag_inr", "", abg.norm_inr_mean),
-    ("blood_coag_dDimer", "ng/ml", abg.norm_ddimer_mean),
+    ("blood_coag_ddimer", "ng/ml", abg.norm_ddimer_mean),
 )
 
 

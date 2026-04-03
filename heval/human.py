@@ -147,23 +147,23 @@ class HumanModel:
     blood_abg_cK = FloatAttr()  # mmol/L
     blood_abg_cNa = FloatAttr()  # mmol/L
     blood_abg_cCl = FloatAttr()  # mmol/L
-
     blood_abg_cGlu = FloatAttr()  # mmol/L
-    blood_abg_ctAlb = FloatAttr()  # g/L, albumin
     blood_abg_cCrea = FloatAttr()  # μmol/L
-    blood_bchem_urea = FloatAttr()  # mmol/L
-    blood_bchem_ctBil = FloatAttr()
+    blood_abg_ctBil = FloatAttr()
+
     blood_bchem_ctBilIndir = FloatAttr()  # μmol/L
+    blood_bchem_albumin = FloatAttr()  # g/L, albumin
+    blood_bchem_urea = FloatAttr()  # mmol/L
 
     # blood_abg_ctHb = FloatAttr()  # g/L, haemoglobin, usage discouraged
     blood_cbc_hb = FloatAttr()  # g/L
     blood_cbc_plt = FloatAttr()  # 10⁹/L
     blood_cbc_mcv = FloatAttr()  # fL
-    blood_cbc_ret = FloatAttr()  # Percent
+    blood_cbc_ret_fraq = FloatAttr()  # Percent
 
     blood_coag_fib = FloatAttr()  # g/L
     blood_coag_inr = FloatAttr()  # Fraction
-    blood_coag_dDimer = FloatAttr()  # ng/ml
+    blood_coag_ddimer = FloatAttr()  # ng/ml
 
     def __init__(self):
         self.verbose: bool = False
@@ -292,7 +292,7 @@ class HumanModel:
         """
         if (
             self.blood_cbc_plt is None
-            or self.blood_bchem_ctBil is None
+            or self.blood_abg_ctBil is None
             or self.blood_abg_cCrea is None
         ):
             return None
@@ -309,13 +309,13 @@ class HumanModel:
             sofa += 1
 
         # Liver cBil μmol/L
-        if self.blood_bchem_ctBil > 204:
+        if self.blood_abg_ctBil > 204:
             sofa += 4
-        elif self.blood_bchem_ctBil >= 102:
+        elif self.blood_abg_ctBil >= 102:
             sofa += 3
-        elif self.blood_bchem_ctBil >= 33:
+        elif self.blood_abg_ctBil >= 33:
             sofa += 2
-        elif self.blood_bchem_ctBil >= 20:
+        elif self.blood_abg_ctBil >= 20:
             sofa += 1
 
         # Renal function cCrea μmol/L
@@ -376,7 +376,7 @@ class HumanModel:
                 Cl=self.blood_abg_cCl,
                 HCO3act=self.blood_abg_hco3p,
                 K=self.blood_abg_cK,
-                ctAlb=self.blood_abg_ctAlb,
+                ctAlb=self.blood_bchem_albumin,
             )
         else:
             raise ValueError("No potassium specified")
@@ -388,14 +388,14 @@ class HumanModel:
             Na=self.blood_abg_cNa,
             Cl=self.blood_abg_cCl,
             HCO3act=self.blood_abg_hco3p,
-            ctAlb=self.blood_abg_ctAlb,
+            ctAlb=self.blood_bchem_albumin,
         )
 
     @property
     def blood_abg_sid_abbr(self):
         """Strong ion difference."""
         return abg.calculate_sid_abbr(
-            self.blood_abg_cNa, self.blood_abg_cCl, self.blood_abg_ctAlb
+            self.blood_abg_cNa, self.blood_abg_cCl, self.blood_bchem_albumin
         )
 
     @property
@@ -777,7 +777,7 @@ class HumanModel:
             self.blood_abg_pCO2,
             self.blood_abg_cNa,
             self.blood_abg_cCl,
-            self.blood_abg_ctAlb,
+            self.blood_bchem_albumin,
         ):
             return "pH, pCO2, cNa, cCl, albumin required"
         info = "<h4>Anion gap</h4>"
@@ -1011,20 +1011,18 @@ class HumanModel:
     def _lab_albumin(self):
         """Describe low albumin as nutrition marker in adults."""
         info = ""
-        if self.blood_abg_ctAlb is None:
+        if self.blood_bchem_albumin is None:
             return info
-        ctalb_range = (
-            f"{self.blood_abg_ctAlb:0.0f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/L)"
-        )
-        if abg.norm_ctAlb[1] < self.blood_abg_ctAlb:
+        ctalb_range = f"{self.blood_bchem_albumin:0.0f} ({abg.norm_ctAlb[0]}-{abg.norm_ctAlb[1]} g/L)"
+        if abg.norm_ctAlb[1] < self.blood_bchem_albumin:
             info = f"ctAlb is high {ctalb_range}. Dehydration?"
-        elif abg.norm_ctAlb[0] <= self.blood_abg_ctAlb <= abg.norm_ctAlb[1]:
+        elif abg.norm_ctAlb[0] <= self.blood_bchem_albumin <= abg.norm_ctAlb[1]:
             info = f"ctAlb is ok {ctalb_range}"
-        elif 30 <= self.blood_abg_ctAlb < abg.norm_ctAlb[0]:
+        elif 30 <= self.blood_bchem_albumin < abg.norm_ctAlb[0]:
             info = f"ctAlb is low: mild hypoalbuminemia {ctalb_range}"
-        elif 25 <= self.blood_abg_ctAlb < 30:
+        elif 25 <= self.blood_bchem_albumin < 30:
             info = f"ctAlb is low: medium hypoalbuminemia {ctalb_range}"
-        elif self.blood_abg_ctAlb < 25:
+        elif self.blood_bchem_albumin < 25:
             info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
         return info
 
@@ -1232,10 +1230,10 @@ class HumanModel:
             elif self.blood_cbc_plt < 50:
                 score += 2
 
-        if self.blood_coag_dDimer is not None:
-            if 400 <= self.blood_coag_dDimer <= 4000:  # ng/ml
+        if self.blood_coag_ddimer is not None:
+            if 400 <= self.blood_coag_ddimer <= 4000:  # ng/ml
                 score += 2
-            elif self.blood_coag_dDimer > 4000:
+            elif self.blood_coag_ddimer > 4000:
                 score += 3
 
         if self.blood_coag_inr is not None:
@@ -1282,8 +1280,8 @@ class HumanModel:
                 score += 1
 
         hemolysis = False
-        if self.blood_cbc_ret is not None:
-            if self.blood_cbc_ret > 2.5:  # Фракция незрелых ретикулоцитов, %
+        if self.blood_cbc_ret_fraq is not None:
+            if self.blood_cbc_ret_fraq > 2.5:  # Фракция незрелых ретикулоцитов, %
                 hemolysis = True
         if self.blood_cbc_mcv is not None:
             if self.blood_cbc_mcv < 90:  # fl
@@ -2443,7 +2441,7 @@ def electrolyte_K(weight: float, K_serum: float, pH: float) -> str:
                 <em>{common.A.nota_bene} 98% of the all body K⁺ resides within cells, so it's impossible to measure deficiency.</em> Use standard K⁺ replacement rate """
             )
             if weight < 40:
-                info += f"{(0.25 * weight,):.1f}-{0.5 * weight:.1f} mmol/h (KCl 4 % {solution_kcl4(0.25 * weight):.1f}-{solution_kcl4(0.5 * weight):.1f} ml/h)"
+                info += f"{(0.25 * weight):.1f}-{0.5 * weight:.1f} mmol/h (KCl 4 % {solution_kcl4(0.25 * weight):.1f}-{solution_kcl4(0.5 * weight):.1f} ml/h)"
             else:
                 info += f"{10:.0f}-{20:.0f} mmol/h (KCl 4 % {solution_kcl4(10):.1f}-{solution_kcl4(20):.1f} ml/h)"
             info += f" and check {common.A.abg} every 2-4 hours.\n"

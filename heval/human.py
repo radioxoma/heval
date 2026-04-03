@@ -66,31 +66,32 @@ class HumanAttr:
         self.default = default
 
     def __set_name__(self, owner, name):
-        self.private_name = "_" + name
+        self.attr = name
 
     def __set__(self, obj, value):
-        obj.__dict__[self.private_name] = value
+        obj.__dict__[self.attr] = value
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        return obj.__dict__.get(self.attr, self.default)
 
 
 class FloatAttr(HumanAttr):
     """Descriptor to set attr from float or obj.float."""
-
-    def __get__(self, obj, objtype=None) -> float | None:
-        return obj.__dict__.get(self.private_name, self.default)
 
     def __set__(self, obj, value):
         val = value
         if hasattr(value, "float"):
             val = value.float
         if isinstance(val, float | int):
-            obj.__dict__[self.private_name] = float(val)
+            obj.__dict__[self.attr] = float(val)
 
 
 class SexAttr(HumanAttr):
     """Mandatory sex."""
 
-    def __get__(self, obj, objtype=None) -> HumanSex:
-        return obj.__dict__.get(self.private_name, self.default)
+    pass
 
 
 class HeightAttr(HumanAttr):
@@ -100,8 +101,7 @@ class HeightAttr(HumanAttr):
         Human body weight, kg.
     """
 
-    def __get__(self, obj, objtype=None) -> float:
-        return obj.__dict__.get(self.private_name, self.default)
+    pass
 
 
 class WeightAttr(HumanAttr):
@@ -111,14 +111,13 @@ class WeightAttr(HumanAttr):
         Human body weight, kg.
     """
 
-    def __get__(self, obj: HumanModel, objtype=None) -> float:
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
         if obj.body_use_ibw:
             return obj.body_weight_ideal
         else:
-            return (
-                obj.__dict__.get(self.private_name, self.default)
-                or obj.body_weight_ideal
-            )
+            return obj.__dict__.get(self.attr, self.default) or obj.body_weight_ideal
 
 
 @dataclass
@@ -159,7 +158,7 @@ class HumanModel:
     blood_cbc_hb = FloatAttr()  # g/L
     blood_cbc_plt = FloatAttr()  # 10⁹/L
     blood_cbc_mcv = FloatAttr()  # fL
-    blood_cbc_ret_fraq = FloatAttr()  # Percent
+    blood_cbc_retFraq = FloatAttr()  # Percent
 
     blood_coag_fib = FloatAttr()  # g/L
     blood_coag_inr = FloatAttr()  # Fraction
@@ -1280,8 +1279,8 @@ class HumanModel:
                 score += 1
 
         hemolysis = False
-        if self.blood_cbc_ret_fraq is not None:
-            if self.blood_cbc_ret_fraq > 2.5:  # Фракция незрелых ретикулоцитов, %
+        if self.blood_cbc_retFraq is not None:
+            if self.blood_cbc_retFraq > 2.5:  # Фракция незрелых ретикулоцитов, %
                 hemolysis = True
         if self.blood_cbc_mcv is not None:
             if self.blood_cbc_mcv < 90:  # fl

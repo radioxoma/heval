@@ -171,14 +171,27 @@ class A:
 
 
 @dataclasses.dataclass(slots=True)
+class LabRef:
+    lld: float | None = None
+    ll: float | None = None
+    l: float | None = None  # noqa: E741
+    default: float | None = None  # For user interface. Target healthy value?
+    # mean: float = None  # Numeric mean between 'l' and 'h'
+    h: float | None = None
+    hh: float | None = None
+    hhd: float | None = None
+    unit: str = ""
+
+
+@dataclasses.dataclass(slots=True)
 class LabType:
     name: str
-    mapping: tuple[str, ...] = dataclasses.field(
-        default_factory=tuple
-    )  # Lab assay IDs collection: LOINC, ESLI etc
+    ref: LabRef = dataclasses.field(default_factory=LabRef)
+    # Lab assay IDs collection: LOINC, ESLI etc
+    mapping: tuple[str, ...] = dataclasses.field(default_factory=tuple)
     # lambda k: k * heval.abg.kPa
     converter: typing.Callable = dataclasses.field(default=lambda k: k, repr=False)
-    unit: str = dataclasses.field(default_factory=str)  # Unit expected by converter?
+    # unit: str = dataclasses.field(default_factory=str)  # Unit expected by converter?
     attr: str = dataclasses.field(default_factory=str, init=False)
 
     def __set_name__(self, owner, name):
@@ -200,33 +213,49 @@ class LabType:
 
 @dataclasses.dataclass(slots=True)
 class LabTypeMapper:
-    """These codes must have result in comparable quantitative units.
+    """Mapping codes must have result in comparable quantitative units.
 
     I.e.:
         * ctHb level from ABG machine is unstable and must not be compared to
             Hb from hematologic analyzer (EDTA vial). Better not to use it at all.
         * cK, cNa, cCl treated as interchangeable.
+
+    References:
+        * https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
+        * https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
     """
 
-    # fmt: off
     # Hematology
-    blood_cbc_hb = LabType("Hb", unit="g/L")
+    # https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
+    # hb_male = (135, 175)  # 130-160 g/L
+    # hb_female = (120, 155)  # 120-140 g/L
+    # hb_child = (110, 160)  # g/L
+    blood_cbc_hb = LabType("Hb", ref=LabRef(default=140, unit="g/L"))
+    # hct_male = (0.407, 0.503)
+    # hct_female = (0.361, 0.443)
+    # hct_child = (0.31, 0.41)
     blood_cbc_hct = LabType("HCT")
-    blood_cbc_mcv = LabType("MCV", unit="fL")
-    blood_cbc_retFraq = LabType("RET", unit="%")  # Фракция незрелых ретикулоцитов, %
-    blood_cbc_plt = LabType("PLT", unit="10⁹/L")
-    blood_cbc_plt_microscopy = LabType("PLT (по Фонио)", unit="10⁹/L")
-    blood_cbc_ley = LabType("LEY", unit="10⁹/L")
-    blood_cbc_neu_fraq = LabType("NEU", unit="%")  # Относительное количество нейтрофилов, %
-    blood_cbc_lym = LabType("LYM", unit="10⁹/L")  # Абсолютное количество лимфоцитов
+    blood_cbc_mcv = LabType("MCV", ref=LabRef(default=90, unit="fL"))
+    # Фракция незрелых ретикулоцитов, %
+    blood_cbc_retFraq = LabType("RET", ref=LabRef(default=1, unit="%"))
+    blood_cbc_plt = LabType("PLT", LabRef(default=300, unit="10⁹/L"))
+    blood_cbc_plt_microscopy = LabType(
+        "PLT microscopy", ref=LabRef(default=300, unit="10⁹/L")
+    )
+    blood_cbc_ley = LabType("LEY", ref=LabRef(unit="10⁹/L"))
+    # Относительное количество нейтрофилов, %
+    blood_cbc_neu_fraq = LabType("NEU", ref=LabRef(unit="%"))
+    # Абсолютное количество лимфоцитов
+    blood_cbc_lym = LabType("LYM", ref=LabRef(unit="10⁹/L"))
 
     # Coagulation
-    blood_coag_fib = LabType("Fib", unit="g/L")
-    blood_coag_inr = LabType("INR", unit="Fraq")  # МНО, ПВ+МНО
+    blood_coag_fib = LabType("Fib", ref=LabRef(default=3, unit="g/L"))
+    blood_coag_inr = LabType("INR", ref=LabRef(default=1, hh=4, unit="Fraq"))
     blood_coag_ptt = LabType("PTT")  # АЧТВ
-    blood_coag_ddimer = LabType("dDimer", unit="ng/ml")
+    blood_coag_ddimer = LabType("dDimer", ref=LabRef(default=300, unit="ng/ml"))
     blood_coag_antix = LabType("Anti-Xa")
-    blood_coag_at3 = LabType("AT III", unit="%")  # Активность антитромбина III, %
+    # Активность антитромбина III, %
+    blood_coag_at3 = LabType("AT III", ref=LabRef(unit="%"))
 
     # Blood type
     blood_type_ab0 = LabType("AB0")
@@ -239,46 +268,96 @@ class LabTypeMapper:
     blood_type_er_antibody = LabType("Антиэритроцитарные антитела")
 
     # ABG
-    blood_abg_pH = LabType("pH крови")  # pH — кислотно-основное состояние крови, усл.ед.
-    blood_abg_pO2 = LabType("pO2")  # pO2 — парциальное давление кислорода в крови, мм.рт.ст.
+    # pH — кислотно-основное состояние крови, усл.ед.
+    blood_abg_pH = LabType(
+        "pH крови", ref=LabRef(lld=6.8, ll=7.15, l=7.35, default=7.4, h=7.45, hhd=7.8)
+    )
+    # pO2 — парциальное давление кислорода в крови, мм.рт.ст.
+    blood_abg_pO2 = LabType("pO2", ref=LabRef(l=80, default=95, h=100, unit="mmHg"))
     # blood_abg_p50 = LabType("", ("ESLI.LI_TEST.772",))  # No data, see ESLI.LI_TEST.787  # # p50 — 50% насыщение гемоглобина кислородом
-    blood_abg_pCO2 = LabType("pCO2")  # pCO2 — парциальное давление углекислого газа в крови, мм.рт.ст.
+    # ref_pCO2mmHg = LabRef(l=35, default=40, h=45)  # mmHg
+    # pCO2 — парциальное давление углекислого газа в крови, мм.рт.ст.
+    blood_abg_pCO2 = LabType("pCO2", ref=LabRef(l=4.666, h=6, unit="kPa"))
     blood_abg_ctCO2A = LabType("tCO2A")  # tCO2A - общая двуокись углерода крови
-    blood_abg_ctHb = LabType("ctHb", unit="g/L")  # tHb — концентрация общего гемоглобина в крови, г/л, usage discouraged
+    # tHb — концентрация общего гемоглобина в крови, г/л, usage discouraged
+    blood_abg_ctHb = LabType("ctHb", ref=LabRef(unit="g/L"))
     blood_abg_hct = LabType("Hct calculated")  # Hct, %
     blood_abg_FO2Hb = LabType("FO2Hb")  # FO2Hb — фракция оксигемоглобина в крови
     blood_abg_FCOHb = LabType("FCOHb")  # FCOHb — фракция карбоксигемоглобина в крови
     blood_abg_FMetHb = LabType("FMetHb")  # FMetHb — фракция метгемоглобина в крови
-    blood_abg_FHHb = LabType("FHHb")  # FHHb — фракция восстановленного гемоглобина в крови
+    # FHHb — фракция восстановленного гемоглобина в крови
+    blood_abg_FHHb = LabType("FHHb")
     blood_abg_FHbF = LabType("FHbF")  # FHbF — фракция фетального гемоглобина в крови
     # blood_abg_ = LabType("")  # # H+ - концентрация водородных ионов крови
     blood_abg_sO2 = LabType("sO2")  # sO2 — насыщение кислородом крови, %
     blood_abg_tO2 = LabType("tO2")  # # tO2 — общее содержание кислорода крови
-    blood_abg_FiO2 = LabType("FiO2")  # # Концентрация кислорода в вдыхаемом воздухе
+    # Концентрация кислорода в вдыхаемом воздухе
+    blood_abg_FiO2 = LabType("FiO2", ref=LabRef(default=0.21, unit="Fraq"))
+    blood_abg_Aa_gradient = LabType("", ref=LabRef(l=5, h=20, unit="mmHg"))
     # blood_abg_ = LabType("")  # # Концентрация углекислого газ в вдыхаемом воздухе
     # blood_abg_ = LabType("")  # # Концентрация сурфактанта в вдыхаемом воздухе
-    blood_abg_p50 = LabType("р50")  # # p50 — парциальное давление кислорода при 50% насыщении крови
+    # p50 — парциальное давление кислорода при 50% насыщении крови
+    blood_abg_p50 = LabType("р50")
     # blood_abg_ = LabType("")  # # Px — показатель экстракции кислорода в тканях
-    blood_abg_cHCO3 = LabType("cHCO3")  # cHCO3 — концентрация бикарбоната — ацидоза/алкалоза, мМоль/л
+    # cHCO3 — концентрация бикарбоната — ацидоза/алкалоза, мМоль/л
+    blood_abg_cHCO3 = LabType("cHCO3", ref=LabRef(l=22, h=26, unit="mEq/L"))
     blood_abg_sbc = LabType("SBC")  # SBC- стандартный бикарбонат крови
-    blood_abg_be = LabType("BE")  # BE - избыток оснований, мМоль/л
+
+    # -15 is NaHCO3 infusion threshold
+    # BE - избыток оснований, мМоль/л
+    blood_abg_be = LabType("BE", ref=LabRef(ll=-15, l=-2, default=0, h=2, unit="mEq/L"))
     # blood_abg_ = LabType("")  # # BBA - буферные основания крови
-    blood_abg_cK = LabType("cK+")  # K+ — концентрация ионов калия в крови, мМоль/л
-    blood_abg_cCl = LabType("cCl-")  # Cl- — концентрация ионов хлора в крови  # Interchangeable
-    blood_abg_cCa = LabType("cCa2+")  # Ca2+ — концентрация ионов кальция в крови, мМоль/л
-    blood_abg_cNa = LabType("cNa")  # Na+ — концентрация ионов натрия в крови, мМоль/л
-    blood_abg_cGlu = LabType("cGlu")  # Glu — концентрация глюкозы, мМоль/л
-    blood_abg_cLac = LabType("cLac")  # Lac — концентрация лактата, мМоль/л
-    blood_abg_cCrea = LabType("cCrea")  # cCrea — концентрации креатинина
-    blood_abg_ctBil = LabType("ctBil")  # ctBil — концентрации билирубина
-    blood_abg_anionGap = LabType("AG")
-    blood_abg_osmolarity = LabType("Osm")  # Осмолярность (sic!). De-facto 2*Na+cGlu
-    blood_abg_osmolality = LabType("mOsm")  # ОсмоляЛЬность
+
+    # ref_K = LabRef(l=3.5, default=4, h=5.3)  # mmol/L, Radiometer, adult
+    # K+ — концентрация ионов калия в крови, мМоль/л
+    blood_abg_cK = LabType(
+        "cK+", ref=LabRef(lld=1.5, ll=3.1, l=3.5, default=4, h=5.3, hh=7)
+    )
+    # Cl- — концентрация ионов хлора в крови. Radiometer, adult
+    blood_abg_cCl = LabType("cCl-", ref=LabRef(l=98, default=105, h=115, unit="mmol/L"))
+    # Ca2+ — концентрация ионов кальция в крови, мМоль/л
+    blood_abg_cCa = LabType("cCa2+")
+
+    # https://en.wikipedia.org/wiki/Hypernatremia
+    # Na = (130, 155)  # mmol/L, Radiometer, adult
+    # Na = (130, 150)  # Курек 2013 c 133, children
+    # Na+ — концентрация ионов натрия в крови, мМоль/л
+    blood_abg_cNa = LabType("cNa", ref=LabRef(l=135, default=140, h=145))
+
+    # Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
+    # Note: gap between lower cGlu and cGlu_target
+    # Used as initial value for mOsm calculation.
+    # <6.1 mmol/L  is perfect for septic patients
+    # 10 mmol/L stands for glucose renal threshold
+    # cGlu_target = (4.5, 10)  # ICU target range
+    # ref_Glu = LabRef(lld=1.5, ll=None, default=None, l=7.8, h=10)  # NICE-SUGAR trial?
+    # Glu — концентрация глюкозы, мМоль/л
+    blood_abg_cGlu = LabType("cGlu", ref=LabRef(l=4.1, default=5.5, h=6.1, hh=10))
+    # Lac — концентрация лактата, мМоль/л
+    blood_abg_cLac = LabType("cLac", ref=LabRef(default=1, h=4, hh=8, hhd=15))
+    # cCrea — концентрации креатинина
+    blood_abg_cCrea = LabType("cCrea", ref=LabRef(default=75, unit="μmol/L"))
+    # ctBil — концентрации билирубина
+    blood_abg_ctBil = LabType("ctBil", ref=LabRef(default=10, unit="μmol/L"))
+
+    # NB! Changing 'gap' range will affect Gap-Gap calculation
+    # mEq/L without potassium [Курек 2013, с 47]
+    blood_abg_anionGap = LabType("Anion gap", LabRef(l=7, h=16))
+    # Strong ion difference. Arbitrary threshold
+    blood_abg_SIDAbbr = LabType("", LabRef(l=-5, h=5))
+
+    # Minimal low value has been chosen (<280), as I believe it corresponds to mOsm reference range without BUN
+    # Осмолярность (sic!). De-facto 2*Na+cGlu
+    blood_abg_osmolarity = LabType("Osm", LabRef(l=275, h=295, unit="mOsm/kg"))
+    blood_abg_osmolality = LabType("ОсмоляЛЬность")
 
     # Biochemistry
     blood_bchem_ctBilDir = LabType("Бил. кон (блок)")  # Non-toxic
-    blood_bchem_ctBilIndir = LabType("Бил. некон (liver failure, гемолиз)")  # Toxin некон/непрям
-    blood_bchem_urea = LabType("Urea")
+    # Toxin некон/непрям
+    blood_bchem_ctBilIndir = LabType(
+        "Бил. некон (liver failure, гемолиз)", ref=LabRef(default=10, unit="μmol/L")
+    )
+    blood_bchem_urea = LabType("Urea", ref=LabRef(default=7, unit="mmol/L"))
     blood_bchem_cMg = LabType("Mg2+")
     blood_bchem_Fe = LabType("Fe общее")
     blood_bchem_NTproBNP = LabType("NT-proBNP")  # Brain natriuretic peptide
@@ -290,8 +369,13 @@ class LabTypeMapper:
     blood_bchem_b9 = LabType("B9 (фолиевая)")
     blood_bchem_b12 = LabType("B12")
     blood_bchem_total_protein = LabType("Общий белок")
-    blood_bchem_albumin = LabType("Albumin")
-    blood_bchem_troponin_i = LabType("Troponine I")  # Several test systems with different reference ranges
+    # Mean albumin level used to normalize anion gap value in low cAlb case
+    # Albumin <25 for oncotic oedema
+    blood_bchem_albumin = LabType(
+        "Albumin", ref=LabRef(ll=25, l=35, default=44, h=50, unit="g/L")
+    )
+    # Several test systems with different reference ranges
+    blood_bchem_troponin_i = LabType("Troponine I")
 
     # Urine
     urine_any_ketone = LabType("UrineKetone")
@@ -306,7 +390,6 @@ class LabTypeMapper:
     blood_serology_hiv_abag = LabType("")
 
     sofa = LabType("SOFA")  # Sequential Organ Failure Assessment (SOFA) Score
-    # fmt: on
 
     @classmethod
     def print_codes(cls):

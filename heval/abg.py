@@ -52,6 +52,8 @@ from __future__ import annotations
 import enum
 import math
 
+from heval import common
+
 # Multiple to convert
 kPa = 0.133322368  # kPa to mmHg, 1 mmHg = 0.133322368 kPa
 Crea = 88.40  # mg/dL to μmol/L, 1 mg/dL = 88.40 μmol/L
@@ -68,33 +70,23 @@ M_Hb = 16.1140  # g/mol
 
 # Reference blood test ranges
 norm_pH = (7.35, 7.45)
-norm_pH_mean = 7.40
-norm_pH_alive = (6.8, 7.8)  # Live borders
+# norm_pH_alive = (6.8, 7.8)  # Live borders
 
 norm_pCO2 = (4.666, 6)  # kPa
 # norm_pCO2mmHg = (35, 45)
-norm_pCO2mmHg_mean = 40.0  # mmHg
-norm_pO2mmHg = (80, 100)  # mmHg
-norm_pO2mmHg_mean = 95.0  # mmHg
-norm_FiO2 = 0.21  # Fraction in air
+# norm_pO2mmHg = (80, 100)  # mmHg
 norm_Aa_gradient_mmHg = (5, 20)
 
-norm_HCO3 = (22, 26)  # mEq/L
+# norm_HCO3 = (22, 26)  # mEq/L
 norm_sbe = (-2, 2)  # mEq/L
 norm_SIDabbr = (-5, 5)  # Arbitrary threshold
 
 norm_K = (3.5, 5.3)  # mmol/L, Radiometer, adult
-norm_K_mean = 4
 norm_Na = (135, 145)  # https://en.wikipedia.org/wiki/Hypernatremia
-norm_Na_mean = 140
 # norm_Na = (130, 155)  # mmol/L, Radiometer, adult
 # norm_Na = (130, 150)  # Курек 2013 c 133, children
 norm_Cl = (98, 115)  # mmol/L, Radiometer, adult
-norm_Cl_mean = 105
 
-# Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
-# Used as initial value for mOsm calculation.
-norm_cGlu_mean = 5.5  # mmol/L
 norm_cGlu = (4.1, 6.1)  # mmol/L < 6.1 is perfect for septic patients
 # 10 mmol/L stands for glucose renal threshold
 norm_cGlu_target = (4.5, 10)  # ICU target range
@@ -109,30 +101,17 @@ norm_mOsm = (275, 295)  # mOsm/kg
 
 # Mean albumin level. Used to normalize anion gap value in low cAlb case
 # See Anion Gap calculation for reference
-norm_ctAlb_mean = 44  # g/L
 norm_ctAlb = (35, 50)  # g/L
-norm_urea = 7  # mmol/L
-norm_cCrea = 75  # μmol/L
-norm_ctBil = 10  # μmol/L
-norm_ctBilIndir = 10  # μmol/L
 
 # https://www.mayoclinic.org/tests-procedures/hemoglobin-test/about/pac-20385075
 hb_norm_male = (135, 175)  # 130-160 g/L
 hb_norm_female = (120, 155)  # 120-140 g/L
 hb_norm_child = (110, 160)  # g/L
-norm_hb_mean = 140  # g/L
 
 # Various https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
 norm_hct_male = (0.407, 0.503)
 norm_hct_female = (0.361, 0.443)
 norm_hct_child = (0.31, 0.41)
-
-norm_plt_mean = 300  # 10⁹/L
-norm_mcv_mean = 90  # fL
-norm_ret_fraq_mean = 1  # %
-norm_fib_mean = 3  # g/L
-norm_inr_mean = 1  # Fraqtion
-norm_ddimer_mean = 300  # ng/ml
 
 
 class AbgProcess(enum.Enum):
@@ -145,7 +124,11 @@ class AbgProcess(enum.Enum):
 
 
 def calculate_anion_gap(
-    Na: float, Cl: float, HCO3act: float, K: float = 0, ctAlb: float = norm_ctAlb_mean
+    Na: float,
+    Cl: float,
+    HCO3act: float,
+    K: float = 0,
+    ctAlb: float = common.LabTypeMapper.blood_bchem_albumin.ref.default,
 ) -> float:
     """Calculate serum 'Anion gap' or 'Anion gap (K+)' if potassium is given.
 
@@ -200,7 +183,7 @@ def calculate_anion_gap(
         14.0
 
         With albumin:
-        >>> calculate_anion_gap(Na=140, Cl=105, HCO3act=24, ctAlb=norm_ctAlb_mean)
+        >>> calculate_anion_gap(Na=140, Cl=105, HCO3act=24, ctAlb=common.LabTypeMapper.blood_bchem_albumin.ref.default)
         11.0
         >>> calculate_anion_gap(Na=137, Cl=108, HCO3act=24, ctAlb=23)
         10.25
@@ -221,7 +204,9 @@ def calculate_anion_gap(
     """
     anion_gap = (Na + K) - (Cl + HCO3act)
     if ctAlb is not None:
-        anion_gap += 0.25 * (norm_ctAlb_mean - ctAlb)
+        anion_gap += 0.25 * (
+            common.LabTypeMapper.blood_bchem_albumin.ref.default - ctAlb
+        )
     return anion_gap
 
 
@@ -305,7 +290,11 @@ def calculate_anion_gap_delta(AG: float, HCO3act: float) -> str:
         return info
 
 
-def calculate_sid_abbr(cNa: float, cCl: float, ctAlb: float = norm_ctAlb_mean) -> float:
+def calculate_sid_abbr(
+    cNa: float,
+    cCl: float,
+    ctAlb: float = common.LabTypeMapper.blood_bchem_albumin.ref.default,
+) -> float:
     """Strong ion difference, SID (strong ion gap, SIG).
 
     * Increased SID (>0) leads to alkalosis
@@ -347,7 +336,7 @@ def calculate_sid_abbr(cNa: float, cCl: float, ctAlb: float = norm_ctAlb_mean) -
     """
     sid = cNa - cCl - 38
     if ctAlb is not None:
-        sid += 0.25 * (norm_ctAlb_mean - ctAlb)
+        sid += 0.25 * (common.LabTypeMapper.blood_bchem_albumin.ref.default - ctAlb)
     return sid
 
 

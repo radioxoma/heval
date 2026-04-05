@@ -2449,7 +2449,11 @@ def electrolyte_K(weight: float, K_serum: float, pH: float) -> str:
             # coefficient = 0.4   # грудные
             # coefficient = 0.3   # <5 years
             coefficient = 0.2  # >5 лет [Курек 2013]
-            K_deficit = (abg.norm_K_mean - K_serum) * weight * coefficient
+            K_deficit = (
+                (common.LabTypeMapper.blood_abg_cK.ref.default - K_serum)
+                * weight
+                * coefficient
+            )
             # K_deficit += weight * 1  # mmol/kg/24h Should I also add daily requirement? https://nursemathmedblog.wordpress.com/2016/05/29/potassium-replacement-calculation/
             info += f"Estimated K⁺ deficit is {K_deficit:.0f} mmol (KCl 4 % {solution_kcl4(K_deficit):.1f} ml) + "
             if K_deficit > 4 * weight:

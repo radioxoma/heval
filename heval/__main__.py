@@ -1093,51 +1093,73 @@ class CalcElectrolytes(ttk.Frame):
 
     def set_input_abg_defaults(self, event=None):
         self.ctl_sbx_pH.delete(0, tk.END)
-        self.ctl_sbx_pH.insert(0, f"{abg.norm_pH_mean:.2f}")
+        self.ctl_sbx_pH.insert(
+            0, f"{common.LabTypeMapper.blood_abg_pH.ref.default:.2f}"
+        )
         self.set_model_pH()
         self.ctl_sbx_pCO2.delete(0, tk.END)
-        self.ctl_sbx_pCO2.insert(0, f"{abg.norm_pCO2mmHg_mean:.0f}")
+        self.ctl_sbx_pCO2.insert(
+            0, f"{common.LabTypeMapper.blood_abg_pCO2.ref.default:.0f}"
+        )
         self.set_model_pCO2()
 
     def set_input_elec_defaults(self, event=None):
         self.ctl_sbx_K.delete(0, tk.END)
-        self.ctl_sbx_K.insert(0, f"{abg.norm_K_mean:.1f}")
+        self.ctl_sbx_K.insert(0, f"{common.LabTypeMapper.blood_abg_cK.ref.default:.1f}")
         self.set_model_K()
         self.ctl_sbx_Na.delete(0, tk.END)
-        self.ctl_sbx_Na.insert(0, f"{abg.norm_Na_mean:.0f}")
+        self.ctl_sbx_Na.insert(
+            0, f"{common.LabTypeMapper.blood_abg_cNa.ref.default:.0f}"
+        )
         self.set_model_Na()
         self.ctl_sbx_Cl.delete(0, tk.END)
-        self.ctl_sbx_Cl.insert(0, f"{abg.norm_Cl_mean:.0f}")
+        self.ctl_sbx_Cl.insert(
+            0, f"{common.LabTypeMapper.blood_abg_cCl.ref.default:.0f}"
+        )
         self.set_model_Cl()
 
     def set_input_extra_defaults(self, event=None):
         self.ctl_sbx_cGlu.delete(0, tk.END)
-        self.ctl_sbx_cGlu.insert(0, str(abg.norm_cGlu_mean))
+        self.ctl_sbx_cGlu.insert(
+            0, f"{common.LabTypeMapper.blood_abg_cGlu.ref.default:.1f}"
+        )
         self.set_model_cGlu()
         self.ctl_sbx_ctAlb.delete(0, tk.END)
-        self.ctl_sbx_ctAlb.insert(0, f"{abg.norm_ctAlb_mean:.0f}")
+        self.ctl_sbx_ctAlb.insert(
+            0, f"{common.LabTypeMapper.blood_bchem_albumin.ref.default:.0f}"
+        )
         self.set_model_ctAlb()
         self.ctl_sbx_cCrea.delete(0, tk.END)
-        self.ctl_sbx_cCrea.insert(0, f"{abg.norm_cCrea:.0f}")
+        self.ctl_sbx_cCrea.insert(
+            0, f"{common.LabTypeMapper.blood_abg_cCrea.ref.default:.0f}"
+        )
         self.set_model_cCrea()
         self.ctl_sbx_ctBil.delete(0, tk.END)
-        self.ctl_sbx_ctBil.insert(0, f"{abg.norm_ctBil:.0f}")
+        self.ctl_sbx_ctBil.insert(
+            0, f"{common.LabTypeMapper.blood_abg_ctBil.ref.default:.0f}"
+        )
         self.set_model_ctBil()
 
     def set_input_trans_defaults(self, event=None):
         self.ctl_sbx_ctHb.delete(0, tk.END)
         self.ctl_sbx_ctHb.insert(
-            0, f"{abg.norm_hb_mean:.0f}"
+            0, f"{common.LabTypeMapper.blood_cbc_hb.ref.default:.0f}"
         )  # g/L, mean value for both sexes
         self.set_model_ctHb()
         self.ctl_sbx_plt.delete(0, tk.END)
-        self.ctl_sbx_plt.insert(0, f"{abg.norm_plt_mean:.0f}")
+        self.ctl_sbx_plt.insert(
+            0, f"{common.LabTypeMapper.blood_cbc_plt.ref.default:.0f}"
+        )
         self.set_model_plt()
         self.ctl_sbx_fib.delete(0, tk.END)
-        self.ctl_sbx_fib.insert(0, f"{abg.norm_fib_mean:.1f}")
+        self.ctl_sbx_fib.insert(
+            0, f"{common.LabTypeMapper.blood_coag_fib.ref.default:.1f}"
+        )
         self.set_model_fib()
         self.ctl_sbx_inr.delete(0, tk.END)
-        self.ctl_sbx_inr.insert(0, f"{abg.norm_inr_mean:.2f}")
+        self.ctl_sbx_inr.insert(
+            0, f"{common.LabTypeMapper.blood_coag_inr.ref.default:.2f}"
+        )
         self.set_model_inr()
 
     def set_model_pH(self, event=None):

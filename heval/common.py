@@ -222,7 +222,6 @@ class LabTypeMapper:
 
     References:
         * https://en.wikipedia.org/wiki/Reference_ranges_for_blood_tests
-        * https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
     """
 
     # Hematology
@@ -231,6 +230,8 @@ class LabTypeMapper:
     # hb_female = (120, 155)  # 120-140 g/L
     # hb_child = (110, 160)  # g/L
     blood_cbc_hb = LabType("Hb", ref=LabRef(default=140, unit="g/L"))
+
+    # https://www.healthcare.uiowa.edu/path_handbook/appendix/heme/pediatric_normals.html
     # hct_male = (0.407, 0.503)
     # hct_female = (0.361, 0.443)
     # hct_child = (0.31, 0.41)
@@ -275,9 +276,9 @@ class LabTypeMapper:
     # pO2 — парциальное давление кислорода в крови, мм.рт.ст.
     blood_abg_pO2 = LabType("pO2", ref=LabRef(l=80, default=95, h=100, unit="mmHg"))
     # blood_abg_p50 = LabType("", ("ESLI.LI_TEST.772",))  # No data, see ESLI.LI_TEST.787  # # p50 — 50% насыщение гемоглобина кислородом
-    # ref_pCO2mmHg = LabRef(l=35, default=40, h=45)  # mmHg
     # pCO2 — парциальное давление углекислого газа в крови, мм.рт.ст.
-    blood_abg_pCO2 = LabType("pCO2", ref=LabRef(l=4.666, h=6, unit="kPa"))
+    # blood_abg_pCO2 = LabType("pCO2", ref=LabRef(l=4.666, h=6, unit="kPa"))
+    blood_abg_pCO2 = LabType("pCO2", ref=LabRef(l=35, default=40, h=45, unit="mmHg"))
     blood_abg_ctCO2A = LabType("tCO2A")  # tCO2A - общая двуокись углерода крови
     # tHb — концентрация общего гемоглобина в крови, г/л, usage discouraged
     blood_abg_ctHb = LabType("ctHb", ref=LabRef(unit="g/L"))
@@ -324,12 +325,10 @@ class LabTypeMapper:
     # Na+ — концентрация ионов натрия в крови, мМоль/л
     blood_abg_cNa = LabType("cNa", ref=LabRef(l=135, default=140, h=145))
 
-    # Mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
-    # Note: gap between lower cGlu and cGlu_target
-    # Used as initial value for mOsm calculation.
-    # <6.1 mmol/L  is perfect for septic patients
+    # 4.5-10 ICU target range
+    # 5.5 mean fasting glucose level https://en.wikipedia.org/wiki/Blood_sugar_level
+    # <6.1 mmol/L is perfect for septic patients
     # 10 mmol/L stands for glucose renal threshold
-    # cGlu_target = (4.5, 10)  # ICU target range
     # ref_Glu = LabRef(lld=1.5, ll=None, default=None, l=7.8, h=10)  # NICE-SUGAR trial?
     # Glu — концентрация глюкозы, мМоль/л
     blood_abg_cGlu = LabType("cGlu", ref=LabRef(l=4.1, default=5.5, h=6.1, hh=10))
@@ -348,8 +347,8 @@ class LabTypeMapper:
 
     # Minimal low value has been chosen (<280), as I believe it corresponds to mOsm reference range without BUN
     # Осмолярность (sic!). De-facto 2*Na+cGlu
-    blood_abg_osmolarity = LabType("Osm", LabRef(l=275, h=295, unit="mOsm/kg"))
-    blood_abg_osmolality = LabType("ОсмоляЛЬность")
+    blood_abg_osmolarity = LabType("Osm", LabRef(l=275, h=295, unit="mOsm/L"))
+    blood_abg_osmolality = LabType("ОсмоляЛЬность", ref=LabRef(unit="mOsm/kg"))
 
     # Biochemistry
     blood_bchem_ctBilDir = LabType("Бил. кон (блок)")  # Non-toxic
@@ -369,11 +368,14 @@ class LabTypeMapper:
     blood_bchem_b9 = LabType("B9 (фолиевая)")
     blood_bchem_b12 = LabType("B12")
     blood_bchem_total_protein = LabType("Общий белок")
+
     # Mean albumin level used to normalize anion gap value in low cAlb case
+    # See Anion Gap calculation for reference
     # Albumin <25 for oncotic oedema
     blood_bchem_albumin = LabType(
         "Albumin", ref=LabRef(ll=25, l=35, default=44, h=50, unit="g/L")
     )
+
     # Several test systems with different reference ranges
     blood_bchem_troponin_i = LabType("Troponine I")
 

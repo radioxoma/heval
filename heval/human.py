@@ -414,7 +414,7 @@ class HumanModel:
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
             info += f", ({bmi_describe(self.body_bmi)}),"
 
-        info += f" {common.A.bsa} {self.body_bsa:.3f} m².\n"
+        info += f" {common.A.bsa} {self.body_bsa:.3f} m².<br>"
 
         # Value 70 ml/kg used in cardiopulmonary bypass. It valid for humans
         # older than 3 month. ml/kg ratio more in neonates and underweight
@@ -518,26 +518,32 @@ class HumanModel:
             weight_type, self.body_sex.name.lower(), weight_chosen
         )
         info += f"{common.A.mv} x{mv:.2f} L/kg/min={Vd:.3f} L/min. "
-        info += f"{common.A.vd_airway} is {VDaw:.0f} ml, so {common.A.tv} must be &gt;{Tv_min:.0f} ml\n"
-        info += f" * {common.A.tv} x{tv_mul_min}={weight_chosen * tv_mul_min:3.0f} ml, {common.A.resp_rate} {Vd * 1000 / (weight_chosen * tv_mul_min):.0f}/min\n"
-        info += f" * {common.A.tv} x{tv_mul_max}={weight_chosen * tv_mul_max:3.0f} ml, {common.A.resp_rate} {Vd * 1000 / (weight_chosen * tv_mul_max):.0f}/min"
+        info += f"{common.A.vd_airway} is {VDaw:.0f} ml, so {common.A.tv} must be &gt;{Tv_min:.0f} ml:<br>"
+        info += f"{common.A.tv} x{tv_mul_min}={weight_chosen * tv_mul_min:3.0f} ml, {common.A.resp_rate} {Vd * 1000 / (weight_chosen * tv_mul_min):.0f}/min<br>"
+        info += f"{common.A.tv} x{tv_mul_max}={weight_chosen * tv_mul_max:3.0f} ml, {common.A.resp_rate} {Vd * 1000 / (weight_chosen * tv_mul_max):.0f}/min</li><br>"
         return info
 
     def _body_fluids_in(self) -> str:
         """Calculate daily fluid requirements."""
-        info = ""
+        info = list()
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += f" * {common.A.rbw} fluids demand {30 * self.body_weight:.0f}-{35 * self.body_weight:.0f} ml/24h (30-35 ml/kg/24h) [{common.A.book_pos_dej}]\n"
+            info.append(
+                f"{common.A.rbw} fluids demand {30 * self.body_weight:.0f}-{35 * self.body_weight:.0f} ml/24h (30-35 ml/kg/24h) [{common.A.book_pos_dej}]"
+            )
 
         hs_fluid = fluid_holidaysegar_mod(self.body_weight)
-        info += f" * {common.A.rbw} fluids demand {hs_fluid:.0f} ml/24h or {hs_fluid / 24:.0f} ml/h [Holliday-Segar]\n"
+        info.append(
+            f"{common.A.rbw} fluids demand {hs_fluid:.0f} ml/24h or {hs_fluid / 24:.0f} ml/h [Holliday-Segar]"
+        )
 
         if self.body_height is not None:
             # All ages
             dubois = 1750 * body_surface_area_dubois(
                 height=self.body_height, weight=self.body_weight
             )
-            info += f" * {common.A.bsa} fluids demand {dubois:.0f} ml/24h (1750 ml/m²)"
+            info.append(
+                f"{common.A.bsa} fluids demand {dubois:.0f} ml/24h (1750 ml/m²)"
+            )
 
         # Variable perspiration losses, which is not included in physiologic demand
         # persp_ros = 10 * self.weight + 500 * (self.body_temp - 36.6)
@@ -547,45 +553,46 @@ class HumanModel:
         # Точная оценка перспирационных потерь невозможна. Формула из "Пособия дежуранта" примерно соответствует [таблице 1.6 Рябов 1994, с 31 (Condon R.E. 1975)]
         if self.body_temp is not None and self.body_temp > 37:
             deg = self.body_temp - 37
-            info += "\n + perspiration fluid loss {:.0f}-{:.0f} ml/24h (5-7 ml/kg/24h for each °C above 37°C)".format(
-                5 * self.body_weight * deg, 7 * self.body_weight * deg
+            info.append(
+                f"+ perspiration fluid loss {5 * self.body_weight * deg:.0f}-{7 * self.body_weight * deg:.0f} ml/24h (5-7 ml/kg/24h for each degree above 37 °C)"
             )
-        return info
+        return "<ul><li>" + "</li><li>".join(info) + "</li></ul>"
 
-    def _body_food(self) -> str:
+    def _body_nutrition(self) -> str:
         """Calculate daily macro- and micronutrients demand."""
-        info = ""
-        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += (
-                f"Daily nutrition requirements for adults [{common.A.book_pos_dej}]:\n"
-            )
-            info += " * Protein {:3.0f}-{:3.0f} g/24h (1.2-1.5 g/kg/24h)\n".format(
-                1.2 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
-            )
-            info += " * Fat     {:3.0f}-{:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)\n".format(
-                1.0 * self.body_weight_ideal, 1.5 * self.body_weight_ideal
-            )
-            info += " * Glucose {:3.0f}-{:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)\n".format(
-                4.0 * self.body_weight_ideal, 5.0 * self.body_weight_ideal
-            )
+        if self.body_sex == HumanSex.CHILD:
+            return f"Electrolyte demand calculation for children not implemented. Refer to [{common.A.book_kurek2013}, p 130]"
+        info = list()
 
-            info += "Electrolytes daily requirements:\n"
-            info += " * Na⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(
-                self.body_weight
-            )
-            info += " * K⁺\t{:3.0f} mmol/24h [~1.00 mmol/kg/24h]\n".format(
-                self.body_weight
-            )
+        info.append(
+            f"Daily nutrition requirements for adults [{common.A.book_pos_dej}]:"
+        )
+        macro = list()
+        macro.append(
+            f"Protein {1.2 * self.body_weight_ideal:3.0f}-{1.5 * self.body_weight_ideal:3.0f} g/24h (1.2-1.5 g/kg/24h)<br>"
+        )
+        macro.append(
+            f"Fat     {1.0 * self.body_weight_ideal:3.0f}-{1.5 * self.body_weight_ideal:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)<br>"
+        )
+        macro.append(
+            f"Carbohydrates {4 * self.body_weight_ideal:3.0f}-{5 * self.body_weight_ideal:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)<br>"
+        )
+        info.append("<ul><li>" + "</li><li>".join(macro) + "</li></ul>")
 
-            # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
-            info += f" * Mg²⁺\t{self.body_weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]\n"
-            # Parenteral (25% of enteral) 200 mg/24h, 5 mmol/24h [Kostuch, p 49]
-            info += (
-                f" * Ca²⁺\t{self.body_weight * 0.11:3.1f} mmol/24h [~0.11 mmol/kg/24h]"
-            )
-            return info
-        else:
-            return f"Electrolytes demand calculation for children not implemented. Refer to [{common.A.book_kurek2013}, с 130]"
+        info.append("Electrolyte daily requirements:")
+        micro = list()
+        micro.append(f"Na⁺\t{self.body_weight:3.0f} mmol/24h [~1.00 mmol/kg/24h]<br>")
+        micro.append(f"K⁺\t{self.body_weight:3.0f} mmol/24h [~1.00 mmol/kg/24h]")
+        # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
+        micro.append(
+            f"Mg²⁺\t{self.body_weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]<nr>"
+        )
+        # Parenteral (25% of enteral) 200 mg/24h, 5 mmol/24h [Kostuch, p 49]
+        micro.append(
+            f"Ca²⁺\t{self.body_weight * 0.11:3.1f} mmol/24h [~0.11 mmol/kg/24h]"
+        )
+        info.append("<ul><li>" + "</li><li>".join(micro) + "</li></ul>")
+        return "".join(info)
 
     def _body_energy(self) -> str:
         """Calculate daily energy requirements.
@@ -645,29 +652,30 @@ class HumanModel:
             Жиры         1.0-1.5 г/кг (30-40% от общей энергии)
             Глюкоза      4.0-5.0 г/кг (60-70% от общей энергии)
         """
-        info = ""
-        if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
-            if self.body_age:
-                info += "Resting energy expenditure for healthy adults:\n"
-                info += " * {:.0f} kcal/24h [Harris-Benedict, revised 1984] \n".format(
-                    ree_harris_benedict_revised(
-                        self.body_height, self.body_weight, self.body_sex, self.body_age
-                    )
-                )
-                info += " * {:.0f} kcal/24h [Mifflin 1990]\n".format(
-                    ree_mifflin(
-                        self.body_height, self.body_weight, self.body_sex, self.body_age
-                    )
-                )
-            else:
-                info += "Enter age to calculate REE\n"
-            info += f" * {25 * self.body_weight_ideal:.0f}-{30 * self.body_weight_ideal:.0f} kcal/24h (25-30 kcal/kg/24h {common.A.ibw}) [{common.A.espen} 2019]"
+        # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
+        # стартовые дозы глюкозы [Курек с 143] . Refer to [{common.A.book_kurek2013}, стр. 137]
+        if self.body_sex == HumanSex.CHILD:
+            return "Energy calculations for children not implemented."
+        info = list()
+        # 25-30 kcal/kg/24h IBW? ESPEN Guidelines on Enteral Nutrition: Intensive care https://doi.org/10.1016/j.clnu.2018.08.037
+        if self.body_age:
+            ree_hb = ree_harris_benedict_revised(
+                self.body_height, self.body_weight, self.body_sex, self.body_age
+            )
+            ree_mif = ree_mifflin(
+                self.body_height, self.body_weight, self.body_sex, self.body_age
+            )
+            info.append(
+                "Resting energy expenditure for healthy adults:<ul>"
+                f"<li>{ree_hb:.0f} kcal/24h [Harris-Benedict, revised 1984]</li>"
+                f"<li>{ree_mif:.0f} kcal/24h [Mifflin 1990]</li></ul>"
+            )
         else:
-            # Looks like child needs more then 25 kcal/kg/24h (up to 100?) [Курек p. 163]
-            # стартовые дозы глюкозы [Курек с 143]
-            info += f"Energy calculations for children not implemented. Refer to [{common.A.book_kurek2013}, стр. 137]"
-        return info
+            info.append("Enter age to calculate REE<br>")
+        info.append(
+            f"{25 * self.body_weight_ideal:.0f}-{30 * self.body_weight_ideal:.0f} kcal/24h (25-30 kcal/kg/24h {common.A.ibw}) [{common.A.espen} 2019]<br>"
+        )
+        return "".join(info)
 
     def _body_fluids_out(self) -> str:
         """Calculate minimal required urinary output (0.5-1 ml/kg/h).
@@ -675,27 +683,19 @@ class HumanModel:
         У детей диурез значительно выше, у новорождённых 2.5 ml/kg/h.
         Выделение мочи <0.5 мл/кг/ч >6 часов - самостоятельный критерии ОПП
         """
-        info = ""
         if self.body_sex in (HumanSex.MALE, HumanSex.FEMALE):
-            info += f"{common.A.rbw} adult urinary output:\n"
-            info += (
-                " * x0.5={:2.0f} ml/h, {:4.0f} ml/24h (target >0.5 ml/kg/h)\n".format(
-                    0.5 * self.body_weight, 0.5 * self.body_weight * 24
-                )
+            return (
+                f"{common.A.rbw} adult urinary output:<ul>"
+                f"<li>x0.5={0.5 * self.body_weight:2.0f} ml/h, {0.5 * self.body_weight * 24:4.0f} ml/24h (target >0.5 ml/kg/h)</li>"
+                f"<li>x1.0={self.body_weight:2.0f} ml/h, {self.body_weight * 24:4.0f} ml/24h</li></ul>"
             )
-            info += " * x1.0={:2.0f} ml/h, {:4.0f} ml/24h".format(
-                self.body_weight, self.body_weight * 24
-            )
-        if self.body_sex == HumanSex.CHILD:
+        else:
             # Not lower than 1 ml/kg/h in children [Курек 2013 122, 129]
-            info += f"{common.A.rbw} child urinary output:\n"
-            info += " * x1  ={:3.0f} ml/h, {:.0f} ml/24h (target >1 ml/kg/h).\n".format(
-                self.body_weight, self.body_weight * 24
+            return (
+                f"{common.A.rbw} child urinary output:<ul>"
+                f"<li>x1  ={self.body_weight:3.0f} ml/h, {self.body_weight * 24:.0f} ml/24h (target >1 ml/kg/h).</li>"
+                f"<li>x3.5={3.5 * self.body_weight:3.0f} ml/h, {3.5 * self.body_weight * 24:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)</li></ul>"
             )
-            info += " * x3.5={:3.0f} ml/h, {:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)".format(
-                3.5 * self.body_weight, 3.5 * self.body_weight * 24
-            )
-        return info
 
     def _lab_osmolarity(self):
         """Describe osmolarity impact like thirst, HHS, kidney injury risk, coma.
@@ -779,7 +779,7 @@ class HumanModel:
             self.blood_bchem_albumin,
         ):
             return f"Some lab data missing: pH {self.blood_abg_pH}, pCO2 {self.blood_abg_pCO2}, cNa {self.blood_abg_cNa}, cCl {self.blood_abg_cCl}, albumin {self.blood_bchem_albumin}"
-        info = "<h4>Anion gap</h4>"
+        info = ""
         desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
         if (
             abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[1]
@@ -898,22 +898,38 @@ class HumanModel:
             info += f"{common.A.sbe} is ok {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
         return info
 
-    def _lab_electrolytes(self):
-        """Describe electrolyte and osmolar abnormalities."""
+    def _lab_electrolyte_cK(self) -> str:
         if None in (
             self.body_weight,
             self.blood_abg_cK,
+            self.blood_abg_pH,
+        ):
+            return ""
+        return electrolyte_K(
+            weight=self.body_weight,
+            K_serum=self.blood_abg_cK,
+            pH=self.blood_abg_pH,
+        )
+
+    def _lab_electrolyte_cNa(self) -> str:
+        if None in (
+            self.body_weight,
             self.blood_abg_cNa,
-            self.blood_abg_cCl,
             self.blood_abg_cGlu,
         ):
             return ""
-        return textwrap.dedent(f"""\
-            <h4>Electrolyte and osmolar abnormalities</h4>{self._lab_osmolarity()}
-            {electrolyte_K(weight=self.body_weight, K_serum=self.blood_abg_cK, pH=self.blood_abg_pH)}
-            {electrolyte_Na(self.body_weight, self.blood_abg_cNa, self.blood_abg_cGlu, self.verbose)}
-            {electrolyte_Cl(self.blood_abg_cCl)}
-            """)
+        return electrolyte_Na(
+            self.body_weight,
+            self.blood_abg_cNa,
+            self.blood_abg_cGlu,
+            self.verbose,
+        )
+
+    def _lab_electrolyte_cCl(self) -> str:
+        if self.blood_abg_cCl is None:
+            return ""
+        else:
+            return electrolyte_Cl(self.blood_abg_cCl)
 
     def _lab_glucose(self):
         """Describe glucose level, detect DKE/HHS.
@@ -1324,33 +1340,39 @@ class HumanModel:
         self.flags = common.FlagWarnings()
         if self.body_height is None or self.body_sex is None:
             return "Empty human model (set sex, height, weight)"
-        self._eval_body = ""
-        self._eval_body += "{}\n".format(self._body_composition())
-        self._eval_body += "<h3>Respiration</h3>"
-        self._eval_body += "{}\n".format(self._body_respiration())
-        self._eval_body += "<h3>Metabolic</h3>"
-        self._eval_body += "{}\n".format(self._body_energy())
-        self._eval_body += "<h3>Fluids</h3>"
-        self._eval_body += "{}\n".format(self._body_fluids_in())
-        if self.verbose:
-            self._eval_body += "\n{}\n".format(self._body_food())
-        self._eval_body += "<h3>Renal function</h3>"
-        self._eval_body += f"{self._body_fluids_out()}\n"
-        self._eval_body += crrt_weight_to_rate(self.body_weight)
 
-        self._eval_labs = ""
-        self._eval_labs += "<h3>Basic ABG assessment</h3>"
-        self._eval_labs += "{}\n".format(self._lab_abg())
-        self._eval_labs += "{}\n".format(self._lab_sbe())
-        self._eval_labs += "{}\n".format(self._lab_oxygenation())
-        self._eval_labs += "<h3>Complex electrolyte assessment</h3>"
-        self._eval_labs += "{}\n".format(self._lab_anion_gap())
-        self._eval_labs += "{}\n".format(self._lab_electrolytes())
-        self._eval_labs += "{}\n".format(self._lab_glucose())
-        self._eval_labs += "{}\n".format(self._lab_albumin())
-        self._eval_labs += "{}\n".format(self._lab_ccrea())
-        self._eval_labs += "<h3>Transfusion</h3>"
-        self._eval_labs += "{}\n".format(self._lab_hb())
+        body = list()
+        body.append(self._body_composition())
+        body.append("<h3>Respiration</h3>")
+        body.append(self._body_respiration())
+        body.append("<h3>Metabolic</h3>")
+        body.append(self._body_energy())
+        if self.verbose:
+            body.append(self._body_nutrition())
+        body.append("<h3>Fluids</h3>")
+        body.append(self._body_fluids_in())
+        body.append("<h3>Renal function</h3>")
+        body.append(self._body_fluids_out())
+        body.append(crrt_weight_to_rate(self.body_weight))
+        self._eval_body = "<p>" + "</p><p>".join(body) + "</p>"
+
+        labs = list()
+        labs.append("<h3>Basic ABG assessment</h3>")
+        labs.append(self._lab_abg())
+        labs.append(self._lab_sbe())
+        labs.append(self._lab_oxygenation())
+        labs.append("<h3>Complex electrolyte assessment</h3>")
+        labs.append(self._lab_anion_gap())
+        labs.append(self._lab_osmolarity())
+        labs.append(self._lab_electrolyte_cK())
+        labs.append(self._lab_electrolyte_cNa())
+        labs.append(self._lab_electrolyte_cCl())
+        labs.append(self._lab_glucose())
+        labs.append(self._lab_albumin())
+        labs.append(self._lab_ccrea())
+        labs.append("<h3>Transfusion</h3>")
+        labs.append(self._lab_hb())
+        self._eval_labs = "<p>" + "</p><p>".join(labs) + "</p>"
 
         self.flags.add(
             common.Flag(
@@ -1909,12 +1931,12 @@ def crrt_weight_to_rate(weight: float) -> str:
     Args:
         weight: real body weight, kg
     """
-    return textwrap.dedent(f"""
-        {common.A.crrt} total effluent dose (dialysate + substitute + {common.A.uf} + diuresis):
-        * Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [{common.A.kdigo} 20-25 ml/kg/h].
-        * Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (urea, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: urea 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h
-        * Ultrafiltration, diuresis, other losses counts as effluent too.
-        """)
+    return (
+        f"{common.A.crrt} total effluent dose (dialysate + substitute + {common.A.uf} + diuresis):<ul>"
+        f"<li>Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [{common.A.kdigo} 20-25 ml/kg/h].</li>"
+        f"<li>Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (urea, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: urea 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h</li>"
+        f"<li>Ultrafiltration, diuresis, other losses counts as effluent too.</li></ul>"
+    )
 
 
 def mnemonic_wetflag(age: float | None = None, weight: float | None = None) -> str:
@@ -2192,17 +2214,20 @@ def solution_glucose(
         ins_dosage = 0.25  # IU/g
         insulin = glu_mass * ins_dosage
         info += f" + Ins {insulin:.1f} {common.A.iu} ({ins_dosage:.2f} IU/g)"
-    info += ":\n"
+    info += ": "
 
+    glu_list = list()
     for dilution in (5, 10, 40):
         g_low, g_max = 0.15, 0.5  # g/kg/h
         speed_low = (g_low * body_weight) / dilution * 100
         speed_max = (g_max * body_weight) / dilution * 100
         vol = glu_mass / dilution * 100
-        info += f" * Glu {dilution:>2.0f}% {vol:>4.0f} ml ({speed_low:>3.0f}-{speed_max:>3.0f} ml/h = {g_low:.3f}-{g_max:.2f} g/kg/h)"
-        if dilution == 5:
-            info += " isotonic"
-        info += "\n"
+        glu_list.append(
+            f"""Glu {dilution:>2.0f}% {vol:>4.0f} ml ({speed_low:>3.0f}-{speed_max:>3.0f} ml/h = {g_low:.3f}-{g_max:.2f} g/kg/h){" isotonic" if dilution == 5 else ""}"""
+        )
+
+    if glu_list:
+        info += "<ul><li>" + "</li><li>".join(glu_list) + "</li></ul>"
     return info
 
 
@@ -2351,7 +2376,7 @@ def electrolyte_Na_adrogue(
         {"name": "D5W or water    (Na⁺   0 mmol/L)", "K_inf": 0, "Na_inf": 0},
     ]
     Na_shift_hours = abs(Na_target - Na_serum) / Na_shift_rate
-    info = ""
+    info = list()
     for sol in solutions:
         Na_inf = float(sol["Na_inf"])
         K_inf = float(sol["K_inf"])
@@ -2371,8 +2396,14 @@ def electrolyte_Na_adrogue(
             # Will lead to volume overload, not an option
             # Using 50000 ml threshold to cut off unreal volumes
             continue
-        info += f" * {sol['name']:<15} {vol:>6.0f} ml, {vol / Na_shift_hours:6.1f} ml/h during {Na_shift_hours:.0f} hours\n"
-    return info
+        info.append(
+            f"{sol['name']:<15} {vol:>6.0f} ml, {vol / Na_shift_hours:6.1f} ml/h during {Na_shift_hours:.0f} hours"
+        )
+
+    if info:
+        return "<ul><li>" + "</li><li>".join(info) + "</li></ul>"
+    else:
+        return ""
 
 
 def electrolyte_K(weight: float, K_serum: float, pH: float) -> str:
@@ -2440,11 +2471,9 @@ def electrolyte_K(weight: float, K_serum: float, pH: float) -> str:
     )
     if K_serum < abg.norm_K[0]:
         if K_serum <= K_lowlow:
-            info += textwrap.dedent(
-                f"""\
+            info += textwrap.dedent(f"""\
                 is dangerously low (&le;{K_lowlow:.1f} mmol/L). Often associated with low Mg²⁺ (should be at least 1 mmol/L) and low Cl⁻. Expect muscle weakness, fatigue, U waves.
-                <em>{common.A.nota_bene} 98% of the all body K⁺ resides within cells, so it's impossible to measure deficiency.</em> Use standard K⁺ replacement rate """
-            )
+                <em>{common.A.nota_bene} 98% of the all body K⁺ resides within cells, so it's impossible to measure deficiency.</em> Use standard K⁺ replacement rate """)
             if weight < 40:
                 info += f"{(0.25 * weight):.1f}-{0.5 * weight:.1f} mmol/h (KCl 4 % {solution_kcl4(0.25 * weight):.1f}-{solution_kcl4(0.5 * weight):.1f} ml/h)"
             else:
@@ -2481,8 +2510,7 @@ def electrolyte_K(weight: float, K_serum: float, pH: float) -> str:
                         <li>Standard adult bolus Glu 40% 60 ml + Ins 10 {common.A.iu} [{common.A.book_pos_dej}]</li>
                     </ul>
                     <li><em>To stabilize heart cells membrane</em>, if changes on ECG (T is higher than R), inject Ca gluconate / Ca chloride 10 ml</li>
-                </ul>
-            """)
+                </ul>""")
         else:
             info += f"on the upper acceptable border {K_serum:.1f} ({K_lowlow:.1f}-{K_highhigh:.1f} mmol/L)"
     else:

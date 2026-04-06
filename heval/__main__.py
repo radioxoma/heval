@@ -62,7 +62,6 @@ class TextHtmlView(tkinterweb.HtmlFrame):
 
     def set_text(self, text: str):
         """Set preformatted text to show it as <code> block."""
-        text = text.replace("\n", "&nbsp;<br>")
         self.load_html(__css__ + f"<code>{text}</code>")
 
     def set_html(self, html: str):
@@ -210,7 +209,7 @@ class MainWindow(ttk.Frame):
         super().__init__(*args, **kwargs)
         self.parent = parent
         self.parent.title("Heval: the human evaluator — v" + heval.__version__)
-        self.parent.geometry("650x590")
+        self.parent.geometry("750x590")
 
         style = ttk.Style()
         style.theme_use("clam")  # ('clam', 'alt', 'default', 'classic')
@@ -568,13 +567,9 @@ class CalcMain(ttk.Frame):
         self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
         self.TxtView.set_text(
-            textwrap.dedent(
-                """\
-        Just set sex and height. Open \"Help\" from menu or by pressing F1 key.
-
-        Не знаете с чего начать? Выберите \"Help\" в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу F1.
-        """
-            )
+            textwrap.dedent("""\
+        <p>Just set sex and height. Open "Help" from menu or by pressing F1 key.</p>
+        <p>Не знаете с чего начать? Выберите "Help" в меню, чтобы вызвать краткую справку на русском языке. Или просто нажмите клавишу <kbd>F1</kbd>.</p>""")
         )
 
     def eval(self, event=None):
@@ -742,17 +737,14 @@ class CalcNutrition(ttk.Frame):
         self.set_input_protein_defaults()
         self.set_nutr_gui_state()
         self.TxtView.set_text(
-            textwrap.dedent(
-                """\
-            Just set sex and height.
-
-            Nutrition mixtures dosage can be estimated in two ways:
-              * As daily calorie goal by weight (kcal/kg/24h)
-              * As daily protein goal by nitrogen balance (urea nitrogen loss mmol/24h) or expected protein demand (g/kg/24h) which are dependent on each other
-
-            Heval will suggest additional fluid if nutrition mixture doesn't contain full 24h volume. Negative value means fluid excess.
-            """
-            )
+            textwrap.dedent("""\
+            <p>Just set sex and height.</p>
+            <p>Nutrition mixtures dosage can be estimated in two ways:
+            <ul>
+              <li>As daily calorie goal by weight (kcal/kg/24h)</li>
+              <li>As daily protein goal by nitrogen balance (urea nitrogen loss mmol/24h) or expected protein demand (g/kg/24h) which are dependent on each other</li>
+            </ul></p>
+            <p>Heval will suggest additional fluid if nutrition mixture doesn't contain full 24h volume. Negative value means fluid excess.</p>""")
         )
 
     def set_input_fluid_defaults(self, event=None):
@@ -1079,15 +1071,10 @@ class CalcElectrolytes(ttk.Frame):
         self.set_input_extra_defaults()
         self.set_input_trans_defaults()
         self.TxtView.set_text(
-            textwrap.dedent(
-                """\
-            Make sure you set sex, body weight.
-
-            Use real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap.
-
-            Same applies for analytical errors in lab: garbage in - garbage out. Some imagined book case studies will fail too.
-            """
-            )
+            textwrap.dedent("""\
+                <p>Make sure you set sex, body weight.</p>
+                <p>Use real patient's data: all electrolytes interconnected by electroneutrality law, Henderson-Hasselbalch equation. So even if you enter values in reference range, calculations can produce a broken result, especially anion gap.</p>
+                <p>Same applies for analytical errors in lab: garbage in - garbage out. Some imagined book case studies will fail too.</p>""")
         )
         # This one is quite good: https://web.archive.org/web/20170829095349/http://fitsweb.uchc.edu/student/selectives/TimurGraham/Cases.html
 

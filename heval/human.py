@@ -778,7 +778,7 @@ class HumanModel:
             self.blood_abg_cCl,
             self.blood_bchem_albumin,
         ):
-            return "pH, pCO2, cNa, cCl, albumin required"
+            return f"Some lab data missing: pH {self.blood_abg_pH}, pCO2 {self.blood_abg_pCO2}, cNa {self.blood_abg_cNa}, cCl {self.blood_abg_cCl}, albumin {self.blood_bchem_albumin}"
         info = "<h4>Anion gap</h4>"
         desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
         if (
@@ -1410,6 +1410,12 @@ class HumanModel:
 
     def eval_labs(self) -> str:
         return self._eval_labs
+
+    def __str__(self):
+        filtered = filter(
+            lambda o: isinstance(o, HumanAttr), vars(self.__class__).values()
+        )
+        return "\n".join([str(k) for k in filtered])
 
     @classmethod
     def selfdoc(cls) -> str:

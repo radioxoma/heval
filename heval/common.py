@@ -251,6 +251,7 @@ class LabTypeMapper:
 
     # Coagulation
     blood_coag_fib = LabType("Fib", ref=LabRef(default=3, unit="g/L"))
+    blood_coag_pt = LabType("ПВ", ref=LabRef(unit="s"))
     blood_coag_inr = LabType("INR", ref=LabRef(default=1, hh=4, unit="Fraq"))
     blood_coag_ptt = LabType("PTT")  # АЧТВ
     blood_coag_ddimer = LabType("dDimer", ref=LabRef(default=300, unit="ng/ml"))
@@ -275,7 +276,8 @@ class LabTypeMapper:
     )
     # pO2 — парциальное давление кислорода в крови, мм.рт.ст.
     blood_abg_pO2 = LabType("pO2", ref=LabRef(l=80, default=95, h=100, unit="mmHg"))
-    # blood_abg_p50 = LabType("", ("ESLI.LI_TEST.772",))  # No data, see ESLI.LI_TEST.787  # # p50 — 50% насыщение гемоглобина кислородом
+    # p50 — 50% насыщение гемоглобина кислородом
+    # blood_abg_p50 = LabType("", ("ESLI.LI_TEST.772",))  # No data, see ESLI.LI_TEST.787
     # pCO2 — парциальное давление углекислого газа в крови, мм.рт.ст.
     # blood_abg_pCO2 = LabType("pCO2", ref=LabRef(l=4.666, h=6, unit="kPa"))
     blood_abg_pCO2 = LabType("pCO2", ref=LabRef(l=35, default=40, h=45, unit="mmHg"))
@@ -289,17 +291,17 @@ class LabTypeMapper:
     # FHHb — фракция восстановленного гемоглобина в крови
     blood_abg_FHHb = LabType("FHHb")
     blood_abg_FHbF = LabType("FHbF")  # FHbF — фракция фетального гемоглобина в крови
-    # blood_abg_ = LabType("")  # # H+ - концентрация водородных ионов крови
+    # blood_abg_ = LabType("")  # H+ - концентрация водородных ионов крови
     blood_abg_sO2 = LabType("sO2")  # sO2 — насыщение кислородом крови, %
-    blood_abg_tO2 = LabType("tO2")  # # tO2 — общее содержание кислорода крови
+    blood_abg_tO2 = LabType("tO2")  # tO2 — общее содержание кислорода крови
     # Концентрация кислорода в вдыхаемом воздухе
     blood_abg_FiO2 = LabType("FiO2", ref=LabRef(default=0.21, unit="Fraq"))
     blood_abg_Aa_gradient = LabType("", ref=LabRef(l=5, h=20, unit="mmHg"))
-    # blood_abg_ = LabType("")  # # Концентрация углекислого газ в вдыхаемом воздухе
-    # blood_abg_ = LabType("")  # # Концентрация сурфактанта в вдыхаемом воздухе
+    # blood_abg_ = LabType("")  # Концентрация углекислого газ в вдыхаемом воздухе
+    # blood_abg_ = LabType("")  # Концентрация сурфактанта в вдыхаемом воздухе
     # p50 — парциальное давление кислорода при 50% насыщении крови
     blood_abg_p50 = LabType("р50")
-    # blood_abg_ = LabType("")  # # Px — показатель экстракции кислорода в тканях
+    # blood_abg_ = LabType("")  # Px — показатель экстракции кислорода в тканях
     # cHCO3 — концентрация бикарбоната — ацидоза/алкалоза, мМоль/л
     blood_abg_cHCO3 = LabType("cHCO3", ref=LabRef(l=22, h=26, unit="mEq/L"))
     blood_abg_sbc = LabType("SBC")  # SBC- стандартный бикарбонат крови
@@ -307,7 +309,7 @@ class LabTypeMapper:
     # -15 is NaHCO3 infusion threshold
     # BE - избыток оснований, мМоль/л
     blood_abg_be = LabType("BE", ref=LabRef(ll=-15, l=-2, default=0, h=2, unit="mEq/L"))
-    # blood_abg_ = LabType("")  # # BBA - буферные основания крови
+    # blood_abg_ = LabType("")  # BBA - буферные основания крови
 
     # ref_K = LabRef(l=3.5, default=4, h=5.3)  # mmol/L, Radiometer, adult
     # K+ — концентрация ионов калия в крови, мМоль/л
@@ -377,7 +379,7 @@ class LabTypeMapper:
     )
 
     # Several test systems with different reference ranges
-    blood_bchem_troponin_i = LabType("Troponine I")
+    blood_bchem_troponin_i = LabType("Troponin I")
 
     # Urine
     urine_any_ketone = LabType("UrineKetone")
@@ -392,6 +394,10 @@ class LabTypeMapper:
     blood_serology_hiv_abag = LabType("")
 
     sofa = LabType("SOFA")  # Sequential Organ Failure Assessment (SOFA) Score
+
+    @classmethod
+    def values(cls):
+        return filter(lambda k: isinstance(k, LabType), vars(cls).values())
 
     @classmethod
     def print_codes(cls):

@@ -421,7 +421,7 @@ class HumanModel:
         info += "Total blood volume {:.0f} ml (70 ml/kg) or {:.0f} ml (weight indexed by Lemmens). ".format(
             self.body_weight * 70, self.body_total_blood_volume
         )
-        info += f"Transfusion of one {common.A.prbc} dose will increase {common.A.hb} by {estimate_prbc_transfusion_response(self.body_weight):+.2f} g/dL."
+        info += f"Transfusion of one {common.A.prbc} dose will increase {common.A.hb} by {estimate_prbc_transfusion_response(self.body_weight):+.0f} g/L."
 
         if self.body_sex == HumanSex.CHILD:
             try:
@@ -575,7 +575,7 @@ class HumanModel:
             f"Fat     {1.0 * self.body_weight_ideal:3.0f}-{1.5 * self.body_weight_ideal:3.0f} g/24h (1.0-1.5 g/kg/24h) (30-40% of total energy req.)<br>"
         )
         macro.append(
-            f"Carbohydrates {4 * self.body_weight_ideal:3.0f}-{5 * self.body_weight_ideal:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)<br>"
+            f"Carbs   {4 * self.body_weight_ideal:3.0f}-{5 * self.body_weight_ideal:3.0f} g/24h (4.0-5.0 g/kg/24h) (60-70% of total energy req.)<br>"
         )
         info.append("<ul><li>" + "</li><li>".join(macro) + "</li></ul>")
 
@@ -583,13 +583,13 @@ class HumanModel:
         micro = list()
         micro.append(f"Na⁺\t{self.body_weight:3.0f} mmol/24h [~1.00 mmol/kg/24h]<br>")
         micro.append(f"K⁺\t{self.body_weight:3.0f} mmol/24h [~1.00 mmol/kg/24h]")
-        # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
-        micro.append(
-            f"Mg²⁺\t{self.body_weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]<nr>"
-        )
         # Parenteral (25% of enteral) 200 mg/24h, 5 mmol/24h [Kostuch, p 49]
         micro.append(
             f"Ca²⁺\t{self.body_weight * 0.11:3.1f} mmol/24h [~0.11 mmol/kg/24h]"
+        )
+        # Parenteral (33% of enteral) 120 mg, 5 mmol/24h [Kostuch, p 49]
+        micro.append(
+            f"Mg²⁺\t{self.body_weight * 0.04:3.1f} mmol/24h [~0.04 mmol/kg/24h]<nr>"
         )
         info.append("<ul><li>" + "</li><li>".join(micro) + "</li></ul>")
         return "".join(info)
@@ -666,14 +666,14 @@ class HumanModel:
                 self.body_height, self.body_weight, self.body_sex, self.body_age
             )
             info.append(
-                "Resting energy expenditure for healthy adults:<ul>"
+                "Resting energy expenditure (REE) for healthy adults:<ul>"
                 f"<li>{ree_hb:.0f} kcal/24h [Harris-Benedict, revised 1984]</li>"
                 f"<li>{ree_mif:.0f} kcal/24h [Mifflin 1990]</li></ul>"
             )
         else:
-            info.append("Enter age to calculate REE<br>")
+            info.append(f"Enter age to calculate {common.A.energy_ree}<br>")
         info.append(
-            f"{25 * self.body_weight_ideal:.0f}-{30 * self.body_weight_ideal:.0f} kcal/24h (25-30 kcal/kg/24h {common.A.ibw}) [{common.A.espen} 2019]<br>"
+            f"{common.A.energy_tdee} {25 * self.body_weight_ideal:.0f}-{30 * self.body_weight_ideal:.0f} kcal/24h (25-30 kcal/kg/24h {common.A.ibw}) [{common.A.espen} 2019]<br>"
         )
         return "".join(info)
 
@@ -1125,12 +1125,15 @@ class HumanModel:
         return info
 
     def _flag_abg(self) -> str:
-        """Flag deadly ABG disturbances."""
+        """Flag deadly ABG disturbances.
+
+        Stop feeding at p/f <85 (60-70%), lac >3, pH <7.2.
+        """
         warnings = list()
         if self.blood_abg_pH is not None:
-            if self.blood_abg_pH < 7.15:
+            if self.blood_abg_pH < common.LabTypeMapper.blood_abg_pH.ref.ll:
                 warnings.append(
-                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;7.15. Acidosis requires intervention. Check {common.A.abg}.</span>"""
+                    f"""<span style="color:red;">pH {self.blood_abg_pH}&lt;{common.LabTypeMapper.blood_abg_pH.ref.ll}. Acidosis requires intervention. Check {common.A.abg}.</span>"""
                 )
 
         if self.blood_abg_cK is not None:
@@ -1936,9 +1939,11 @@ def crrt_weight_to_rate(weight: float) -> str:
     """
     return (
         f"{common.A.crrt} total effluent dose (dialysate + substitute + {common.A.uf} + diuresis):<ul>"
-        f"<li>Recommended dose for this weight is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [{common.A.kdigo} 20-25 ml/kg/h].</li>"
-        f"<li>Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (urea, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: urea 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h</li>"
+        f"<li>Recommended effluent dose is {weight * 20:.0f}-{weight * 25:.0f} ml/h, {weight * 0.02 * 24:.0f}-{weight * 0.025 * 24:.0f} L/24h [{common.A.kdigo} 20-25 ml/kg/h]. "
+        f"Start with {weight * 15:.0f} ml/h, {weight * 0.015 * 24:.0f} L/24h (15 ml/kg/h) if multiple osmolarity issues to be corrected (urea, Na⁺, glucose). Check BUN every 6-12 hours initially. Correction speed limit: urea 25 %/24h, Na⁺ 10 mmol/24h, cGlu 3-4 mmol/h</li>"
         f"<li>Ultrafiltration, diuresis, other losses counts as effluent too.</li></ul>"
+        f"Extracorporeal procedures with unfractionated heparin anticoagulation:<ul><li>{common.A.crrt} bolus {weight * 25:.0f}-{weight * 50:.0f} (25-50 IU/kg), maintenance {weight * 10:.0f}-{weight * 15:.0f} (10-15 IU/kg). Target {common.A.aptt} 60-80 s (60 is better), antiXa 0.2-0.5 IU/mL</li>"
+        f"<li>{common.A.mps} with small hemofilter requires higher dose: bolus {weight * 70:.0f}-{weight * 80:.0f} (70-80 IU/kg), maintenance {weight * 15:.0f}-{weight * 20:.0f} (15-20 IU/kg/h)</li></ul>"
     )
 
 
@@ -2072,13 +2077,13 @@ def estimate_prbc_transfusion_response(
         prbc_hct: Haematocrit of pRBC dose, fraction. Value is
 
     Returns:
-        Expected Hb increase, g/dL
+        Expected Hb increase, g/L
 
     Examples:
         >>> estimate_prbc_transfusion_response(70, 10 * 70)
-        2.0
+        20.0
         >>> estimate_prbc_transfusion_response(real_body_weight=70)
-        1.0
+        10.0
 
     References:
         See function `hb_prbc_dose` for complete reference.
@@ -2086,7 +2091,7 @@ def estimate_prbc_transfusion_response(
         [1] https://www.ncbi.nlm.nih.gov/pubmed/17302766
             10 mL/kg gives an increment of 2 g/dL
     """
-    return prbc_volume / (real_body_weight * 3 / prbc_hct)
+    return prbc_volume / (real_body_weight * 3 / prbc_hct) * 10
 
 
 def estimate_prbc_transfusion_volume(

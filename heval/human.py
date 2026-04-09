@@ -697,60 +697,6 @@ class HumanModel:
                 f"<li>x3.5={3.5 * self.body_weight:3.0f} ml/h, {3.5 * self.body_weight * 24:.0f} ml/24h much higher in infants (up to 3.5 ml/kg/h)</li></ul>"
             )
 
-    def _lab_osmolarity(self):
-        """Describe osmolarity impact like thirst, HHS, kidney injury risk, coma.
-
-        Diabetes mellitus decompensation:
-        * 1 type - DKA (no insulin enables ketogenesis).
-            * dehydration (osmotic diuresis and vomiting)
-            * cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
-        * 2 type - HHS (cells not sensitive to Ins)
-            * dehydration (osmotic diuresis)
-            * cGlu >30, mOsm >320, no acidosis and ketone bodies
-        """
-        info = ""
-        if self.blood_abg_cNa is None or self.blood_abg_cGlu is None:
-            return info
-
-        info = "Osmolarity is "
-        if self.blood_abg_osmolarity > abg.norm_mOsm[1]:
-            info += "high"
-        elif self.blood_abg_osmolarity < abg.norm_mOsm[0]:
-            info += "low"
-        else:
-            info += "ok"
-        info += f" {self.blood_abg_osmolarity:.0f} ({abg.norm_mOsm[0]:.0f}-{abg.norm_mOsm[1]:.0f} mOsm/L)"
-
-        # Hyperosmolarity flags
-        # if self.osmolarity >=282: # mOsm/kg
-        #     info += " vasopressin released"
-        if self.blood_abg_osmolarity > 290:  # mOsm/kg
-            # plasma thirst point reached
-            info += ", human is thirsty (>290 mOsm/kg)"
-        if self.blood_abg_osmolarity > 320:  # mOsm/kg
-            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
-            info += ", acute kidney injury risk (>320 mOsm/kg)"
-        if self.blood_abg_osmolarity > 330:  # mOsm/kg
-            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
-            info += ", coma (>330 mOsm/kg)"
-
-        # Implies cNa, pCO2 available
-        if self.blood_abg_pH is None or self.blood_abg_pCO2 is None:
-            return info
-
-        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
-        if all(
-            (
-                self.blood_abg_osmolarity > 320,
-                self.blood_abg_cGlu > 30,
-                self.blood_abg_sbe > -18.4,
-            )
-        ):
-            # https://www.aafp.org/afp/2005/0501/p1723.html
-            # IV insulin drip and crystalloids
-            info += f" Diabetes mellitus type 2 with {common.A.hhs}? Check for {common.A.hagma} and ketonuria to exclude {common.A.dka}. Look for infection or another underlying illness that caused the hyperglycemic crisis."
-        return info
-
     def _lab_abg(self) -> str:
         """Describe pH and pCO2, reveal hidden processes."""
         info = ""
@@ -769,63 +715,7 @@ class HumanModel:
                 )
         return info
 
-    def _lab_anion_gap(self):
-        """Describe metabolic acidosis possible cause."""
-        if None in (
-            self.blood_abg_pH,
-            self.blood_abg_pCO2,
-            self.blood_abg_cNa,
-            self.blood_abg_cCl,
-            self.blood_bchem_albumin,
-        ):
-            return f"Some lab data missing: pH {self.blood_abg_pH}, pCO2 {self.blood_abg_pCO2}, cNa {self.blood_abg_cNa}, cCl {self.blood_abg_cCl}, albumin {self.blood_bchem_albumin}"
-        info = ""
-        desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
-        if (
-            abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[1]
-            == abg.AbgProcess.METABOLIC_ACIDOSIS
-        ):
-            if abg.norm_gap[1] < self.blood_abg_anion_gap:
-                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
-                info += f"{common.A.hagma} {desc} ({common.A.kult}?), "
-                info += abg.calculate_anion_gap_delta(
-                    self.blood_abg_anion_gap, self.blood_abg_hco3p
-                )
-            elif self.blood_abg_anion_gap < abg.norm_gap[0]:
-                info += f"Low {common.A.anion_gap} {desc} - hypoalbuminemia or low Na⁺?"
-            else:
-                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
-                info += f"{common.A.nagma} {desc}. Diarrhea or renal tubular acidosis?"
-        else:
-            if abg.norm_gap[1] < self.blood_abg_anion_gap:
-                info += f"Unexpected high {common.A.anion_gap} {desc} without main metabolic acidosis; "
-                # Can catch COPD or concurrent metabolic alkalosis here
-                info += abg.calculate_anion_gap_delta(
-                    self.blood_abg_anion_gap, self.blood_abg_hco3p
-                )
-            elif self.blood_abg_anion_gap < abg.norm_gap[0]:
-                info += f"Unexpected low {common.A.anion_gap} {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
-            else:
-                info += f"{common.A.anion_gap} is ok {desc}"
-        if self.verbose:
-            """Strong ion difference.
-
-            Sometimes Na and Cl don't changes simultaneously.
-            Try distinguish Na-Cl balance in case high/low osmolarity.
-            Should help to choose better fluid for correction.
-            """
-            ref_str = f"{self.blood_abg_sid_abbr:.1f} ({abg.norm_SIDabbr[0]:.0f}-{abg.norm_SIDabbr[1]:.0f} mEq/L)"
-            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
-            if self.blood_abg_sid_abbr > abg.norm_SIDabbr[1]:
-                info += f"is alkalotic {ref_str}, relative Na⁺ excess"
-            elif self.blood_abg_sid_abbr < abg.norm_SIDabbr[0]:
-                info += f"is acidotic {ref_str}, relative Cl⁻ excess"
-            else:
-                info += f"is ok {ref_str}"
-            info += f", BDE gap {self.blood_abg_sbe - self.blood_abg_sid_abbr:.01f} mEq/L"  # Lactate?
-        return info
-
-    def _lab_sbe(self):
+    def _lab_abg_sbe(self):
         """Describe needed NaHCO3 for metabolic acidosis correction.
 
         Using SBE (not pH) as threshold point guaranties that bicarbonate
@@ -898,7 +788,117 @@ class HumanModel:
             info += f"{common.A.sbe} is ok {self.blood_abg_sbe:.1f} ({abg.norm_sbe[0]:.0f}-{abg.norm_sbe[1]:.0f} mEq/L)"
         return info
 
-    def _lab_electrolyte_cK(self) -> str:
+    def _lab_abg_anion_gap(self):
+        """Describe metabolic acidosis possible cause."""
+        if None in (
+            self.blood_abg_pH,
+            self.blood_abg_pCO2,
+            self.blood_abg_cNa,
+            self.blood_abg_cCl,
+            self.blood_bchem_albumin,
+        ):
+            return f"Some lab data missing: pH {self.blood_abg_pH}, pCO2 {self.blood_abg_pCO2}, cNa {self.blood_abg_cNa}, cCl {self.blood_abg_cCl}, albumin {self.blood_bchem_albumin}"
+        info = ""
+        desc = f"{self.blood_abg_anion_gap:.1f} ({abg.norm_gap[0]:.0f}-{abg.norm_gap[1]:.0f} mEq/L)"
+        if (
+            abg.abg_approach_stable(self.blood_abg_pH, self.blood_abg_pCO2)[1]
+            == abg.AbgProcess.METABOLIC_ACIDOSIS
+        ):
+            if abg.norm_gap[1] < self.blood_abg_anion_gap:
+                # Since AG elevated, calculate delta ratio to test for coexistent NAGMA or metabolic alkalosis
+                info += f"{common.A.hagma} {desc} ({common.A.kult}?), "
+                info += abg.calculate_anion_gap_delta(
+                    self.blood_abg_anion_gap, self.blood_abg_hco3p
+                )
+            elif self.blood_abg_anion_gap < abg.norm_gap[0]:
+                info += f"Low {common.A.anion_gap} {desc} - hypoalbuminemia or low Na⁺?"
+            else:
+                # Hypocorticism [Henessy 2018, с 113 (Clinical case 23)]
+                info += f"{common.A.nagma} {desc}. Diarrhea or renal tubular acidosis?"
+        else:
+            if abg.norm_gap[1] < self.blood_abg_anion_gap:
+                info += f"Unexpected high {common.A.anion_gap} {desc} without main metabolic acidosis; "
+                # Can catch COPD or concurrent metabolic alkalosis here
+                info += abg.calculate_anion_gap_delta(
+                    self.blood_abg_anion_gap, self.blood_abg_hco3p
+                )
+            elif self.blood_abg_anion_gap < abg.norm_gap[0]:
+                info += f"Unexpected low {common.A.anion_gap} {desc}. Starved patient with low albumin? Check your input and enter ctAlb if known."
+            else:
+                info += f"{common.A.anion_gap} is ok {desc}"
+        if self.verbose:
+            """Strong ion difference.
+
+            Sometimes Na and Cl don't changes simultaneously.
+            Try distinguish Na-Cl balance in case high/low osmolarity.
+            Should help to choose better fluid for correction.
+            """
+            ref_str = f"{self.blood_abg_sid_abbr:.1f} ({abg.norm_SIDabbr[0]:.0f}-{abg.norm_SIDabbr[1]:.0f} mEq/L)"
+            info += "\nSIDabbr [Na⁺-Cl⁻-38] "
+            if self.blood_abg_sid_abbr > abg.norm_SIDabbr[1]:
+                info += f"is alkalotic {ref_str}, relative Na⁺ excess"
+            elif self.blood_abg_sid_abbr < abg.norm_SIDabbr[0]:
+                info += f"is acidotic {ref_str}, relative Cl⁻ excess"
+            else:
+                info += f"is ok {ref_str}"
+            info += f", BDE gap {self.blood_abg_sbe - self.blood_abg_sid_abbr:.01f} mEq/L"  # Lactate?
+        return info
+
+    def _lab_abg_osmolarity(self):
+        """Describe osmolarity impact like thirst, HHS, kidney injury risk, coma.
+
+        Diabetes mellitus decompensation:
+        * 1 type - DKA (no insulin enables ketogenesis).
+            * dehydration (osmotic diuresis and vomiting)
+            * cGlu 15-30 mmol/L, SBE < -18.4 (ketoacidosis), HAGMA
+        * 2 type - HHS (cells not sensitive to Ins)
+            * dehydration (osmotic diuresis)
+            * cGlu >30, mOsm >320, no acidosis and ketone bodies
+        """
+        info = ""
+        if self.blood_abg_cNa is None or self.blood_abg_cGlu is None:
+            return info
+
+        info = "Osmolarity is "
+        if self.blood_abg_osmolarity > abg.norm_mOsm[1]:
+            info += "high"
+        elif self.blood_abg_osmolarity < abg.norm_mOsm[0]:
+            info += "low"
+        else:
+            info += "ok"
+        info += f" {self.blood_abg_osmolarity:.0f} ({abg.norm_mOsm[0]:.0f}-{abg.norm_mOsm[1]:.0f} mOsm/L)"
+
+        # Hyperosmolarity flags
+        # if self.osmolarity >=282: # mOsm/kg
+        #     info += " vasopressin released"
+        if self.blood_abg_osmolarity > 290:  # mOsm/kg
+            # plasma thirst point reached
+            info += ", human is thirsty (>290 mOsm/kg)"
+        if self.blood_abg_osmolarity > 320:  # mOsm/kg
+            # >320 mOsm/kg Acute kidney injury cause https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", acute kidney injury risk (>320 mOsm/kg)"
+        if self.blood_abg_osmolarity > 330:  # mOsm/kg
+            # >330 mOsm/kg hyperosmolar hyperglycemic coma https://www.ncbi.nlm.nih.gov/pubmed/9387687
+            info += ", coma (>330 mOsm/kg)"
+
+        # Implies cNa, pCO2 available
+        if self.blood_abg_pH is None or self.blood_abg_pCO2 is None:
+            return info
+
+        # SBE>-18.4 - same as (pH>7.3 and hco3p>15 mEq/L) https://emedicine.medscape.com/article/1914705-overview
+        if all(
+            (
+                self.blood_abg_osmolarity > 320,
+                self.blood_abg_cGlu > 30,
+                self.blood_abg_sbe > -18.4,
+            )
+        ):
+            # https://www.aafp.org/afp/2005/0501/p1723.html
+            # IV insulin drip and crystalloids
+            info += f" Diabetes mellitus type 2 with {common.A.hhs}? Check for {common.A.hagma} and ketonuria to exclude {common.A.dka}. Look for infection or another underlying illness that caused the hyperglycemic crisis."
+        return info
+
+    def _lab_abg_electrolyte_cK(self) -> str:
         """Describe hi/low cK correction and emergencies."""
         if None in (
             self.body_weight,
@@ -912,7 +912,7 @@ class HumanModel:
             pH=self.blood_abg_pH,
         )
 
-    def _lab_electrolyte_cNa(self) -> str:
+    def _lab_abg_electrolyte_cNa(self) -> str:
         """Describe hi/low cNa correction and relation to high glycemia."""
         if None in (
             self.body_weight,
@@ -927,14 +927,41 @@ class HumanModel:
             self.verbose,
         )
 
-    def _lab_electrolyte_cCl(self) -> str:
+    def _lab_abg_electrolyte_cCl(self) -> str:
         """Describe hi/low cCl and probable cause."""
         if self.blood_abg_cCl is None:
             return ""
         else:
             return electrolyte_Cl(self.blood_abg_cCl)
 
-    def _lab_glucose(self):
+    def _lab_abg_oxygenation(self) -> str:
+        """Describe p/f and A-a gradient."""
+        info = ""
+        if (
+            self.blood_abg_pCO2 is None
+            or self.blood_abg_pO2 is None
+            or self.blood_abg_FiO2 is None
+        ):
+            return info
+        pf_index = abg.calculate_pO2_FO2_fraction(
+            pO2=self.blood_abg_pO2, FiO2=self.blood_abg_FiO2
+        )
+        Aa_gradient = (
+            abg.calculate_Aa_gradient(
+                pCO2=self.blood_abg_pCO2,
+                pO2=self.blood_abg_pO2,
+                FiO2=self.blood_abg_FiO2,
+            )
+            / abg.kPa
+        )
+
+        info += f"""Oxygenation (implies arterial blood): p/f {pf_index:.0f}, {common.A.aa_gradient}"""
+        if Aa_gradient > abg.norm_Aa_gradient_mmHg[1]:
+            info += " is high"
+        info += f" {Aa_gradient:.1f} ({abg.norm_Aa_gradient_mmHg[0]:.0f}-{abg.norm_Aa_gradient_mmHg[1]:.0f} mmHg)"
+        return info
+
+    def _lab_bchem_glucose(self):
         """Describe glucose level, detect DKE/HHS.
 
         References:
@@ -975,7 +1002,7 @@ class HumanModel:
             info += f"cGlu is ok {self.blood_abg_cGlu:.1f} ({abg.norm_cGlu[0]:.1f}-{abg.norm_cGlu[1]:.1f} mmol/L)"
         return info
 
-    def _lab_ccrea(self) -> str:
+    def _lab_bchem_ccrea(self) -> str:
         """Describe kidney function via glomerular filtration rate (eGFR)."""
         egfr = None
         info = ""
@@ -1026,7 +1053,7 @@ class HumanModel:
                 )
         return info
 
-    def _lab_albumin(self):
+    def _lab_bchem_albumin(self):
         """Describe low albumin as nutrition marker in adults."""
         info = ""
         if self.blood_bchem_albumin is None:
@@ -1044,7 +1071,7 @@ class HumanModel:
             info = f"ctAlb is low: severe hypoalbuminemia {ctalb_range}. Expect oncotic edema"
         return info
 
-    def _lab_hb(self):
+    def _lab_cbc_hb(self):
         """Describe Hb and hct_calc (hemoconcentration).
 
         References:
@@ -1097,33 +1124,6 @@ class HumanModel:
             info += f" \nNote that normal {common.A.hb} and {common.A.hct} values in children greatly dependent from age."
         return info
 
-    def _lab_oxygenation(self) -> str:
-        """Describe p/f and A-a gradient."""
-        info = ""
-        if (
-            self.blood_abg_pCO2 is None
-            or self.blood_abg_pO2 is None
-            or self.blood_abg_FiO2 is None
-        ):
-            return info
-        pf_index = abg.calculate_pO2_FO2_fraction(
-            pO2=self.blood_abg_pO2, FiO2=self.blood_abg_FiO2
-        )
-        Aa_gradient = (
-            abg.calculate_Aa_gradient(
-                pCO2=self.blood_abg_pCO2,
-                pO2=self.blood_abg_pO2,
-                FiO2=self.blood_abg_FiO2,
-            )
-            / abg.kPa
-        )
-
-        info += f"""Oxygenation (implies arterial blood): p/f {pf_index:.0f}, {common.A.aa_gradient}"""
-        if Aa_gradient > abg.norm_Aa_gradient_mmHg[1]:
-            info += " is high"
-        info += f" {Aa_gradient:.1f} ({abg.norm_Aa_gradient_mmHg[0]:.0f}-{abg.norm_Aa_gradient_mmHg[1]:.0f} mmHg)"
-        return info
-
     def _flag_abg(self) -> str:
         """Flag deadly ABG disturbances."""
         warnings = list()
@@ -1151,7 +1151,7 @@ class HumanModel:
 
         return " ".join(warnings)
 
-    def _flag_hb(self) -> str:
+    def _flag_cbc_hb(self) -> str:
         """Flag low hemoglobin, calculate required pRBC replacement.
 
         Chronic anemia with Hb <30 g/L causes syncope.
@@ -1167,7 +1167,7 @@ class HumanModel:
                 return f"""{msg} {math.ceil(prbc_volume / 350)} units of {common.A.prbc} ({prbc_volume:.0f} ml) is required to reach 75 g/L"""
         return ""
 
-    def _flag_anemia_type(self):
+    def _flag_cbc_anemia_type(self):
         info = ""
         if self.blood_cbc_hb is not None and self.blood_cbc_mcv is not None:
             info += check_anemia(
@@ -1176,7 +1176,7 @@ class HumanModel:
             )
         return info
 
-    def _flag_plt(self):
+    def _flag_cbc_plt(self):
         """Flag low platelets."""
         msg = ""
         # Platelets 10^9/L
@@ -1192,7 +1192,7 @@ class HumanModel:
                 msg += f"""{plt_count} transfusion in the case of life-threatening bleeding (e.g. intracranial)"""
         return msg
 
-    def _flag_fib(self):
+    def _flag_coag_fib(self):
         """Flag low fibrinogen, suggest cryo replacement.
 
         https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10193588/
@@ -1210,7 +1210,7 @@ class HumanModel:
                 msg += f"""{common.A.fib} <abbr title="Target fibrinogen 1.5-2 g/L">{self.blood_coag_fib}</abbr> g/L: consider {dose}cryoprecipitate"""
         return msg
 
-    def _flag_inr(self):
+    def _flag_coag_inr(self):
         """Flag high INR."""
         msg = ""
         if self.body_weight is not None and self.blood_coag_inr is not None:
@@ -1362,43 +1362,43 @@ class HumanModel:
         labs = list()
         labs.append("<h3>Basic ABG assessment</h3>")
         labs.append(self._lab_abg())
-        labs.append(self._lab_sbe())
-        labs.append(self._lab_oxygenation())
+        labs.append(self._lab_abg_sbe())
+        labs.append(self._lab_abg_oxygenation())
         labs.append("<h3>Complex electrolyte assessment</h3>")
-        labs.append(self._lab_anion_gap())
-        labs.append(self._lab_osmolarity())
-        labs.append(self._lab_electrolyte_cK())
-        labs.append(self._lab_electrolyte_cNa())
-        labs.append(self._lab_electrolyte_cCl())
-        labs.append(self._lab_glucose())
-        labs.append(self._lab_albumin())
-        labs.append(self._lab_ccrea())
+        labs.append(self._lab_abg_anion_gap())
+        labs.append(self._lab_abg_osmolarity())
+        labs.append(self._lab_abg_electrolyte_cK())
+        labs.append(self._lab_abg_electrolyte_cNa())
+        labs.append(self._lab_abg_electrolyte_cCl())
+        labs.append(self._lab_bchem_glucose())
+        labs.append(self._lab_bchem_albumin())
+        labs.append(self._lab_bchem_ccrea())
         labs.append("<h3>Transfusion</h3>")
-        labs.append(self._lab_hb())
+        labs.append(self._lab_cbc_hb())
         self._eval_labs = "<p>" + "</p><p>".join(labs) + "</p>"
 
         self.flags.add(
             common.Flag(
                 reason="Low Hb",
-                description=self._flag_hb(),
+                description=self._flag_cbc_hb(),
                 severity=common.FlagSeverity.RED,
             )
         )
         self.flags.add(
-            common.Flag(reason="Anemia type", description=self._flag_anemia_type())
+            common.Flag(reason="Anemia type", description=self._flag_cbc_anemia_type())
         )
-        self.flags.add(common.Flag(reason="Low PLT", description=self._flag_plt()))
+        self.flags.add(common.Flag(reason="Low PLT", description=self._flag_cbc_plt()))
         self.flags.add(
             common.Flag(
                 reason="Low Fib",
-                description=self._flag_fib(),
+                description=self._flag_coag_fib(),
                 severity=common.FlagSeverity.YELLOW,
             )
         )
         self.flags.add(
             common.Flag(
                 reason="High INR",
-                description=self._flag_inr(),
+                description=self._flag_coag_inr(),
             )
         )
         self.flags.add(

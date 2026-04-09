@@ -250,11 +250,12 @@ class LabTypeMapper:
     blood_cbc_lym = LabType("LYM", ref=LabRef(unit="10⁹/L"))
 
     # Coagulation
-    blood_coag_fib = LabType("Fib", ref=LabRef(default=3, unit="g/L"))
-    blood_coag_pt = LabType("ПВ", ref=LabRef(unit="s"))
-    blood_coag_inr = LabType("INR", ref=LabRef(default=1, hh=4, unit="Fraq"))
     blood_coag_ptt = LabType("PTT")  # АЧТВ
+    blood_coag_tt = LabType("Thrombin time", ref=LabRef(unit="s"))
+    blood_coag_fib = LabType("Fib", ref=LabRef(default=3, unit="g/L"))
     blood_coag_ddimer = LabType("dDimer", ref=LabRef(default=300, unit="ng/ml"))
+    blood_coag_pt = LabType("Prothrombin time", ref=LabRef(unit="s"))
+    blood_coag_inr = LabType("INR", ref=LabRef(default=1, hh=4, unit="Fraq"))
     blood_coag_antix = LabType("Anti-Xa")
     # Активность антитромбина III, %
     blood_coag_at3 = LabType("AT III", ref=LabRef(unit="%"))

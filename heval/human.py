@@ -899,6 +899,7 @@ class HumanModel:
         return info
 
     def _lab_electrolyte_cK(self) -> str:
+        """Describe hi/low cK correction and emergencies."""
         if None in (
             self.body_weight,
             self.blood_abg_cK,
@@ -912,6 +913,7 @@ class HumanModel:
         )
 
     def _lab_electrolyte_cNa(self) -> str:
+        """Describe hi/low cNa correction and relation to high glycemia."""
         if None in (
             self.body_weight,
             self.blood_abg_cNa,
@@ -926,6 +928,7 @@ class HumanModel:
         )
 
     def _lab_electrolyte_cCl(self) -> str:
+        """Describe hi/low cCl and probable cause."""
         if self.blood_abg_cCl is None:
             return ""
         else:
@@ -2282,7 +2285,7 @@ def electrolyte_Na_classic(
     Na_target: float = 140,
     Na_shift_rate: float = 0.5,
 ) -> str:
-    """Correct hyper- hyponatremia correction with two classic formulas.
+    """Correct hyper- hyponatremia with two classic formulas.
 
     Calculates amount of pure water or Na.
 
@@ -2572,7 +2575,7 @@ def electrolyte_Na(
     References:
         * http://www.medcalc.com/sodium.html
     """
-    Na_target = 140  # mmol/L just mean value, from Маневич и Плохой
+    Na_target = 140  # mmol/L just mean value
 
     # Na decrease not faster than 0.5-1 mmol/L/h for hypernatremia (cerebral edema risk)
     # Na increase not faster than 1-2 mmol/L/h for hyponatremia (central pontine myelinolysis risk)
@@ -2592,13 +2595,13 @@ def electrolyte_Na(
         )
         info += f"Warning: Na⁺ decrement faster than {Na_shift_rate:.1f} mmol/L/h can cause cerebral edema.\n"
         if verbose:
-            info += "Classic replacement calculation: " + electrolyte_Na_classic(
+            info += "Classic correction calculation: " + electrolyte_Na_classic(
                 total_body_water,
                 Na_serum,
                 Na_target=Na_target,
                 Na_shift_rate=Na_shift_rate,
             )
-        info += "Adrogue replacement calculation:\n" + electrolyte_Na_adrogue(
+        info += "Adrogue correction calculation:\n" + electrolyte_Na_adrogue(
             total_body_water,
             Na_serum,
             Na_target=Na_target,

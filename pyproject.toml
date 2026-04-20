@@ -4,7 +4,8 @@ dynamic = ["version"]
 description = "Medical calculator for intensive care unit"
 readme = "README.md"
 requires-python = ">=3.8.10"
-license = {file = "LICENSE"}
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [
     { name = "Eugene Dvoretsky", email = "radioxoma@gmail.com" },
 ]
@@ -13,7 +14,6 @@ classifiers = [
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python :: 3",
 ]
 
@@ -26,7 +26,8 @@ gui = ["tkinterweb==4.25.0",]
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
-    "ruff>=0.15.8",
+    "pdoc>=16.0.0",
+    "ruff>=0.15.10",
     "ty>=0.0.26",
 ]
 

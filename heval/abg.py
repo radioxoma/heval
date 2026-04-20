@@ -21,7 +21,7 @@ Main pitfalls:
     Delta Gap calculation. Also, specific reference 7-16 mEq/L shall be used.
 * Authors are humans and misuse formulas, coefficients and reference ranges
     * Constants vary from one source to another
-        * Mean cAlb, K_target or Na_target changes without notice and rationale
+        * Mean ctAlb, K_target or Na_target changes without notice and rationale
     * Reference range for the same parameter varies
         * Though it's normal for different human populations
     * Reference range for the same parameter depends on calculation formula
@@ -662,7 +662,7 @@ def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
 
     See Also:
         * p/f ratio = `pO2/FiO2`
-        * Respiratory index (RI) = `(pAO2 - pO2) / pO2`
+        * Respiratory index (RI) = `(PAO2 - pO2) / pO2`
 
     Returns:
         Alveolar–arterial gradient, kPa
@@ -677,11 +677,11 @@ def calculate_Aa_gradient(pCO2: float, pO2: float, FiO2: float = 0.21) -> float:
         * https://en.wikipedia.org/wiki/Alveolar–arterial_gradient
         * https://www.respiratorytherapyzone.com/alveolar-gas-equation/
     """
-    # pAO2 is theoretical partial pressure of oxygen
+    # PAO2 is theoretical partial pressure of oxygen
     # 93.8 kPa is barometric pressure at sea level minus water vapor pressure (47 mmHg)
-    pAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
+    PAO2 = FiO2 * 93.8 - pCO2 * 1.2  # [Hennessey, Alan G Japp, 2 ed. 2018, p 65]
     # PAO2 = 20 - 5 / 4 * pCO2  # Also simplified calculation [1]
-    return pAO2 - pO2
+    return PAO2 - pO2
 
 
 def calculate_Ca74(pH: float, Ca: float) -> float:

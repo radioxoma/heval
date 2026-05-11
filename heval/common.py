@@ -153,7 +153,7 @@ class A:
     mps = Abbr("MPS", "Membrane plasma separation")
     mv = Abbr("MV", "Minute ventilation, L/min")
     nagma = Abbr("NAGMA", "Normal anion gap metabolic acidosis")
-    nmt = Abbr("NMT", "Neuromuscular monitoring")
+    nmt = Abbr("NMT", "Neuromuscular transmission monitoring")
     nota_bene = Abbr("NB!", "Nota bene")
     plt = Abbr("PLT", "Platelets")
     prbc = Abbr("pRBC", "Packed red blood cells")

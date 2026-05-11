@@ -9,7 +9,7 @@ https://github.com/pyscript/pyscript-stubs/tree/main/src/pyscript-stubs
 from pyscript import Event, web, when, window  # ty: ignore[unresolved-import]
 
 import heval
-from heval import abg, common, human
+from heval import abg, common, drugs, human
 
 human_model = human.HumanModel()
 human_model_changed = Event()
@@ -212,8 +212,11 @@ set_input_defaults()
 @when(human_model_changed)
 def eval_model():
     human_model.init()
+    human_drugs = drugs.HumanDrugsModel(human_model)
     web.page["output_flags"].innerHTML = human_model.flags.render()
-    web.page["output_body"].innerHTML = human_model.eval_body()
+    web.page["output_body"].innerHTML = (
+        human_model.eval_body() + human_drugs.describe_anesthesiology()
+    )
     web.page["output_labs"].innerHTML = human_model.eval_labs()
 
 

@@ -16,7 +16,7 @@ from tkinter import ttk
 import tkinterweb
 
 import heval
-from heval import abg, common, human
+from heval import abg, common, drugs, human
 
 __css__ = """
 <style>
@@ -563,6 +563,7 @@ class CalcMain(ttk.Frame):
         super().__init__(parent)
         self.parent = parent
         self.human = human_model
+        self.human_drugs = drugs.HumanDrugsModel(self.human)
 
         self.TxtView = TextHtmlView(self)
         self.TxtView.pack(expand=True, fill=tk.BOTH)
@@ -575,7 +576,9 @@ class CalcMain(ttk.Frame):
     def eval(self, event=None):
         """Calculate and print some evaluated data."""
         self.human.init()
-        self.TxtView.set_text(self.human.eval_body())
+        self.TxtView.set_text(
+            self.human.eval_body() + self.human_drugs.describe_anesthesiology()
+        )
 
 
 class CalcNutrition(ttk.Frame):

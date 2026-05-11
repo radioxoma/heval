@@ -8,6 +8,7 @@
     "{FROM}/__init__.py": "{TO}",
     "{FROM}/abg.py": "{TO}",
     "{FROM}/common.py": "{TO}",
+    "{FROM}/drugs.py": "{TO}",
     "{FROM}/human.py": "{TO}",
     "{FROM}/nutrition.py": "{TO}"
     },

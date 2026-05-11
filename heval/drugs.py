@@ -71,7 +71,8 @@ class HumanDrugsModel:
         ]
 
     def describe_anesthesiology(self):
-        return "\n".join(["* " + str(d) for d in self.drug_list])
+        info = "<h3>Anesthesiology</h3><ul><li>"
+        return info + "</li><li>".join([str(k) for k in self.drug_list]) + "</li></ul>"
 
     def describe_pressors(self):
         def describe_pressor(pressor, weight):
@@ -255,24 +256,31 @@ class Rocuronium:
         # 60 seconds before intubation
 
     def __str__(self):
-        info = "{} intubation {:.0f} mg (30-40 mins before <25% recovery). NMT maintenance:\n".format(
-            self.name, 0.6 * self.human_body.body_weight
+        preface = "{} intubation {:.0f} mg (30-40 mins before &lt;25% recovery). {} maintenance:".format(
+            self.name, 0.6 * self.human_body.body_weight, common.A.nmt
         )
-        info += (
-            " * bolus: <1h {:.0f} mg; >1h {:.0f}-{:.0f} mg [2-3 TOF, <25%]\n".format(
+        info = list()
+        info.append(
+            "bolus: &lt;1h {:.0f} mg; &gt;1h {:.0f}-{:.0f} mg [2-3 {}, &lt;25%]".format(
                 self.human_body.body_weight * 0.15,
                 self.human_body.body_weight * 0.075,
                 self.human_body.body_weight * 0.1,
+                common.A.tof,
             )
         )
-        info += " * pump: TIVA {:.0f}-{:.0f} mg/h; GA {:.0f}-{:.0f} mg/h [1-2 TOF, <10%]\n".format(
-            self.human_body.body_weight * 0.3,
-            self.human_body.body_weight * 0.6,
-            self.human_body.body_weight * 0.3,
-            self.human_body.body_weight * 0.4,
+        info.append(
+            "pump: {} {:.0f}-{:.0f} mg/h; {} {:.0f}-{:.0f} mg/h [1-2 {}, &lt;10%]".format(
+                common.A.tiva,
+                self.human_body.body_weight * 0.3,
+                self.human_body.body_weight * 0.6,
+                common.A.ganest,
+                self.human_body.body_weight * 0.3,
+                self.human_body.body_weight * 0.4,
+                common.A.tof,
+            )
         )
-        info += "   Same dosage for all ages."
-        return info
+        info.append("Same dosage for all ages")
+        return preface + "<ul><li>" + "</li><li>".join(info) + "</li></ul>"
 
 
 def percent_corr(i, corr):
